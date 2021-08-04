@@ -1,9 +1,7 @@
-# AMiMA (Anki Mind Map)
+# AnnA : Anki neuronal Appendix
+# *Careful, this project is currently being refactored from scratch*
 Plot the latent space of the semantic relation of your anki cards showing clusters of related notions. In other words, this finds "semantic siblings" in your collection.
 
-
-Here's a quick picture of the end result on about 5000 cards :
-![picture](./quick_picture.png)
 
 
 ## FAQ
@@ -34,7 +32,7 @@ Here's a quick picture of the end result on about 5000 cards :
 ## TODO
 ### pandas and optimization
 * write the code as a python file with function
-* rename it AnnI : Anki neural network Interface
+* rename it AnnA : Anki neural network Appendix
 * use ankiconnect instead of that dumb way to access the db..., the file "ankiconnect.py" contains all you need, but you have to do a PR to add flagging and burying of cards, or just add a way to call "exec" from ankiconnect
 * add a setting to specify if you want to use sfld or flds
 * use merge to find quickly the deckname of a card and its notetype, the current way is way too slow for no good reason
@@ -60,6 +58,7 @@ Here's a quick picture of the end result on about 5000 cards :
         * another example of c-tf-idf : https://www.sbert.net/examples/applications/clustering/README.html
         * store the vectors in a file and reuse it to search for a card using ankiconnect to directly open the browser on a search
 * do sentenceBert and tf-idf to get vectors, L2-renormalize each then use PCA, but keep the PCA vector otherwise you can't do information retrieval
+* automatically create a phylogeny of cards based on a distance matrix and see if it's an appropriate mind map, plotly is suitable for this kind of tree
 * try to UMAP down to 1 dimension to see if you can use it to optimize the review queue, but note that distance is not conserved in UMAP and maybe PCA should be used instead
 * see if it's possible to search for a card based on a search by comparing vector similarity
 
@@ -82,7 +81,7 @@ Here's a quick picture of the end result on about 5000 cards :
 * **Show related** : have a card about a notion you just can't fit into the big picture? I could have a button showing similar cards!
 * **Train on hardest clusters** : know that you have notions in the deck that you can't understand? This could help you create a filtered deck containing cards from closest to farthest from the center of the cluster. Allowing you to really connect the notion with the rest.
 * **Optimize learning via cues** : A weird idea of mine is about the notion that hearing a tone when you're learning something will increase your recall if you have the same tone playing while taking the test. So maybe it would be useful to assign a tone that increases in pitch while you advance in the queue of due cards? I told you it was crazy ideas... Also this tone could play the tone assigned to the cluster when doing random reviews.
-* **Mental Walk** (credit goes to discussing with Paul Bricman) : integrating AMiMA with VR by offering the user to walk in an imaginary and procedurally generated world with the reviews materialized in precise location. So the user would have to walk to the flashcard location then do the review. The cards would be automatically grouped by cluster into rooms or forests or buildings etc. Allowing to not have to create the mental palace but just have to create the flashcards.
+* **Mental Walk** (credit goes to discussing with Paul Bricman) : integrating AnnA with VR by offering the user to walk in an imaginary and procedurally generated world with the reviews materialized in precise location. So the user would have to walk to the flashcard location then do the review. The cards would be automatically grouped by cluster into rooms or forests or buildings etc. Allowing to not have to create the mental palace but just have to create the flashcards.
     * a possibility would be to do a dimension reduction to 5 dimensions. Use the 2 first to get the spatial location were the cluster would be assigned. Then the cards would be spread across the room but the 3 remaining vectors could be used to derive something about the room like wall color, the tempo of a music playing when inside the room and I don't know, the color of the floor?
     * we could ensure that the clusters would always stay in the same room even after adding many cards or even across users by querying a large language model for the vectors associated to the main descriptors of the cluster.
 * **Source Walking** : it would be interesting to do the anki reviews in VR where the floor would be your source (pdf, epub, ppt, whatever). The cards would be spread over the document, approximately located above the actual source sentence. Hence leveraging the power of mental palace while doing your reviews. Accessing the big picture AND the small picture.
