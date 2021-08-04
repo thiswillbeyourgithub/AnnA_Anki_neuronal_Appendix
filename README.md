@@ -1,5 +1,5 @@
 # AnnA : Anki neuronal Appendix
-# *Careful, this project is currently being refactored from scratch*
+# **Careful, this project is currently being refactored from scratch, ETA : end of summer 2021**
 Plot the latent space of the semantic relation of your anki cards showing clusters of related notions. In other words, this finds "semantic siblings" in your collection.
 
 
