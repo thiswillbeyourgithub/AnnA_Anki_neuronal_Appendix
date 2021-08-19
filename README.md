@@ -31,23 +31,9 @@ Plot the latent space of the semantic relation of your anki cards showing cluste
 
 ## TODO
 ### pandas and optimization
-* write the code as a python file with function
-* rename it AnnA : Anki neural network Appendix
-* use ankiconnect instead of that dumb way to access the db..., the file "ankiconnect.py" contains all you need, but you have to do a PR to add flagging and burying of cards, or just add a way to call "exec" from ankiconnect
-* add a setting to specify if you want to use sfld or flds
-* use merge to find quickly the deckname of a card and its notetype, the current way is way too slow for no good reason
-* use .str.vectorized methods for the replacements : https://stackoverflow.com/questions/22588316/pandas-applying-regex-to-replace-values
-* make it OS agnostic, especially the "os.system" lines and make the path changeable
-* add a way to keep +, %, &, numbers and inequalities like ">5%"
-* add a way to specify if one wants to keep the OCR of the cards
-* add a way to replace greek letter + add a setting for it : https://gist.github.com/beniwohli/765262
-* add a way to set the stop words language
 * add a setting to enable or not the clustering (which takes the most time)
-* add a way to display found capitalized acronyms then to replace acronyms on the fly according to a user defined list
-* use tupple instead of lists to make it faster in some places
 * add a setting to colorize the plot using tags instead of clusters, or notetypes
 * add tags to cards containing the cluster number as well as a few words to describe the topic of the cluster, it would connect nicely with the other mindmapping addon
-* there is something good to to with adding the last 7 days of review that are mature cards to reduce the load 
 
 ### ML
 * you actually have to do the clustering BEFORE the dimensionnality reduction
