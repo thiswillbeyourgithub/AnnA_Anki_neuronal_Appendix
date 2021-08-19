@@ -36,7 +36,6 @@ Plot the latent space of the semantic relation of your anki cards showing cluste
 * add tags to cards containing the cluster number as well as a few words to describe the topic of the cluster, it would connect nicely with the other mindmapping addon
 
 ### ML
-* you actually have to do the clustering BEFORE the dimensionnality reduction
 * try with miniBatchKMeans to seed if it speeds up the clustering, otherwise go with HDBSCAN
 * use sentence vectorization from https://github.com/UKPLab/sentence-transformers instead of tf-idf
     * the video of CodeEmporium "Topic Modeling with BERT" is exactly what you need : https://www.youtube.com/watch?v=TLPmlVeEf1k

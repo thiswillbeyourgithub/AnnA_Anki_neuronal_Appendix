@@ -7,6 +7,8 @@ import pandas as pd
 from pprint import pprint
 from tqdm import tqdm
 import re
+from prompt_toolkit import prompt
+from prompt_toolkit.completion import WordCompleter
 
 import numpy as np
 from nltk.corpus import stopwords
@@ -68,9 +70,13 @@ def ankiconnect_invoke(action, **params):
     requestJson = json.dumps(request_wrapper(action, **params)).encode('utf-8')
     if verb is True:
         pprint(requestJson)
-    response = json.load(urllib.request.urlopen(urllib.request.Request(
-                                                'http://localhost:8765',
-                                                requestJson)))
+    try:
+        response = json.load(urllib.request.urlopen(
+                                urllib.request.Request('http://localhost:8765',
+                                                       requestJson)))
+    except ConnectionRefusedError as e:
+        print(f"{e}: is Anki open and ankiconnect enabled?")
+        raise SystemExit()
     if verb is True:
         pprint(response)
     if len(response) != 2:
@@ -120,6 +126,9 @@ def sanitize_text(text):
     text = re.sub("<.*?>", " ", text)
     text = re.sub(r"{{c\d+?::", "", text)
     text = re.sub("}}|::", "", text)
+    text = text.replace("&nbsp;", " ")
+    text = text.replace("&gt;", ">")
+    text = text.replace("&l;;", "<")
     return text
 
 
@@ -144,29 +153,6 @@ def remove_stopwords(text):
 # machine learning related functions
 
 
-def get_cluster_topic(cluster_note_dic, all_note_dic, cluster_nb):
-    "given notes, outputs the topic that is likely the subject of the cards"
-    pass
-
-
-def find_similar_notes(note):
-    "given a note, find similar other notes with highest cosine similarity"
-    pass
-
-
-def find_notes_similar_to_input(user_input, nlimit):
-    "given a text input, find notes with highest cosine similarity"
-    pass
-
-
-def show_latent_space(query):
-    """
-    given a query, will open plotly and show a 2d scatterplot of your cards
-    semantically arranged.
-    """
-    # TODO test if the cards contain the relevant tags otherwise exit
-    pass
-
 
 ##################################################
 # main loop
@@ -185,70 +171,50 @@ if __name__ == "__main__":
 
     # getting correct deck name
     decklist = get_deckname_list()
-    ready = False
-    while ready is False:
-        candidate = []
-        for d in decklist:
-            if deck in d:
-                candidate = candidate + [d]
-        if len(candidate) == 1:
-            ans = input(f"Is {candidate[0]} the correct deck ? (y/n)\n>")
-            if ans != "y" and ans != "yes":
-                print("Exiting.")
-                raise SystemExit()
-            else:
-                deck = candidate[0]
-                ready = True
-        else:
-            print("Several corresponding decks found:")
-            for i, c in enumerate(candidate):
-                print(f"#{i} - {c}")
-            ans = input("Which deck do you chose?\
-(input the corresponding number)\n>")
-            print("")
-            try:
-                deck = candidate[int(ans)]
-                ready = True
-            except (ValueError, IndexError) as e:
-                print(f"Wrong number: {e}\n")
-                ready = False
-
+    if deck is not None:
+        if deck not in decklist:
+            print("Couldn't find this deck.")
+            deck = None
+    if deck is None:
+        auto_complete = WordCompleter(decklist,
+                                      match_middle=True,
+                                      ignore_case=True)
+        deck = ""
+        while deck not in decklist:
+            deck = prompt("Enter the name of the deck to use:\n>", completer=auto_complete)
 
 
     # extracting card list
     print("Getting due card from this deck...")
-    due_cards = get_card_id_from_query(f"deck:{deck} is:due is:review -is:learn")
+    due_cards = get_card_id_from_query(f"deck:{deck} is:due is:review -is:learn -is:suspended -is:buried")
 
     print("Getting cards that where rated in the last week from this deck...")
-    rated_cards = get_card_id_from_query(f"deck:{deck} rated:7")
+    rated_cards = get_card_id_from_query(f"deck:{deck} rated:7 -is:suspended")
 
-    # checks that rated_cards and due_cards don't overlap
-    overlap = []
-    for r in rated_cards:
-        if r in due_cards:
-            print(f"Card with id {r} is both rated in the last 7 days and due!")
-            overlap = overlap + [r]
-    if overlap != []:
-        print("This should never happen!")
-        raise SystemExit()
+    for i in due_cards:  # removes overlap
+        if i in rated_cards:
+            rated_cards.remove(i)
 
     # extracting card information
-    all_rlvt_cards = list(set(rated_cards + due_cards))
-    #all_rlvt_cards = all_rlvt_cards[0:150]  # TODO
-    print(f"Getting information from relevant {len(all_rlvt_cards)} cards...")
+    all_rlvt_cards = list(rated_cards + due_cards)
+    print(f"Fetching information from relevant {len(all_rlvt_cards)} cards...")
     list_cardsInfo = get_cards_info_from_card_id(all_rlvt_cards)
 
-    # creating dataframe
+    # creating pandas dataframe
     df = pd.DataFrame(columns=["cardId"])
     df = df.set_index("cardId")
     for i in list_cardsInfo:
         i = dict(i)
         df = df.append(i, ignore_index=True)
+    df.drop(columns=["answer", "question", "css", "fieldOrder", "ord"], inplace=True)
     df.sort_index()
 
     # cleaning up text and keeping only relevant fields
     print("Cleaning up text...")
-    rlvt_fields = ["Body", "More", "Source", "Header", "value"]
+    rlvt_fields = ["Body", "More", "Source", "Header", "value",
+                   "Spanish word with article", "English",
+                   "Simple example sentences",
+                   "Image", "Header", "Extra 1", "Front", "Back"]
     df["cleaned_text"] = [sanitize_fields(x) for x in tqdm(df["fields"])]
     df.sort_index()
 
@@ -256,7 +222,11 @@ if __name__ == "__main__":
     stops = []
     if lang_list != []:
         for i in lang_list:
-            stops = stops + stopwords.words(i)
+            try:
+                stops = stops + stopwords.words(i)
+            except Exception as e:
+                print(f"{e}: nltk doesn't seem to have a stopwords list for\
+language '{i}'")
     else:
         stops = []
 
@@ -267,6 +237,7 @@ if __name__ == "__main__":
 
     print("Loading BERT tokenizer...")
     tokenizer2 = transformers.BertTokenizerFast.from_pretrained('bert-base-multilingual-uncased')
+
     print("Tokenizing text using BERT...")
     df["tkns"] = [' '.join(
         tokenizer2.convert_ids_to_tokens(tokenizer2.encode(
@@ -277,30 +248,54 @@ if __name__ == "__main__":
     print("Loading Tfidf...")
     tfidf = TfidfVectorizer(tokenizer=None)
     print("Computing Tfidf vectors...")
-    tfs = tfidf.fit_transform(df['tkns'])
-    tfs_reduced = TruncatedSVD(n_components=20,
-                               random_state=42).fit_transform(tfs)
+    tfs = tfidf.fit_transform(tqdm(df['tkns']))
+
+    print("Reducing Tfidf vectors to 100 dimensions using SVD...")
+    tfs_svd = TruncatedSVD(n_components=100,
+                           random_state=42).fit_transform(tfs)
+    df["tfs_svd"] = [list(x) for x in tfs_svd]
 
     print("Computing vectors from sentence-bert...")
     model = SentenceTransformer('distiluse-base-multilingual-cased-v1')
-    df["sbert_vec"] = [model.encode(x) for x in df["cleaned_text_wo_sw"]]
+    df["sbert_vec"] = [model.encode(x) for x in tqdm(df["cleaned_text"])]
 
-    print("Reducing sentence-BERT vectors to 20 vectors using PCA...")
-    vec_n = [int(x) for x in range(0, 512)]
-    df_s_vec = pd.DataFrame(columns=["cardId"] + vec_n)
-    df_s_vec["cardId"] = df.index
-    df_s_vec = df_s_vec.set_index("cardId")
+    print("Combining vectors from tfidf and sentence-BERT into\
+the same matrix...")
+    df["combo_vec"] = [list(df.loc[i, "sbert_vec"]) + df.loc[i, "tfs_svd"]
+                       for i in df.index]
+
+    print("Reducing combo vectors to 50 dimensions only using PCA...")
+    vec_n = [int(x) for x in range(len(df.loc[0,"combo_vec"]))]
+    df_c_vec = pd.DataFrame(columns=["cardId"] + vec_n)
+    df_c_vec["cardId"] = df.index
+    df_c_vec = df_c_vec.set_index("cardId")
 
     for i in df.index:
-        df_s_vec.loc[i] = df.loc[i, "sbert_vec"]
+        df_c_vec.loc[i] = df.loc[i, "combo_vec"]
 
-    pca_fitted = PCA(n_components=20, random_state=42).fit(df_s_vec)
-    df_s_vec = pca_fitted.transform(df_s_vec)
+    pca_fitted = PCA(n_components=2, random_state=42).fit(df_c_vec)
+    df_c_vec = pca_fitted.transform(df_c_vec)
+    df["combo_vec_pca"] = [list(x) for x in df_c_vec]
+#    print("Reducing sentence-BERT vectors to 50 dimension using PCA...")
+#    # PCA seemes to only work when given a full dataframe with each column
+#    # a vector so  I had to create it
+#    vec_n = [int(x) for x in range(0, 512)]
+#    df_s_vec = pd.DataFrame(columns=["cardId"] + vec_n)
+#    df_s_vec["cardId"] = df.index
+#    df_s_vec = df_s_vec.set_index("cardId")
+#
+#    for i in df.index:
+#        df_s_vec.loc[i] = df.loc[i, "sbert_vec"]
+#
+#    pca_fitted = PCA(n_components=50, random_state=42).fit(df_s_vec)
+#    df_s_vec = pca_fitted.transform(df_s_vec)
+#    df["sbert_PCA"] = [list(x) for x in df_s_vec]
 
-    # TODO : do the reverse to get the vector as lists in df
-    #df["sbert_vec_PCA"] = 
+    print("Clustering using KMeans...")
+    kmeans = KMeans(n_clusters=50)
+    df['cluster_kmeans'] = kmeans.fit_predict(df_c_vec)
 
-    print("Computing UMAP embeddings...")
+    print("Computing UMAP embeddings in 2D...")
     umap_embed = umap.UMAP(
             n_jobs=-1,
             verbose=3,
@@ -312,25 +307,24 @@ if __name__ == "__main__":
             n_neighbors=5,
             min_dist=1,
             n_epochs=500,
-            target_n_neighbors=20).fit_transform(tfs_reduced)
+            target_n_neighbors=20).fit_transform(df_c_vec)
 
-    print("Clustering using KMeans...")
-    kmeans = KMeans(n_clusters=20)
-    df['cluster_kmeans_umap_embed'] = kmeans.fit_predict(tfs_reduced)
 
     print("Plotting results...")
     fig = px.scatter(df,
-                     title="AMiMA",
+                     title="AnnA Anki neuronal Appendix",
+                     #x=[x[0] for x in df["combo_vec_pca"]],
+                     #y=[x[1] for x in df["combo_vec_pca"]],
                      x=umap_embed[:,0],
                      y=umap_embed[:,1],
-                     color=df["cluster_kmeans_umap_embed"],
+                     color=df["cluster_kmeans"],
                      hover_data=["cleaned_text"])
     fig.show()
     breakpoint()
 
 
 ##################################################
-# TEMPORARY JAILED
+# TODO
 def add_tag_to_card_id(card_id, tag):
     "add tag to card id"
     # first gets note it from card id
@@ -361,3 +355,25 @@ def add_actionTags(note_dic):
     The action can be "bury" or "study_today"
     Currently, you then have to manually bury them or study them into anki
     """
+
+def get_cluster_topic(cluster_note_dic, all_note_dic, cluster_nb):
+    "given notes, outputs the topic that is likely the subject of the cards"
+    pass
+
+
+def find_similar_notes(note):
+    "given a note, find similar other notes with highest cosine similarity"
+    pass
+
+
+def find_notes_similar_to_input(user_input, nlimit):
+    "given a text input, find notes with highest cosine similarity"
+    pass
+
+
+def show_latent_space(query):
+    """
+    given a query, will open plotly and show a 2d scatterplot of your cards
+    semantically arranged.
+    """
+    # TODO test if the cards contain the relevant tags otherwise exit
