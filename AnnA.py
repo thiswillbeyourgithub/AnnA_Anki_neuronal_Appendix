@@ -122,8 +122,12 @@ def sanitize_text(text):
         import user_acronym_list
         for a, b in user_acronym_list.acronym_list.items():
             text = re.sub(a, b, text)
-    text = re.sub('\u001F', " ", text) # removes \x1F
-    text = re.sub("<.*?>", " ", text)
+    text = re.sub(r'[a-zA-Z0-9-]+\....', " ", text)  # removes mediafile
+    text = re.sub('\\n|<div>|</div>|<br>|<span>|</span>|<li>|</li>|<ul>|</ul>',
+            " ", text)  # removes newline
+    text = re.sub("<a href.*?</a>", " ", text)  # removes links
+    text = re.sub("<.*?>", " ", text)  # removes html tags
+    text = re.sub('\u001F', " ", text)  # removes \x1F
     text = re.sub(r"{{c\d+?::", "", text)
     text = re.sub("}}|::", "", text)
     text = text.replace("&nbsp;", " ")
