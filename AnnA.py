@@ -1,3 +1,5 @@
+import pdb
+import signal
 import os
 import argparse
 import json
@@ -10,17 +12,22 @@ import re
 from prompt_toolkit import prompt
 from prompt_toolkit.completion import WordCompleter
 
-import numpy as np
 from nltk.corpus import stopwords
-import transformers
 from sentence_transformers import SentenceTransformer
-from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.cluster import KMeans
-from sklearn.decomposition import TruncatedSVD, PCA
+#import numpy as np
+#import transformers
+#from sklearn.feature_extraction.text import TfidfVectorizer
+#from sklearn.decomposition import TruncatedSVD
+#from sklearn.metrics import
+from sklearn.decomposition import PCA
 import plotly.express as px
 import umap.umap_
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
+
+# makes the script interuptible, resume it using c+enter
+signal.signal(signal.SIGINT, (lambda signal, frame : pdb.set_trace()))
 
 
 ##################################################
@@ -74,7 +81,7 @@ def ankiconnect_invoke(action, **params):
         response = json.load(urllib.request.urlopen(
                                 urllib.request.Request('http://localhost:8765',
                                                        requestJson)))
-    except ConnectionRefusedError as e:
+    except (ConnectionRefusedError, urllib.error.URLError) as e:
         print(f"{e}: is Anki open and ankiconnect enabled?")
         raise SystemExit()
     if verb is True:
@@ -103,7 +110,10 @@ def get_card_id_from_query(query):
 def get_cards_info_from_card_id(card_id):
     "get cardinfo from card id, works with either int of list of int"
     if isinstance(card_id, list):
-        return ankiconnect_invoke(action="cardsInfo", cards=card_id)
+        r_list = []
+        for card in tqdm(card_id):
+            r_list.extend(ankiconnect_invoke(action="cardsInfo", cards=[card]))
+        return r_list
     if isinstance(card_id, int):
         return ankiconnect_invoke(action="cardsInfo", cards=[card_id])
 
@@ -126,6 +136,7 @@ def sanitize_text(text):
     text = re.sub('\\n|<div>|</div>|<br>|<span>|</span>|<li>|</li>|<ul>|</ul>',
             " ", text)  # removes newline
     text = re.sub("<a href.*?</a>", " ", text)  # removes links
+    text = re.sub(r'http[s]?://\S*', " ", text)  # removes plaintext links
     text = re.sub("<.*?>", " ", text)  # removes html tags
     text = re.sub('\u001F', " ", text)  # removes \x1F
     text = re.sub(r"{{c\d+?::", "", text)
@@ -161,6 +172,7 @@ def remove_stopwords(text):
 ##################################################
 # main loop
 if __name__ == "__main__":
+
     # printing banner
     ascii_banner = pyfiglet.figlet_format("AnnA")
     print(ascii_banner)
@@ -239,36 +251,43 @@ language '{i}'")
     df.sort_index()
 
 
-    print("Loading BERT tokenizer...")
-    tokenizer2 = transformers.BertTokenizerFast.from_pretrained('bert-base-multilingual-uncased')
+# removed, tfidf is super fast even on very large matrices BUT sentence bert
+# includes the wordpiece algorithm
 
-    print("Tokenizing text using BERT...")
-    df["tkns"] = [' '.join(
-        tokenizer2.convert_ids_to_tokens(tokenizer2.encode(
-            i,
-            add_special_tokens=False,
-            truncation=False))) for i in tqdm(df["cleaned_text_wo_sw"])]
-
-    print("Loading Tfidf...")
-    tfidf = TfidfVectorizer(tokenizer=None)
-    print("Computing Tfidf vectors...")
-    tfs = tfidf.fit_transform(tqdm(df['tkns']))
-
-    print("Reducing Tfidf vectors to 100 dimensions using SVD...")
-    tfs_svd = TruncatedSVD(n_components=100,
-                           random_state=42).fit_transform(tfs)
-    df["tfs_svd"] = [list(x) for x in tfs_svd]
+#    print("Loading BERT tokenizer...")
+#    tokenizer2 = transformers.BertTokenizerFast.from_pretrained('bert-base-multilingual-uncased')
+#
+#    print("Tokenizing text using BERT...")
+#    df["tkns"] = [' '.join(
+#        tokenizer2.convert_ids_to_tokens(tokenizer2.encode(
+#            i,
+#            add_special_tokens=False,
+#            truncation=True))) for i in tqdm(df["cleaned_text_wo_sw"])]
+#
+#    print("Loading Tfidf...")
+#    tfidf = TfidfVectorizer(tokenizer=None)
+#    print("Computing Tfidf vectors...")
+#    tfs = tfidf.fit_transform(tqdm(df['tkns']))
+#
+#    print("Reducing Tfidf vectors to 100 dimensions using SVD...")
+#    tfs_svd = TruncatedSVD(n_components=512,
+#                           random_state=42).fit_transform(tfs)
+#    df["tfs_svd"] = [list(x) for x in tfs_svd]
 
     print("Computing vectors from sentence-bert...")
     model = SentenceTransformer('distiluse-base-multilingual-cased-v1')
-    df["sbert_vec"] = [model.encode(x) for x in tqdm(df["cleaned_text"])]
+    df["sbert_vec"] = model.encode(df["cleaned_text"],
+                                    normalize_embeddings=True,
+                                    output_value="token_embeddings",
+                                    show_progress_bar=True)
 
-    print("Combining vectors from tfidf and sentence-BERT into\
-the same matrix...")
-    df["combo_vec"] = [list(df.loc[i, "sbert_vec"]) + df.loc[i, "tfs_svd"]
-                       for i in df.index]
+    breakpoint()
+#    print("Combining vectors from tfidf and sentence-BERT into\
+#the same matrix...")
+#    df["combo_vec"] = [list(df.loc[i, "sbert_vec"]) + df.loc[i, "tfs_svd"]
+#                       for i in df.index]
 
-    print("Reducing combo vectors to 50 dimensions only using PCA...")
+    print("Reducing sentence-BERT vectors to 50 dimensions only using PCA...")
     vec_n = [int(x) for x in range(len(df.loc[0,"combo_vec"]))]
     df_c_vec = pd.DataFrame(columns=["cardId"] + vec_n)
     df_c_vec["cardId"] = df.index

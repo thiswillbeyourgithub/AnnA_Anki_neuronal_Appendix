@@ -36,6 +36,8 @@ Plot the latent space of the semantic relation of your anki cards showing cluste
 * add tags to cards containing the cluster number as well as a few words to describe the topic of the cluster, it would connect nicely with the other mindmapping addon
 
 ### ML
+* stop using tf-idf because sentence bert includes wordpiece algorithm, even though tdidf is super fast
+* the website https://www.sbert.net/docs/pretrained_models.html contains everything you need to use
 * try with miniBatchKMeans to seed if it speeds up the clustering, otherwise go with HDBSCAN
 * use sentence vectorization from https://github.com/UKPLab/sentence-transformers instead of tf-idf
     * the video of CodeEmporium "Topic Modeling with BERT" is exactly what you need : https://www.youtube.com/watch?v=TLPmlVeEf1k
@@ -48,6 +50,7 @@ Plot the latent space of the semantic relation of your anki cards showing cluste
 * see if it's possible to search for a card based on a search by comparing vector similarity
 
 ### long term
+* compare best models of sentencebert
 * add repulsion between cards based on proximity to influence the fuzz
 * re read this article : http://mccormickml.com/2021/05/27/question-answering-system-tf-idf/
 * respect PEP8, but only after I finished using a notebook and moved to a proper python script
