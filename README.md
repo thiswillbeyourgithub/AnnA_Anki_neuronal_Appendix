@@ -31,15 +31,12 @@ Plot the latent space of the semantic relation of your anki cards showing cluste
 
 ## TODO
 ### pandas and optimization
-* add a setting to enable or not the clustering (which takes the most time)
-* add a setting to colorize the plot using tags instead of clusters, or notetypes
+* add way to reload only cards that need reloading using cardModTime
 * add tags to cards containing the cluster number as well as a few words to describe the topic of the cluster, it would connect nicely with the other mindmapping addon
 * use a class instead of functions
-* add way to reload only cards that need reloading using cardModTime
 * cite the authors of sentence bert
 
 ### ML
-* understand why wordpiece outputs 65 vectors and not 512
 * the website https://www.sbert.net/docs/pretrained_models.html contains everything you need to use
 * try with miniBatchKMeans to seed if it speeds up the clustering, otherwise go with HDBSCAN
 * use sentence vectorization from https://github.com/UKPLab/sentence-transformers instead of tf-idf

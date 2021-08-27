@@ -15,11 +15,10 @@ from prompt_toolkit.completion import WordCompleter
 from nltk.corpus import stopwords
 from sentence_transformers import SentenceTransformer
 from sklearn.cluster import KMeans
-#import numpy as np
-#import transformers
-#from sklearn.feature_extraction.text import TfidfVectorizer
-#from sklearn.decomposition import TruncatedSVD
-#from sklearn.metrics import
+import transformers
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.decomposition import TruncatedSVD
+from sklearn.metrics import cosine_distances
 from sklearn.decomposition import PCA
 import plotly.express as px
 import umap.umap_
@@ -134,7 +133,7 @@ def sanitize_text(text):
             text = re.sub(a, b, text)
     text = re.sub(r'[a-zA-Z0-9-]+\....', " ", text)  # removes mediafile
     text = re.sub('\\n|<div>|</div>|<br>|<span>|</span>|<li>|</li>|<ul>|</ul>',
-            " ", text)  # removes newline
+                  " ", text)  # removes newline
     text = re.sub("<a href.*?</a>", " ", text)  # removes links
     text = re.sub(r'http[s]?://\S*', " ", text)  # removes plaintext links
     text = re.sub("<.*?>", " ", text)  # removes html tags
@@ -147,14 +146,13 @@ def sanitize_text(text):
     return text
 
 
-def sanitize_fields(field_dic):
+def sanitize_fields(field_dic, field_list):
     to_return = ""
     for side in field_dic.keys():
         for a, b in field_dic[side].items():
-            if a in rlvt_fields:
+            if a in field_list:
                 to_return += sanitize_text(b)
     return to_return
-
 
 alphaNumeric = re.compile("[a-z0-9A-Z]{1,25}")
 def remove_stopwords(text):
@@ -171,7 +169,7 @@ def remove_stopwords(text):
 
 ##################################################
 # main loop
-if __name__ == "__main__":
+#if __name__ == "__main__":
 
     # printing banner
     ascii_banner = pyfiglet.figlet_format("AnnA")
@@ -204,8 +202,8 @@ if __name__ == "__main__":
     print("Getting due card from this deck...")
     due_cards = get_card_id_from_query(f"deck:{deck} is:due is:review -is:learn -is:suspended -is:buried")
 
-    print("Getting cards that where rated in the last week from this deck...")
-    rated_cards = get_card_id_from_query(f"deck:{deck} rated:7 -is:suspended")
+    print("Getting cards that where rated in the last 4 days from this deck...")
+    rated_cards = get_card_id_from_query(f"deck:{deck} rated:4 -is:suspended")
 
     for i in due_cards:  # removes overlap
         if i in rated_cards:
@@ -217,21 +215,20 @@ if __name__ == "__main__":
     list_cardsInfo = get_cards_info_from_card_id(all_rlvt_cards)
 
     # creating pandas dataframe
-    df = pd.DataFrame(columns=["cardId"])
-    df = df.set_index("cardId")
-    for i in list_cardsInfo:
-        i = dict(i)
-        df = df.append(i, ignore_index=True)
+    df = pd.DataFrame(columns=["cardId"]).set_index("cardId")
+    for card_dic in list_cardsInfo:
+        card_dic = dict(card_dic)
+        df = df.append(card_dic, ignore_index=True)
     df.drop(columns=["answer", "question", "css", "fieldOrder", "ord"], inplace=True)
     df.sort_index()
 
     # cleaning up text and keeping only relevant fields
     print("Cleaning up text...")
-    rlvt_fields = ["Body", "More", "Source", "Header", "value",
+    rlvt_fields = ["Body", "More", "Header", "value",
                    "Spanish word with article", "English",
                    "Simple example sentences",
                    "Image", "Header", "Extra 1", "Front", "Back"]
-    df["cleaned_text"] = [sanitize_fields(x) for x in tqdm(df["fields"])]
+    df["cleaned_text"] = [sanitize_fields(x, rlvt_fields) for x in tqdm(df["fields"])]
     df.sort_index()
 
     # getting list of stop words
@@ -251,68 +248,56 @@ language '{i}'")
     df.sort_index()
 
 
-# removed, tfidf is super fast even on very large matrices BUT sentence bert
-# includes the wordpiece algorithm
+    print("Loading BERT tokenizer...")
+    tokenizer2 = transformers.BertTokenizerFast.from_pretrained('bert-base-multilingual-uncased')
 
-#    print("Loading BERT tokenizer...")
-#    tokenizer2 = transformers.BertTokenizerFast.from_pretrained('bert-base-multilingual-uncased')
-#
-#    print("Tokenizing text using BERT...")
-#    df["tkns"] = [' '.join(
-#        tokenizer2.convert_ids_to_tokens(tokenizer2.encode(
-#            i,
-#            add_special_tokens=False,
-#            truncation=True))) for i in tqdm(df["cleaned_text_wo_sw"])]
-#
-#    print("Loading Tfidf...")
-#    tfidf = TfidfVectorizer(tokenizer=None)
-#    print("Computing Tfidf vectors...")
-#    tfs = tfidf.fit_transform(tqdm(df['tkns']))
-#
-#    print("Reducing Tfidf vectors to 100 dimensions using SVD...")
-#    tfs_svd = TruncatedSVD(n_components=512,
-#                           random_state=42).fit_transform(tfs)
-#    df["tfs_svd"] = [list(x) for x in tfs_svd]
+    print("Tokenizing text using BERT...")
+    df["tkns"] = [' '.join(
+        tokenizer2.convert_ids_to_tokens(tokenizer2.encode(
+            i,
+            add_special_tokens=False,
+            truncation=True))) for i in tqdm(df["cleaned_text_wo_sw"])]
+
+    print("Loading Tfidf...")
+    tfidf = TfidfVectorizer(tokenizer=None)
+    print("Computing Tfidf vectors...")
+    tfs = tfidf.fit_transform(tqdm(df['tkns']))
+
+    print("Reducing Tfidf vectors to 100 dimensions using SVD...")
+    tfs_svd = TruncatedSVD(n_components=512,
+                           random_state=42).fit_transform(tfs)
+    df["tfs_svd"] = [list(x) for x in tfs_svd]
+
 
     print("Computing vectors from sentence-bert...")
     model = SentenceTransformer('distiluse-base-multilingual-cased-v1')
-    df["sbert_vec"] = model.encode(df["cleaned_text"],
+    df["sbert_vec"] = [model.encode(x,
                                     normalize_embeddings=True,
                                     output_value="token_embeddings",
-                                    show_progress_bar=True)
+                                    convert_to_numpy=True,
+                                    show_progress_bar=False)
+                       for x in tqdm(df["cleaned_text"])]
 
-    breakpoint()
-#    print("Combining vectors from tfidf and sentence-BERT into\
-#the same matrix...")
-#    df["combo_vec"] = [list(df.loc[i, "sbert_vec"]) + df.loc[i, "tfs_svd"]
-#                       for i in df.index]
+    print("Combining vectors from tfidf and sentence-BERT into\
+the same matrix...")
+    df["combo_vec"] = [list(df.loc[i, "sbert_vec"]) + df.loc[i, "tfs_svd"]
+                       for i in df.index]
 
-    print("Reducing sentence-BERT vectors to 50 dimensions only using PCA...")
-    vec_n = [int(x) for x in range(len(df.loc[0,"combo_vec"]))]
-    df_c_vec = pd.DataFrame(columns=["cardId"] + vec_n)
-    df_c_vec["cardId"] = df.index
-    df_c_vec = df_c_vec.set_index("cardId")
+
+    print("Reducing sentence-BERT vectors to 50 dimensions using PCA...")
+    # PCA seemes to only work when given a full dataframe with each column
+    # a vector so  I had to create it
+    vec_n = [int(x) for x in range(0, 512)]
+    df_s_vec = pd.DataFrame(columns=["cardId"] + vec_n)
+    df_s_vec["cardId"] = df.index
+    df_s_vec = df_s_vec.set_index("cardId")
 
     for i in df.index:
-        df_c_vec.loc[i] = df.loc[i, "combo_vec"]
+        df_s_vec.loc[i] = df.loc[i, "sbert_vec"]
 
-    pca_fitted = PCA(n_components=2, random_state=42).fit(df_c_vec)
-    df_c_vec = pca_fitted.transform(df_c_vec)
-    df["combo_vec_pca"] = [list(x) for x in df_c_vec]
-#    print("Reducing sentence-BERT vectors to 50 dimension using PCA...")
-#    # PCA seemes to only work when given a full dataframe with each column
-#    # a vector so  I had to create it
-#    vec_n = [int(x) for x in range(0, 512)]
-#    df_s_vec = pd.DataFrame(columns=["cardId"] + vec_n)
-#    df_s_vec["cardId"] = df.index
-#    df_s_vec = df_s_vec.set_index("cardId")
-#
-#    for i in df.index:
-#        df_s_vec.loc[i] = df.loc[i, "sbert_vec"]
-#
-#    pca_fitted = PCA(n_components=50, random_state=42).fit(df_s_vec)
-#    df_s_vec = pca_fitted.transform(df_s_vec)
-#    df["sbert_PCA"] = [list(x) for x in df_s_vec]
+    pca_fitted = PCA(n_components=50, random_state=42).fit(df_s_vec)
+    df_s_vec = pca_fitted.transform(df_s_vec)
+    df["sbert_PCA"] = [list(x) for x in df_s_vec]
 
     print("Clustering using KMeans...")
     kmeans = KMeans(n_clusters=50)
@@ -338,8 +323,8 @@ language '{i}'")
                      title="AnnA Anki neuronal Appendix",
                      #x=[x[0] for x in df["combo_vec_pca"]],
                      #y=[x[1] for x in df["combo_vec_pca"]],
-                     x=umap_embed[:,0],
-                     y=umap_embed[:,1],
+                     x=umap_embed[:, 0],
+                     y=umap_embed[:, 1],
                      color=df["cluster_kmeans"],
                      hover_data=["cleaned_text"])
     fig.show()
