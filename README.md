@@ -37,16 +37,8 @@ Plot the latent space of the semantic relation of your anki cards showing cluste
 * cite the authors of sentence bert
 
 ### ML
-* the website https://www.sbert.net/docs/pretrained_models.html contains everything you need to use
 * try with miniBatchKMeans to seed if it speeds up the clustering, otherwise go with HDBSCAN
-* use sentence vectorization from https://github.com/UKPLab/sentence-transformers instead of tf-idf
-    * the video of CodeEmporium "Topic Modeling with BERT" is exactly what you need : https://www.youtube.com/watch?v=TLPmlVeEf1k
-        * he uses sentence transformers, gets the name of each cluster and uses HDBscan
-        * another example of c-tf-idf : https://www.sbert.net/examples/applications/clustering/README.html
-        * store the vectors in a file and reuse it to search for a card using ankiconnect to directly open the browser on a search
-* do sentenceBert and tf-idf to get vectors, L2-renormalize each then use PCA, but keep the PCA vector otherwise you can't do information retrieval
 * automatically create a phylogeny of cards based on a distance matrix and see if it's an appropriate mind map, plotly is suitable for this kind of tree
-* try to UMAP down to 1 dimension to see if you can use it to optimize the review queue, but note that distance is not conserved in UMAP and maybe PCA should be used instead
 * see if it's possible to search for a card based on a search by comparing vector similarity
 
 ### long term
