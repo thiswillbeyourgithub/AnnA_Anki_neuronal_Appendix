@@ -69,3 +69,4 @@ Plot the latent space of the semantic relation of your anki cards showing cluste
 
 
 ## Credits and links that helped me a lot
+    * [Corentin Sautier](https://github.com/CSautier/) for his many many insights and suggestions on ML and python.
