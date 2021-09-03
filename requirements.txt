@@ -26,3 +26,5 @@ transformers == 4.3.2
 
 # test/anki_pandas_v3.ipynb: 14
 umap == 0.1.1
+
+tables

@@ -1,4 +1,3 @@
-import random
 import pdb
 import signal
 import os
@@ -11,40 +10,51 @@ from tqdm import tqdm
 import re
 from prompt_toolkit import prompt
 from prompt_toolkit.completion import WordCompleter
-
-from nltk.corpus import stopwords
-from sentence_transformers import SentenceTransformer
-from sklearn.cluster import KMeans, DBSCAN, AgglomerativeClustering
-import transformers
+from glob import glob
+from pathlib import Path
+import threading
+from sklearn.feature_extraction.text import TfidfTransformer
 import scipy.sparse as sp
-from sklearn.preprocessing import normalize
-from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer, TfidfTransformer
-from sklearn.decomposition import TruncatedSVD
-from sklearn.metrics.pairwise import paired_cosine_distances
-from sklearn.decomposition import PCA
-import plotly.express as px
-import umap.umap_
 import numpy as np
 
+# avoids annoying warning
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
 # makes the script interuptible, resume it using c+enter
 signal.signal(signal.SIGINT, (lambda signal, frame: pdb.set_trace()))
 
 
-# I put those three lines here because they are long to run
-# hence I don't want to rerun them at each new instance of AnnA
-print("Loading tokenizers...")
-tokenizer_bert = transformers.BertTokenizerFast.from_pretrained(
-        'bert-base-multilingual-uncased'
-        )
-sbert = SentenceTransformer('distiluse-base-multilingual-cased-v1')
-# this variable contains as key a notetype model name and as value the
+# This variable contains as key a notetype model name and as value the
 # name of the fields to keep, in order
 # ex : "basic": ["Front", "Back"]
-field_dic = {"clozolkor": ["Header", "Body"],
+field_dic = {
+             #"clozolkor": ["Header", "Body"],
+             "clozolkor": ["Body"],
              "occlusion": ["Header", "Image"]
              }
+
+def asynchronous_importer():
+    "used to asynchroneously import the modules, speeds up launch time"
+    global stopwords, SentenceTransformer, KMeans, DBSCAN, \
+        AgglomerativeClustering, transformers, sp, normalize, TfidfVectorizer,\
+        CountVectorizer, TruncatedSVD,\
+        pairwise_distances, PCA, px, umap, np, tokenizer_bert, sbert
+    from nltk.corpus import stopwords
+    from sentence_transformers import SentenceTransformer
+    from sklearn.cluster import KMeans, DBSCAN, AgglomerativeClustering
+    import transformers
+    from sklearn.preprocessing import normalize
+    from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer, TfidfTransformer
+    from sklearn.decomposition import TruncatedSVD
+    from sklearn.metrics import pairwise_distances
+    from sklearn.decomposition import PCA
+    import plotly.express as px
+    import umap.umap_
+    tokenizer_bert = transformers.BertTokenizerFast.from_pretrained(
+            'bert-base-multilingual-uncased'
+            )
+    sbert = SentenceTransformer('distiluse-base-multilingual-cased-v1')
+
 
 
 class AnnA:
@@ -57,14 +67,13 @@ class AnnA:
                  keep_ocr=False,
                  rated_last_X_days=4,
                  show_banner=True,
-                 SVD_dim=10,
-                 PCA_dim=10,
-                 n_cluster=8):
+                 card_limit=None,
+                 n_clusters=None):
         # printing banner
         if show_banner is True:
             ascii_banner = pyfiglet.figlet_format("AnnA")
             print(ascii_banner)
-            print("Anki neuronal Appendix\n\n")
+            print("(Anki neuronal Appendix)\n\n")
 
         # loading args etc
         self.deckname = deckname
@@ -74,13 +83,15 @@ class AnnA:
         self.stop_word_lang = stop_word_lang
         self.keep_ocr = keep_ocr
         self.rated_last_X_days = rated_last_X_days
-        self.SVD_dim = SVD_dim
-        self.PCA_dim = PCA_dim
-        self.n_cluster = n_cluster
+        self.card_limit = card_limit
+        self.n_clusters = n_clusters
+        self.combo_vec_red_dim = 50
 
         # loading backend stuf
         self.stop_words = self._gathering_stopwords()
+        import_thread.join()  # asynchroneous importing of large module
         self.tfidf = TfidfVectorizer(
+                                ngram_range=(1, 2),
                                 tokenizer=self._tokenizer_wrap,
                                 analyzer="word",
                                 norm="l2",
@@ -88,21 +99,18 @@ class AnnA:
                                 lowercase=True,
                                 stop_words=self.stop_words
                                 )
-        self.TSVD = TruncatedSVD(n_components=self.SVD_dim, random_state=42)
-        self.pca = PCA(n_components=self.PCA_dim, random_state=42)
+        self.TSVD = TruncatedSVD(n_components=512, random_state=42)
+        self.pca = PCA(n_components=self.combo_vec_red_dim, random_state=42)
         self.pca_disp = PCA(n_components=2, random_state=42)
 
         # actual execution
         self.deckname = self._check_deck(deckname)
         self._create_and_fill_df()
-        self._reset_index_dtype()
+        self.df = self._reset_index_dtype(self.df)
         self._format_card()
-        self._reset_index_dtype()
+        self.df = self._reset_index_dtype(self.df)
         self._vectors()
-        self._reset_index_dtype()
-        #self._distances()
-        self.do_clustering()
-        self.show_latent_space()
+        self.df = self._reset_index_dtype(self.df)
 
     def _gathering_stopwords(self):
         "store the completed list of stopwords to self.stops"
@@ -117,13 +125,14 @@ class AnnA:
             stops = []
         self.stops = list(set(stops))
 
-    def _reset_index_dtype(self):
+    def _reset_index_dtype(self, df):
         """
         the index dtype (cardId) somehow gets turned into float so I turn it back into int
         """
-        temp = self.df.reset_index()
+        temp = df.reset_index()
         temp["cardId"] = temp["cardId"].astype(int)
-        self.df = temp.set_index("cardId")
+        df = temp.set_index("cardId")
+        return df
 
     def _ankiconnect_invoke(self, action, **params):
         "send requests to ankiconnect addon"
@@ -202,7 +211,10 @@ class AnnA:
         query = f"deck:{self.deckname} rated:{n_rated_days} -is:suspended"
         rated_cards = self._get_card_id_from_query(query)
 
-        combined_card_list = list(rated_cards + due_cards)
+        if self.card_limit is None:
+            combined_card_list = list(rated_cards + due_cards)
+        else:
+            combined_card_list = list(rated_cards + due_cards)[0:self.card_limit]
         if len(combined_card_list) < 50:
             print("You don't have enough due and rated cards!\nExiting.")
             raise SystemExit()
@@ -215,8 +227,8 @@ class AnnA:
         list_cardInfo = []
         df = pd.DataFrame()
 
-        n = len(due_cards + rated_cards)
-        print(f"Query Anki for information about {n} cards (takes ~{n//500}s) ...")
+        n = len(combined_card_list)
+        print(f"Asking Anki for information about {n} cards...\n")
         list_cardInfo.extend(self._ankiconnect_invoke(action="cardsInfo",
                              cards=combined_card_list))
 
@@ -256,7 +268,6 @@ class AnnA:
             for a, b in user_acronym_list.acronym_list.items():
                 text = re.sub(a, b, text)
         text = re.sub(r'[a-zA-Z0-9-]+\....', " ", text)  # media file name
-        text = re.sub("\d", "", text)
         text = re.sub('\\n|<div>|</div>|<br>|<span>|</span>|<li>|</li>|<ul>|</ul>',
                       " ", text)  # newline
         text = re.sub("<a href.*?</a>", " ", text)  # html links
@@ -264,20 +275,23 @@ class AnnA:
         text = re.sub("<.*?>", " ", text)  # remaining html tags
         text = re.sub('\u001F|&nbsp;', " ", text)
         text = re.sub(r"{{c\d+?::", "", text)
-        text = re.sub("}}|::", "", text)
+        text = re.sub("{{c|{{|}}|::", " ", text)
+        text = re.sub("\d", " ", text)
         text = text.replace("&gt;", ">")
         text = text.replace("&l;;", "<")
+        text = " ".join(text.split())  # multiple spaces
         return text.strip()
 
     def _format_card(self):
         "keep only relevant field of card then clean text"
         df = self.df
 
-        for index in tqdm(df.index, desc="Processing text", unit="card"):
+        for index in tqdm(df.index, desc="Parsing text content", unit="card"):
             card_model = df.loc[index, "modelName"]
             take_first_field = False
             fields_to_keep = []
 
+            # determines which is the corresponding model described in field_dic
             cnt=0
             for user_model in field_dic.keys():
                 if user_model.lower() in card_model.lower():
@@ -292,7 +306,9 @@ class AnnA:
 Edit the variable 'field_dic' to use {card_model}")
                 take_first_field = True
 
-            if take_first_field is True:
+            # concatenates the corresponding fields into one string:
+            if take_first_field is True:  # case where no corresponding model 
+                # found in field_dic
                 field_list = list(df.loc[index, "fields"])
                 for f in field_list:
                     order = df.loc[index,"fields"][f]["order"]
@@ -302,11 +318,10 @@ Edit the variable 'field_dic' to use {card_model}")
 
             comb_text = ""
             for f in fields_to_keep:
-                comb_text = comb_text + df.loc[index, "fields"][f]["value"] + ": "
-            comb_text = comb_text.strip()[:-2].replace(" : ", ": ")
-            if comb_text.startswith(": "):
-                comb_text = comb_text[2:]
-            df.loc[index, "comb_text"] = comb_text
+                to_add = df.loc[index, "fields"][f]["value"].strip()
+                if to_add != "":
+                    comb_text = comb_text + to_add + ": "
+            df.loc[index, "comb_text"] = comb_text.strip().replace(": :", "").strip()
         df["text"] = [self._format_text(x) for x in tqdm(df["comb_text"])]
         self.df = df.sort_index()
 
@@ -316,72 +331,147 @@ Edit the variable 'field_dic' to use {card_model}")
                                        add_special_tokens=False,
                                        truncation=True)
 
-    def _vectors(self):
+    def _vectors(self, df=None, save_cache=True):
         """
         Assigne vectors to each card
         df["tfs"] contains tf-idf vectors
         df["tfs_svd"] contains tf-idf vectors after SVD dim reduction
         df["sbert"] contains sentencebert vectors
-        df["sbert_pca"] contains sentencebert vectors after PCA dim reduction
-        df["combo_vec"] contains sbert_pca next to tfs_svd
+        df["combo_vec"] contains sbert next to tfs_svd
+        df["combo_vec_red"] contains combo_vec after pca dim reduction
+        The arguments allow to be called from, for example,
+        self.find_notes_similar_to_input(), otherwise it would be impossible to
+        get the same tf_idf vectors
         """
-        df = self.df
+        if df is None:
+            df = self.df
 
-        print("Computing Tfidf vectors...")
-        #tfs = self.tfidf.fit_transform(tqdm(df['tkns']))
+        print("\nComputing Tfidf vectors...")
         tfs = self.tfidf.fit_transform(tqdm(df['text']))
-        print(f"Reducing Tfidf vectors to {self.SVD_dim} dimensions using SVD...")
+        print(f"Reducing Tfidf vectors to 512 dimensions using SVD...")
         tfs2 = self.TSVD.fit_transform(tfs)
 
         df["tfs"] = [x for x in tfs]
         df["tfs_svd"] = [x for x in tfs2]
+        df = df.sort_index()
 
 
 
-        print("Computing vectors from sentence-bert...")
-        sentence_list = [x for x in df["text"]]
-        df["sbert"] = [x for x in sbert.encode(sentence_list,
+        print("\nChecking for cached sentence-bert HDF file...")
+        # WARNING: this part of the code is full of supersition
+        # as I had a lot of trouble making it work, with errors like 
+        # "Must have equal len keys and value when setting with an ndarray"
+        # and "setting an array element with a sequence."
+        # I ended up putting a lot of astype("object") and used .at instead of .loc
+        sbert_file = Path("./sbert_cache.hdf")
+        df["sbert"] = 0*len(df.index)
+        df["sbert"] = df["sbert"].astype("object")
+        loaded_sbert = 0
+        index_to_recompute = []
+
+        # reloads sbert vectors and only recomputes the new one:
+        if not sbert_file.exists():
+            print("sentence-bert cache not found, will create it.")
+            df_cache = pd.DataFrame(columns=["cardId", "mod", "text", "sbert"]).set_index("cardId")
+            index_to_recompute = df.index
+        else:
+            print("Found sentence-bert cache.")
+            df_cache = pd.read_hdf(sbert_file)
+            df_cache = self._reset_index_dtype(df_cache)
+            df_cache["sbert"] = df_cache["sbert"].astype("object")
+            df_cache["mod"] = df_cache["mod"].astype("object")
+            df_cache["text"] = df_cache["text"]
+            for i in df.index:
+                if i in df_cache.index and \
+                        (str(df_cache.loc[i, "mod"]) == str(df.loc[i, "mod"])) and \
+                        (str(df_cache.loc[i, "text"]) == str(df.loc[i, "text"])):
+                    df.at[i, "sbert"] = df_cache.loc[i, "sbert"].astype("object")
+                    loaded_sbert += 1
+                else:
+                    index_to_recompute.append(i)
+
+        print(f"Loaded {loaded_sbert} vectors from cache, will compute {len(index_to_recompute)} others...")
+        if len(index_to_recompute) != 0:
+            sentence_list = [df.loc[x, "text"]
+                    for x in df.index if x in index_to_recompute]
+            sentence_embeddings = sbert.encode(sentence_list,
                                                normalize_embeddings=True,
-                                               show_progress_bar=True)]
+                                               show_progress_bar=True)
 
-        print(f"Reducing sentence-BERT vectors to {self.PCA_dim} dimensions using PCA...")
-        # temporary datarame that holds the vectors of sbert to feed it to the PCA engine
-        df_temp = pd.DataFrame(
-                               columns=[f"V{x}" for x in range(len(df.loc[df.index[0], "sbert"]))],
-                               data=[x[0:] for x in df["sbert"]]
-                               )
-        df["sbert_pca"] = [list(x[0:]) for x in self.pca.fit_transform(df_temp)]
+            for i, ind in enumerate(tqdm(index_to_recompute)):
+                df.at[ind, "sbert"] = sentence_embeddings[i]
+
+        # stores newly computed sbert vectors in a file:
+        df_cache = self._reset_index_dtype(df_cache)
+        for i in [x for x in index_to_recompute if x not in df_cache.index]:
+            df_cache.loc[i, "sbert"] = df.loc[i, "sbert"].astype("object")
+            df_cache.loc[i, "mod"] = df.loc[i, "mod"].astype("object")
+            df_cache.loc[i, "text"] = df.loc[i, "text"]
+        for i in [x for x in index_to_recompute if x in df_cache.index]:
+            df_cache.loc[i, "sbert"] = df.loc[i, "sbert"].astype("object")
+            df_cache.loc[i, "mod"] = df.loc[i, "mod"].astype("object")
+            df_cache.loc[i, "text"] = df.loc[i, "text"]
+        df_cache = self._reset_index_dtype(df_cache)
+        if save_cache is True:
+            df_cache.to_hdf(f"sbert_cache.hdf", "sbert_cache", complevel=0, errors="")
 
 
         print("Concatenating vectors from tfidf and sentence-BERT...")
-        df["combo_vec"] = [ list(df.loc[x, "sbert_pca"]) + list(df.loc[x, "tfs_svd"])
-                           for x in df.index]
+        df["combo_vec"] = [np.array(list(df.loc[x, "sbert"]) + list(df.loc[x, "tfs_svd"])) for x in df.index]
+        print(f"Reducing combo_vec to {self.combo_vec_red_dim} vectors...")
+        df_temp = pd.DataFrame(
+            columns=["V"+str(x) for x in range(len(df.loc[df.index[0], "combo_vec"]))],
+            data=[x[0:] for x in df["combo_vec"]])
+#        out = umap.UMAP(n_jobs=-1,
+#                        verbose=0,
+#                        n_components=self.combo_vec_red_dim,
+#                        metric="cosine",
+#                        random_state=42,
+#                        init='spectral',
+#                        transform_seed=42,
+#                        n_neighbors=50,
+#                        min_dist=0.1).fit_transform(df_temp)
+        out = self.pca.fit_transform(df_temp)
+        df["combo_vec_red"] = [x for x in out]
         self.df = df.sort_index()
 
-    def _distances(self):
+    def compute_distance_matrix(self, method="cosine", input_col="combo_vec_red"):
         "compute distance matrix between cards"
+        print("Computing the distance matrix...")
         df = self.df
+        df_dist = pd.DataFrame(columns=list(df.index),
+                               index=list(df.index),
+                               data=float(-1))
+        for i in tqdm(df.index, desc="Distances"):
+            for j in df.index:
+                df_dist.at[i, j] = pairwise_distances(X=df.loc[i, input_col].reshape(1, -1),
+                                                      Y=df.loc[j, input_col].reshape(1, -1),
+                                                      n_jobs=-1,
+                                                      metric=method)
+        self.df_dist = df_dist
         self.df = df
 
-    def do_clustering(self,
-            method="DBSCAN",
-            input_col = "combo_vec",
-            output_col="clusters",
-            **kwargs):
-        "perform clustering over some column"
+    def compute_clusters(self,
+                      method="kmeans",
+                      input_col="combo_vec",
+                      output_col="clusters",
+                      **kwargs):
+        "perform clustering over a given column"
         df = self.df
+        if self.n_clusters is None:
+            self.n_clusters = len(df.index)//10
         if method == "kmeans":
-            clust = KMeans(n_clusters=self.n_cluster,
+            clust = KMeans(n_clusters=min(self.n_clusters, 100),
                     **kwargs)
         elif method == "DBSCAN":
-            clust = DBSCAN(eps=0.5,
-                    min_samples=3,
-                    n_jobs=-1,
-                    **kwargs
-                    )
+            clust = DBSCAN(eps=0.75,
+                           min_samples=3,
+                           n_jobs=-1,
+                           **kwargs
+                           )
         elif method.lower() in "agglomerative":
             clust = AgglomerativeClustering(
-                        n_clusters=self.n_cluster,
+                        n_clusters=self.n_clusters,
                         #distance_threshold=0.1,
                         affinity="cosine",
                         memory="/tmp/",
@@ -421,6 +511,10 @@ Edit the variable 'field_dic' to use {card_model}")
                  coordinate_col="combo_vec"):
         "display a graph showing the cards spread out into 2 dimensions"
         df = self.df
+        if "clusters" not in df.columns:
+            df["clusters"] = 0
+        if "cluster_topic" not in df.columns:
+            df["cluster_topic"] = 0
 
         if reduce_dim is not None:
             df_temp = pd.DataFrame(
@@ -433,16 +527,14 @@ Edit the variable 'field_dic' to use {card_model}")
             y_coor = res[1]
         elif reduce_dim.lower() in "umap":
                 res = umap.UMAP(n_jobs=-1,
-                                verbose=2,
+                                verbose=0,
                                 n_components=2,
                                 metric="cosine",
-                                init="random",
+                                init='spectral',
                                 random_state=42,
                                 transform_seed=42,
-                                n_neighbors=5,
-                                min_dist=1,
-                                n_epochs=500,
-                                target_n_neighbors=5).fit_transform(df_temp)
+                                n_neighbors=100,
+                                min_dist=0.1).fit_transform(df_temp)
                 x_coor = res.T[0]
                 y_coor = res.T[1]
         elif reduce_dim is None:
@@ -451,28 +543,72 @@ Edit the variable 'field_dic' to use {card_model}")
             y_coor = [x[1] for x in df[coordinate_col]],
             y_coor = list(y_coor)[0]
         print("Plotting results...")
+        df["cropped_text"] = df["text"].str[0:75]
         fig = px.scatter(df,
                          title="AnnA Anki neuronal Appendix",
                          x = x_coor,
                          y = y_coor,
                          color=color_col,
-                         hover_data=["text", "cluster_topic"])
+                         hover_data=["cropped_text", "cluster_topic"])
         fig.show()
 
-    def find_notes_similar_to_input(self, user_input, nlimit=100):
+    def find_notes_similar_to_input(self,
+                                    user_input,
+                                    nlimit=5,
+                                    user_col="combo_vec",
+                                    dist="cosine"):
         "given a text input, find notes with highest cosine similarity"
-        embed = sbert.encode(user_input)
+        pd.set_option('display.max_rows', None)
+        pd.set_option('display.max_columns', None)
+        pd.set_option('display.width', None)
+        pd.set_option('display.max_colwidth', None)
         df = self.df
+        if user_col == "tfs":
+            user_col = "tfs_svd"
+        if dist in "cosine":
+            dist_args = {"metric": "cosine", "n_jobs": -1}
+        if dist in "euclidian":
+            dist_args = {"metric": "euclidean", "n_jobs": -1}
+
+        if user_col in ["tfs_svd", "combo_vec"]:
+            new_index = max(df.index)+1
+            df.loc[new_index, "text"] = user_input
+            print("\n\n\nRecomputing vectors...")
+            self._vectors(df, save_cache=False)
+            print("Done.")
+            df = self.df
         dist = {}
+
+        if user_col == "tfs_svd":
+            embed = df.loc[new_index, "tfs_svd"]
+        if user_col == "sbert":
+            embed = sbert.encode(user_input, normalize_embeddings=True)
+        if user_col == "combo_vec":
+            embed = np.array(df.loc[new_index, "combo_vec"])
         for i in df.index:
-            dist.update({i: paired_cosine_distances(embed.reshape(1, -1), df.loc[i, "sbert"].reshape(1, -1))})
+            dist.update({i: pairwise_distances(
+                                                X=embed.reshape(1, -1),
+                                                Y=df.loc[i, user_col].reshape(1, -1),
+                                                **dist_args)
+                        })
         if len(dist.keys()) == 0:
             print("No cards found")
         else:
             print(f"Found {len(dist.keys())} cards:")
-            index = dist.keys()
-            index = sorted(index, key=lambda row: int(index[row]), reverse=True)
-            print(df.loc[index, "text"])
+            index = list(dist.keys())
+            good_order = sorted(index, key=lambda row: int(dist[row]), reverse=False)
+            print(df.loc[good_order[:nlimit], "text"])
+            cnt = 0
+            while True:
+                cnt += 1
+                ans = input("Show more?\n(y/n)>")
+                if ans == "y":
+                    try:
+                        print(df.loc[index[nlimit*cnt:nlimit*(cnt+1)], "text"])
+                    except:
+                        break
+                else:
+                    break
         return True
 
 
@@ -502,9 +638,11 @@ class CTFIDFVectorizer(TfidfTransformer):
     def transform(self, X: sp.csr_matrix) -> sp.csr_matrix:
         """Transform a count-based matrix to c-TF-IDF """
         X = X * self._idf_diag
-        X = normalize(X, axis=1, norm='l1', copy=False)
+        X = normalize(X, axis=1, norm='l2', copy=False)
         return X
 
+import_thread = threading.Thread(target=asynchronous_importer)
+import_thread.start()
 
 
 ##################################################
