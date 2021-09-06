@@ -30,24 +30,27 @@ Plot the latent space of the semantic relation of your anki cards showing cluste
 
 
 ## TODO
-### pandas and optimization
-* add way to reload only cards that need reloading using cardModTime
+### optimization
+* use a saved df to find the quickest way to get pairwise distance
 * add tags to cards containing the cluster number as well as a few words to describe the topic of the cluster, it would connect nicely with the other mindmapping addon
-* use a class instead of functions
-* cite the authors of sentence bert
+* use as scoring: interval + [take the median/mean of the proximity to the cards in queue]
+    * use cosine [distance or similarity]
+    * review the lowest or highest score first
+    * interval has to be centered and scaled
+    * if queue empty : pick the lowest interval card
+    * stop at 200 card generated
+* create filtered deck with the right due scores
+* create a requirements.txt file
+* respect PEP8
 
 ### ML
 * try with miniBatchKMeans to seed if it speeds up the clustering, otherwise go with HDBSCAN
 * automatically create a phylogeny of cards based on a distance matrix and see if it's an appropriate mind map, plotly is suitable for this kind of tree
-* see if it's possible to search for a card based on a search by comparing vector similarity
+* see if it's possible to search for a card based on a search by comparing vector similarity, easy to test: searching for a card's content should find the card first
 
 ### long term
 * compare best models of sentencebert
-* add repulsion between cards based on proximity to influence the fuzz
 * re read this article : http://mccormickml.com/2021/05/27/question-answering-system-tf-idf/
-* respect PEP8, but only after I finished using a notebook and moved to a proper python script
-* don't throw away the duplicated cards as they will be used for the scheduler
-* use this to reschedule 50% of due cards in a given deck to the day after, but also do it for tomorow, then 2 day from now etc. Effectively allowing to use this tool only once per week
 * talk about this in the anki dev channel and create a subreddit post
 * port into anki as an addon
 * investigate VR, minecraft integration, roblox, etc
@@ -69,5 +72,6 @@ Plot the latent space of the semantic relation of your anki cards showing cluste
 
 
 ## Credits and links that helped me a lot
-    * [Corentin Sautier](https://github.com/CSautier/) for his many many insights and suggestions on ML and python.
-    * [Towardsdatascience post about class based tf idf, by Maarten Grootendorst](https://towardsdatascience.com/creating-a-class-based-tf-idf-with-scikit-learn-caea7b15b858)
+    * [Corentin Sautier](https://github.com/CSautier/) for his many many insights and suggestions on ML and python. He was also instrumental in devising the score formula used to order the filtered deck.
+    * [A post about class based tf idf by Maarten Grootendorst on Towardsdatascience](https://towardsdatascience.com/creating-a-class-based-tf-idf-with-scikit-learn-caea7b15b858)
+    * [The authors of sentence-bert and their very informative website](https://github.com/UKPLab/sentence-transformers)

@@ -1,3 +1,4 @@
+import time
 import pdb
 import signal
 import os
@@ -28,9 +29,9 @@ signal.signal(signal.SIGINT, (lambda signal, frame: pdb.set_trace()))
 # name of the fields to keep, in order
 # ex : "basic": ["Front", "Back"]
 field_dic = {
-             #"clozolkor": ["Header", "Body"],
-             "clozolkor": ["Body"],
-             "occlusion": ["Header", "Image"]
+             "clozolkor": ["Header", "Body"],
+             "occlusion": ["Header", "Image"],
+             "spanish cards": ["Spanish", "English"]
              }
 
 def asynchronous_importer():
@@ -59,7 +60,7 @@ def asynchronous_importer():
 
 class AnnA:
     def __init__(self,
-                 deckname="",
+                 deckname=None,
                  verbose=False,
                  replace_greek=True,
                  replace_acronym=False,
@@ -68,7 +69,10 @@ class AnnA:
                  rated_last_X_days=4,
                  show_banner=True,
                  card_limit=None,
-                 n_clusters=None):
+                 n_clusters=None,
+                 tfs_svd_dim=200,
+                 pca_sbert_dim=200,
+                 ):
         # printing banner
         if show_banner is True:
             ascii_banner = pyfiglet.figlet_format("AnnA")
@@ -76,6 +80,8 @@ class AnnA:
             print("(Anki neuronal Appendix)\n\n")
 
         # loading args etc
+        if deckname is None:
+            deckname = "*"
         self.deckname = deckname
         self.verbose = verbose
         self.replace_greek = replace_greek
@@ -85,13 +91,16 @@ class AnnA:
         self.rated_last_X_days = rated_last_X_days
         self.card_limit = card_limit
         self.n_clusters = n_clusters
-        self.combo_vec_red_dim = 50
+
+        self.tfs_svd_dim = tfs_svd_dim
+        self.pca_sbert_dim = pca_sbert_dim
 
         # loading backend stuf
         self.stop_words = self._gathering_stopwords()
         import_thread.join()  # asynchroneous importing of large module
         self.tfidf = TfidfVectorizer(
-                                ngram_range=(1, 2),
+                                #ngram_range=(1, 2),
+                                ngram_range=(1, 1),
                                 tokenizer=self._tokenizer_wrap,
                                 analyzer="word",
                                 norm="l2",
@@ -99,9 +108,9 @@ class AnnA:
                                 lowercase=True,
                                 stop_words=self.stop_words
                                 )
-        self.TSVD = TruncatedSVD(n_components=512, random_state=42)
-        self.pca = PCA(n_components=self.combo_vec_red_dim, random_state=42)
-        self.pca_disp = PCA(n_components=2, random_state=42)
+        self.TSVD = TruncatedSVD(n_components=self.tfs_svd_dim, random_state=42)
+        self.pca_sbert = PCA(n_components=self.pca_sbert_dim, random_state=42)
+        self.pca_2D = PCA(n_components=2, random_state=42)
 
         # actual execution
         self.deckname = self._check_deck(deckname)
@@ -171,11 +180,59 @@ class AnnA:
     def _get_cards_info_from_card_id(self, card_id):
         "get cardinfo from card id, works with either int of list of int"
         if isinstance(card_id, list):
-            r_list = []
-            for card in tqdm(card_id):
-                r_list.extend(self._ankiconnect_invoke(action="cardsInfo",
-                              cards=[card]))
-            return r_list
+            if len(card_id) < 1000:
+                r_list = []
+                for card in tqdm(card_id):
+                    r_list.extend(self._ankiconnect_invoke(action="cardsInfo",
+                                  cards=[card]))
+                return r_list
+
+            else:
+                lock = threading.Lock()
+                threads = []
+                cnt = 0
+                r_list = []
+                batchsize = 500
+                target_thread_n = len(card_id)//batchsize+1
+                start = time.time()
+                print(f"Large number of cards to retrieve, creating {target_thread_n} threads:")
+
+                def retrieve_cards(card_list, lock, cnt, r_list):
+                    "for multithreaded card retrieval"
+                    #start = time.time()
+                    out_list = self._ankiconnect_invoke(action="cardsInfo",
+                                  cards=card_list)
+                    lock.acquire()
+                    r_list.extend(out_list)
+                    #tqdm.write(f"Thread #{cnt} finished in {int(time.time()-start)}s")
+                    pbar.update(1)
+                    lock.release()
+                    return True
+
+
+                with tqdm(total=target_thread_n,
+                        unit="thread",
+                        dynamic_ncols=True,
+                        desc="Finished threads",
+                        smoothing=0) as pbar:
+                    for nb in range(0, len(card_id), batchsize):
+                        cnt += 1
+                        temp_card_id = card_id[nb: nb+batchsize]
+                        thread = threading.Thread(target=retrieve_cards,
+                                                  args=(temp_card_id, lock, cnt, r_list),
+                                                  daemon=True)
+                        thread.start()
+                        threads.append(thread)
+                        time.sleep(0.1)
+                    print("")
+                    for t in threads:
+                        t.join()
+                assert len(r_list) == len(card_id)
+                print(f"Finished getting informations from cards in {int(time.time()-start)}seconds.")
+                r_list = sorted(r_list, key= lambda x: x["cardId"], reverse=False)
+                return r_list
+
+
         if isinstance(card_id, int):
             return self._ankiconnect_invoke(action="cardsInfo",
                                             cards=[card_id])
@@ -200,16 +257,21 @@ class AnnA:
         return deckname
 
     def _create_and_fill_df(self):
-        "fill the dataframe with due cards and rated cards"
+        "create and fill the dataframe with due cards and rated cards"
 
         print("Getting due card from this deck...")
         n_rated_days = int(self.rated_last_X_days)
         query = f"deck:{self.deckname} is:due is:review -is:learn -is:suspended -is:buried"
+        print(query)
         due_cards = self._get_card_id_from_query(query)
 
         print(f"Getting cards that where rated in the last {n_rated_days} days from this deck...")
         query = f"deck:{self.deckname} rated:{n_rated_days} -is:suspended"
+        print(query)
         rated_cards = self._get_card_id_from_query(query)
+
+        # removes overlap if found
+        rated_cards = [x for x in rated_cards if x not in due_cards]
 
         if self.card_limit is None:
             combined_card_list = list(rated_cards + due_cards)
@@ -219,20 +281,17 @@ class AnnA:
             print("You don't have enough due and rated cards!\nExiting.")
             raise SystemExit()
 
-        # removes overlap if found
-        for i in due_cards:
-            if i in rated_cards:
-                rated_cards.remove(i)
 
         list_cardInfo = []
         df = pd.DataFrame()
 
         n = len(combined_card_list)
-        print(f"Asking Anki for information about {n} cards...\n")
-        list_cardInfo.extend(self._ankiconnect_invoke(action="cardsInfo",
-                             cards=combined_card_list))
+        print(f"Asking Anki for information about {n} cards...")
+        start = time.time()
+        list_cardInfo.extend(self._get_cards_info_from_card_id(card_id=combined_card_list))
+        print(f"Extracted information in {int(time.time()-start)}seconds.\n")
 
-        for i, card in enumerate(list_cardInfo):
+        for i, card in enumerate(tqdm(list_cardInfo, desc="Filtering only relevant fields...", unit="card")):
             # removing large fields:
             list_cardInfo[i].pop("question")
             list_cardInfo[i].pop("answer")
@@ -246,7 +305,12 @@ class AnnA:
                 list_cardInfo[i]["status"] = "ERROR"
                 print(f"Error processing card with ID {card['cardId']}")
 
-        for x in list_cardInfo:
+        if len(list_cardInfo) != len(list(set(combined_card_list))):
+            print("Duplicate elements!\nExiting.")
+            pdb.set_trace()
+
+
+        for x in tqdm(list_cardInfo, desc="Creating DataFrame"):
             df = df.append(x, ignore_index=True)
         # removing the largest and useless columns
         df = df.set_index("cardId")
@@ -311,7 +375,7 @@ Edit the variable 'field_dic' to use {card_model}")
                 # found in field_dic
                 field_list = list(df.loc[index, "fields"])
                 for f in field_list:
-                    order = df.loc[index,"fields"][f]["order"]
+                    order = df.loc[index, "fields"][f]["order"]
                     if order == 0:
                         break
                 fields_to_keep = [f]
@@ -320,7 +384,7 @@ Edit the variable 'field_dic' to use {card_model}")
             for f in fields_to_keep:
                 to_add = df.loc[index, "fields"][f]["value"].strip()
                 if to_add != "":
-                    comb_text = comb_text + to_add + ": "
+                    comb_text = comb_text + to_add + " "
             df.loc[index, "comb_text"] = comb_text.strip().replace(": :", "").strip()
         df["text"] = [self._format_text(x) for x in tqdm(df["comb_text"])]
         self.df = df.sort_index()
@@ -337,8 +401,9 @@ Edit the variable 'field_dic' to use {card_model}")
         df["tfs"] contains tf-idf vectors
         df["tfs_svd"] contains tf-idf vectors after SVD dim reduction
         df["sbert"] contains sentencebert vectors
-        df["combo_vec"] contains sbert next to tfs_svd
-        df["combo_vec_red"] contains combo_vec after pca dim reduction
+        df["sbert_pca"] contains sbert after pca
+        df["combo_vec"] contains sbert_pca next to tfs_svd
+
         The arguments allow to be called from, for example,
         self.find_notes_similar_to_input(), otherwise it would be impossible to
         get the same tf_idf vectors
@@ -348,11 +413,12 @@ Edit the variable 'field_dic' to use {card_model}")
 
         print("\nComputing Tfidf vectors...")
         tfs = self.tfidf.fit_transform(tqdm(df['text']))
-        print(f"Reducing Tfidf vectors to 512 dimensions using SVD...")
+        print(f"Reducing Tfidf vectors to {self.tfs_svd_dim} dimensions using SVD...")
         tfs2 = self.TSVD.fit_transform(tfs)
 
         df["tfs"] = [x for x in tfs]
         df["tfs_svd"] = [x for x in tfs2]
+        print(f"Explained variance ratio: {round(sum(self.TSVD.explained_variance_ratio_)*100, 1)}%")
         df = df.sort_index()
 
 
@@ -415,13 +481,21 @@ Edit the variable 'field_dic' to use {card_model}")
         if save_cache is True:
             df_cache.to_hdf(f"sbert_cache.hdf", "sbert_cache", complevel=0, errors="")
 
-
-        print("Concatenating vectors from tfidf and sentence-BERT...")
-        df["combo_vec"] = [np.array(list(df.loc[x, "sbert"]) + list(df.loc[x, "tfs_svd"])) for x in df.index]
-        print(f"Reducing combo_vec to {self.combo_vec_red_dim} vectors...")
+        print(f"Reducing dimension of sbert to {self.pca_sbert_dim} using PCA...")
         df_temp = pd.DataFrame(
-            columns=["V"+str(x) for x in range(len(df.loc[df.index[0], "combo_vec"]))],
-            data=[x[0:] for x in df["combo_vec"]])
+            columns=["V"+str(x) for x in range(len(df.loc[df.index[0], "sbert"]))],
+            data=[x[0:] for x in df["sbert"]])
+        out = self.pca_sbert.fit_transform(df_temp)
+        print(f"Explained variance ratio: {round(sum(self.pca_sbert.explained_variance_ratio_)*100,1)}%")
+        df["sbert_pca"] = [x for x in out]
+
+        print("\nConcatenating tfidf_svd and sentence-BERT_pca vectors...")
+        df["combo_vec"] = [np.array(list(df.loc[x, "sbert_pca"]) + list(df.loc[x, "tfs_svd"])) for x in df.index]
+        
+#        print(f"Reducing combo_vec to {self.combo_vec_red_dim} vectors using PCA...")
+#        df_temp = pd.DataFrame(
+#            columns=["V"+str(x) for x in range(len(df.loc[df.index[0], "combo_vec"]))],
+#            data=[x[0:] for x in df["combo_vec"]])
 #        out = umap.UMAP(n_jobs=-1,
 #                        verbose=0,
 #                        n_components=self.combo_vec_red_dim,
@@ -431,11 +505,11 @@ Edit the variable 'field_dic' to use {card_model}")
 #                        transform_seed=42,
 #                        n_neighbors=50,
 #                        min_dist=0.1).fit_transform(df_temp)
-        out = self.pca.fit_transform(df_temp)
-        df["combo_vec_red"] = [x for x in out]
+#        out = self.pca_sbert.fit_transform(df_temp)
+#        df["combo_vec_red"] = [x for x in out]
         self.df = df.sort_index()
 
-    def compute_distance_matrix(self, method="cosine", input_col="combo_vec_red"):
+    def compute_distance_matrix(self, method="cosine", input_col="combo_vec"):
         "compute distance matrix between cards"
         print("Computing the distance matrix...")
         df = self.df
@@ -522,7 +596,7 @@ Edit the variable 'field_dic' to use {card_model}")
                 data=[x[0:] for x in df[coordinate_col]])
             print(f"Reduce to 2 dimensions via {reduce_dim} before plotting...")
         if reduce_dim.lower() in "pca":
-            res = self.pca_disp.fit_transform(df_temp).T
+            res = self.pca_2D.fit_transform(df_temp).T
             x_coor = res[0]
             y_coor = res[1]
         elif reduce_dim.lower() in "umap":
@@ -618,6 +692,14 @@ Edit the variable 'field_dic' to use {card_model}")
         text = info[0]['fields_no_html'][field_name]
         self.find_notes_similar_to_input(text)
 
+    def save_df(self, df=None, out_name=None):
+        "export dataframe as HDF format"
+        if df is None:
+            df = self.df
+        name = f"{out_name}_{self.deckname}_{int(time.time())}.hdf"
+        df.to_hdf(name, name, errors="", complevel=9)
+        print(f"Dataframe exported to {name}")
+
 
 class CTFIDFVectorizer(TfidfTransformer):
     "source: https://towardsdatascience.com/creating-a-class-based-tf-idf-with-scikit-learn-caea7b15b858"
@@ -644,40 +726,3 @@ class CTFIDFVectorizer(TfidfTransformer):
 import_thread = threading.Thread(target=asynchronous_importer)
 import_thread.start()
 
-
-##################################################
-# TODO
-#def add_tag_to_card_id(card_id, tag):
-#    "add tag to card id"
-#    # first gets note it from card id
-#    note_id = self._ankiconnect_invoke(action="cardsToNote", cards=card_id)
-#    return self._ankiconnect_invoke(action="addTags",
-#                              notes=note_id,
-#                              tags=tag)
-#
-#
-#def add_vectorTags(note_dic, vectorizer, vectors):
-#    "adds a tag containing the vector values to each note"
-#    if vectorizer not in ["sentence_bert", "tf-idf"]:
-#        print("Wrong vectorTags vectorizer")
-#        raise SystemExit()
-#    return self._ankiconnect_invoke(action="addTags",
-#                              notes=note_id,
-#                              tags=vectors_tag)
-#
-#
-#def add_cluterTags(note_dic):
-#    "add a tag containing the cluster number and name to each note"
-#    pass
-#
-#
-#def add_actionTags(note_dic):
-#    """
-#    add a tag containing the action that should be taken regarding cards.
-#    The action can be "bury" or "study_today"
-#    Currently, you then have to manually bury them or study them into anki
-#    """
-#
-#def get_cluster_topic(cluster_note_dic, all_note_dic, cluster_nb):
-#    "given notes, outputs the topic that is likely the subject of the cards"
-#    pass
