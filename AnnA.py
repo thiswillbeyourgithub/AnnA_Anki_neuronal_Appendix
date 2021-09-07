@@ -11,7 +11,6 @@ from tqdm import tqdm
 import re
 from prompt_toolkit import prompt
 from prompt_toolkit.completion import WordCompleter
-from glob import glob
 from pathlib import Path
 import threading
 from sklearn.feature_extraction.text import TfidfTransformer
@@ -40,21 +39,28 @@ def asynchronous_importer():
         AgglomerativeClustering, transformers, sp, normalize, TfidfVectorizer,\
         CountVectorizer, TruncatedSVD,\
         pairwise_distances, PCA, px, umap, np, tokenizer_bert, sbert
+    print("Begin importing modules.")
     from nltk.corpus import stopwords
-    from sentence_transformers import SentenceTransformer
-    from sklearn.cluster import KMeans, DBSCAN, AgglomerativeClustering
+    from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
     import transformers
-    from sklearn.preprocessing import normalize
-    from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer, TfidfTransformer
-    from sklearn.decomposition import TruncatedSVD
-    from sklearn.metrics import pairwise_distances
-    from sklearn.decomposition import PCA
+    from sentence_transformers import SentenceTransformer
+    tokenizer_bert = transformers.BertTokenizerFast.from_pretrained('bert-base-multilingual-uncased',
+                                                                    add_special_tokens=False,
+                                                                    do_lower_case=True,
+                                                                    wordpieces_prefix="",
+                                                                    strip_accents=True,
+                                                                    tokenize_chinese_chars=False,  # the docs says it's better for japanese
+                                                                    clean_text=True,
+                                                                    truncation=True)
+    sbert = SentenceTransformer('distiluse-base-multilingual-cased-v1')
+    from sklearn.cluster import KMeans, DBSCAN, AgglomerativeClustering
     import plotly.express as px
     import umap.umap_
-    tokenizer_bert = transformers.BertTokenizerFast.from_pretrained(
-            'bert-base-multilingual-uncased'
-            )
-    sbert = SentenceTransformer('distiluse-base-multilingual-cased-v1')
+    from sklearn.metrics import pairwise_distances
+    from sklearn.preprocessing import normalize
+    from sklearn.decomposition import TruncatedSVD
+    from sklearn.decomposition import PCA
+    print("Finished importing modules")
 
 
 
@@ -63,7 +69,7 @@ class AnnA:
                  deckname=None,
                  verbose=False,
                  replace_greek=True,
-                 replace_acronym=False,
+                 replace_acronym=True,
                  stop_word_lang=["en"],
                  keep_ocr=False,
                  rated_last_X_days=4,
@@ -84,28 +90,33 @@ class AnnA:
             deckname = "*"
         self.deckname = deckname
         self.verbose = verbose
-        self.replace_greek = replace_greek
-        self.replace_acronym = replace_acronym
         self.stop_word_lang = stop_word_lang
+        self.replace_acronym = replace_acronym
+        self.replace_greek = replace_greek
         self.keep_ocr = keep_ocr
         self.rated_last_X_days = rated_last_X_days
         self.card_limit = card_limit
         self.n_clusters = n_clusters
-
         self.tfs_svd_dim = tfs_svd_dim
         self.pca_sbert_dim = pca_sbert_dim
 
         # loading backend stuf
-        self.stop_words = self._gathering_stopwords()
+        if self.replace_acronym is True:
+            from user_acronym_list import acronym_list
+            self.acronym_list = acronym_list
+        if self.replace_greek is True:
+            from greek_alphabet_mapping import greek_alphabet
+            self.greek_alphabet = greek_alphabet
         import_thread.join()  # asynchroneous importing of large module
+        self.stop_words = self._gathering_stopwords()
         self.tfidf = TfidfVectorizer(
                                 #ngram_range=(1, 2),
-                                ngram_range=(1, 1),
-                                tokenizer=self._tokenizer_wrap,
+                                ngram_range=(1, 2),
+                                tokenizer=tokenizer_bert.tokenize,
                                 analyzer="word",
                                 norm="l2",
-                                strip_accents="ascii",
-                                lowercase=True,
+                                strip_accents=None,  # already removed by bert
+                                lowercase=False,  # already done at preprocessing
                                 stop_words=self.stop_words
                                 )
         self.TSVD = TruncatedSVD(n_components=self.tfs_svd_dim, random_state=42)
@@ -120,6 +131,7 @@ class AnnA:
         self.df = self._reset_index_dtype(self.df)
         self._vectors()
         self.df = self._reset_index_dtype(self.df)
+        self.compute_distance_matrix()
 
     def _gathering_stopwords(self):
         "store the completed list of stopwords to self.stops"
@@ -180,7 +192,7 @@ class AnnA:
     def _get_cards_info_from_card_id(self, card_id):
         "get cardinfo from card id, works with either int of list of int"
         if isinstance(card_id, list):
-            if len(card_id) < 1000:
+            if len(card_id) < 300:
                 r_list = []
                 for card in tqdm(card_id):
                     r_list.extend(self._ankiconnect_invoke(action="cardsInfo",
@@ -192,10 +204,10 @@ class AnnA:
                 threads = []
                 cnt = 0
                 r_list = []
-                batchsize = 500
-                target_thread_n = len(card_id)//batchsize+1
+                target_thread_n = 10
+                batchsize = len(card_id)//target_thread_n+3
                 start = time.time()
-                print(f"Large number of cards to retrieve, creating {target_thread_n} threads:")
+                print(f"Large number of cards to retrieve, creating 10 threads of {batchsize} cards...")
 
                 def retrieve_cards(card_list, lock, cnt, r_list):
                     "for multithreaded card retrieval"
@@ -228,7 +240,7 @@ class AnnA:
                     for t in threads:
                         t.join()
                 assert len(r_list) == len(card_id)
-                print(f"Finished getting informations from cards in {int(time.time()-start)}seconds.")
+                print(f"Finished getting informations from cards in {int(time.time()-start)} seconds.")
                 r_list = sorted(r_list, key= lambda x: x["cardId"], reverse=False)
                 return r_list
 
@@ -283,7 +295,6 @@ class AnnA:
 
 
         list_cardInfo = []
-        df = pd.DataFrame()
 
         n = len(combined_card_list)
         print(f"Asking Anki for information about {n} cards...")
@@ -310,11 +321,9 @@ class AnnA:
             pdb.set_trace()
 
 
-        for x in tqdm(list_cardInfo, desc="Creating DataFrame"):
-            df = df.append(x, ignore_index=True)
-        # removing the largest and useless columns
-        df = df.set_index("cardId")
-        self.df = df.sort_index()
+        self.df = pd.DataFrame().append(list_cardInfo,
+                                   ignore_index=True,
+                                   sort=True).set_index("cardId").sort_index()
 
     def _format_text(self, text):
         "text preprocessor"
@@ -323,13 +332,12 @@ class AnnA:
             # keep image title (usually OCR)
             text = re.sub("title=(\".*?\")", "> Image: \\1. <", text)
         if self.replace_greek is True:
-            # https://gist.github.com/beniwohli/765262
-            import greek_alphabet_mapping
-            for a, b in greek_alphabet_mapping.greek_alphabet.items():
+            global greek_alphabet
+            for a, b in self.greek_alphabet.items():
                 text = re.sub(a, b, text)
         if self.replace_acronym is True:
-            import user_acronym_list
-            for a, b in user_acronym_list.acronym_list.items():
+            global acronym_list
+            for a, b in self.acronym_list.items():
                 text = re.sub(a, b, text)
         text = re.sub(r'[a-zA-Z0-9-]+\....', " ", text)  # media file name
         text = re.sub('\\n|<div>|</div>|<br>|<span>|</span>|<li>|</li>|<ul>|</ul>',
@@ -386,14 +394,8 @@ Edit the variable 'field_dic' to use {card_model}")
                 if to_add != "":
                     comb_text = comb_text + to_add + " "
             df.loc[index, "comb_text"] = comb_text.strip().replace(": :", "").strip()
-        df["text"] = [self._format_text(x) for x in tqdm(df["comb_text"])]
+        df["text"] = [self._format_text(x) for x in tqdm(df["comb_text"], desc="Formating text")]
         self.df = df.sort_index()
-
-    def _tokenizer_wrap(self, string):
-        "just a wrapper to pass arguments to the tokenizer"
-        return tokenizer_bert.tokenize(string,
-                                       add_special_tokens=False,
-                                       truncation=True)
 
     def _vectors(self, df=None, save_cache=True):
         """
@@ -411,17 +413,25 @@ Edit the variable 'field_dic' to use {card_model}")
         if df is None:
             df = self.df
 
-        print("\nComputing Tfidf vectors...")
-        tfs = self.tfidf.fit_transform(tqdm(df['text']))
-        print(f"Reducing Tfidf vectors to {self.tfs_svd_dim} dimensions using SVD...")
-        tfs2 = self.TSVD.fit_transform(tfs)
-
-        df["tfs"] = [x for x in tfs]
-        df["tfs_svd"] = [x for x in tfs2]
-        print(f"Explained variance ratio: {round(sum(self.TSVD.explained_variance_ratio_)*100, 1)}%")
-        df = df.sort_index()
-
-
+        def compute_tfidf_in_thread(tfidf_list, lock):
+            global tfs, tfs2
+            start = time.time()
+            tqdm.write("\n Launching computation of Tfidf vectors in a separate thread...")
+            tfs = self.tfidf.fit_transform(tqdm(df['text']))
+            tqdm.write(f"Reducing Tfidf vectors to {self.tfs_svd_dim} dimensions using SVD...")
+            tfs2 = self.TSVD.fit_transform(tfs)
+            tqdm.write(f"SVD done after {int(time.time()-start)}s.")
+            tqdm.write(f"Explained variance ratio after SVD on TFS: {round(sum(self.TSVD.explained_variance_ratio_)*100, 1)}%")
+            lock.acquire()
+            tfidf_list.append(tfs)
+            tfidf_list.append(tfs2)
+            lock.release()
+        tfidf_list =  []
+        lock = threading.Lock()
+        tfidf_thread = threading.Thread(target=compute_tfidf_in_thread,
+                                        args=(tfidf_list, lock),
+                                        daemon=True)
+        tfidf_thread.start()
 
         print("\nChecking for cached sentence-bert HDF file...")
         # WARNING: this part of the code is full of supersition
@@ -486,42 +496,39 @@ Edit the variable 'field_dic' to use {card_model}")
             columns=["V"+str(x) for x in range(len(df.loc[df.index[0], "sbert"]))],
             data=[x[0:] for x in df["sbert"]])
         out = self.pca_sbert.fit_transform(df_temp)
-        print(f"Explained variance ratio: {round(sum(self.pca_sbert.explained_variance_ratio_)*100,1)}%")
+        print(f"Explained variance ratio after PCA on SBERT: {round(sum(self.pca_sbert.explained_variance_ratio_)*100,1)}%")
         df["sbert_pca"] = [x for x in out]
+
+        tfidf_thread.join()
+        df["tfs"] = [x for x in tfidf_list[0]]
+        df["tfs_svd"] = [x for x in tfidf_list[1]]
 
         print("\nConcatenating tfidf_svd and sentence-BERT_pca vectors...")
         df["combo_vec"] = [np.array(list(df.loc[x, "sbert_pca"]) + list(df.loc[x, "tfs_svd"])) for x in df.index]
-        
-#        print(f"Reducing combo_vec to {self.combo_vec_red_dim} vectors using PCA...")
-#        df_temp = pd.DataFrame(
-#            columns=["V"+str(x) for x in range(len(df.loc[df.index[0], "combo_vec"]))],
-#            data=[x[0:] for x in df["combo_vec"]])
-#        out = umap.UMAP(n_jobs=-1,
-#                        verbose=0,
-#                        n_components=self.combo_vec_red_dim,
-#                        metric="cosine",
-#                        random_state=42,
-#                        init='spectral',
-#                        transform_seed=42,
-#                        n_neighbors=50,
-#                        min_dist=0.1).fit_transform(df_temp)
-#        out = self.pca_sbert.fit_transform(df_temp)
-#        df["combo_vec_red"] = [x for x in out]
         self.df = df.sort_index()
 
     def compute_distance_matrix(self, method="cosine", input_col="combo_vec"):
-        "compute distance matrix between cards"
+        """
+        compute distance matrix between cards, given that L2 norm is used throughout the 
+        script, cosine is not used but np.dot is used instead.
+        """
         print("Computing the distance matrix...")
         df = self.df
-        df_dist = pd.DataFrame(columns=list(df.index),
-                               index=list(df.index),
-                               data=float(-1))
-        for i in tqdm(df.index, desc="Distances"):
-            for j in df.index:
-                df_dist.at[i, j] = pairwise_distances(X=df.loc[i, input_col].reshape(1, -1),
-                                                      Y=df.loc[j, input_col].reshape(1, -1),
-                                                      n_jobs=-1,
-                                                      metric=method)
+        df_temp = pd.DataFrame(
+            columns=["V"+str(x) for x in range(len(df.loc[df.index[0], "combo_vec"]))],
+            data=[x[0:] for x in df["combo_vec"]])
+        df_dist = pairwise_distances(df_temp, n_jobs=-1, metric=method)
+        print("Done.")
+#        df_dist = pd.DataFrame(columns=list(df.index),
+#                               index=list(df.index),
+#                               data=float(-1))
+#        for i in tqdm(df.index, desc="Distances"):
+#            for j in df.index:
+#                df_dist.at[i, j] = np.dot(df.loc[i, input_col], df.loc[j, input_col])
+#                df_dist.at[i, j] = pairwise_distances(X=df.loc[i, input_col].reshape(1, -1),
+#                                                      Y=df.loc[j, input_col].reshape(1, -1),
+#                                                      n_jobs=-1,
+#                                                      metric=method)
         self.df_dist = df_dist
         self.df = df
 
@@ -699,6 +706,7 @@ Edit the variable 'field_dic' to use {card_model}")
         name = f"{out_name}_{self.deckname}_{int(time.time())}.hdf"
         df.to_hdf(name, name, errors="", complevel=9)
         print(f"Dataframe exported to {name}")
+
 
 
 class CTFIDFVectorizer(TfidfTransformer):
