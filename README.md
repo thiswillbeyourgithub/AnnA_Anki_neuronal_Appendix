@@ -32,14 +32,14 @@ Plot the latent space of the semantic relation of your anki cards showing cluste
 ## TODO
 ### optimization
 * virer tf-idf
-* use as scoring: interval + [take the median/mean of the proximity to the cards in queue]
-* create filtered deck with the right due scores
+* understand where the "tags" columns disappears...
 * add tags to cards containing the cluster number as well as a few words to describe the topic of the cluster, it would connect nicely with the other mindmapping addon
-* check if you should not use lapply in some places instead of loops
+* check if you should not use df.apply in some places instead of loops, or use .values
 * create a requirements.txt file
-* normalize all occurence of "tfidf" to the canonical format (TF-IDF?), same with sbert/s-BERT etc
+* comment the code
 * run the script on notes and not cards
 * respect PEP8
+* maybe use df.compare to fetch more quickly the cached sbert vectors
 
 ### ML
 * try with miniBatchKMeans to seed if it speeds up the clustering, otherwise go with HDBSCAN
@@ -47,7 +47,6 @@ Plot the latent space of the semantic relation of your anki cards showing cluste
 * see if it's possible to search for a card based on a search by comparing vector similarity, easy to test: searching for a card's content should find the card first
 
 ### long term
-* compare best models of sentencebert
 * re read this article : http://mccormickml.com/2021/05/27/question-answering-system-tf-idf/
 * talk about this in the anki dev channel and create a subreddit post
 * port into anki as an addon

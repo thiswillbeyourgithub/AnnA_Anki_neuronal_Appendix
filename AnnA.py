@@ -42,16 +42,7 @@ def asynchronous_importer():
     print("Importing modules.")
     from nltk.corpus import stopwords
     from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
-    import transformers
     from sentence_transformers import SentenceTransformer
-    tokenizer_bert = transformers.BertTokenizerFast.from_pretrained('bert-base-multilingual-uncased',
-                                                                    add_special_tokens=False,
-                                                                    do_lower_case=True,
-                                                                    #wordpieces_prefix="",
-                                                                    strip_accents=True,
-                                                                    tokenize_chinese_chars=False,  # the docs says it's better for japanese
-                                                                    clean_text=True,
-                                                                    truncation=True)
     sbert = SentenceTransformer('distiluse-base-multilingual-cased-v1')
     from sklearn.cluster import KMeans, DBSCAN, AgglomerativeClustering
     import plotly.express as px
@@ -71,14 +62,13 @@ class AnnA:
                  verbose=False,
                  replace_greek=True,
                  replace_acronym=True,
-                 stop_word_lang=["en"],
                  keep_ocr=False,
+                 desired_deck_size=500,
                  rated_last_X_days=4,
                  show_banner=True,
                  card_limit=None,
                  n_clusters=None,
-                 tfs_svd_dim=200,
-                 pca_sbert_dim=200,
+                 pca_sbert_dim=None,
                  ):
         # printing banner
         if show_banner is True:
@@ -91,14 +81,13 @@ class AnnA:
             deckname = "*"
         self.deckname = deckname
         self.verbose = verbose
-        self.stop_word_lang = stop_word_lang
         self.replace_acronym = replace_acronym
         self.replace_greek = replace_greek
         self.keep_ocr = keep_ocr
+        self.desired_deck_size = desired_deck_size
         self.rated_last_X_days = rated_last_X_days
         self.card_limit = card_limit
         self.n_clusters = n_clusters
-        self.tfs_svd_dim = tfs_svd_dim
         self.pca_sbert_dim = pca_sbert_dim
 
         # loading backend stuf
@@ -110,20 +99,9 @@ class AnnA:
             self.greek_alphabet = greek_alphabet
         import_thread.join()  # asynchroneous importing of large module
         time.sleep(1)
-        self.stop_words = self._gathering_stopwords()
-        self.tfidf = TfidfVectorizer(
-                                ngram_range=(1, 1),
-                                tokenizer=tokenizer_bert.tokenize,
-                                analyzer="word",
-                                norm="l2",
-                                strip_accents=None,  # already removed by bert
-                                lowercase=False,  # already done at preprocessing
-                                stop_words=self.stop_words
-                                )
-        self.TSVD = TruncatedSVD(n_components=self.tfs_svd_dim, random_state=42)
         self.pca_sbert = PCA(n_components=self.pca_sbert_dim, random_state=42)
         self.pca_2D = PCA(n_components=2, random_state=42)
-        scaler = StandardScaler()
+        self.scaler = StandardScaler()
 
         # actual execution
         self.deckname = self._check_deck(deckname)
@@ -131,20 +109,8 @@ class AnnA:
         self.df = self._reset_index_dtype(self.df)
         self._format_card()
         self._vectors()
-        #self.assign_scoring()
-
-    def _gathering_stopwords(self):
-        "store the completed list of stopwords to self.stops"
-        stops = []
-        if self.stop_word_lang != []:
-            for lang in self.stop_word_lang:
-                try:
-                    stops = stops + stopwords.words(lang)
-                except Exception as e:
-                    print(f"{e}: nltk doesn't seem to have a stopwords list for language '{lang}'")
-        else:
-            stops = []
-        self.stops = list(set(stops))
+        self._compute_distance_matrix()
+        self.assign_scoring()
 
     def _reset_index_dtype(self, df):
         """
@@ -206,7 +172,6 @@ class AnnA:
                 r_list = []
                 target_thread_n = 10
                 batchsize = len(card_id)//target_thread_n+3
-                start = time.time()
                 print(f"Large number of cards to retrieve, creating 10 threads of {batchsize} cards...")
 
                 def retrieve_cards(card_list, lock, cnt, r_list):
@@ -223,10 +188,11 @@ class AnnA:
 
 
                 with tqdm(total=target_thread_n,
-                        unit="thread",
-                        dynamic_ncols=True,
-                        desc="Finished threads",
-                        smoothing=0) as pbar:
+                          unit="thread",
+                          dynamic_ncols=True,
+                          desc="Finished threads",
+                          delay=2,
+                          smoothing=0) as pbar:
                     for nb in range(0, len(card_id), batchsize):
                         cnt += 1
                         temp_card_id = card_id[nb: nb+batchsize]
@@ -240,7 +206,6 @@ class AnnA:
                     for t in threads:
                         t.join()
                 assert len(r_list) == len(card_id)
-                print(f"Finished getting informations from cards in {int(time.time()-start)} seconds.")
                 r_list = sorted(r_list, key= lambda x: x["cardId"], reverse=False)
                 return r_list
 
@@ -300,7 +265,7 @@ class AnnA:
         print(f"Asking Anki for information about {n} cards...")
         start = time.time()
         list_cardInfo.extend(self._get_cards_info_from_card_id(card_id=combined_card_list))
-        print(f"Extracted information in {int(time.time()-start)}seconds.\n")
+        print(f"Extracted information in {int(time.time()-start)} seconds.")
 
         for i, card in enumerate(tqdm(list_cardInfo, desc="Filtering only relevant fields...", unit="card")):
             # removing large fields:
@@ -326,7 +291,7 @@ class AnnA:
                                    sort=True).set_index("cardId").sort_index()
 
     def _format_text(self, text):
-        "text preprocessor"
+        "text preprocessor, called by _format_card on each card content"
         text = str(text)
         if self.keep_ocr is True:
             # keep image title (usually OCR)
@@ -338,7 +303,7 @@ class AnnA:
         if self.replace_acronym is True:
             global acronym_list
             for a, b in self.acronym_list.items():
-                text = re.sub(a, b, text)
+                text = re.sub(rf"\b{a}\b", b, text)  # \b matches beginning and end of a word
         text = re.sub(r'[a-zA-Z0-9-]+\....', " ", text)  # media file name
         text = re.sub('\\n|<div>|</div>|<br>|<span>|</span>|<li>|</li>|<ul>|</ul>',
                       " ", text)  # newline
@@ -401,41 +366,14 @@ Edit the variable 'field_dic' to use {card_model}")
     def _vectors(self, df=None, use_sbert_cache=True):
         """
         Assigne vectors to each card
-        df["tfs"] contains tf-idf vectors
-        df["tfs_svd"] contains tf-idf vectors after SVD dim reduction
-        df["sbert"] contains sentencebert vectors
-        df["sbert_pca"] contains sbert after pca
-        df["combo_vec"] contains sbert_pca next to tfs_svd
-
-        The arguments allow to be called from, for example,
-        self.find_notes_similar_to_input(), otherwise it would be impossible to
-        get the same tf_idf vectors
+        df["sbert"] contains sentencebert vectors, eventually after PCA
+        df["sbert_before_pca"] if exists, then it's the full 512 vectors
         """
         if df is None:
             df = self.df
 
-        def compute_tfidf_in_thread(tfidf_list, lock):
-            global tfs, tfs2
-            start = time.time()
-            print("")
-            tfs = self.tfidf.fit_transform(tqdm(df['text'], desc="Computing Tfidf vectors in a separate thread", position=1))
-            tqdm.write(f"Reducing Tfidf vectors to {self.tfs_svd_dim} dimensions using SVD...")
-            tfs2 = self.TSVD.fit_transform(tfs)
-            tqdm.write(f"SVD done after {int(time.time()-start)}s.")
-            tqdm.write(f"Explained variance ratio after SVD on Tfidf: {round(sum(self.TSVD.explained_variance_ratio_)*100, 1)}%")
-            lock.acquire()
-            tfidf_list.append(tfs)
-            tfidf_list.append(tfs2)
-            lock.release()
-        tfidf_list =  []
-        lock = threading.Lock()
-        tfidf_thread = threading.Thread(target=compute_tfidf_in_thread,
-                                        args=(tfidf_list, lock),
-                                        daemon=True)
-        tfidf_thread.start()
-
         if use_sbert_cache is True:
-            print("\nChecking for cached sentence-bert pickle file...")
+            print("\nLooking for cached sentence-bert pickle file...", end="")
             sbert_file = Path("./sbert_cache.pickle")
             df["sbert"] = 0*len(df.index)
             df["sbert"] = df["sbert"].astype("object")
@@ -444,11 +382,11 @@ Edit the variable 'field_dic' to use {card_model}")
 
             # reloads sbert vectors and only recomputes the new one:
             if not sbert_file.exists():
-                print("sentence-bert cache not found, will create it.")
+                print(" sentence-bert cache not found, will create it.")
                 df_cache = pd.DataFrame(columns=["cardId", "mod", "text", "sbert"]).set_index("cardId")
                 index_to_recompute = df.index
             else:
-                print("Found sentence-bert cache.")
+                print(" Found sentence-bert cache.")
                 df_cache = pd.read_pickle(sbert_file)
                 df_cache["sbert"] = df_cache["sbert"].astype("object")
                 df_cache["mod"] = df_cache["mod"].astype("object")
@@ -487,60 +425,22 @@ Edit the variable 'field_dic' to use {card_model}")
             df_cache = self._reset_index_dtype(df_cache)
             df_cache.to_pickle(f"sbert_cache.pickle")
 
-        print(f"Reducing dimension of sbert to {self.pca_sbert_dim} using PCA...")
-        df_temp = pd.DataFrame(
-            columns=["V"+str(x+1) for x in range(len(df.loc[df.index[0], "sbert"]))],
-            data=[x[0:] for x in df["sbert"]])
-        out = self.pca_sbert.fit_transform(df_temp)
-        print(f"Explained variance ratio after PCA on SBERT: {round(sum(self.pca_sbert.explained_variance_ratio_)*100,1)}%")
-        df["sbert_pca"] = [x for x in out]
+        if self.pca_sbert_dim is not None:
+            print(f"Reducing dimension of sbert to {self.pca_sbert_dim} using PCA...")
+            df_temp = pd.DataFrame(
+                columns=["V"+str(x+1) for x in range(len(df.loc[df.index[0], "sbert"]))],
+                data=[x[0:] for x in df["sbert"]])
+            out = self.pca_sbert.fit_transform(df_temp)
+            print(f"Explained variance ratio after PCA on SBERT: {round(sum(self.pca_sbert.explained_variance_ratio_)*100,1)}%")
+            df["sbert_before_pca"] = df["sbert"]
+            df["sbert"] = [x for x in out]
 
-        tfidf_thread.join()
-        df["tfs"] = [x for x in tfidf_list[0]]
-        df["tfs_svd"] = [x for x in tfidf_list[1]]
-
-        print("\nConcatenating tfidf_svd and sBERT_pca vectors...")
-        df["combo_vec"] = [np.array(list(df.loc[x, "sbert_pca"]) + list(df.loc[x, "tfs_svd"])) for x in df.index]
-        self.df = df.sort_index()
-
-
-    def assign_scoring(self, n_to_generate=500, reference_order="lowest_interval"):
-        """
-        assign scoring to each card, the score reflects the order in which 
-        they should be reviewed to minimize useless reviews.
-        The score is computed according to formula:
-            score = interval + median of the proximity to each card of the queue
-        Reference_order can either be "lower_interval" or "relative_overdueness"
-        """
-        df = self.df
-
-        if reference_order != "lowest_interval":
-            print("Using another reference than lowest interval is not yet supproted")
-            reference_order = "lowest_interval"
-
-        # fill queue with already rated cards
-        queue = [x for x in df.index if df.loc[x, "status"] == "rated"]
-
-        # center and scale intervals
-        df["ivl_std"] = scaler.fit_transform(df["interval"].to_numpy().reshape(-1, 1))
-
-        if len(queue) == 0:
-            if reference_order == "lowest_interval":
-                queue.append(df.iloc[df["ivl_std"].to_numpy().argmin()].name)
-
-        
-        # compute distance matrix to the queue
-        # make sure the scoring is not backwards etc
-        # stop after n generated cards
-
-        self.df = df
-
-    def compute_distance_matrix(self, method="cosine", input_col="combo_vec"):
+    def _compute_distance_matrix(self, method="cosine", input_col="sbert"):
         """
         compute distance matrix between cards, given that L2 norm is used throughout the 
         script, cosine is not used but np.dot is used instead.
         """
-        print("Computing the distance matrix...")
+        print("Computing the distance matrix...", end="")
         df = self.df
 
         df_temp = pd.DataFrame(
@@ -548,19 +448,122 @@ Edit the variable 'field_dic' to use {card_model}")
             data=[x[0:] for x in df[input_col]])
         df_dist = pairwise_distances(df_temp, n_jobs=-1, metric=method)
 
-#        df_dist = pd.DataFrame(columns=list(df.index),
-#                               index=list(df.index),
-#                               data=float(-1))
-#        for i in tqdm(df.index, desc="Distances"):
-#            for j in df.index:
-#                df_dist.at[i, j] = np.dot(df.loc[i, input_col], df.loc[j, input_col])
-        print("Done.")
+        print(" Done.")
         self.df_dist = df_dist
         self.df = df
 
+
+    def assign_scoring(self, reference_order="lowest_interval"):
+        """
+        assign scoring to each card, the score reflects the order in which 
+        they should be reviewed to minimize useless reviews.
+        The score is computed according to formula:
+            score = interval + median of the proximity to each card of the queue
+        Reference_order can either be "lower_interval" or "relative_overdueness"
+        """
+        print("Assigning scores...")
+        df = self.df
+        df_dist = self.df_dist
+        queue_size_goal = self.desired_deck_size
+        # center and scale intervals
+        df["ivl_std"] = self.scaler.fit_transform(df["interval"].to_numpy().reshape(-1, 1))
+
+        if reference_order != "lowest_interval":
+            print("Using another reference than lowest interval is not yet supproted")
+            reference_order = "lowest_interval"
+
+        # fill queue with already rated cards
+        rated = [x for x in df.index if df.loc[x, "status"] == "rated"]
+        queue = []
+        print(f"Already rated in the past relevant days: {len(rated)}")
+
+
+        if len(rated) == 0:
+            if reference_order == "lowest_interval":
+                queue.append(df["ivl_std"].idxmin())
+
+        cnt = 0
+        df_temp = pd.DataFrame(columns=rated, index=df.index)
+        with tqdm(desc="Finding optimal review order", unit="Card", smoothing=0, total=queue_size_goal) as pbar:
+            while len(queue) < queue_size_goal:
+                cnt += 1
+                if cnt > 500000:
+                    print("Detected potential endeless loop. Exiting.")
+                    break
+
+                for q in rated + queue:
+                    df_temp[q] = df_dist[df.index.get_loc(q)]
+                df["median_dist_to_queue"] = np.median(df_temp)
+                df["score"] = df["ivl_std"] - df["median_dist_to_queue"]
+                chosen_one = df.drop(labels=queue)["score"].idxmin()
+
+                queue.append(chosen_one)
+                df_temp[chosen_one] = df_dist[df.index.get_loc(chosen_one)]
+                pbar.update(1)
+
+        print("Done. Now all that is left is to send all of this to anki.\n")
+        self.best_review_order = queue
+
+    def to_anki(self, filtered_deck_name=f"AnnA - Optimal Review Order"):
+        """
+        add a tag to the queue cards then
+        orders the creation of a filtered deck filtering by this tag
+        then manually alter the order of the review in the deck to 
+        match self.best_review_order
+        """
+
+        if self.deckname not in filtered_deck_name:
+            filtered_deck_name = filtered_deck_name + f" - {self.deckname}"
+        if filtered_deck_name in self._ankiconnect_invoke(action="deckNames"):
+            print("Deck name already taken.")
+            filtered_deck_name = filtered_deck_name + "_".join(time.asctime().split()[0:3])
+        filtered_deck_name = filtered_deck_name.replace("::", "_")
+        tag_name = f"AnnA_Optimal_review_order::{self.deckname}::session_{'_'.join(time.asctime().split()[0:3])}"
+
+        # first remove the tag if present:
+        tag_list = self._ankiconnect_invoke(action="getTags")
+        if tag_name in tag_list:
+            all_note_list = self._ankiconnect_invoke(action="findNotes", query="")
+            self._ankiconnect_invoke(action="removeTags", notes=all_note_list, tags=tag_name)
+            print("Removed tags that was already present.")
+
+        note_list = list(set([int(self.df.loc[x, "note"]) for x in self.best_review_order]))
+        self._ankiconnect_invoke(action="addTags", notes=note_list, tags=tag_name)
+
+        print(f"Added tagname {tag_name}")
+        self._ankiconnect_invoke(action="createFilteredDeck",
+                                 newDeckName=filtered_deck_name,
+                                 searchQuery=f'tag:{tag_name}',
+                                 gatherCount=len(self.best_review_order),
+                                 reschedule=True,
+                                 sortOrder=0,
+                                 createEmpty=False)
+        # sortOrder = 0 is "oldest seen first", this way I can see if something is fishy if the deck rebuilded itself
+        print(f"Created deck {filtered_deck_name}")
+
+        incrementer = -len(self.best_review_order)-1
+        for c in tqdm(self.best_review_order, desc="Altering due order", unit="card"):
+            incrementer += 1
+            self._ankiconnect_invoke(action="setSpecificValueOfCard",
+                                     card=int(c),
+                                     keys=["due"],
+                                     newValues=[incrementer])
+        print("All done!\n\n")
+
+
+    def rechange_due_order(self):
+        incrementer = -len(self.best_review_order)-1
+        for c in tqdm(self.best_review_order, desc="Altering due order", unit="card"):
+            incrementer += 1
+            self._ankiconnect_invoke(action="setSpecificValueOfCard",
+                                     card=int(c),
+                                     keys=["due"],
+                                     newValues=[incrementer])
+        print("All done!\n\n")
+
     def compute_clusters(self,
                       method="kmeans",
-                      input_col="combo_vec",
+                      input_col="sbert",
                       output_col="clusters",
                       **kwargs):
         "perform clustering over a given column"
@@ -615,7 +618,7 @@ Edit the variable 'field_dic' to use {card_model}")
     def show_latent_space(self,
                  reduce_dim="umap",
                  color_col="clusters",
-                 coordinate_col="combo_vec"):
+                 coordinate_col="sbert"):
         "display a graph showing the cards spread out into 2 dimensions"
         df = self.df
         if "clusters" not in df.columns:
@@ -662,7 +665,7 @@ Edit the variable 'field_dic' to use {card_model}")
     def find_notes_similar_to_input(self,
                                     user_input,
                                     nlimit=5,
-                                    user_col="combo_vec",
+                                    user_col="sbert",
                                     dist="cosine", reverse=False):
         "given a text input, find notes with highest cosine similarity"
         pd.set_option('display.max_rows', None)
@@ -670,53 +673,25 @@ Edit the variable 'field_dic' to use {card_model}")
         pd.set_option('display.width', None)
         pd.set_option('display.max_colwidth', None)
         df = self.df
-        if user_col == "tfs":
-            user_col = "tfs_svd"
-        if dist in "cosine":
-            dist_args = {"metric": "cosine", "n_jobs": -1}
-        if dist in "euclidian":
-            dist_args = {"metric": "euclidean", "n_jobs": -1}
 
-        if user_col in ["tfs_svd", "combo_vec"]:
-            new_index = max(df.index)+1
-            df.loc[new_index, "text"] = user_input
-            df.loc[new_index, "mod"] = "0"
-            df.at[new_index, "sbert"] = sbert.encode(user_input, normalize_embeddings=True)
-            print("\n\n\nRecomputing vectors...")
-            self._vectors(df, use_sbert_cache=False)
-            print("Done.")
-            df = self.df
-
-        if user_col == "tfs_svd":
-            embed = df.loc[new_index, "tfs_svd"]
-        if user_col == "sbert":
-            embed = sbert.encode(user_input, normalize_embeddings=True)
-        if user_col == "combo_vec":
-            embed = np.array(df.loc[new_index, "combo_vec"])
+        embed = sbert.encode(user_input, normalize_embeddings=True)
         print("")
         tqdm.pandas(desc="Searching")
-        df["distance"] = df[user_col].progress_apply(lambda x : pairwise_distances(
-                                                        embed.reshape(1, -1),
-                                                        x.reshape(1, -1),
-                                                        **dist_args))
+        df["distance"] = df[user_col].progress_apply(
+                lambda x : pairwise_distances(embed.reshape(1, -1),
+                                              x.reshape(1, -1),
+                                              metric=dist))
         index = df.index
-        try:
-            index.remove(new_index)
-        except:
-            pass
         good_order = sorted(index, key=lambda row: df.loc[row, "distance"], reverse=reverse)
-        print(df.loc[good_order[0:nlimit], ["text", "distance"]])
         cnt = 0
+        ans = "y"
         while True:
             cnt += 1
-            ans = input("Show more?\n(y/n)>")
-            if ans == "y":
-                try:
-                    print(df.loc[good_order[nlimit*cnt:nlimit*(cnt+1)], ["text", "distance"]])
-                except:
-                    break
+            if ans != "n":
+                print(df.loc[good_order[nlimit*cnt:nlimit*(cnt+1)], ["text", "distance"]])
             else:
                 break
+            ans = input("Show more?\n(y/n)>")
         pd.reset_option("display.max_rows")
         pd.reset_option('display.max_columns')
         pd.reset_option('display.width')
