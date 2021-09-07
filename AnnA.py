@@ -37,9 +37,9 @@ def asynchronous_importer():
     "used to asynchroneously import the modules, speeds up launch time"
     global stopwords, SentenceTransformer, KMeans, DBSCAN, \
         AgglomerativeClustering, transformers, sp, normalize, TfidfVectorizer,\
-        CountVectorizer, TruncatedSVD,\
+        CountVectorizer, TruncatedSVD, StandardScaler, \
         pairwise_distances, PCA, px, umap, np, tokenizer_bert, sbert
-    print("Begin importing modules.")
+    print("Importing modules.")
     from nltk.corpus import stopwords
     from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
     import transformers
@@ -47,7 +47,7 @@ def asynchronous_importer():
     tokenizer_bert = transformers.BertTokenizerFast.from_pretrained('bert-base-multilingual-uncased',
                                                                     add_special_tokens=False,
                                                                     do_lower_case=True,
-                                                                    wordpieces_prefix="",
+                                                                    #wordpieces_prefix="",
                                                                     strip_accents=True,
                                                                     tokenize_chinese_chars=False,  # the docs says it's better for japanese
                                                                     clean_text=True,
@@ -60,6 +60,7 @@ def asynchronous_importer():
     from sklearn.preprocessing import normalize
     from sklearn.decomposition import TruncatedSVD
     from sklearn.decomposition import PCA
+    from sklearn.preprocessing import StandardScaler
     print("Finished importing modules")
 
 
@@ -108,10 +109,10 @@ class AnnA:
             from greek_alphabet_mapping import greek_alphabet
             self.greek_alphabet = greek_alphabet
         import_thread.join()  # asynchroneous importing of large module
+        time.sleep(1)
         self.stop_words = self._gathering_stopwords()
         self.tfidf = TfidfVectorizer(
-                                #ngram_range=(1, 2),
-                                ngram_range=(1, 2),
+                                ngram_range=(1, 1),
                                 tokenizer=tokenizer_bert.tokenize,
                                 analyzer="word",
                                 norm="l2",
@@ -122,16 +123,15 @@ class AnnA:
         self.TSVD = TruncatedSVD(n_components=self.tfs_svd_dim, random_state=42)
         self.pca_sbert = PCA(n_components=self.pca_sbert_dim, random_state=42)
         self.pca_2D = PCA(n_components=2, random_state=42)
+        scaler = StandardScaler()
 
         # actual execution
         self.deckname = self._check_deck(deckname)
         self._create_and_fill_df()
         self.df = self._reset_index_dtype(self.df)
         self._format_card()
-        self.df = self._reset_index_dtype(self.df)
         self._vectors()
-        self.df = self._reset_index_dtype(self.df)
-        self.compute_distance_matrix()
+        #self.assign_scoring()
 
     def _gathering_stopwords(self):
         "store the completed list of stopwords to self.stops"
@@ -352,7 +352,8 @@ class AnnA:
         text = text.replace("&gt;", ">")
         text = text.replace("&l;;", "<")
         text = " ".join(text.split())  # multiple spaces
-        return text.strip()
+        text = text.strip()[0:512] # truncation
+        return text
 
     def _format_card(self):
         "keep only relevant field of card then clean text"
@@ -397,7 +398,7 @@ Edit the variable 'field_dic' to use {card_model}")
         df["text"] = [self._format_text(x) for x in tqdm(df["comb_text"], desc="Formating text")]
         self.df = df.sort_index()
 
-    def _vectors(self, df=None, save_cache=True):
+    def _vectors(self, df=None, use_sbert_cache=True):
         """
         Assigne vectors to each card
         df["tfs"] contains tf-idf vectors
@@ -416,12 +417,12 @@ Edit the variable 'field_dic' to use {card_model}")
         def compute_tfidf_in_thread(tfidf_list, lock):
             global tfs, tfs2
             start = time.time()
-            tqdm.write("\n Launching computation of Tfidf vectors in a separate thread...")
-            tfs = self.tfidf.fit_transform(tqdm(df['text']))
+            print("")
+            tfs = self.tfidf.fit_transform(tqdm(df['text'], desc="Computing Tfidf vectors in a separate thread", position=1))
             tqdm.write(f"Reducing Tfidf vectors to {self.tfs_svd_dim} dimensions using SVD...")
             tfs2 = self.TSVD.fit_transform(tfs)
             tqdm.write(f"SVD done after {int(time.time()-start)}s.")
-            tqdm.write(f"Explained variance ratio after SVD on TFS: {round(sum(self.TSVD.explained_variance_ratio_)*100, 1)}%")
+            tqdm.write(f"Explained variance ratio after SVD on Tfidf: {round(sum(self.TSVD.explained_variance_ratio_)*100, 1)}%")
             lock.acquire()
             tfidf_list.append(tfs)
             tfidf_list.append(tfs2)
@@ -433,67 +434,62 @@ Edit the variable 'field_dic' to use {card_model}")
                                         daemon=True)
         tfidf_thread.start()
 
-        print("\nChecking for cached sentence-bert HDF file...")
-        # WARNING: this part of the code is full of supersition
-        # as I had a lot of trouble making it work, with errors like 
-        # "Must have equal len keys and value when setting with an ndarray"
-        # and "setting an array element with a sequence."
-        # I ended up putting a lot of astype("object") and used .at instead of .loc
-        sbert_file = Path("./sbert_cache.hdf")
-        df["sbert"] = 0*len(df.index)
-        df["sbert"] = df["sbert"].astype("object")
-        loaded_sbert = 0
-        index_to_recompute = []
+        if use_sbert_cache is True:
+            print("\nChecking for cached sentence-bert pickle file...")
+            sbert_file = Path("./sbert_cache.pickle")
+            df["sbert"] = 0*len(df.index)
+            df["sbert"] = df["sbert"].astype("object")
+            loaded_sbert = 0
+            index_to_recompute = []
 
-        # reloads sbert vectors and only recomputes the new one:
-        if not sbert_file.exists():
-            print("sentence-bert cache not found, will create it.")
-            df_cache = pd.DataFrame(columns=["cardId", "mod", "text", "sbert"]).set_index("cardId")
-            index_to_recompute = df.index
-        else:
-            print("Found sentence-bert cache.")
-            df_cache = pd.read_hdf(sbert_file)
+            # reloads sbert vectors and only recomputes the new one:
+            if not sbert_file.exists():
+                print("sentence-bert cache not found, will create it.")
+                df_cache = pd.DataFrame(columns=["cardId", "mod", "text", "sbert"]).set_index("cardId")
+                index_to_recompute = df.index
+            else:
+                print("Found sentence-bert cache.")
+                df_cache = pd.read_pickle(sbert_file)
+                df_cache["sbert"] = df_cache["sbert"].astype("object")
+                df_cache["mod"] = df_cache["mod"].astype("object")
+                df_cache["text"] = df_cache["text"]
+                df_cache = self._reset_index_dtype(df_cache)
+                for i in df.index:
+                    if i in df_cache.index and \
+                            (str(df_cache.loc[i, "mod"]) == str(df.loc[i, "mod"])) and \
+                            (str(df_cache.loc[i, "text"]) == str(df.loc[i, "text"])):
+                        df.at[i, "sbert"] = df_cache.loc[i, "sbert"].astype("object")
+                        loaded_sbert += 1
+                    else:
+                        index_to_recompute.append(i)
+
+            print(f"Loaded {loaded_sbert} vectors from cache, will compute {len(index_to_recompute)} others...")
+            if len(index_to_recompute) != 0:
+                sentence_list = [df.loc[x, "text"]
+                        for x in df.index if x in index_to_recompute]
+                sentence_embeddings = sbert.encode(sentence_list,
+                                                   normalize_embeddings=True,
+                                                   show_progress_bar=True)
+
+                for i, ind in enumerate(tqdm(index_to_recompute)):
+                    df.at[ind, "sbert"] = sentence_embeddings[i]
+
+            # stores newly computed sbert vectors in a file:
             df_cache = self._reset_index_dtype(df_cache)
-            df_cache["sbert"] = df_cache["sbert"].astype("object")
-            df_cache["mod"] = df_cache["mod"].astype("object")
-            df_cache["text"] = df_cache["text"]
-            for i in df.index:
-                if i in df_cache.index and \
-                        (str(df_cache.loc[i, "mod"]) == str(df.loc[i, "mod"])) and \
-                        (str(df_cache.loc[i, "text"]) == str(df.loc[i, "text"])):
-                    df.at[i, "sbert"] = df_cache.loc[i, "sbert"].astype("object")
-                    loaded_sbert += 1
-                else:
-                    index_to_recompute.append(i)
-
-        print(f"Loaded {loaded_sbert} vectors from cache, will compute {len(index_to_recompute)} others...")
-        if len(index_to_recompute) != 0:
-            sentence_list = [df.loc[x, "text"]
-                    for x in df.index if x in index_to_recompute]
-            sentence_embeddings = sbert.encode(sentence_list,
-                                               normalize_embeddings=True,
-                                               show_progress_bar=True)
-
-            for i, ind in enumerate(tqdm(index_to_recompute)):
-                df.at[ind, "sbert"] = sentence_embeddings[i]
-
-        # stores newly computed sbert vectors in a file:
-        df_cache = self._reset_index_dtype(df_cache)
-        for i in [x for x in index_to_recompute if x not in df_cache.index]:
-            df_cache.loc[i, "sbert"] = df.loc[i, "sbert"].astype("object")
-            df_cache.loc[i, "mod"] = df.loc[i, "mod"].astype("object")
-            df_cache.loc[i, "text"] = df.loc[i, "text"]
-        for i in [x for x in index_to_recompute if x in df_cache.index]:
-            df_cache.loc[i, "sbert"] = df.loc[i, "sbert"].astype("object")
-            df_cache.loc[i, "mod"] = df.loc[i, "mod"].astype("object")
-            df_cache.loc[i, "text"] = df.loc[i, "text"]
-        df_cache = self._reset_index_dtype(df_cache)
-        if save_cache is True:
-            df_cache.to_hdf(f"sbert_cache.hdf", "sbert_cache", complevel=0, errors="")
+            for i in [x for x in index_to_recompute if x not in df_cache.index]:
+                df_cache.loc[i, "sbert"] = df.loc[i, "sbert"].astype("object")
+                df_cache.loc[i, "mod"] = df.loc[i, "mod"].astype("object")
+                df_cache.loc[i, "text"] = df.loc[i, "text"]
+            for i in [x for x in index_to_recompute if x in df_cache.index]:
+                df_cache.loc[i, "sbert"] = df.loc[i, "sbert"].astype("object")
+                df_cache.loc[i, "mod"] = df.loc[i, "mod"].astype("object")
+                df_cache.loc[i, "text"] = df.loc[i, "text"]
+            df_cache = self._reset_index_dtype(df_cache)
+            df_cache.to_pickle(f"sbert_cache.pickle")
 
         print(f"Reducing dimension of sbert to {self.pca_sbert_dim} using PCA...")
         df_temp = pd.DataFrame(
-            columns=["V"+str(x) for x in range(len(df.loc[df.index[0], "sbert"]))],
+            columns=["V"+str(x+1) for x in range(len(df.loc[df.index[0], "sbert"]))],
             data=[x[0:] for x in df["sbert"]])
         out = self.pca_sbert.fit_transform(df_temp)
         print(f"Explained variance ratio after PCA on SBERT: {round(sum(self.pca_sbert.explained_variance_ratio_)*100,1)}%")
@@ -503,9 +499,41 @@ Edit the variable 'field_dic' to use {card_model}")
         df["tfs"] = [x for x in tfidf_list[0]]
         df["tfs_svd"] = [x for x in tfidf_list[1]]
 
-        print("\nConcatenating tfidf_svd and sentence-BERT_pca vectors...")
+        print("\nConcatenating tfidf_svd and sBERT_pca vectors...")
         df["combo_vec"] = [np.array(list(df.loc[x, "sbert_pca"]) + list(df.loc[x, "tfs_svd"])) for x in df.index]
         self.df = df.sort_index()
+
+
+    def assign_scoring(self, n_to_generate=500, reference_order="lowest_interval"):
+        """
+        assign scoring to each card, the score reflects the order in which 
+        they should be reviewed to minimize useless reviews.
+        The score is computed according to formula:
+            score = interval + median of the proximity to each card of the queue
+        Reference_order can either be "lower_interval" or "relative_overdueness"
+        """
+        df = self.df
+
+        if reference_order != "lowest_interval":
+            print("Using another reference than lowest interval is not yet supproted")
+            reference_order = "lowest_interval"
+
+        # fill queue with already rated cards
+        queue = [x for x in df.index if df.loc[x, "status"] == "rated"]
+
+        # center and scale intervals
+        df["ivl_std"] = scaler.fit_transform(df["interval"].to_numpy().reshape(-1, 1))
+
+        if len(queue) == 0:
+            if reference_order == "lowest_interval":
+                queue.append(df.iloc[df["ivl_std"].to_numpy().argmin()].name)
+
+        
+        # compute distance matrix to the queue
+        # make sure the scoring is not backwards etc
+        # stop after n generated cards
+
+        self.df = df
 
     def compute_distance_matrix(self, method="cosine", input_col="combo_vec"):
         """
@@ -514,21 +542,19 @@ Edit the variable 'field_dic' to use {card_model}")
         """
         print("Computing the distance matrix...")
         df = self.df
+
         df_temp = pd.DataFrame(
-            columns=["V"+str(x) for x in range(len(df.loc[df.index[0], "combo_vec"]))],
-            data=[x[0:] for x in df["combo_vec"]])
+            columns=["V"+str(x+1) for x in range(len(df.loc[df.index[0], input_col]))],
+            data=[x[0:] for x in df[input_col]])
         df_dist = pairwise_distances(df_temp, n_jobs=-1, metric=method)
-        print("Done.")
+
 #        df_dist = pd.DataFrame(columns=list(df.index),
 #                               index=list(df.index),
 #                               data=float(-1))
 #        for i in tqdm(df.index, desc="Distances"):
 #            for j in df.index:
 #                df_dist.at[i, j] = np.dot(df.loc[i, input_col], df.loc[j, input_col])
-#                df_dist.at[i, j] = pairwise_distances(X=df.loc[i, input_col].reshape(1, -1),
-#                                                      Y=df.loc[j, input_col].reshape(1, -1),
-#                                                      n_jobs=-1,
-#                                                      metric=method)
+        print("Done.")
         self.df_dist = df_dist
         self.df = df
 
@@ -637,7 +663,7 @@ Edit the variable 'field_dic' to use {card_model}")
                                     user_input,
                                     nlimit=5,
                                     user_col="combo_vec",
-                                    dist="cosine"):
+                                    dist="cosine", reverse=False):
         "given a text input, find notes with highest cosine similarity"
         pd.set_option('display.max_rows', None)
         pd.set_option('display.max_columns', None)
@@ -654,11 +680,12 @@ Edit the variable 'field_dic' to use {card_model}")
         if user_col in ["tfs_svd", "combo_vec"]:
             new_index = max(df.index)+1
             df.loc[new_index, "text"] = user_input
+            df.loc[new_index, "mod"] = "0"
+            df.at[new_index, "sbert"] = sbert.encode(user_input, normalize_embeddings=True)
             print("\n\n\nRecomputing vectors...")
-            self._vectors(df, save_cache=False)
+            self._vectors(df, use_sbert_cache=False)
             print("Done.")
             df = self.df
-        dist = {}
 
         if user_col == "tfs_svd":
             embed = df.loc[new_index, "tfs_svd"]
@@ -666,45 +693,43 @@ Edit the variable 'field_dic' to use {card_model}")
             embed = sbert.encode(user_input, normalize_embeddings=True)
         if user_col == "combo_vec":
             embed = np.array(df.loc[new_index, "combo_vec"])
-        for i in df.index:
-            dist.update({i: pairwise_distances(
-                                                X=embed.reshape(1, -1),
-                                                Y=df.loc[i, user_col].reshape(1, -1),
-                                                **dist_args)
-                        })
-        if len(dist.keys()) == 0:
-            print("No cards found")
-        else:
-            print(f"Found {len(dist.keys())} cards:")
-            index = list(dist.keys())
-            good_order = sorted(index, key=lambda row: int(dist[row]), reverse=False)
-            print(df.loc[good_order[:nlimit], "text"])
-            cnt = 0
-            while True:
-                cnt += 1
-                ans = input("Show more?\n(y/n)>")
-                if ans == "y":
-                    try:
-                        print(df.loc[index[nlimit*cnt:nlimit*(cnt+1)], "text"])
-                    except:
-                        break
-                else:
+        print("")
+        tqdm.pandas(desc="Searching")
+        df["distance"] = df[user_col].progress_apply(lambda x : pairwise_distances(
+                                                        embed.reshape(1, -1),
+                                                        x.reshape(1, -1),
+                                                        **dist_args))
+        index = df.index
+        try:
+            index.remove(new_index)
+        except:
+            pass
+        good_order = sorted(index, key=lambda row: df.loc[row, "distance"], reverse=reverse)
+        print(df.loc[good_order[0:nlimit], ["text", "distance"]])
+        cnt = 0
+        while True:
+            cnt += 1
+            ans = input("Show more?\n(y/n)>")
+            if ans == "y":
+                try:
+                    print(df.loc[good_order[nlimit*cnt:nlimit*(cnt+1)], ["text", "distance"]])
+                except:
                     break
+            else:
+                break
+        pd.reset_option("display.max_rows")
+        pd.reset_option('display.max_columns')
+        pd.reset_option('display.width')
+        pd.reset_option('display.max_colwidth')
         return True
 
 
-    def find_similar_card(self, card_id, field_name):
-        "given a card_id, find similar other notes with highest cosine similarity"
-        info = self._get_cards_info_from_card_id(card_id)
-        text = info[0]['fields_no_html'][field_name]
-        self.find_notes_similar_to_input(text)
-
     def save_df(self, df=None, out_name=None):
-        "export dataframe as HDF format"
+        "export dataframe as pickle format"
         if df is None:
             df = self.df
-        name = f"{out_name}_{self.deckname}_{int(time.time())}.hdf"
-        df.to_hdf(name, name, errors="", complevel=9)
+        name = f"{out_name}_{self.deckname}_{int(time.time())}.pickle"
+        df.to_pickle(name)
         print(f"Dataframe exported to {name}")
 
 
@@ -731,6 +756,5 @@ class CTFIDFVectorizer(TfidfTransformer):
         X = normalize(X, axis=1, norm='l2', copy=False)
         return X
 
-import_thread = threading.Thread(target=asynchronous_importer)
+import_thread = threading.Thread(target=asynchronous_importer, daemon=True)
 import_thread.start()
-

@@ -31,17 +31,14 @@ Plot the latent space of the semantic relation of your anki cards showing cluste
 
 ## TODO
 ### optimization
-* use a saved df to find the quickest way to get pairwise distance
+* virer tf-idf
 * use as scoring: interval + [take the median/mean of the proximity to the cards in queue]
-    * use cosine [distance or similarity], actually dot score is faster
-    * review the lowest or highest score first
-    * interval has to be centered and scaled
-    * if queue empty : pick the lowest interval card
-    * stop at 200 card generated
 * create filtered deck with the right due scores
 * add tags to cards containing the cluster number as well as a few words to describe the topic of the cluster, it would connect nicely with the other mindmapping addon
+* check if you should not use lapply in some places instead of loops
 * create a requirements.txt file
-* normalize all occurence of "tfidf" to the canonical format (TF-IDF?)
+* normalize all occurence of "tfidf" to the canonical format (TF-IDF?), same with sbert/s-BERT etc
+* run the script on notes and not cards
 * respect PEP8
 
 ### ML
