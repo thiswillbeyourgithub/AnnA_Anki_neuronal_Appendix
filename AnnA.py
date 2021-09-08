@@ -282,12 +282,9 @@ from this deck...")
         self.due_cards_list = due_cards
         self.rated_cards_list = rated_cards
 
-        if self.card_limit is None:
-            combined_card_list = list(rated_cards + due_cards)
-        else:
-            combined_card_list = list(
-                                     rated_cards + due_cards
-                                     )[0:self.card_limit]
+        limit = self.card_limit if self.card_limit else -1
+        combined_card_list = list(rated_cards + due_cards)[:limit]
+
         if len(combined_card_list) < 50:
             print("You don't have enough due and rated cards!\nExiting.")
             raise SystemExit()
