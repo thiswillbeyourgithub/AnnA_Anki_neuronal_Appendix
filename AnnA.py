@@ -176,7 +176,6 @@ class AnnA:
 
                 def retrieve_cards(card_list, lock, cnt, r_list):
                     "for multithreaded card retrieval"
-                    #start = time.time()
                     out_list = self._ankiconnect_invoke(action="cardsInfo",
                                   cards=card_list)
                     lock.acquire()
@@ -465,14 +464,12 @@ Edit the variable 'field_dic' to use {card_model}")
         df = self.df
         df_dist = self.df_dist
         queue_size_goal = self.desired_deck_size
-        # center and scale intervals
         df["ivl_std"] = self.scaler.fit_transform(df["interval"].to_numpy().reshape(-1, 1))
 
         if reference_order != "lowest_interval":
             print("Using another reference than lowest interval is not yet supproted")
             reference_order = "lowest_interval"
 
-        # fill queue with already rated cards
         rated = [x for x in df.index if df.loc[x, "status"] == "rated"]
         queue = []
         print(f"Already rated in the past relevant days: {len(rated)}")
