@@ -31,7 +31,7 @@ Plot the latent space of the semantic relation of your anki cards showing cluste
 ## TODO
 ### optimization
 * optimize review order computation
-* respect PEP8 + comment the code
+* comment the code
 * rewrite the README
 * check if you should not use df.apply in some places instead of loops, or use .values
 * create a requirements.txt file
@@ -40,6 +40,7 @@ Plot the latent space of the semantic relation of your anki cards showing cluste
 * add tags of ctf-if to cards
 * ponder using df.compare to fetch more quickly the cached sbert vectors
 * mention in the readme that I could reimplement tfidf if needed
+* recommand in the readme to use another sbert model if you only use
 
 ### ML
 * try with miniBatchKMeans to seed if it speeds up the clustering, otherwise go with HDBSCAN
