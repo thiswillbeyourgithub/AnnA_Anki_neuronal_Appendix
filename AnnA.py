@@ -734,15 +734,15 @@ as best_review_order!\nNumber of inconsistent cards: {len(diff)}")
         * To find the topic of each cluster, ctf-idf is used
         """
         df = self.df
-        if self.n_clusters is None and method.lower() not in "dbscan":
+        if self.n_clusters is None and method.lower() in "kmeans":
             self.n_clusters = len(df.index)//100
-            print(f"Number of clusters to detect: {n_clusters}") 
+            print(f"No number of clustrs supplied, will try {self.n_clusters}") 
         kmeans_args_deploy = {"n_clusters": self.n_clusters}
         dbscan_args_deploy = {"eps": 0.75,
                               "min_samples":3,
                               "n_jobs":-1}
         agglo_args_deploy = {"n_clusters": self.n_clusters,
-                             "distance_threshold": 0.1,
+                             # "distance_threshold": 0.6,
                              "affinity": "cosine",
                              "memory": "/tmp/",
                              "linkage": "average"}
