@@ -120,7 +120,7 @@ class AnnA:
         self._compute_sBERT_vec()
         self._compute_distance_matrix()
         self.assign_score()
-        self.to_anki()
+        self.send_to_anki()
         self.save_df()
 
         print("Re-optimizing Anki database")
