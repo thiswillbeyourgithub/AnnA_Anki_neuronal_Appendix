@@ -121,7 +121,6 @@ class AnnA:
         self._compute_distance_matrix()
         self.compute_clusters()
         self.assign_score()
-        self.compute_clusters()
 
         self.save_df()
         print("Re-optimizing database")
