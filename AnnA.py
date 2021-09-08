@@ -641,7 +641,7 @@ Edit the variable 'field_dic' to use {card_model}")
 
     def show_latent_space(self,
                  reduce_dim="umap",
-                 color_col="clusters",
+                 color_col="tags",
                  coordinate_col="sbert"):
         "display a graph showing the cards spread out into 2 dimensions"
         df = self.df
