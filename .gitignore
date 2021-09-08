@@ -4,3 +4,4 @@ obsolete
 __pycache__/
 AMIMA_jupyter.py
 *.pickle
+./DF_backups
