@@ -761,7 +761,7 @@ plotting...")
             y_coor = res[1]
         elif reduce_dim.lower() in "umap":
             res = umap.UMAP(n_jobs=-1,
-                            verbose=0,
+                            verbose=1,
                             n_components=2,
                             metric="cosine",
                             init='spectral',
