@@ -518,7 +518,7 @@ Edit the variable 'field_dic' to use {card_model}")
             print("Deck name already taken.")
             filtered_deck_name = filtered_deck_name + "_".join(time.asctime().split()[0:3])
         filtered_deck_name = filtered_deck_name.replace("::", "_")
-        tag_name = f"AnnA_Optimal_review_order::{self.deckname}::session_{'_'.join(time.asctime().split()[0:3])}"
+        tag_name = f"AnnA_Optimal_review_order::{self.deckname.replace('::', '_')}::session_{'_'.join(time.asctime().split()[0:3])}"
 
         # first remove the tag if present:
         tag_list = self._ankiconnect_invoke(action="getTags")
