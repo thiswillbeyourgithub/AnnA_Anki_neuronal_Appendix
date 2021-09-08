@@ -45,13 +45,13 @@ def asynchronous_importer():
     global stopwords, SentenceTransformer, KMeans, DBSCAN, \
         AgglomerativeClustering, transformers, sp, normalize, TfidfVectorizer,\
         CountVectorizer, TruncatedSVD, StandardScaler, \
-        pairwise_distances, PCA, px, umap, np, tokenizer_bert, sbert
+        pairwise_distances, PCA, px, umap, np, tokenizer_bert, sBERT
     print("Importing modules.")
     from nltk.corpus import stopwords
     from sklearn.feature_extraction.text import TfidfVectorizer
     from sklearn.feature_extraction.text import CountVectorizer
     from sentence_transformers import SentenceTransformer
-    sbert = SentenceTransformer('distiluse-base-multilingual-cased-v1')
+    sBERT = SentenceTransformer('distiluse-base-multilingual-cased-v1')
     from sklearn.cluster import KMeans, DBSCAN, AgglomerativeClustering
     import plotly.express as px
     import umap.umap_
@@ -81,7 +81,7 @@ class AnnA:
                  show_banner=True,
                  card_limit=None,
                  n_clusters=10,
-                 pca_sbert_dim=300,  # should keep about 99% of variance
+                 pca_sBERT_dim=300,  # should keep about 99% of variance
                  ):
         # printing banner
         if show_banner is True:
@@ -99,7 +99,7 @@ class AnnA:
         self.rated_last_X_days = rated_last_X_days
         self.card_limit = card_limit
         self.n_clusters = n_clusters
-        self.pca_sbert_dim = pca_sbert_dim
+        self.pca_sBERT_dim = pca_sBERT_dim
 
         # loading backend stuf
         if self.replace_acronym is True:
@@ -117,7 +117,7 @@ class AnnA:
         self.scaler = StandardScaler()
         self.df = self._reset_index_dtype(self.df)
         self._format_card()
-        self._compute_sbert_vec()
+        self._compute_sBERT_vec()
         self._compute_distance_matrix()
         self.compute_clusters()
         self.assign_score()
@@ -426,37 +426,37 @@ troubleshoot formating issues:")
         self.df = df.sort_index()
         return True
 
-    def _compute_sbert_vec(self, df=None, use_sbert_cache=True):
+    def _compute_sBERT_vec(self, df=None, use_sBERT_cache=True):
         """
         Assigne vectors to each card
-        df["sbert_before_pca"] if exists, contains the 512 vectors of sbert
-        df["sbert"] contains either the 512 vectors or less because you
+        df["sBERT_before_pca"] if exists, contains the 512 vectors of sBERT
+        df["sBERT"] contains either the 512 vectors or less because you
             enabled pca reduction
         * given how long it is to compute the vectors I decided to store
-            all already computed sbert to a pickled DataFrame at each run
+            all already computed sBERT to a pickled DataFrame at each run
         """
         if df is None:
             df = self.df
 
-        if use_sbert_cache is True:
-            print("\nLooking for cached sentence-bert pickle file...", end="")
-            sbert_file = Path("./sbert_cache.pickle")
-            df["sbert"] = 0*len(df.index)
-            df["sbert"] = df["sbert"].astype("object")
-            loaded_sbert = 0
+        if use_sBERT_cache is True:
+            print("\nLooking for cached sBERT pickle file...", end="")
+            sBERT_file = Path("./sBERT_cache.pickle")
+            df["sBERT"] = 0*len(df.index)
+            df["sBERT"] = df["sBERT"].astype("object")
+            loaded_sBERT = 0
             id_to_recompute = []
 
-            # reloads sbert vectors and only recomputes the new one:
-            if not sbert_file.exists():
-                print(" sentence-bert cache not found, will create it.")
+            # reloads sBERT vectors and only recomputes the new one:
+            if not sBERT_file.exists():
+                print(" sBERT cache not found, will create it.")
                 df_cache = pd.DataFrame(
-                        columns=["cardId", "mod", "text", "sbert"]
+                        columns=["cardId", "mod", "text", "sBERT"]
                         ).set_index("cardId")
                 id_to_recompute = df.index
             else:
-                print(" Found sentence-bert cache.")
-                df_cache = pd.read_pickle(sbert_file)
-                df_cache["sbert"] = df_cache["sbert"].astype("object")
+                print(" Found sBERT cache.")
+                df_cache = pd.read_pickle(sBERT_file)
+                df_cache["sBERT"] = df_cache["sBERT"].astype("object")
                 df_cache["mod"] = df_cache["mod"].astype("object")
                 df_cache["text"] = df_cache["text"]
                 df_cache = self._reset_index_dtype(df_cache)
@@ -466,52 +466,52 @@ troubleshoot formating issues:")
                                 str(df.loc[i, "mod"])) and \
                             (str(df_cache.loc[i, "text"]) ==
                                 str(df.loc[i, "text"])):
-                        df.at[i, "sbert"] = df_cache.loc[i, "sbert"]
-                        loaded_sbert += 1
+                        df.at[i, "sBERT"] = df_cache.loc[i, "sBERT"]
+                        loaded_sBERT += 1
                     else:
                         id_to_recompute.append(i)
 
-            print(f"Loaded {loaded_sbert} vectors from cache, will compute \
+            print(f"Loaded {loaded_sBERT} vectors from cache, will compute \
 {len(id_to_recompute)} others...")
             if len(id_to_recompute) != 0:
                 sentence_list = [df.loc[x, "text"]
                                  for x in df.index if x in id_to_recompute]
-                sentence_embeddings = sbert.encode(sentence_list,
+                sentence_embeddings = sBERT.encode(sentence_list,
                                                    normalize_embeddings=True,
                                                    show_progress_bar=True)
 
                 for i, ind in enumerate(tqdm(id_to_recompute)):
-                    df.at[ind, "sbert"] = sentence_embeddings[i]
+                    df.at[ind, "sBERT"] = sentence_embeddings[i]
 
-            # stores newly computed sbert vectors in a file:
+            # stores newly computed sBERT vectors in a file:
             df_cache = self._reset_index_dtype(df_cache)
             for i in [x for x in id_to_recompute if x not in df_cache.index]:
-                df_cache.loc[i, "sbert"] = df.loc[i, "sbert"].astype("object")
+                df_cache.loc[i, "sBERT"] = df.loc[i, "sBERT"].astype("object")
                 df_cache.loc[i, "mod"] = df.loc[i, "mod"].astype("object")
                 df_cache.loc[i, "text"] = df.loc[i, "text"]
             for i in [x for x in id_to_recompute if x in df_cache.index]:
-                df_cache.loc[i, "sbert"] = df.loc[i, "sbert"].astype("object")
+                df_cache.loc[i, "sBERT"] = df.loc[i, "sBERT"].astype("object")
                 df_cache.loc[i, "mod"] = df.loc[i, "mod"].astype("object")
                 df_cache.loc[i, "text"] = df.loc[i, "text"]
             df_cache = self._reset_index_dtype(df_cache)
-            df_cache.to_pickle("sbert_cache.pickle")
+            df_cache.to_pickle("sBERT_cache.pickle")
 
-        if self.pca_sbert_dim is not None:
-            print(f"Reducing dimension of sbert to {self.pca_sbert_dim} \
+        if self.pca_sBERT_dim is not None:
+            print(f"Reducing dimension of sBERT to {self.pca_sBERT_dim} \
 using PCA...")
-            pca_sbert = PCA(n_components=self.pca_sbert_dim, random_state=42)
+            pca_sBERT = PCA(n_components=self.pca_sBERT_dim, random_state=42)
             df_temp = pd.DataFrame(
                 columns=["V"+str(x+1)
-                         for x in range(len(df.loc[df.index[0], "sbert"]))],
-                data=[x[0:] for x in df["sbert"]])
-            out = pca_sbert.fit_transform(df_temp)
-            print(f"Explained variance ratio after PCA on SBERT: \
-{round(sum(pca_sbert.explained_variance_ratio_)*100,1)}%")
-            df["sbert_before_pca"] = df["sbert"]
-            df["sbert"] = [x for x in out]
+                         for x in range(len(df.loc[df.index[0], "sBERT"]))],
+                data=[x[0:] for x in df["sBERT"]])
+            out = pca_sBERT.fit_transform(df_temp)
+            print(f"Explained variance ratio after PCA on sBERT: \
+{round(sum(pca_sBERT.explained_variance_ratio_)*100,1)}%")
+            df["sBERT_before_pca"] = df["sBERT"]
+            df["sBERT"] = [x for x in out]
             return True
 
-    def _compute_distance_matrix(self, method="cosine", input_col="sbert"):
+    def _compute_distance_matrix(self, method="cosine", input_col="sBERT"):
         """
         compute distance matrix between all the cards
         * the distance matrix can be parallelised by scikit learn so I didn't
@@ -718,7 +718,7 @@ as best_review_order!\nNumber of inconsistent cards: {len(diff)}")
 
     def compute_clusters(self,
                          method="kmeans",
-                         input_col="sbert",
+                         input_col="sBERT",
                          output_col="clusters",
                          n_topics = 5,
                          kmeans_args=None,
@@ -806,7 +806,7 @@ as best_review_order!\nNumber of inconsistent cards: {len(diff)}")
                                       "tags",
                                       "clusters",
                                       "cluster_topic"],
-                          coordinate_col="sbert",
+                          coordinate_col="sBERT",
                           disable_legend=True,
                           umap_args=None,
                           plotly_args=None,
@@ -883,12 +883,12 @@ plotting...")
     def search_for_notes(self,
                          user_input,
                          nlimit=5,
-                         user_col="sbert",
+                         user_col="sBERT",
                          do_format_input=False,
                          dist="cosine", reverse=False):
         """
         given a text input, find notes with highest cosine similarity
-        * note that you cannot use the pca version of the sbert vectors
+        * note that you cannot use the pca version of the sBERT vectors
             otherwise you'd have to re run the whole PCA, so it's quicker
             to just use the full vectors
         """
@@ -900,7 +900,7 @@ plotting...")
 
         if do_format_input is True:
             user_input = self._format_text(user_input)
-        embed = sbert.encode(user_input, normalize_embeddings=True)
+        embed = sBERT.encode(user_input, normalize_embeddings=True)
         print("")
         tqdm.pandas(desc="Searching")
         try:
@@ -909,8 +909,8 @@ plotting...")
                                                  x.reshape(1, -1),
                                                  metric=dist))
         except ValueError as e:
-            print(f"Error {e}: did you select 'sbert' instead of \
-'sbert_before_pca'?")
+            print(f"Error {e}: did you select 'sBERT' instead of \
+'sBERT_before_pca'?")
             return False
         index = df.index
         good_order = sorted(index,
