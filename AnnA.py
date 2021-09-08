@@ -240,16 +240,16 @@ class AnnA:
         query = f"deck:{self.deckname} is:due is:review -is:learn -is:suspended -is:buried -is:new -rated:1"
         print(query)
         due_cards = self._get_card_id_from_query(query)
-        self.due_cards_list = due_cards
 
         print(f"Getting cards that where rated in the last {n_rated_days} days from this deck...")
         query = f"deck:{self.deckname} rated:{n_rated_days} -is:suspended"
         print(query)
-        rated_cards = self._get_card_id_from_query(query)
-        self.rated_cards_list = rated_cards
+        r_cards = self._get_card_id_from_query(query)
 
         # removes overlap if found
-        rated_cards = [x for x in rated_cards if x not in due_cards]
+        rated_cards = [x for x in r_cards if x not in due_cards]
+        self.due_cards_list = due_cards
+        self.rated_cards_list = rated_cards
 
         if self.card_limit is None:
             combined_card_list = list(rated_cards + due_cards)
