@@ -300,6 +300,7 @@ from this deck...")
                                         ignore_index=True,
                                         sort=True
                                         ).set_index("cardId").sort_index()
+        return True
 
     def _format_text(self, text):
         "text preprocessor, called by _format_card on each card content"
@@ -391,6 +392,7 @@ troubleshoot formating issues:")
         pd.reset_option('display.max_colwidth')
         print("\n\n")
         self.df = df.sort_index()
+        return True
 
     def _compute_sbert_vec(self, df=None, use_sbert_cache=True):
         """
@@ -472,6 +474,7 @@ using PCA...")
 {round(sum(pca_sbert.explained_variance_ratio_)*100,1)}%")
             df["sbert_before_pca"] = df["sbert"]
             df["sbert"] = [x for x in out]
+            return True
 
     def _compute_distance_matrix(self, method="cosine", input_col="sbert"):
         """
@@ -490,6 +493,7 @@ using PCA...")
         print(" Done.")
         self.df_dist = df_dist
         self.df = df
+        return True
 
     def assign_scoring(self, reference_order="lowest_interval"):
         """
@@ -545,6 +549,7 @@ supported")
 
         print("Done. Now all that is left is to send all of this to anki.\n")
         self.best_review_order = queue
+        return True
 
     def to_anki(self, template_name="AnnA - Optimal Review Order"):
         """
@@ -649,6 +654,7 @@ as best_review_order!\nNumber of inconsistent cards: {len(diff)}")
                                      keys=["due"],
                                      newValues=[incrementer])
         print("All done!\n\n")
+        return True
 
     def rechange_due_order(self):
         "reassign the due order without having the re-run the whole script"
@@ -672,6 +678,7 @@ as best_review_order!\nNumber of inconsistent cards: {len(diff)}")
                                      keys=["due"],
                                      newValues=[incrementer])
         print("All done!\n\n")
+        return True
 
     def compute_clusters(self,
                          method="kmeans",
@@ -738,6 +745,7 @@ as best_review_order!\nNumber of inconsistent cards: {len(diff)}")
 
         self.w_by_class = w_by_class
         self.df = df.sort_index()
+        return True
 
     def show_latent_space(self,
                           specific_index=None,
@@ -819,6 +827,7 @@ plotting...")
         if disable_legend is True:
             fig = fig.update_layout(showlegend=False)
         fig.show()
+        return True
 
     def search_for_notes(self,
                          user_input,
