@@ -64,7 +64,7 @@ class AnnA:
                  replace_acronym=True,
                  keep_ocr=False,
                  desired_deck_size=500,
-                 rated_last_X_days=4,
+                 rated_last_X_days=7,
                  show_banner=True,
                  card_limit=None,
                  n_clusters=None,
