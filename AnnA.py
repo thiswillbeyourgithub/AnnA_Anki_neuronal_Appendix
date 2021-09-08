@@ -551,7 +551,7 @@ supported")
         self.best_review_order = queue
         return True
 
-    def to_anki(self, template_name="AnnA - Optimal Review Order"):
+    def to_anki(self, deck_template="AnnA - Optimal Review Order"):
         """
         add a tag to the queue cards then orders the creation of a filtered
         deck filtering by this tag then manually alter the order of the review
@@ -564,7 +564,7 @@ supported")
         decks is limited.
         """
 
-        filtered_deck_name = str(template_name + f" - {self.deckname}")
+        filtered_deck_name = str(deck_template + f" - {self.deckname}")
         filtered_deck_name = filtered_deck_name.replace("::", "_")
         self.filtered_deck_name = filtered_deck_name
         if filtered_deck_name in self._ankiconnect(action="deckNames"):
