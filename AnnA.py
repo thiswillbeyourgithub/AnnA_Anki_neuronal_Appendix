@@ -873,6 +873,8 @@ plotting...")
         "export dataframe as pickle format"
         if df is None:
             df = self.df
+        if out_name is None:
+            out_name = "AnnA_Saved_DF"
         name = f"{out_name}_{self.deckname}_{int(time.time())}.pickle"
         df.to_pickle(name)
         print(f"Dataframe exported to {name}")
