@@ -177,7 +177,6 @@ threads of {batchsize} cards...")
                                                         cards=card_list)
                     lock.acquire()
                     r_list.extend(out_list)
-                    #tqdm.write(f"Thread #{cnt} finished in {int(time.time()-start)}s")
                     pbar.update(1)
                     lock.release()
                     return True
@@ -248,12 +247,10 @@ from this deck...")
         query = f"deck:{self.deckname} rated:{n_rated_days} -is:suspended"
         print(query)
         r_cards = self._get_card_id_from_query(query)
-        print(f"Found {len(r_cards)} cards that were rated in \
-the last {n_rated_days} days.")
 
         # removes overlap if found
         rated_cards = [x for x in r_cards if x not in due_cards]
-        print(f"Rated cards contained only {len(rated_cards)} relevant cards")
+        print(f"Rated cards contained {len(rated_cards)} relevant cards (from {len(r_cards)}")
         self.due_cards_list = due_cards
         self.rated_cards_list = rated_cards
 
