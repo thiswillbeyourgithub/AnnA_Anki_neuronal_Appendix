@@ -332,7 +332,7 @@ from this deck...")
             when instantiating AnnA
         Greek letters will also be replaced
         """
-        text = str(text)
+        text = str(text).replace("\n", " ")
         if self.keep_ocr is True:
             # keep image title (usually OCR)
             text = re.sub("title=(\".*?\")", "> Image: \\1. <", text)
