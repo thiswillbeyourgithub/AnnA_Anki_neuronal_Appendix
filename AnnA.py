@@ -866,7 +866,7 @@ plotting...")
         if out_name is None:
             out_name = "AnnA_Saved_DF"
         name = f"{out_name}_{self.deckname}_{int(time.time())}.pickle"
-        df.to_pickle(name)
+        df.to_pickle("./DF_backups/" + name)
         print(f"Dataframe exported to {name}")
         return True
 
