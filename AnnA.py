@@ -545,14 +545,20 @@ supported")
 
     def to_anki(self, template_name="AnnA - Optimal Review Order"):
         """
-        add a tag to the queue cards then
-        orders the creation of a filtered deck filtering by this tag
-        then manually alter the order of the review in the deck to
-        match self.best_review_order
+        add a tag to the queue cards then orders the creation of a filtered
+        deck filtering by this tag then manually alter the order of the review
+        in the deck to match self.best_review_order
+        * When creating the filtered deck, I chose 'sortOrder = 0'
+        ("oldest seen first") this way I will notice if the deck
+        somehow got rebuild and lost the right order
+        * I had to create this hackish was of creating the filtered deck by
+        using orange flags because the size of the query of the filtered
+        decks is limited.
         """
 
         filtered_deck_name = str(template_name + f" - {self.deckname}")
         filtered_deck_name = filtered_deck_name.replace("::", "_")
+        self.filtered_deck_name = filtered_deck_name
         if filtered_deck_name in self._ankiconnect(action="deckNames"):
             input(f"Deck '{filtered_deck_name}' already exists. Make sure \
 to delete this deck before continuing.\nDone? (y/n) >")
@@ -577,25 +583,50 @@ to delete this deck before continuing.\nDone? (y/n) >")
         self._ankiconnect(action="addTags", notes=note_list, tags=tag_name)
         print(f"Added tag: {tag_name} to all relevant notes.")
 
-        to_review_concat = " OR ".join([
-                                        f"cid:{x}"
-                                        for x in self.best_review_order
-                                        ])
-        query = f'("tag:{tag_name}") AND ({to_review_concat})',
+        # getting list of already orange cards, to restore later
+        orange_list = self._ankiconnect(action="findCards",
+                                        query="\"flag:2\"")
+
+        for c in tqdm(orange_list,
+                      desc="Removing orange flag from all cards",
+                      unit="card"):
+            self._ankiconnect(action="setSpecificValueOfCard",
+                                     card=int(c),
+                                     keys=["flags"],
+                                     newValues=[0])
+        for c in tqdm(self.best_review_order,
+                      desc="Adding flag 'orange' to cards to review",
+                      unit="card"):
+            self._ankiconnect(action="setSpecificValueOfCard",
+                                     card=int(c),
+                                     keys=["flags"],
+                                     newValues=[2])
+
+        print(f"Creating deck: {filtered_deck_name}")
         self._ankiconnect(action="createFilteredDeck",
                                  newDeckName=filtered_deck_name,
-                                 searchQuery=query,
+                                 searchQuery=f"\"tag:{tag_name}\" \"flag:2\"",
                                  gatherCount=2*len(self.best_review_order),
                                  reschedule=True,
                                  sortOrder=0,
                                  createEmpty=False)
-        # sortOrder = 0 is "oldest seen first", this way I can see if
-        # something is fishy if the deck rebuilded itself
-        print(f"Created deck {filtered_deck_name}")
-        self.filtered_deck_name = filtered_deck_name
+        for c in tqdm(self.best_review_order,
+                      desc="Removing flag 'orange' from cards to review",
+                      unit="card"):
+            self._ankiconnect(action="setSpecificValueOfCard",
+                                     card=int(c),
+                                     keys=["flags"],
+                                     newValues=[0])
+        for c in tqdm(orange_list,
+                      desc="Restoring orange flags from other cards",
+                      unit="card"):
+            self._ankiconnect(action="setSpecificValueOfCard",
+                                     card=int(c),
+                                     keys=["flags"],
+                                     newValues=[2])
 
-        # checks that the content of filtered deck name is the same as
-        # best_review_order
+        print("checking that the content of filtered deck name is the same as \
+ the order devises from AnnA")
         cur_in_deck = self._ankiconnect(action="findCards",
                                         query=f"\"deck:{filtered_deck_name}\"")
         diff = [x for x in self.best_review_order + cur_in_deck
