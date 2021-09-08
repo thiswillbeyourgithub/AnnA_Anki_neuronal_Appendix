@@ -360,6 +360,18 @@ Edit the variable 'field_dic' to use {card_model}")
                     comb_text = comb_text + to_add + " "
             df.loc[index, "comb_text"] = comb_text.strip().replace(": :", "").strip()
         df["text"] = [self._format_text(x) for x in tqdm(df["comb_text"], desc="Formating text")]
+        print("\n\n5 random samples of your formated text, to help troubleshoot formating issues:")
+        pd.set_option('display.max_rows', None)
+        pd.set_option('display.max_columns', None)
+        pd.set_option('display.width', None)
+        pd.set_option('display.max_colwidth', None)
+        for i in range(5):
+            print(df.sample(1)["text"], end="\n\n")
+        pd.reset_option("display.max_rows")
+        pd.reset_option('display.max_columns')
+        pd.reset_option('display.width')
+        pd.reset_option('display.max_colwidth')
+        print("\n\n")
         self.df = df.sort_index()
 
     def _vectors(self, df=None, use_sbert_cache=True):
