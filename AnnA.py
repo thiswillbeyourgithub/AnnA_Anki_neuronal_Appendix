@@ -85,8 +85,7 @@ class AnnA:
                  ):
         # printing banner
         if show_banner is True:
-            ascii_banner = pyfiglet.figlet_format("AnnA")
-            print(ascii_banner)
+            print(pyfiglet.figlet_format("AnnA"))
             print("(Anki neuronal Appendix)\n\n")
 
         # loading args etc
