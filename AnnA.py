@@ -286,7 +286,7 @@ from this deck...")
         combined_card_list = list(rated_cards + due_cards)[:limit]
 
         if len(combined_card_list) < 50:
-            print("You don't have enough due and rated cards!\nExiting.")
+            print("You don't have enough cards!\nExiting.")
             raise SystemExit()
 
         list_cardInfo = []
@@ -636,7 +636,7 @@ supported")
         timestamp = '_'.join(time.asctime().split()[0:3])
         tag_name = f"AnnA_Optimal_review_order::{deck}::session_{timestamp}"
 
-        # first remove the tag if present:
+        # remove the tag if present:
         tag_list = self._ankiconnect(action="getTags")
         if tag_name in tag_list:
             note_list = self._ankiconnect(action="findNotes",
