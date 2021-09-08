@@ -600,14 +600,10 @@ to delete this deck before continuing.\nDone? (y/n) >")
                                         query=f"\"deck:{filtered_deck_name}\"")
         diff = [x for x in self.best_review_order + cur_in_deck
                 if x not in self.best_review_order or x not in cur_in_deck]
-        if len(cur_in_deck) != len(self.best_review_order):
-            print("Wrong number of card present in deck. Something unexpained \
-happened.")
-            pdb.set_trace()
         if len(diff) != 0:
-            print("Inconsistency! The deck does not contain the same cards \
-as best_review_order!")
-            pdb.set_trace()
+            print(f"Inconsistency! The deck does not contain the same cards \
+as best_review_order!\nNumber of inconsistent cards: {len(diff)}")
+            pprint(diff)
 
         incrementer = -10*len(self.best_review_order)
         for c in tqdm(self.best_review_order,
@@ -624,8 +620,15 @@ as best_review_order!")
         "reassign the due order without having the re-run the whole script"
         # checks that the content of filtered deck name is the same
         # as best_review_order
-        # TODO re add sanity check
-        incrementer = -len(self.best_review_order)-1
+        cur_in_deck = self._ankiconnect(action="findCards",
+                                        query=f"\"deck:{filtered_deck_name}\"")
+        diff = [x for x in self.best_review_order + cur_in_deck
+                if x not in self.best_review_order or x not in cur_in_deck]
+        if len(diff) != 0:
+            print(f"Inconsistency! The deck does not contain the same cards \
+as best_review_order!\nNumber of inconsistent cards: {len(diff)}")
+            pprint(diff)
+        incrementer = -10*len(self.best_review_order)
         for c in tqdm(self.best_review_order,
                       desc="Altering due order",
                       unit="card"):
