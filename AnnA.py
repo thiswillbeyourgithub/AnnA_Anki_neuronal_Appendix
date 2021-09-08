@@ -553,7 +553,7 @@ supported")
         self.best_review_order = queue
         return True
 
-    def to_anki(self, deck_template="AnnA - Optimal Review Order"):
+    def send_to_anki(self, deck_template="AnnA - Optimal Review Order"):
         """
         add a tag to the queue cards then orders the creation of a filtered
         deck filtering by this tag then manually alter the order of the review
