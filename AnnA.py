@@ -100,8 +100,8 @@ class AnnA:
         # actual execution
         self.deckname = self._check_deck(deckname)
         import_thread.join()  # asynchroneous importing of large module
+        time.sleep(0.5)  # sometimes import_thread takes too long apparently
         self._create_and_fill_df()
-        time.sleep(1)
         self.scaler = StandardScaler()
         self.df = self._reset_index_dtype(self.df)
         self._format_card()
