@@ -661,30 +661,6 @@ as best_review_order!\nNumber of inconsistent cards: {len(diff)}")
         print("All done!\n\n")
         return True
 
-    def rechange_due_order(self):
-        "reassign the due order without having the re-run the whole script"
-        # checks that the content of filtered deck name is the same
-        # as best_review_order
-        cur_in_deck = self._ankiconnect(action="findCards",
-                                        query=f"\"deck:{self.filtered_deck_name}\"")
-        diff = [x for x in self.best_review_order + cur_in_deck
-                if x not in self.best_review_order or x not in cur_in_deck]
-        if len(diff) != 0:
-            print(f"Inconsistency! The deck does not contain the same cards \
-as best_review_order!\nNumber of inconsistent cards: {len(diff)}")
-            pprint(diff)
-        incrementer = -10*len(self.best_review_order)
-        for c in tqdm(self.best_review_order,
-                      desc="Altering due order",
-                      unit="card"):
-            incrementer += 1
-            self._ankiconnect(action="setSpecificValueOfCard",
-                                     card=int(c),
-                                     keys=["due"],
-                                     newValues=[incrementer])
-        print("All done!\n\n")
-        return True
-
     def compute_clusters(self,
                          method="kmeans",
                          input_col="sbert",
