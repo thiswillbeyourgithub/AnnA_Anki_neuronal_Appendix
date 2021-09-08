@@ -67,7 +67,7 @@ class AnnA:
                  rated_last_X_days=7,
                  show_banner=True,
                  card_limit=None,
-                 n_clusters=None,
+                 n_clusters=10,
                  pca_sbert_dim=300,  # should keep about 99% of variance
                  ):
         # printing banner
