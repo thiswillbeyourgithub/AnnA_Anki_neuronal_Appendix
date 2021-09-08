@@ -548,7 +548,7 @@ Edit the variable 'field_dic' to use {card_model}")
                 print("Inconsistency! The deck does not contain the same cards as best_review_order!") 
                 pdb.set_trace()
 
-        incrementer = -len(self.best_review_order)-1
+        incrementer = -10*len(self.best_review_order)
         for c in tqdm(self.best_review_order, desc="Altering due order", unit="card"):
             incrementer += 1
             self._ankiconnect_invoke(action="setSpecificValueOfCard",
