@@ -490,8 +490,11 @@ Edit the variable 'field_dic' to use {card_model}")
 
                 for q in rated + queue:
                     df_temp[q] = df_dist[df.index.get_loc(q)]
-                df["median_dist_to_queue"] = np.median(df_temp)
                 df["score"] = df["ivl_std"] - df["median_dist_to_queue"]
+                scaled_median = self.scaler.fit_transform(
+                        np.median(df_temp, axis=1).reshape(-1,1))
+                df["median_dist_to_queue"] = scaled_median
+
                 chosen_one = df.drop(labels=queue)["score"].idxmin()
 
                 queue.append(chosen_one)
