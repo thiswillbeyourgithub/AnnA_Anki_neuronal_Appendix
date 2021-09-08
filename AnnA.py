@@ -886,7 +886,10 @@ plotting...")
 
 
 class CTFIDFVectorizer(TfidfTransformer):
-    "source: https://towardsdatascience.com/creating-a-class-based-tf-idf-with-scikit-learn-caea7b15b858"
+    """
+    this class is just used to allow class Tf-idf, I took it from:
+    https://towardsdatascience.com/creating-a-class-based-tf-idf-with-scikit-learn-caea7b15b858
+    """
     def __init__(self, *args, **kwargs):
         super(CTFIDFVectorizer, self).__init__(*args, **kwargs)
 
