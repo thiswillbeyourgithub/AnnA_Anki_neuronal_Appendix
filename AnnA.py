@@ -755,11 +755,11 @@ plotting...")
                          hover_data=["cropped_text", "cluster_topic"])
         fig.show()
 
-    def find_notes_similar_to_input(self,
-                                    user_input,
-                                    nlimit=5,
-                                    user_col="sbert",
-                                    dist="cosine", reverse=False):
+    def search_for_notes(self,
+                         user_input,
+                         nlimit=5,
+                         user_col="sbert",
+                         dist="cosine", reverse=False):
         "given a text input, find notes with highest cosine similarity"
         pd.set_option('display.max_rows', None)
         pd.set_option('display.max_columns', None)
