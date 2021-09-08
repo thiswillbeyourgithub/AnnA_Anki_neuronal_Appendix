@@ -677,21 +677,21 @@ as best_review_order!\nNumber of inconsistent cards: {len(diff)}")
                          method="kmeans",
                          input_col="sbert",
                          output_col="clusters",
-                         **kwargs):
+                         cluster_args=None):
         "perform clustering over a given column"
         df = self.df
         if self.n_clusters is None:
-            self.n_clusters = len(df.index)//10
+            self.n_clusters = len(df.index)//100
+        if cluster_args is None:
+            cluster_args = {}
         if method == "kmeans":
-            clust = KMeans(n_clusters=min(
-                                    self.n_clusters,
-                                    100),
-                           **kwargs)
+            clust = KMeans(n_clusters=self.n_clusters,
+                           **cluster_args)
         elif method == "DBSCAN":
             clust = DBSCAN(eps=0.75,
                            min_samples=3,
                            n_jobs=-1,
-                           **kwargs
+                           **cluster_args
                            )
         elif method.lower() in "agglomerative":
             clust = AgglomerativeClustering(
@@ -700,7 +700,7 @@ as best_review_order!\nNumber of inconsistent cards: {len(diff)}")
                         affinity="cosine",
                         memory="/tmp/",
                         linkage="average",
-                        **kwargs)
+                        **cluster_args)
 
         print(f"Clustering using {method}...")
         df_temp = pd.DataFrame(
