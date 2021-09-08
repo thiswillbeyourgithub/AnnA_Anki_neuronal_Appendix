@@ -316,7 +316,7 @@ class AnnA:
         text = text.replace("&gt;", ">")
         text = text.replace("&l;;", "<")
         text = " ".join(text.split())  # multiple spaces
-        text = text.strip()[0:512] # truncation
+        text = text.strip()
         return text
 
     def _format_card(self):
