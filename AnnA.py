@@ -530,9 +530,10 @@ Edit the variable 'field_dic' to use {card_model}")
         # first remove the tag if present:
         tag_list = self._ankiconnect_invoke(action="getTags")
         if tag_name in tag_list:
-            all_note_list = self._ankiconnect_invoke(action="findNotes", query="")
-            self._ankiconnect_invoke(action="removeTags", notes=all_note_list, tags=tag_name)
-            print("Removed tags that was already present.")
+            note_list = self._ankiconnect_invoke(action="findNotes", query=f"\"tag:{tag_name}f\"")
+            self._ankiconnect_invoke(action="removeTags", notes=note_list, tags=tag_name)
+            self._ankiconnect_invoke(action="clearUnusedTags")
+            print(f"Removed tag that was already present: {tag_name}")
 
         note_list = list(set([int(self.df.loc[x, "note"]) for x in self.best_review_order]))
         self._ankiconnect_invoke(action="addTags", notes=note_list, tags=tag_name)
