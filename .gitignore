@@ -3,3 +3,4 @@ obsolete
 .ipynb_checkpoints
 __pycache__/
 AMIMA_jupyter.py
+*.pickle
