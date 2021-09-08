@@ -29,6 +29,8 @@ signal.signal(signal.SIGINT, (lambda signal, frame: pdb.set_trace()))
 # ex : "basic": ["Front", "Back"]
 field_dic = {
              "clozolkor": ["Header", "Body"],
+             # shameless plug: clozolkor is my own template,
+             # more info: https://github.com/thiswillbeyourgithub/Clozolkor
              "occlusion": ["Header", "Image"],
              "spanish cards": ["Spanish", "English"]
              }
