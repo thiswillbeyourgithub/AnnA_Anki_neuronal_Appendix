@@ -542,7 +542,7 @@ Edit the variable 'field_dic' to use {card_model}")
 
         # checks that the content of filtered deck name is the same as best_review_order
         currently_in_deck = self._ankiconnect_invoke(action="findCards",
-                query=f"deck:{filtered_deck_name}")
+                query=f"\"deck:{filtered_deck_name}\"")
         if len(currently_in_deck) != len(self.best_review_order) or \
                 list(sorted(set(currently_in_deck))) != list(sorted(self.best_review_order)):
                 print("Inconsistency! The deck does not contain the same cards as best_review_order!") 
