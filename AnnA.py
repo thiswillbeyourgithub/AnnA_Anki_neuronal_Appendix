@@ -107,7 +107,10 @@ class AnnA:
         self._format_card()
         self._vectors()
         self._compute_distance_matrix()
+        self.compute_clusters()
         self.assign_scoring()
+
+        self.save_df()
 
     def _reset_index_dtype(self, df):
         """
