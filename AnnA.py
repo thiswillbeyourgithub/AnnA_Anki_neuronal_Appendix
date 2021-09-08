@@ -96,15 +96,13 @@ class AnnA:
         if self.replace_greek is True:
             from greek_alphabet_mapping import greek_alphabet
             self.greek_alphabet = greek_alphabet
-        import_thread.join()  # asynchroneous importing of large module
-        time.sleep(1)
-        self.pca_sbert = PCA(n_components=self.pca_sbert_dim, random_state=42)
-        self.pca_2D = PCA(n_components=2, random_state=42)
-        self.scaler = StandardScaler()
 
         # actual execution
         self.deckname = self._check_deck(deckname)
+        import_thread.join()  # asynchroneous importing of large module
         self._create_and_fill_df()
+        time.sleep(1)
+        self.scaler = StandardScaler()
         self.df = self._reset_index_dtype(self.df)
         self._format_card()
         self._vectors()
@@ -460,13 +458,14 @@ troubleshoot formating issues:")
         if self.pca_sbert_dim is not None:
             print(f"Reducing dimension of sbert to {self.pca_sbert_dim} \
 using PCA...")
+            pca_sbert = PCA(n_components=self.pca_sbert_dim, random_state=42)
             df_temp = pd.DataFrame(
                 columns=["V"+str(x+1)
                          for x in range(len(df.loc[df.index[0], "sbert"]))],
                 data=[x[0:] for x in df["sbert"]])
-            out = self.pca_sbert.fit_transform(df_temp)
+            out = pca_sbert.fit_transform(df_temp)
             print(f"Explained variance ratio after PCA on SBERT: \
-{round(sum(self.pca_sbert.explained_variance_ratio_)*100,1)}%")
+{round(sum(pca_sbert.explained_variance_ratio_)*100,1)}%")
             df["sbert_before_pca"] = df["sbert"]
             df["sbert"] = [x for x in out]
 
@@ -753,10 +752,11 @@ as best_review_order!\nNumber of inconsistent cards: {len(diff)}")
                          range(len(df.loc[df.index[0],
                                    coordinate_col]))],
                 data=[x[0:] for x in df[coordinate_col]])
-            print(f"Reduce to 2 dimensions via {reduce_dim} before \
+            print(f"Reduce to 2 dimensions using {reduce_dim} before \
 plotting...")
         if reduce_dim.lower() in "pca":
-            res = self.pca_2D.fit_transform(df_temp).T
+            pca_2D = PCA(n_components=2, random_state=42, **pca_args_deploy)
+            res = pca_2D.fit_transform(df_temp).T
             x_coor = res[0]
             y_coor = res[1]
         elif reduce_dim.lower() in "umap":
@@ -776,14 +776,20 @@ plotting...")
             x_coor = list(x_coor)[0]
             y_coor = [x[1] for x in df[coordinate_col]],
             y_coor = list(y_coor)[0]
+
         print("Plotting results...")
         df["cropped_text"] = df["text"].str[0:75]
+        if "clusters" not in df.columns:
+            df["clusters"] = 0
+        if "cluster_topic" not in df.columns:
+            df["cluster_topic"] = 0
         fig = px.scatter(df,
                          title="AnnA Anki neuronal Appendix",
                          x=x_coor,
                          y=y_coor,
                          color=color_col,
-                         hover_data=["cropped_text", "cluster_topic"])
+                         hover_data=[hover_data],
+                         **plotly_args_deploy)
         fig.show()
 
     def search_for_notes(self,
