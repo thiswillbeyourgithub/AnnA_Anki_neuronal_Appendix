@@ -105,7 +105,7 @@ class AnnA:
         self.scaler = StandardScaler()
         self.df = self._reset_index_dtype(self.df)
         self._format_card()
-        self._vectors()
+        self._compute_sbert_vec()
         self._compute_distance_matrix()
         self.compute_clusters()
         self.assign_scoring()
@@ -392,7 +392,7 @@ troubleshoot formating issues:")
         print("\n\n")
         self.df = df.sort_index()
 
-    def _vectors(self, df=None, use_sbert_cache=True):
+    def _compute_sbert_vec(self, df=None, use_sbert_cache=True):
         """
         Assigne vectors to each card
         df["sbert"] contains sentencebert vectors, eventually after PCA
