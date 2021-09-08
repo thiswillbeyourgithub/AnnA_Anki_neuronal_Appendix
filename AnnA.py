@@ -555,6 +555,9 @@ Edit the variable 'field_dic' to use {card_model}")
         currently_in_deck = self._ankiconnect_invoke(action="findCards",
                 query=f"\"deck:{filtered_deck_name}\"")
         diff = [x for x in self.best_review_order + currently_in_deck if x not in self.best_review_order or x not in currently_in_deck]
+        if len(currently_in_deck) != len(self.best_review_order):
+            print("Wrong number of card present in deck. Something unexpained happened.")
+            pdb.set_trace()
         if len(diff) != 0:
             print("Inconsistency! The deck does not contain the same cards as best_review_order!") 
             pdb.set_trace()
@@ -572,12 +575,7 @@ Edit the variable 'field_dic' to use {card_model}")
     def rechange_due_order(self):
         "reassign the due order without having the re-run the whole script"
         # checks that the content of filtered deck name is the same as best_review_order
-        currently_in_deck = self._ankiconnect_invoke(action="findCards",
-                query=f"\"deck:{self.filtered_deck_name}\"")
-        diff = [x for x in self.best_review_order + currently_in_deck if x not in self.best_review_order or x not in currently_in_deck]
-        if len(diff) != 0:
-            print("Inconsistency! The deck does not contain the same cards as best_review_order!") 
-            pdb.set_trace()
+        # TODO
         incrementer = -len(self.best_review_order)-1
         for c in tqdm(self.best_review_order, desc="Altering due order", unit="card"):
             incrementer += 1
