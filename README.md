@@ -34,7 +34,6 @@ Plot the latent space of the semantic relation of your anki cards showing cluste
 * comment the code
 * rewrite the README
 * check if you should not use df.apply in some places instead of loops, or use .values
-* create a requirements.txt file
 * run the script on notes and not cards
 * reimplement ctf-idf to get cluster meaning
 * add tags of ctf-if to cards
