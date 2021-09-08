@@ -514,7 +514,7 @@ Edit the variable 'field_dic' to use {card_model}")
         print("Done. Now all that is left is to send all of this to anki.\n")
         self.best_review_order = queue
 
-    def to_anki(self, filtered_deck_name=f"AnnA - Optimal Review Order"):
+    def to_anki(self, template_name=f"AnnA - Optimal Review Order"):
         """
         add a tag to the queue cards then
         orders the creation of a filtered deck filtering by this tag
@@ -522,12 +522,9 @@ Edit the variable 'field_dic' to use {card_model}")
         match self.best_review_order
         """
 
-        filtered_deck_name = filtered_deck_name.replace("::", "_")
-        if self.deckname not in filtered_deck_name:
-            filtered_deck_name = filtered_deck_name + f" - {self.deckname}"
+        filtered_deck_name = str(template_name + f" - {self.deckname}").replace("::", "_")
         if filtered_deck_name in self._ankiconnect_invoke(action="deckNames"):
             input(f"Deck '{filtered_deck_name}' already exists. Make sure to delete this deck before continuing.\nDone? (y/n) >")
-        filtered_deck_name = filtered_deck_name.replace("::", "_")
         tag_name = f"AnnA_Optimal_review_order::{self.deckname.replace('::', '_')}::session_{'_'.join(time.asctime().split()[0:3])}"
 
         # first remove the tag if present:
@@ -539,8 +536,8 @@ Edit the variable 'field_dic' to use {card_model}")
 
         note_list = list(set([int(self.df.loc[x, "note"]) for x in self.best_review_order]))
         self._ankiconnect_invoke(action="addTags", notes=note_list, tags=tag_name)
+        print(f"Added tag: {tag_name} to all the notes from best_review_order.")
 
-        print(f"Added tagname {tag_name}")
         self._ankiconnect_invoke(action="createFilteredDeck",
                                  newDeckName=filtered_deck_name,
                                  searchQuery=f'tag:{tag_name}',
