@@ -60,7 +60,6 @@ def asynchronous_importer():
 class AnnA:
     def __init__(self,
                  deckname=None,
-                 verbose=False,
                  replace_greek=True,
                  replace_acronym=True,
                  keep_ocr=False,
@@ -81,7 +80,6 @@ class AnnA:
         if deckname is None:
             deckname = "*"
         self.deckname = deckname
-        self.verbose = verbose
         self.replace_acronym = replace_acronym
         self.replace_greek = replace_greek
         self.keep_ocr = keep_ocr
@@ -131,8 +129,6 @@ class AnnA:
 
         requestJson = json.dumps(request_wrapper(action, **params)
                                  ).encode('utf-8')
-        if self.verbose is True:
-            pprint(requestJson)
         try:
             response = json.load(urllib.request.urlopen(
                                     urllib.request.Request(
@@ -141,8 +137,6 @@ class AnnA:
         except (ConnectionRefusedError, urllib.error.URLError) as e:
             print(f"{e}: is Anki open and ankiconnect enabled?")
             raise SystemExit()
-        if self.verbose is True:
-            pprint(response)
         if len(response) != 2:
             raise Exception('response has an unexpected number of fields')
         if 'error' not in response:
