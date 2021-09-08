@@ -75,7 +75,7 @@ class AnnA:
                  deckname=None,
                  replace_greek=True,
                  replace_acronym=True,
-                 keep_ocr=False,
+                 keep_ocr=True,
                  desired_deck_size=500,
                  rated_last_X_days=7,
                  show_banner=True,
