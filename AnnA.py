@@ -37,7 +37,11 @@ field_dic = {
 
 
 def asynchronous_importer():
-    "used to asynchroneously import the modules, speeds up launch time"
+    """
+    used to asynchroneously import heavy modules, this way between 
+    importing AnnA and instanciating the class, the language model
+    have some more time to load
+    """
     global stopwords, SentenceTransformer, KMeans, DBSCAN, \
         AgglomerativeClustering, transformers, sp, normalize, TfidfVectorizer,\
         CountVectorizer, TruncatedSVD, StandardScaler, \
@@ -60,6 +64,11 @@ def asynchronous_importer():
 
 
 class AnnA:
+    """
+    main class: used to centralize everything
+    just instantiating the class does most of the job, as you can see
+    in the __init__
+    """
     def __init__(self,
                  deckname=None,
                  replace_greek=True,
@@ -119,7 +128,7 @@ class AnnA:
     def _reset_index_dtype(self, df):
         """
         the index dtype (cardId) somehow gets turned into float so I
-        turn it back into int
+        occasionally turn it back into int
         """
         temp = df.reset_index()
         temp["cardId"] = temp["cardId"].astype(int)
@@ -127,8 +136,9 @@ class AnnA:
         return df
 
     def _ankiconnect(self, action, **params):
-        "send requests to ankiconnect addon"
-
+        """
+        used to send request to anki using the addon anki-connect
+        """
         def request_wrapper(action, **params):
             return {'action': action, 'params': params, 'version': 6}
 
@@ -142,6 +152,7 @@ class AnnA:
         except (ConnectionRefusedError, urllib.error.URLError) as e:
             print(f"{e}: is Anki open and ankiconnect enabled?")
             raise SystemExit()
+
         if len(response) != 2:
             raise Exception('response has an unexpected number of fields')
         if 'error' not in response:
@@ -153,11 +164,17 @@ class AnnA:
         return response['result']
 
     def _get_card_id_from_query(self, query):
-        "get notes from query"
+        "get cardId from query"
         return self._ankiconnect(action="findCards", query=query)
 
     def _get_cards_info_from_card_id(self, card_id):
-        "get cardinfo from card id, works with either int of list of int"
+        """
+        get all information from a card using its card id, works with
+        either int of list of int
+
+        * Due to the time it takes to get thousands of cards, I decided
+        to used Threading extensively.
+        """
         if isinstance(card_id, list):
             if len(card_id) < 300:
                 r_list = []
@@ -220,7 +237,8 @@ threads of {batchsize} cards...")
 
     def _check_deck(self, deckname=None):
         """
-        getting correct deck name
+        used to check if the deckname is correct
+        if incorrect, user is asked to enter the name, using autocompletion
         """
         decklist = self._ankiconnect(action="deckNames")
         if deckname is not None:
@@ -238,7 +256,10 @@ threads of {batchsize} cards...")
         return deckname
 
     def _create_and_fill_df(self):
-        "create and fill the dataframe with due cards and rated cards"
+        """
+        create a pandas DataFrame, fill it with the information gathered from
+        self._get_cards_info_from_card_id
+        """
 
         print("Getting due card from this deck...")
         n_rated_days = int(self.rated_last_X_days)
@@ -307,7 +328,12 @@ from this deck...")
         return True
 
     def _format_text(self, text):
-        "text preprocessor, called by _format_card on each card content"
+        """
+        take text and output processed text
+        Acronyms will be replaced if the corresponding arguments is passed
+            when instantiating AnnA
+        Greek letters will also be replaced
+        """
         text = str(text)
         if self.keep_ocr is True:
             # keep image title (usually OCR)
@@ -338,7 +364,11 @@ from this deck...")
         return text
 
     def _format_card(self):
-        "keep only relevant field of card then clean text"
+        """
+        filter the fields of each card and keep only the relevant fields
+        a "relevant field" is one that is mentionned in the variable field_dic
+        which can be found at the top of the file
+        """
         df = self.df
 
         for index in tqdm(df.index, desc="Parsing text content", unit="card"):
@@ -401,8 +431,11 @@ troubleshoot formating issues:")
     def _compute_sbert_vec(self, df=None, use_sbert_cache=True):
         """
         Assigne vectors to each card
-        df["sbert"] contains sentencebert vectors, eventually after PCA
-        df["sbert_before_pca"] if exists, then it's the full 512 vectors
+        df["sbert_before_pca"] if exists, contains the 512 vectors of sbert
+        df["sbert"] contains either the 512 vectors or less because you
+            enabled pca reduction
+        * given how long it is to compute the vectors I decided to store
+            all already computed sbert to a pickled DataFrame at each run
         """
         if df is None:
             df = self.df
@@ -482,8 +515,11 @@ using PCA...")
 
     def _compute_distance_matrix(self, method="cosine", input_col="sbert"):
         """
-        compute distance matrix between cards, given that L2 norm is used
-        throughout the script, cosine is not used but np.dot is used instead.
+        compute distance matrix between all the cards
+        * the distance matrix can be parallelised by scikit learn so I didn't
+            bother saving and reusing the matrix
+        * given that the L2 norm is used throughout the script,
+            it might be faster to use np.dot instead of cosine distance
         """
         print("Computing the distance matrix...", end="")
         df = self.df
@@ -499,14 +535,21 @@ using PCA...")
         self.df = df
         return True
 
-    def assign_scoring(self, reference_order="lowest_interval"):
+    def assign_score(self, reference_order="lowest_interval"):
         """
-        assign scoring to each card, the score reflects the order in which
-        they should be reviewed to minimize useless reviews.
-        The score is computed according to formula:
-         * score = interval + median of the proximity to each card of the queue
-        Reference_order can either be "lower_interval" or
-        "relative_overdueness"
+        assign score to each card
+        * this score reflects the order in which they should be reviewed
+        * the intuition is that anki doesn't know before hand if some cards
+            are semantically close and can have you review them the same day
+        * The score is computed according to formula:
+           score = reference - median of (similarity to each card of the queue)
+        * reference is either the interval (lower is urgent) or the relative
+            overdueness (higher is urgent)
+        * the reference and the median are both centered and scaled before
+            calculating the score
+        * the queue starts empty and is incrementally filled with the chosen
+            one
+        * the chosen one is the card with the lowest score at each round
         """
         print("Assigning scores...")
         df = self.df
@@ -557,15 +600,28 @@ supported")
 
     def send_to_anki(self, deck_template="AnnA - Optimal Review Order"):
         """
-        add a tag to the queue cards then orders the creation of a filtered
-        deck filtering by this tag then manually alter the order of the review
-        in the deck to match self.best_review_order
+        create a filtered deck containing the cards to review in the
+            optimal order
+
+        * AnnA has to first remove the tag if present
+        * then it adds the tag to the list of cards to review
+          (the tag is not mandatory but I think it's a cool code legacy
+            so I'm leaving it here)
+        * then gets the list of cards that have an orange flag
+        * then remove their orange flag
+        * then adds the orange flag to the cards to review
+        * then create the filtered deck, with instruction to take
+            the cards that have the tag & an orange flag
+        * then the orange flag is removed from the cards to review
+            and readded to the original orange cards
+        * then does a few sanity check to see if the filtered deck
+            does indeed contain the right number of cards and the right cards
+
         * When creating the filtered deck, I chose 'sortOrder = 0'
         ("oldest seen first") this way I will notice if the deck
         somehow got rebuild and lost the right order
-        * I had to create this hackish was of creating the filtered deck by
-        using orange flags because the size of the query of the filtered
-        decks is limited.
+        * The reason I'm using the orange flag hack is that there is a
+            request size limit when creating a filtered deck.
         """
 
         filtered_deck_name = str(deck_template + f" - {self.deckname}")
@@ -598,7 +654,6 @@ supported")
         self._ankiconnect(action="addTags", notes=note_list, tags=tag_name)
         print(f"Added tag: {tag_name} to all relevant notes.")
 
-        # getting list of already orange cards, to restore later
         orange_list = self._ankiconnect(action="findCards",
                                         query="\"flag:2\"")
 
@@ -668,7 +723,14 @@ as best_review_order!\nNumber of inconsistent cards: {len(diff)}")
                          input_col="sbert",
                          output_col="clusters",
                          cluster_args=None):
-        "perform clustering over a given column"
+        """
+        finds cluster of cards and their respective topics
+        * this is not mandatory to create the filtered deck but it's rather fast
+            so I prefer to keep it
+        * Several algorithm are supported for clustering: kmeans, DBSCAN, 
+            agglomerative clustering
+        * To find the topic of each cluster, ctf-idf is used
+        """
         df = self.df
         if self.n_clusters is None:
             self.n_clusters = len(df.index)//100
@@ -744,7 +806,7 @@ as best_review_order!\nNumber of inconsistent cards: {len(diff)}")
                           plotly_args=None,
                           pca_args=None,
                           ):
-        "display a 2D plot showing cards."
+        "open a 2D plot showing cards."
         # args management
         df = self.df
         pca_args_deploy = {"n_components": 2, "random_state": 42}
@@ -818,7 +880,12 @@ plotting...")
                          user_col="sbert",
                          do_format_input=False,
                          dist="cosine", reverse=False):
-        "given a text input, find notes with highest cosine similarity"
+        """
+        given a text input, find notes with highest cosine similarity
+        * note that you cannot use the pca version of the sbert vectors
+            otherwise you'd have to re run the whole PCA, so it's quicker
+            to just use the full vectors
+        """
         pd.set_option('display.max_rows', None)
         pd.set_option('display.max_columns', None)
         pd.set_option('display.width', None)
@@ -862,7 +929,9 @@ plotting...")
         return True
 
     def save_df(self, df=None, out_name=None):
-        "export dataframe as pickle format"
+        """
+        export dataframe as pickle format a DF_backups
+        """
         if df is None:
             df = self.df
         if out_name is None:
