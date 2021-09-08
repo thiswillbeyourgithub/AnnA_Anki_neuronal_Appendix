@@ -68,7 +68,7 @@ class AnnA:
                  show_banner=True,
                  card_limit=None,
                  n_clusters=None,
-                 pca_sbert_dim=None,
+                 pca_sbert_dim=300,  # should keep about 99% of variance
                  ):
         # printing banner
         if show_banner is True:
