@@ -61,6 +61,8 @@ def asynchronous_importer():
     from sklearn.decomposition import PCA
     from sklearn.preprocessing import StandardScaler
     print("Finished importing modules")
+import_thread = threading.Thread(target=asynchronous_importer, daemon=True)
+import_thread.start()
 
 
 class AnnA:
@@ -966,7 +968,3 @@ class CTFIDFVectorizer(TfidfTransformer):
         X = X * self._idf_diag
         X = normalize(X, axis=1, norm='l2', copy=False)
         return X
-
-
-import_thread = threading.Thread(target=asynchronous_importer, daemon=True)
-import_thread.start()
