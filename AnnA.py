@@ -740,15 +740,20 @@ as best_review_order!\nNumber of inconsistent cards: {len(diff)}")
         self.df = df.sort_index()
 
     def show_latent_space(self,
+                          specific_index=None,
                           reduce_dim="umap",
                           color_col="tags",
-                          hover_data="cropped_text",
+                          hover_cols=["cropped_text",
+                                      "tags",
+                                      "clusters",
+                                      "cluster_topic"],
                           coordinate_col="sbert",
+                          disable_legend=True,
                           umap_args=None,
                           plotly_args=None,
                           pca_args=None,
                           ):
-        "display a graph showing the cards spread out into 2 dimensions"
+        "display a 2D plot showing cards."
         # args management
         df = self.df
         if umap_args is not None:
@@ -765,12 +770,16 @@ as best_review_order!\nNumber of inconsistent cards: {len(diff)}")
             pca_args_deploy = {}
 
         if reduce_dim is not None:
+            if specific_index is not None:
+                data = [x[0:] for x in df.loc[specific_index, coordinate_col]]
+            else:
+                data = [x[0:] for x in df[coordinate_col]]
             df_temp = pd.DataFrame(
                 columns=["V"+str(x)
                          for x in
                          range(len(df.loc[df.index[0],
-                                   coordinate_col]))],
-                data=[x[0:] for x in df[coordinate_col]])
+                                   coordinate_col]))
+                         ], data=data)
             print(f"Reduce to 2 dimensions using {reduce_dim} before \
 plotting...")
         if reduce_dim.lower() in "pca":
@@ -798,6 +807,8 @@ plotting...")
             y_coor = [x[1] for x in df[coordinate_col]],
             y_coor = list(y_coor)[0]
 
+        df["X"] = x_coor
+        df["Y"] = y_coor
         print("Plotting results...")
         df["cropped_text"] = df["text"].str[0:75]
         if "clusters" not in df.columns:
@@ -806,11 +817,13 @@ plotting...")
             df["cluster_topic"] = 0
         fig = px.scatter(df,
                          title="AnnA Anki neuronal Appendix",
-                         x=x_coor,
-                         y=y_coor,
-                         color=color_col,
-                         hover_data=[hover_data],
+                         x="X",
+                         y="Y",
+                         hover_data = hover_cols,
+                         color = color_col,
                          **plotly_args_deploy)
+        if disable_legend is True:
+            fig = fig.update_layout(showlegend=False)
         fig.show()
 
     def search_for_notes(self,
