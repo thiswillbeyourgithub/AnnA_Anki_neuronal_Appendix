@@ -652,7 +652,7 @@ as best_review_order!\nNumber of inconsistent cards: {len(diff)}")
         # checks that the content of filtered deck name is the same
         # as best_review_order
         cur_in_deck = self._ankiconnect(action="findCards",
-                                        query=f"\"deck:{filtered_deck_name}\"")
+                                        query=f"\"deck:{self.filtered_deck_name}\"")
         diff = [x for x in self.best_review_order + cur_in_deck
                 if x not in self.best_review_order or x not in cur_in_deck]
         if len(diff) != 0:
