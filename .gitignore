@@ -1,5 +1,5 @@
 sbert_cache.pickle
 obsolete
 .ipynb_checkpoints
-./__pycache__/
-./AMIMA_jupyter.py
+__pycache__/
+AMIMA_jupyter.py
