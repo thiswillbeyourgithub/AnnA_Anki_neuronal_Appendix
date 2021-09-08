@@ -737,13 +737,27 @@ as best_review_order!\nNumber of inconsistent cards: {len(diff)}")
     def show_latent_space(self,
                           reduce_dim="umap",
                           color_col="tags",
-                          coordinate_col="sbert"):
+                          hover_data="cropped_text",
+                          coordinate_col="sbert",
+                          umap_args=None,
+                          plotly_args=None,
+                          pca_args=None,
+                          ):
         "display a graph showing the cards spread out into 2 dimensions"
+        # args management
         df = self.df
-        if "clusters" not in df.columns:
-            df["clusters"] = 0
-        if "cluster_topic" not in df.columns:
-            df["cluster_topic"] = 0
+        if umap_args is not None:
+            umap_args_deploy = umap_args
+        else:
+            umap_args_deploy = {}
+        if plotly_args is not None:
+            plotly_args_deploy = plotly_args
+        else:
+            plotly_args_deploy = {}
+        if pca_args is not None:
+            pca_args_deploy = pca_args
+        else:
+            pca_args_deploy = {}
 
         if reduce_dim is not None:
             df_temp = pd.DataFrame(
@@ -768,7 +782,9 @@ plotting...")
                             random_state=42,
                             transform_seed=42,
                             n_neighbors=100,
-                            min_dist=0.1).fit_transform(df_temp.values)
+                            min_dist=0.1,
+                            **umap_args_deploy,
+                            ).fit_transform(df_temp)
             x_coor = res.T[0]
             y_coor = res.T[1]
         elif reduce_dim is None:
