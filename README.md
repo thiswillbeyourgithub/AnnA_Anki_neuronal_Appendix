@@ -32,14 +32,12 @@ Plot the latent space of the semantic relation of your anki cards showing cluste
 ### optimization
 * optimize review order computation
 * rewrite the README
-* check if you should not use df.apply in some places instead of loops, or use .values
 * run the script on notes and not cards
-* reimplement ctf-idf to get cluster meaning
 * tell in the readme that code is commented with docstrings and PEP compliant
 * add tags of ctf-if to cards
-* gerer la relative overdueness
+* implement relative overdueness
 * ponder using df.compare to fetch more quickly the cached sbert vectors
-* mention in the readme that I could reimplement tfidf if needed
+* mention in the readme that I tried using tf-idf
 * recommand in the readme to use another sbert model if you only use
 
 ### ML
