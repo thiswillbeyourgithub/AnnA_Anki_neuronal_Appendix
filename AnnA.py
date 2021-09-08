@@ -756,18 +756,28 @@ as best_review_order!\nNumber of inconsistent cards: {len(diff)}")
         "display a 2D plot showing cards."
         # args management
         df = self.df
+        pca_args_deploy = {"n_components": 2, "random_state": 42}
+        umap_args_deploy = {"n_jobs": -1,
+                            "verbose": 1,
+                            "n_components": 2,
+                            "metric": "cosine",
+                            "init": 'spectral',
+                            "random_state": 42,
+                            "transform_seed": 42,
+                            "n_neighbors": 100,
+                            "min_dist": 0.1}
+        plotly_args_deploy = {"data_frame": df,
+                              "title": "AnnA Anki neuronal Appendix",
+                              "x": "X",
+                              "y": "Y",
+                              "hover_data": hover_cols,
+                              "color": color_col}
         if umap_args is not None:
-            umap_args_deploy = umap_args
-        else:
-            umap_args_deploy = {}
+            umap_args_deploy.update(umap_args)
         if plotly_args is not None:
-            plotly_args_deploy = plotly_args
-        else:
-            plotly_args_deploy = {}
+            plotly_args_deploy.update(plotly_args)
         if pca_args is not None:
-            pca_args_deploy = pca_args
-        else:
-            pca_args_deploy = {}
+            pca_args_deploy.update(pca_args)
 
         if reduce_dim is not None:
             if specific_index is not None:
@@ -783,22 +793,12 @@ as best_review_order!\nNumber of inconsistent cards: {len(diff)}")
             print(f"Reduce to 2 dimensions using {reduce_dim} before \
 plotting...")
         if reduce_dim.lower() in "pca":
-            pca_2D = PCA(n_components=2, random_state=42, **pca_args_deploy)
+            pca_2D = PCA(**pca_args_deploy)
             res = pca_2D.fit_transform(df_temp).T
             x_coor = res[0]
             y_coor = res[1]
         elif reduce_dim.lower() in "umap":
-            res = umap.UMAP(n_jobs=-1,
-                            verbose=1,
-                            n_components=2,
-                            metric="cosine",
-                            init='spectral',
-                            random_state=42,
-                            transform_seed=42,
-                            n_neighbors=100,
-                            min_dist=0.1,
-                            **umap_args_deploy,
-                            ).fit_transform(df_temp)
+            res = umap.UMAP(**umap_args_deploy).fit_transform(df_temp)
             x_coor = res.T[0]
             y_coor = res.T[1]
         elif reduce_dim is None:
@@ -815,13 +815,7 @@ plotting...")
             df["clusters"] = 0
         if "cluster_topic" not in df.columns:
             df["cluster_topic"] = 0
-        fig = px.scatter(df,
-                         title="AnnA Anki neuronal Appendix",
-                         x="X",
-                         y="Y",
-                         hover_data = hover_cols,
-                         color = color_col,
-                         **plotly_args_deploy)
+        fig = px.scatter(**plotly_args_deploy)
         if disable_legend is True:
             fig = fig.update_layout(showlegend=False)
         fig.show()
