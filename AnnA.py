@@ -123,7 +123,7 @@ class AnnA:
         self.assign_score()
 
         self.save_df()
-        print("Re-optimizing database")
+        print("Re-optimizing Anki database")
         self._ankiconnect(action="guiCheckDatabase")
 
     def _reset_index_dtype(self, df):
