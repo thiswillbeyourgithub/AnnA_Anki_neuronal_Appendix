@@ -24,27 +24,26 @@ Plot the latent space of the semantic relation of your anki cards showing cluste
 * First, **read this page in its entierety**
 * Clone this repository : `git clone URL`
 * Use python to install the necessary packages : `pip install -r requirements.py`
-* make sure ankiconnect is installed
-* open the notebook into jupyter-lab, edit the settings at the top of the page, then run the notebook
+* make sure the addon anki-connect is installed
 * Finally, don't hesitate to open an issue.
 
 
 ## TODO
 ### optimization
-* virer tf-idf
-* understand where the "tags" columns disappears...
-* add tags to cards containing the cluster number as well as a few words to describe the topic of the cluster, it would connect nicely with the other mindmapping addon
 * check if you should not use df.apply in some places instead of loops, or use .values
 * create a requirements.txt file
 * comment the code
-* run the script on notes and not cards
+* rewrite the README
 * respect PEP8
-* maybe use df.compare to fetch more quickly the cached sbert vectors
+* run the script on notes and not cards
+* reimplement ctf-idf to get cluster meaning
+* add tags of ctf-if to cards
+* ponder using df.compare to fetch more quickly the cached sbert vectors
+* mention in the readme that I could reimplement tfidf if needed
 
 ### ML
 * try with miniBatchKMeans to seed if it speeds up the clustering, otherwise go with HDBSCAN
 * automatically create a phylogeny of cards based on a distance matrix and see if it's an appropriate mind map, plotly is suitable for this kind of tree
-* see if it's possible to search for a card based on a search by comparing vector similarity, easy to test: searching for a card's content should find the card first
 
 ### long term
 * re read this article : http://mccormickml.com/2021/05/27/question-answering-system-tf-idf/
