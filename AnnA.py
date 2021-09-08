@@ -720,39 +720,47 @@ as best_review_order!\nNumber of inconsistent cards: {len(diff)}")
                          method="kmeans",
                          input_col="sbert",
                          output_col="clusters",
-                         cluster_args=None):
+                         n_topics = 5,
+                         kmeans_args=None,
+                         agglo_args=None,
+                         dbscan_args=None):
         """
         finds cluster of cards and their respective topics
         * this is not mandatory to create the filtered deck but it's rather fast
             so I prefer to keep it
         * Several algorithm are supported for clustering: kmeans, DBSCAN, 
             agglomerative clustering
+        * n_topics is the number of topics to get for each cluster
         * To find the topic of each cluster, ctf-idf is used
         """
         df = self.df
-        if self.n_clusters is None:
+        if self.n_clusters is None and method.lower() not in "dbscan":
             self.n_clusters = len(df.index)//100
-        if cluster_args is None:
-            cluster_args = {}
-        if method == "kmeans":
-            clust = KMeans(n_clusters=self.n_clusters,
-                           **cluster_args)
-        elif method == "DBSCAN":
-            clust = DBSCAN(eps=0.75,
-                           min_samples=3,
-                           n_jobs=-1,
-                           **cluster_args
-                           )
-        elif method.lower() in "agglomerative":
-            clust = AgglomerativeClustering(
-                        n_clusters=self.n_clusters,
-                        # distance_threshold=0.1,
-                        affinity="cosine",
-                        memory="/tmp/",
-                        linkage="average",
-                        **cluster_args)
+            print(f"Number of clusters to detect: {n_clusters}") 
+        kmeans_args_deploy = {"n_clusters": self.n_clusters}
+        dbscan_args_deploy = {"eps": 0.75,
+                              "min_samples":3,
+                              "n_jobs":-1}
+        agglo_args_deploy = {"n_clusters": self.n_clusters,
+                             "distance_threshold": 0.1,
+                             "affinity": "cosine",
+                             "memory": "/tmp/",
+                             "linkage": "average"}
+        if kmeans_args is not None:
+            kmeans_args_deploy.update(kmeans_args)
+        if dbscan_args is not None:
+            dbscan_args_deploy.update(dbscan_args)
+        if agglo_args is not None:
+            agglo_args_deploy.update(agglo_args)
 
+        if method.lower() in "kmeans":
+            clust = KMeans(**kmeans_args_deploy)
+        elif method.lower() in "DBSCAN":
+            clust = DBSCAN(**dbscan_args_deploy)
+        elif method.lower() in "agglomerative":
+            clust = AgglomerativeClustering(**agglo_args_deploy)
         print(f"Clustering using {method}...")
+
         df_temp = pd.DataFrame(
             columns=["V"+str(x)
                      for x in range(len(df.loc[df.index[0], input_col]))],
@@ -762,7 +770,6 @@ as best_review_order!\nNumber of inconsistent cards: {len(diff)}")
         cluster_list = list(set(list(df[output_col])))
         cluster_nb = len(cluster_list)
         print(f"Getting cluster topics for {cluster_nb} clusters...")
-
         df_by_cluster = df.groupby(["clusters"],
                                    as_index=False).agg({'text': ' '.join})
         count = CountVectorizer().fit_transform(df_by_cluster.text)
@@ -778,7 +785,8 @@ as best_review_order!\nNumber of inconsistent cards: {len(diff)}")
                                                       )).toarray()
         w_by_class = {str(label): [
                                    words[index]
-                                   for index in ctfidf[label].argsort()[-5:]
+                                   for index in
+                                   ctfidf[label].argsort()[-n_topics:]
                                    ] for label in df_by_cluster.clusters}
         df["cluster_topic"] = ""
         for i in df.index:
