@@ -517,6 +517,7 @@ Edit the variable 'field_dic' to use {card_model}")
             filtered_deck_name = filtered_deck_name + f" - {self.deckname}"
         if filtered_deck_name in self._ankiconnect_invoke(action="deckNames"):
             ans = input(f"Deck '{filtered_deck_name}' already exists. Make sure to delete this deck before continuing.\nDone? (y/n) >")
+        filtered_deck_name = filtered_deck_name.replace("::", "_")
         tag_name = f"AnnA_Optimal_review_order::{self.deckname.replace('::', '_')}::session_{'_'.join(time.asctime().split()[0:3])}"
 
         # first remove the tag if present:
