@@ -283,6 +283,7 @@ from this deck...")
             list_cardInfo[i].pop("answer")
             list_cardInfo[i].pop("css")
             list_cardInfo[i].pop("fields_no_html")
+            list_cardInfo[i]["tags"] = " ".join(list_cardInfo[i]["tags"])
             if card["cardId"] in due_cards:
                 list_cardInfo[i]["status"] = "due"
             elif card["cardId"] in rated_cards:
