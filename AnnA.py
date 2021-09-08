@@ -790,6 +790,7 @@ plotting...")
                          user_input,
                          nlimit=5,
                          user_col="sbert",
+                         do_format_input=False,
                          dist="cosine", reverse=False):
         "given a text input, find notes with highest cosine similarity"
         pd.set_option('display.max_rows', None)
@@ -798,6 +799,8 @@ plotting...")
         pd.set_option('display.max_colwidth', None)
         df = self.df
 
+        if do_format_input is True:
+            user_input = self._format_text(user_input)
         embed = sbert.encode(user_input, normalize_embeddings=True)
         print("")
         tqdm.pandas(desc="Searching")
