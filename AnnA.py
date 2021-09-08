@@ -539,10 +539,11 @@ Edit the variable 'field_dic' to use {card_model}")
         self._ankiconnect_invoke(action="addTags", notes=note_list, tags=tag_name)
         print(f"Added tag: {tag_name} to all the notes from best_review_order.")
 
+        to_review_concatenation = " OR ".join([f"\"cid:{x}\"" for x in self.best_review_order])
         self._ankiconnect_invoke(action="createFilteredDeck",
                                  newDeckName=filtered_deck_name,
-                                 searchQuery=f'tag:{tag_name}',
-                                 gatherCount=len(self.best_review_order),
+                                 searchQuery=f'("tag:{tag_name}") AND ({to_review_concatenation})',
+                                 gatherCount=2*len(self.best_review_order),
                                  reschedule=True,
                                  sortOrder=0,
                                  createEmpty=False)
