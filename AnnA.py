@@ -119,10 +119,10 @@ class AnnA:
         self._format_card()
         self._compute_sBERT_vec()
         self._compute_distance_matrix()
-        self.compute_clusters()
         self.assign_score()
-
+        self.to_anki()
         self.save_df()
+
         print("Re-optimizing Anki database")
         self._ankiconnect(action="guiCheckDatabase")
 
