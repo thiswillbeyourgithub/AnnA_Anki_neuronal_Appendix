@@ -736,6 +736,7 @@ as best_review_order!\nNumber of inconsistent cards: {len(diff)}")
                                                   str(df.loc[i, "clusters"])]])
             df.loc[i, "cluster_topic"] = clst_tpc
 
+        self.w_by_class = w_by_class
         self.df = df.sort_index()
 
     def show_latent_space(self,
