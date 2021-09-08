@@ -237,7 +237,7 @@ class AnnA:
 
         print("Getting due card from this deck...")
         n_rated_days = int(self.rated_last_X_days)
-        query = f"deck:{self.deckname} is:due is:review -is:learn -is:suspended -is:buried"
+        query = f"deck:{self.deckname} is:due is:review -is:learn -is:suspended -is:buried -is:new"
         print(query)
         due_cards = self._get_card_id_from_query(query)
 
