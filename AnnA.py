@@ -512,12 +512,11 @@ Edit the variable 'field_dic' to use {card_model}")
         match self.best_review_order
         """
 
+        filtered_deck_name = filtered_deck_name.replace("::", "_")
         if self.deckname not in filtered_deck_name:
             filtered_deck_name = filtered_deck_name + f" - {self.deckname}"
         if filtered_deck_name in self._ankiconnect_invoke(action="deckNames"):
-            print("Deck name already taken.")
-            filtered_deck_name = filtered_deck_name + "_".join(time.asctime().split()[0:3])
-        filtered_deck_name = filtered_deck_name.replace("::", "_")
+            ans = input(f"Deck '{filtered_deck_name}' already exists. Make sure to delete this deck before continuing.\nDone? (y/n) >")
         tag_name = f"AnnA_Optimal_review_order::{self.deckname.replace('::', '_')}::session_{'_'.join(time.asctime().split()[0:3])}"
 
         # first remove the tag if present:
