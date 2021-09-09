@@ -566,18 +566,12 @@ supported")
             if reference_order == "lowest_interval":
                 queue.append(df["ivl_std"].idxmin())
 
-        cnt = 0
         df_temp = pd.DataFrame(columns=rated, index=df.index)
         with tqdm(desc="Finding optimal review order",
                   unit="Card",
                   smoothing=0,
                   total=queue_size_goal) as pbar:
             while len(queue) < queue_size_goal:
-                cnt += 1
-                if cnt > 500000:
-                    print("Detected potential endeless loop. Exiting.")
-                    break
-
                 for q in rated + queue:
                     df_temp[q] = df_dist[df.index.get_loc(q)]
                 df["score"] = df["ivl_std"] - np.min(df_temp, axis=1)
