@@ -165,10 +165,6 @@ class AnnA:
             raise Exception(response['error'])
         return response['result']
 
-    def _get_card_id_from_query(self, query):
-        "get cardId from query"
-        return self._ankiconnect(action="findCards", query=query)
-
     def _get_cards_info_from_card_id(self, card_id):
         """
         get all information from a card using its card id, works with
@@ -268,13 +264,13 @@ threads of {batchsize} cards...")
         query = f"deck:{self.deckname} is:due is:review -is:learn \
 -is:suspended -is:buried -is:new -rated:1"
         print(query)
-        due_cards = self._get_card_id_from_query(query)
+        due_cards = self._ankiconnect(action="findCards", query=query)
 
         print(f"Getting cards that where rated in the last {n_rated_days} days \
 from this deck...")
         query = f"deck:{self.deckname} rated:{n_rated_days} -is:suspended"
         print(query)
-        r_cards = self._get_card_id_from_query(query)
+        r_cards = self._ankiconnect(action="findCards", query=query)
 
         # removes overlap if found
         rated_cards = [x for x in r_cards if x not in due_cards]
