@@ -28,7 +28,7 @@ signal.signal(signal.SIGINT, (lambda signal, frame: pdb.set_trace()))
 # name of the fields to keep, in order
 # ex : "basic": ["Front", "Back"]
 field_dic = {
-             "clozolkor": ["Header", "Body"],
+             "clozolkor": ["Header", "Body", "More"],
              # shameless plug: clozolkor is my own template,
              # more info: https://github.com/thiswillbeyourgithub/Clozolkor
              "occlusion": ["Header", "Image"],
