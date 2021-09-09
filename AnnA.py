@@ -560,7 +560,8 @@ using PCA...")
 supported")
             reference_order = "lowest_interval"
 
-        rated = [x for x in df.index if df.loc[x, "status"] == "rated"]
+        rated = self.rated_cards_list
+        assert len([x for x in rated if df.loc[x, "status"] != "rated"]) == 0
         queue = []
         print(f"Already rated in the past relevant days: {len(rated)}")
 
