@@ -31,22 +31,19 @@ Plot the latent space of the semantic relation of your anki cards showing cluste
 ## TODO
 ### optimization
 * optimize review order computation
-* rewrite the README
+* do a simple parallelization wrapper for the tqdm loops at the end
+* rewrite the README + tell about docstrings and PEP + tried tf-idf + use another sbert if english
 * run the script on notes and not cards
-* tell in the readme that code is commented with docstrings and PEP compliant
 * add tags of ctf-if to cards
 * implement relative overdueness
 * ponder using df.compare to fetch more quickly the cached sbert vectors
-* mention in the readme that I tried using tf-idf
-* recommand in the readme to use another sbert model if you only use
 
-### ML
-* try with miniBatchKMeans to seed if it speeds up the clustering, otherwise go with HDBSCAN
-* automatically create a phylogeny of cards based on a distance matrix and see if it's an appropriate mind map, plotly is suitable for this kind of tree
 
 ### long term
+* add support for miniBatchKMeans and HDBSCAN
 * re read this article : http://mccormickml.com/2021/05/27/question-answering-system-tf-idf/
 * talk about this in the anki dev channel and create a subreddit post
+* automatically create a phylogeny of cards based on a distance matrix and see if it's an appropriate mind map, plotly is suitable for this kind of tree
 * port into anki as an addon
 * investigate VR, minecraft integration, roblox, etc
 
