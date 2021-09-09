@@ -699,8 +699,8 @@ supported")
         diff = [x for x in self.best_review_order + cur_in_deck
                 if x not in self.best_review_order or x not in cur_in_deck]
         if len(diff) != 0:
-            print(f"Inconsistency! The deck does not contain the same cards \
-as best_review_order!\nNumber of inconsistent cards: {len(diff)}")
+            print("Inconsistency! The deck does not contain the same cards \
+as best_review_order!")
             pprint(diff)
 
         incrementer = -10*len(self.best_review_order)
@@ -719,15 +719,15 @@ as best_review_order!\nNumber of inconsistent cards: {len(diff)}")
                          method="kmeans",
                          input_col="sBERT",
                          output_col="clusters",
-                         n_topics = 5,
+                         n_topics=5,
                          kmeans_args=None,
                          agglo_args=None,
                          dbscan_args=None):
         """
         finds cluster of cards and their respective topics
-        * this is not mandatory to create the filtered deck but it's rather fast
-            so I prefer to keep it
-        * Several algorithm are supported for clustering: kmeans, DBSCAN, 
+        * this is not mandatory to create the filtered deck but it's rather
+            fast so I prefer to keep it
+        * Several algorithm are supported for clustering: kmeans, DBSCAN,
             agglomerative clustering
         * n_topics is the number of topics to get for each cluster
         * To find the topic of each cluster, ctf-idf is used
@@ -735,11 +735,11 @@ as best_review_order!\nNumber of inconsistent cards: {len(diff)}")
         df = self.df
         if self.n_clusters is None and method.lower() in "kmeans":
             self.n_clusters = len(df.index)//100
-            print(f"No number of clustrs supplied, will try {self.n_clusters}") 
+            print(f"No number of clustrs supplied, will try {self.n_clusters}")
         kmeans_args_deploy = {"n_clusters": self.n_clusters}
         dbscan_args_deploy = {"eps": 0.75,
-                              "min_samples":3,
-                              "n_jobs":-1}
+                              "min_samples": 3,
+                              "n_jobs": -1}
         agglo_args_deploy = {"n_clusters": self.n_clusters,
                              # "distance_threshold": 0.6,
                              "affinity": "cosine",
