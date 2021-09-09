@@ -616,25 +616,11 @@ supported")
 You have to delete it manually, the cards will be returned to their original \
 deck.")
             input("Done? >")
-        timestamp = '_'.join(time.asctime().split()[0:3])
-        tag_name = f"AnnA_Optimal_review_order::{deck}::session_{timestamp}"
-
-        # remove the tag if present:
-        tag_list = self._ankiconnect(action="getTags")
-        if tag_name in tag_list:
-            note_list = self._ankiconnect(action="findNotes",
-                                          query=f"\"tag:{tag_name}f\"")
-            self._ankiconnect(action="removeTags",
-                              notes=note_list, tags=tag_name)
-            self._ankiconnect(action="clearUnusedTags")
-            print(f"Removed tag that was already present: {tag_name}")
 
         note_list = list(set([
                               int(self.df.loc[x, "note"])
                               for x in self.best_review_order
                               ]))
-        self._ankiconnect(action="addTags", notes=note_list, tags=tag_name)
-        print(f"Added tag: {tag_name} to all relevant notes.")
 
         orange_list = self._ankiconnect(action="findCards",
                                         query="\"flag:2\"")
@@ -658,7 +644,7 @@ deck.")
         print(f"Creating deck: {filtered_deck_name}")
         self._ankiconnect(action="createFilteredDeck",
                                  newDeckName=filtered_deck_name,
-                                 searchQuery=f"\"tag:{tag_name}\" \"flag:2\"",
+                                 searchQuery=f"\"flag:2\"",
                                  gatherCount=2*len(self.best_review_order),
                                  reschedule=True,
                                  sortOrder=0,
