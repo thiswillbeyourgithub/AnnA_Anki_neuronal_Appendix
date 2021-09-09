@@ -589,15 +589,11 @@ supported")
         create a filtered deck containing the cards to review in the
             optimal order
 
-        * AnnA has to first remove the tag if present
-        * then it adds the tag to the list of cards to review
-          (the tag is not mandatory but I think it's a cool code legacy
-            so I'm leaving it here)
-        * then gets the list of cards that have an orange flag
+        * AnnA gets the list of cards that have an orange flag
         * then remove their orange flag
         * then adds the orange flag to the cards to review
         * then create the filtered deck, with instruction to take
-            the cards that have the tag & an orange flag
+            the cards that have the an orange flag
         * then the orange flag is removed from the cards to review
             and readded to the original orange cards
         * then does a few sanity check to see if the filtered deck
