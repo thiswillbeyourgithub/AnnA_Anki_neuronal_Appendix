@@ -81,7 +81,8 @@ class AnnA:
                  show_banner=True,
                  card_limit=None,
                  n_clusters=10,
-                 pca_sBERT_dim=300,  # should keep about 99% of variance
+                 pca_sBERT_dim=None,
+                 # 300 pca dim should keep more than 95% of variance
                  dont_send_to_anki=False
                  ):
         # printing banner
