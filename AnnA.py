@@ -83,7 +83,7 @@ class AnnA:
                  n_clusters=10,
                  pca_sBERT_dim=None,
                  # 300 pca dim should keep more than 95% of variance
-                 dont_send_to_anki=False
+                 dont_send_to_anki=True
                  ):
         # printing banner
         if show_banner is True:
