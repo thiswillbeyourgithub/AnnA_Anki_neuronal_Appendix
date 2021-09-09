@@ -656,13 +656,14 @@ supported")
         orange_list = self._ankiconnect(action="findCards",
                                         query="\"flag:2\"")
 
-        for c in tqdm(orange_list,
-                      desc="Removing orange flag from all cards",
-                      unit="card"):
-            self._ankiconnect(action="setSpecificValueOfCard",
-                                     card=int(c),
-                                     keys=["flags"],
-                                     newValues=[0])
+        if len(orange_list) != 0:
+            for c in tqdm(orange_list,
+                          desc="Removing orange flag from all cards",
+                          unit="card"):
+                self._ankiconnect(action="setSpecificValueOfCard",
+                                         card=int(c),
+                                         keys=["flags"],
+                                         newValues=[0])
         for c in tqdm(self.best_review_order,
                       desc="Adding flag 'orange' to cards to review",
                       unit="card"):
@@ -686,13 +687,14 @@ supported")
                                      card=int(c),
                                      keys=["flags"],
                                      newValues=[0])
-        for c in tqdm(orange_list,
-                      desc="Restoring orange flags from other cards",
-                      unit="card"):
-            self._ankiconnect(action="setSpecificValueOfCard",
-                                     card=int(c),
-                                     keys=["flags"],
-                                     newValues=[2])
+        if len(orange_list) != 0:
+            for c in tqdm(orange_list,
+                          desc="Restoring orange flags from other cards",
+                          unit="card"):
+                self._ankiconnect(action="setSpecificValueOfCard",
+                                         card=int(c),
+                                         keys=["flags"],
+                                         newValues=[2])
 
         print("checking that the content of filtered deck name is the same as \
  the order devises from AnnA")
