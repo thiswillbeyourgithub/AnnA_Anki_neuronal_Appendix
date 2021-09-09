@@ -31,6 +31,7 @@ Plot the latent space of the semantic relation of your anki cards showing cluste
 ## TODO
 ### optimization
 * optimize review order computation
+* add tags after clusters
 * do a simple parallelization wrapper for the tqdm loops at the end
 * rewrite the README + tell about docstrings and PEP + tried tf-idf + use another sbert if english
 * run the script on notes and not cards

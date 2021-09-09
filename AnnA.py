@@ -518,7 +518,7 @@ using PCA...")
         * given that the L2 norm is used throughout the script,
             it might be faster to use np.dot instead of cosine distance
         """
-        print("Computing the distance matrix...", end="")
+        print("\nComputing the distance matrix...")
         df = self.df
 
         df_temp = pd.DataFrame(
@@ -527,9 +527,9 @@ using PCA...")
             data=[x[0:] for x in df[input_col]])
         df_dist = pairwise_distances(df_temp, n_jobs=-1, metric=method)
 
-        print(" Done.")
         self.df_dist = df_dist
         self.df = df
+        print("Done.\n")
         return True
 
     def assign_score(self, reference_order="lowest_interval"):
