@@ -175,7 +175,7 @@ class AnnA:
         to used Threading extensively.
         """
         if isinstance(card_id, list):
-            if len(card_id) < 300:
+            if len(card_id) < 50:
                 r_list = []
                 for card in tqdm(card_id):
                     r_list.extend(self._ankiconnect(action="cardsInfo",
