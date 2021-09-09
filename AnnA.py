@@ -245,15 +245,15 @@ threads of {batchsize} cards...")
         decklist = self._ankiconnect(action="deckNames")
         if deckname is not None:
             if deckname not in decklist:
-                print("Couldn't find this deck.")
-                deck = None
+                print("Couldn't find this deck.", end=" ")
+                deckname = None
         if deckname is None:
             auto_complete = WordCompleter(decklist,
                                           match_middle=True,
                                           ignore_case=True)
             deckname = ""
-            while deck not in decklist:
-                deckname = prompt("Enter the name of the deck to use:\n>",
+            while deckname not in decklist:
+                deckname = prompt("Enter the name of the deck:\n>",
                                   completer=auto_complete)
         return deckname
 
