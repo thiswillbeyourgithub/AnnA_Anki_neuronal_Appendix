@@ -82,6 +82,7 @@ class AnnA:
                  card_limit=None,
                  n_clusters=10,
                  pca_sBERT_dim=300,  # should keep about 99% of variance
+                 dont_send_to_anki=False
                  ):
         # printing banner
         if show_banner is True:
@@ -120,8 +121,8 @@ class AnnA:
         self._compute_sBERT_vec()
         self._compute_distance_matrix()
         self.assign_score()
-        self.send_to_anki()
-        self.save_df()
+        if dont_send_to_anki is False:
+            self.send_to_anki()
 
         print("Re-optimizing Anki database")
         self._ankiconnect(action="guiCheckDatabase")
