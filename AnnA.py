@@ -548,9 +548,6 @@ using PCA...")
         print("Assigning scores...")
         df = self.df
         df_dist = self.df_dist
-        queue_size_goal = self.desired_deck_size
-        ivl = df['interval'].to_numpy().reshape(-1, 1)
-        df["ivl_std"] = self.scaler.fit_transform(ivl)
 
         if reference_order != "lowest_interval":
             print("Using another reference than lowest interval is not yet \
@@ -561,6 +558,15 @@ supported")
         assert len([x for x in rated if df.loc[x, "status"] != "rated"]) == 0
         queue = []
         print(f"Already rated in the past relevant days: {len(rated)}")
+
+        if self.desired_deck_size > len(df.index)-len(rated):
+            print(f"You wanted to create a deck with \
+{self.desired_deck_size} in it but the deck only contains \
+{len(df.index)-len(rated)} cards. Taking the lowest value.")
+        queue_size_goal = min(self.desired_deck_size,
+                              len(df.index)-len(rated))
+        ivl = df['interval'].to_numpy().reshape(-1, 1)
+        df["ivl_std"] = self.scaler.fit_transform(ivl)
 
         if len(rated) == 0:
             if reference_order == "lowest_interval":
