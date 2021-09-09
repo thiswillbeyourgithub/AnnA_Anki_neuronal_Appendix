@@ -697,7 +697,7 @@ supported")
                                          newValues=[2])
 
         print("checking that the content of filtered deck name is the same as \
- the order devises from AnnA")
+ the order infered by AnnA")
         cur_in_deck = self._ankiconnect(action="findCards",
                                         query=f"\"deck:{filtered_deck_name}\"")
         diff = [x for x in self.best_review_order + cur_in_deck
