@@ -31,11 +31,10 @@ Plot the latent space of the semantic relation of your anki cards showing cluste
 ## TODO
 ### optimization
 * optimize review order computation
-* do a simple parallelization wrapper for the tqdm loops at the end
-* add tags after clusters
 * rewrite the README + tell about docstrings and PEP + tried tf-idf + use another sbert if english
+* add tags after clusters
+* do a simple parallelization wrapper for the tqdm loops at the end: https://stackoverflow.com/questions/9786102/how-do-i-parallelize-a-simple-python-loop
 * run the script on notes and not cards
-* add tags of ctf-if to cards
 * implement relative overdueness
 * ponder using df.compare to fetch more quickly the cached sbert vectors
 
