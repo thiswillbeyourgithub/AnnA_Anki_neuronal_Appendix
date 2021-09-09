@@ -538,15 +538,12 @@ using PCA...")
         * this score reflects the order in which they should be reviewed
         * the intuition is that anki doesn't know before hand if some cards
             are semantically close and can have you review them the same day
-        * The score is computed according to formula:
-           score = reference - median of (similarity to each card of the queue)
+        * The score is computed according to the formula:
+           score = reference - min of (similarity to each card of the queue)
         * reference is either the interval (lower is urgent) or the relative
-            overdueness (higher is urgent)
-        * the reference and the median are both centered and scaled before
-            calculating the score
-        * the queue starts empty and is incrementally filled with the chosen
-            one
+            overdueness (higher is urgent), it is centered and scaled
         * the chosen one is the card with the lowest score at each round
+        * the queue starts empty. At each turn, chosen_one is added to it
         """
         print("Assigning scores...")
         df = self.df
@@ -583,11 +580,8 @@ supported")
 
                 for q in rated + queue:
                     df_temp[q] = df_dist[df.index.get_loc(q)]
-                scaled_median = self.scaler.fit_transform(
-                        np.median(df_temp, axis=1).reshape(-1, 1))
-                df["scaled_median_dist_to_queue"] = scaled_median
-                df["score"] = df["ivl_std"] - df["scaled_median_dist_to_queue"]
-                chosen_one = df.drop(labels=queue)["score"].idxmin()
+                df["score"] = df["ivl_std"] - np.min(df_temp, axis=1)
+                chosen_one = df.drop(labels=list(rated+queue))["score"].idxmin()
                 queue.append(chosen_one)
                 df_temp[chosen_one] = df_dist[df.index.get_loc(chosen_one)]
                 pbar.update(1)
