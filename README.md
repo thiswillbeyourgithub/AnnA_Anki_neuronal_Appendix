@@ -1,43 +1,54 @@
 # AnnA : Anki neuronal Appendix
-# **Careful, this project is currently being refactored from scratch, ETA : end of summer 2021**
-Plot the latent space of the semantic relation of your anki cards showing clusters of related notions. In other words, this finds "semantic siblings" in your collection.
+Tired of having to deal with anki flashcards that are too similar when grinding through your backlog? This python script creates filtered deck in optimal review order. It uses Machine Learning / AI to make semantically linked cards far from one another.
+
+## Other features
+* Cluster your card collection using various algorithms (k-means, DBSCAN, agglomerative clustering), also get the topic of each cluster and add it as tag to your cards.
+* Create a plot showing clusters of semantic meanings from your anki database. As you can see on this picture:
+* Look for cards in your database using a semantic query (typing something with a close `meaning` to a card will find it even if no words are in common.)
+* PEP compliant and with details docstrings.
 
 
 
 ## FAQ
-* **What is this? And what is it for?** This script (which I plan to integrate as an anki addon) uses machine learning to render a 2D plot that shows cards that deal with similar notions next to each other. It is only based on the text content of the card (all fields) and not any other (meta)data. It's final use is still to be determined but I'm especially interested in creating filtered decks that uses this to **not** pick cards that are dealing with notions that are too related. Effectively reducing the daily load of cards without meaningfully reducing recall. I am very interested in NLP (natural language processing) and am sure there would be other interesting projects based on this. See at the bottom the section `Crazy Ideas`.
-* **What is the current status of this project?** I am still developing it. My free time is limited but I often have a more polished version on my laptop and push the commit way later so don't be scared if you don't see anything new for months. The machine learning part is still in progress but has worked but I don't know Qt and never really made anki addons so it will take some time to integrate as an addon. Take a look at the TODO list to know more.
-* **Can you explain the name?** The idea is to somehow show on 2D a representation of your knowledge. The brain, its consciousness and memories can be thought of as just a skier skiing down hyper dimensional slopes of potential energy curves to find lowest points. Those minimum are actually "concepts". 
+* **What do you call "optimal review order"?** The order that minimizes the chance of reviewing similar cards in a day. You see, Anki has no knowledge of the content of cards and only cares about their interval. Its built-in system of "siblings" is useful but I think we can do better. AnnA was made to create filtered decks with cards in "lower interval" order BUT in a way that keeps semantic siblings far from each other.
+* **What is this for?** It seems a great idea for dealing with huge backlog you get in medical school. If you have 2 000 reviews to do, but can only do 500 in a day: AnnA is making sure that you will get the most out of those 500. I don't expect the plotting and clustering features to be really used but I had to code them to make sure AnnA was working fine so I might as well leave it :)
+* **What is the current status of this project?** I use it daily and intend to keep developing until I have no free time left. Take a look at the TODO list if you want to know what's in the works.
 * **How does it work? (Layman version)** Magic.
-* **How does it work? (Technical version)** (*Subject to change*) Here's what the code does, section by section. It loads your anki database into pandas. Do a bunch of unnecessarily complicated stuff to get the tags, decks and notetype of each cards into a pandas DataFrame. Removes the duplicate cards (i.e. cards containing the same text content, that's at least almost all image occlusion siblings). Removes the first field of image occlusion cards as it contains a field ID which is annoying for NLP. Removes the stop words. Formats the text to remove html, extract the already [OCRed text](https://ankiweb.net/shared/info/450181164) (i.e. removing html link to image but keeping the `title` part of the html image).Readjusting word counts prior to [tf-idf](https://en.wikipedia.org/wiki/Tf%E2%80%93idf), i.e.  it copies the `sfld` over and over until the number of words from `sfld` is twice the number of words from `flds minus sfld`. This acts as a way to assign priority to the words from `sfld` instead of `flds`, which can be very useful to people like me who often have a lot of pictures in a `Source` field that have been OCRed. Then it tokenizes the cards using currently the model `bert-base-multilingual-uncased`. Then applies the `tf-if` algorithm.  Then does a dimensionality reduction using UMAP. Then plots the latent space using plotly.
-* **What value should I choose be the number of K clusters?** That's a loaded question. It depends on your cards and on your computer. More clusters needs much more time but won't hurt the result that much. I would say go with the highest that won't take too long to run.
-* **What are the power requirements to run this?** This should be rather efficient but if you're on an old laptop and have tens of thousands of cards it could be pretty demanding I think. On my pretty powerful laptop for 5000 cards it takes about 1 minute, mostly because of pandas preprocessing. Any additional data points will be interesting to me so if you want to share how long it takes don't hesitate to share it by opening an issue.
+* **How does it work? (Technical version)** The code is mainly composed of a python class called AnnA. When you create an instance, you have to supply the name of the deck you want to filter from. It will then automatically fetch the cards from your database, assign [sentence-BERT](https://www.sbert.net/) vectors to each. Compute a cosine distance matrix of your cards. You can then call different methods, the most useful will be `a.send_to_anki()` which will create the filtered deck containing the cards, then alter them to get the optimal review order. Note that rated cards of the last few days of the same deck will be used as reference to avoid having cards that are too similar to previous reviews. If you want to know more, either ask me or read the docstrings.
+* **What are the power requirements to run this?** I took care to make it as efficient as possible but am still improving the code. Computing the distance matrix can be long if you do this on very large amount of cards but this step is done in parallel. Let me know if some steps are unusually large and I will try to optimize it. With one argument you can use PCA to do a dimension reduction on your cards, making the rest of the script faster.
 * **Do you mind if I open an issue?** Not at all! It is very much encouraged, even just for a typo. That will at least make me happy. Of course PR are always more than welcome.
-
-
-## A few notes 
-* This has been tested on python 3.9.0, and on linux. I intend to make it easier to run on all OS but it's already fairly easy (just change a few paths and `os.system()` commands.)
-* I initially developed it as a jupyter notebook, so you will find both the last notebook and the finished script in this repository. Keep in mind that will probably add fixes to the python script and not the jupyter notebook
+* **What is the `keep_ocr` argument?** If you set this to True when creating the instance, AnnA will extract the text from images, provided you create it with [Anki OCR](https://github.com/cfculhane/AnkiOCR/) addon beforehand.
+* **If I create a filtered deck using AnnA, can I rebuild it?** No, emptying or rebuilding it will use anki's order and not AnnA's. You have to run the script each time you want to refill your deck. Hence you should create large filtered decks in advance. 
+* **Does this work only on Linux?** It should work on all platform, provided you have anki installed and [anki-connect](https://github.com/FooSoft/anki-connect) enabled. But it uses some dependencies that might only work on some CPUs, so I'm guessing ARM system would not work but please tell me if you know tried.
+* **What is the cache?** The main bottleneck was creating all the vector embeddings of the cards, so I decided to automatically store them in a pickled dataframe.
+* **sBERT is interesting but I'd like to use tf-idf, is this possible?** I initially tried with it and with both combined but it was creating a messy code, you can't cache tf-idf, it slows down the script a lot because SVD does not seem as efficient, using BERT tokenizer and tf-idf means adding more than 20 parameters that I was not sure about. So I decided to go with only sBERT and it's awesome!
 
 
 ## How to use it
-* First, **read this page in its entierety**
-* Clone this repository : `git clone URL`
+* First, **read this page in its entierety, especially the FAQ**
+* make sure the addon [anki-connect](https://github.com/FooSoft/anki-connect) is installed
+* Clone this repository: `git clone https://github.com/thiswillbeyourgithub/AnnA_Anki_neuronal_Appendix ; cd AnnA_Anki_neuronal_Appendix`
 * Use python to install the necessary packages : `pip install -r requirements.py`
-* make sure the addon anki-connect is installed
-* Finally, don't hesitate to open an issue.
+* Open ipython: `ipython3`
+* `from AnnA import * ; a = AnnA(desired_deck_size=500, dont_send_to_anki=False)`
+* *wait a while, the first time you run it on a deck is long because sBERT has to compute all the embeddinsg*
+* Enjoy your filtered deck, but don't empty it or rebuilt it.
+* Open an issue telling me your remarks and suggestion
+
 
 
 ## TODO
-### optimization
+* check that the cache works fine
+* add a weight parameter, balancing proximity and the other thing
+* put the user settings in a separate file
+* create a picture for the readme
 * optimize review order computation
-* rewrite the README + tell about docstrings and PEP + tried tf-idf + use another sbert if english + tell that it interferes with mod time
+* rewrite the README + tried tf-idf + use another sbert if english + tell that it interferes with mod time
 * add tags after clusters
 * do a simple parallelization wrapper for the tqdm loops at the end: https://stackoverflow.com/questions/9786102/how-do-i-parallelize-a-simple-python-loop
 * run the script on notes and not cards
 * implement relative overdueness
 * ponder using df.compare to fetch more quickly the cached sbert vectors
-
 
 ### long term
 * add support for miniBatchKMeans and HDBSCAN
@@ -54,9 +65,8 @@ Plot the latent space of the semantic relation of your anki cards showing cluste
     * that might, somehow, increase the likelihood of [eureka](https://en.wikipedia.org/wiki/Eureka_(word)) moments where your brain just created a new paths. That would supposedly help to remember and master a field.
     * another way would be simply to automatically bury the closest cards to each notion. That would intelligently reduce the load of each day in a "smart" and efficient way.
 * **Show related** : have a card about a notion you just can't fit into the big picture? I could have a button showing similar cards!
-* **Train on hardest clusters** : know that you have notions in the deck that you can't understand? This could help you create a filtered deck containing cards from closest to farthest from the center of the cluster. Allowing you to really connect the notion with the rest.
 * **Optimize learning via cues** : A weird idea of mine is about the notion that hearing a tone when you're learning something will increase your recall if you have the same tone playing while taking the test. So maybe it would be useful to assign a tone that increases in pitch while you advance in the queue of due cards? I told you it was crazy ideas... Also this tone could play the tone assigned to the cluster when doing random reviews.
-* **Mental Walk** (credit goes to discussing with Paul Bricman) : integrating AnnA with VR by offering the user to walk in an imaginary and procedurally generated world with the reviews materialized in precise location. So the user would have to walk to the flashcard location then do the review. The cards would be automatically grouped by cluster into rooms or forests or buildings etc. Allowing to not have to create the mental palace but just have to create the flashcards.
+* **Mental Walk** (credit goes to a discussion with Paul Bricman) : integrating AnnA with VR by offering the user to walk in an imaginary and procedurally generated world with the reviews materialized in precise location. So the user would have to walk to the flashcard location then do the review. The cards would be automatically grouped by cluster into rooms or forests or buildings etc. Allowing to not have to create the mental palace but just have to create the flashcards.
     * a possibility would be to do a dimension reduction to 5 dimensions. Use the 2 first to get the spatial location were the cluster would be assigned. Then the cards would be spread across the room but the 3 remaining vectors could be used to derive something about the room like wall color, the tempo of a music playing when inside the room and I don't know, the color of the floor?
     * we could ensure that the clusters would always stay in the same room even after adding many cards or even across users by querying a large language model for the vectors associated to the main descriptors of the cluster.
 * **Source Walking** : it would be interesting to do the anki reviews in VR where the floor would be your source (pdf, epub, ppt, whatever). The cards would be spread over the document, approximately located above the actual source sentence. Hence leveraging the power of mental palace while doing your reviews. Accessing the big picture AND the small picture.
