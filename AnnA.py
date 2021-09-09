@@ -679,7 +679,8 @@ as best_review_order!")
         else:
             print(" Done.")
 
-        incrementer = -10*len(self.best_review_order)
+        incrementer = -100000  # this seems to be about the same values used
+        # by default by anki
         for c in tqdm(self.best_review_order,
                       desc="Altering due order",
                       unit="card"):
