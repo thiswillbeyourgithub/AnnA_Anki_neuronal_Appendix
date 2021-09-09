@@ -625,13 +625,13 @@ supported")
         filtered_deck_name = str(deck_template + f" - {self.deckname}")
         filtered_deck_name = filtered_deck_name.replace("::", "_")
         self.filtered_deck_name = filtered_deck_name
-        if filtered_deck_name in self._ankiconnect(action="deckNames"):
-            print(f"Deleting previous deck: {filtered_deck_name}")
-            print("(Cards will NOT be deleted)")
-            self._ankiconnect(action="deleteDecks",
-                              decks=list(filtered_deck_name),
-                              cardsToo=False)
         deck = self.deckname.replace('::', '_')
+
+        while filtered_deck_name in self._ankiconnect(action="deckNames"):
+            print(f"\nFound existing filtered deck: {filtered_deck_name} \
+You have to delete it manually, the cards will be returned to their original \
+deck.")
+            input("Done? >")
         timestamp = '_'.join(time.asctime().split()[0:3])
         tag_name = f"AnnA_Optimal_review_order::{deck}::session_{timestamp}"
 
