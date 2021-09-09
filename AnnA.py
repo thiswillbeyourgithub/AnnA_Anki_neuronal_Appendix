@@ -695,8 +695,8 @@ deck.")
                                          keys=["flags"],
                                          newValues=[2])
 
-        print("checking that the content of filtered deck name is the same as \
- the order infered by AnnA")
+        print("Checking that the content of filtered deck name is the same as \
+ the order infered by AnnA...", end="")
         cur_in_deck = self._ankiconnect(action="findCards",
                                         query=f"\"deck:{filtered_deck_name}\"")
         diff = [x for x in self.best_review_order + cur_in_deck
@@ -705,6 +705,9 @@ deck.")
             print("Inconsistency! The deck does not contain the same cards \
 as best_review_order!")
             pprint(diff)
+            print(f"\nNumber of inconsistent cards: {len(diff)}")
+        else:
+            print(" Done.")
 
         incrementer = -10*len(self.best_review_order)
         for c in tqdm(self.best_review_order,
