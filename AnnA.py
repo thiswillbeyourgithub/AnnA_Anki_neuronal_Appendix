@@ -747,12 +747,16 @@ as best_review_order!")
 
         if method.lower() in "minibatch-kmeans":
             clust = MiniBatchKMeans(**minibatchk_args_deploy)
+            method = "minibatch-K-Means"
         elif method.lower() in "kmeans":
             clust = KMeans(**kmeans_args_deploy)
+            method = "K-Means"
         elif method.lower() in "DBSCAN":
             clust = DBSCAN(**dbscan_args_deploy)
+            method = "DBSCAN"
         elif method.lower() in "agglomerative":
             clust = AgglomerativeClustering(**agglo_args_deploy)
+            method = "Agglomerative Clustering"
         print(f"Clustering using {method}...")
 
         df_temp = pd.DataFrame(
