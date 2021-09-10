@@ -38,8 +38,8 @@ field_dic = {
 
 def asynchronous_importer():
     """
-    used to asynchroneously import heavy modules, this way between 
-    importing AnnA and instanciating the class, the language model
+    used to asynchronously import heavy modules, this way between
+    importing AnnA and creating the instance of the class, the language model
     have some more time to load
     """
     global stopwords, SentenceTransformer, KMeans, DBSCAN, \
@@ -113,7 +113,7 @@ class AnnA:
 
         # actual execution
         self.deckname = self._check_deck(deckname)
-        import_thread.join()  # asynchroneous importing of large module
+        import_thread.join()  # asynchronous importing of large module
         time.sleep(0.5)  # sometimes import_thread takes too long apparently
         self._create_and_fill_df()
         self.scaler = StandardScaler()
