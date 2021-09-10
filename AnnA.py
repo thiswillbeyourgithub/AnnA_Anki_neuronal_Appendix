@@ -45,7 +45,8 @@ def asynchronous_importer():
     global stopwords, SentenceTransformer, KMeans, DBSCAN, \
         AgglomerativeClustering, transformers, sp, normalize, TfidfVectorizer,\
         CountVectorizer, TruncatedSVD, StandardScaler, \
-        pairwise_distances, PCA, px, umap, np, tokenizer_bert, sBERT
+        pairwise_distances, PCA, px, umap, np, tokenizer_bert, sBERT, \
+        MiniBatchKMeans
     print("Importing modules.")
     from nltk.corpus import stopwords
     from sklearn.feature_extraction.text import TfidfVectorizer
@@ -53,6 +54,7 @@ def asynchronous_importer():
     from sentence_transformers import SentenceTransformer
     sBERT = SentenceTransformer('distiluse-base-multilingual-cased-v1')
     from sklearn.cluster import KMeans, DBSCAN, AgglomerativeClustering
+    from sklearn.cluster import MiniBatchKMeans
     import plotly.express as px
     import umap.umap_
     from sklearn.metrics import pairwise_distances
@@ -699,10 +701,11 @@ as best_review_order!")
         return True
 
     def compute_clusters(self,
-                         method="kmeans",
+                         method="minibatch-kmeans",
                          input_col="sBERT",
                          output_col="clusters",
                          n_topics=5,
+                         minibatchk_args=None,
                          kmeans_args=None,
                          agglo_args=None,
                          dbscan_args=None):
@@ -728,6 +731,13 @@ as best_review_order!")
                              "affinity": "cosine",
                              "memory": "/tmp/",
                              "linkage": "average"}
+        minibatchk_args = {"n_clusters": self.n_clusters,
+                           "max_iter": 100,
+                           "batch_size": 100,
+                           "verbose": 1,
+                           }
+        if minibatchk_args is not None:
+            minibatchk_args_deploy.update(minibatchk_args)
         if kmeans_args is not None:
             kmeans_args_deploy.update(kmeans_args)
         if dbscan_args is not None:
@@ -735,7 +745,9 @@ as best_review_order!")
         if agglo_args is not None:
             agglo_args_deploy.update(agglo_args)
 
-        if method.lower() in "kmeans":
+        if method.lower() in "minibatch-kmeans":
+            clust = MiniBatchKMeans(**minibatchk_args_deploy)
+        elif method.lower() in "kmeans":
             clust = KMeans(**kmeans_args_deploy)
         elif method.lower() in "DBSCAN":
             clust = DBSCAN(**dbscan_args_deploy)
