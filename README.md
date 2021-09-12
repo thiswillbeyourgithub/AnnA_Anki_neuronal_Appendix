@@ -1,8 +1,9 @@
 # AnnA : Anki neuronal Appendix
 Tired of having to deal with anki flashcards that are too similar when grinding through your backlog? This python script creates filtered deck in optimal review order. It uses Machine Learning / AI to make semantically linked cards far from one another.
+**Note: this project is currently being refactored, the README is not finished and I am still actively contributing until the end of my hollidays. The code is still completely functionnal**
 
 ## Other features
-* Cluster your card collection using various algorithms (k-means, DBSCAN, agglomerative clustering), also get the topic of each cluster and add it as tag to your cards.
+* Cluster your card collection using various algorithms (k-means (including minibatch version), DBSCAN, agglomerative clustering), also get the topic of each cluster and add it as tag to your cards.
 * Create a plot showing clusters of semantic meanings from your anki database. As you can see on this picture:
 * Look for cards in your database using a semantic query (typing something with a close `meaning` to a card will find it even if no words are in common.)
 * PEP compliant and with details docstrings.
@@ -21,11 +22,12 @@ Tired of having to deal with anki flashcards that are too similar when grinding 
 * **If I create a filtered deck using AnnA, can I rebuild it?** No, emptying or rebuilding it will use anki's order and not AnnA's. You have to run the script each time you want to refill your deck. Hence you should create large filtered decks in advance. 
 * **Does this work only on Linux?** It should work on all platform, provided you have anki installed and [anki-connect](https://github.com/FooSoft/anki-connect) enabled. But it uses some dependencies that might only work on some CPUs, so I'm guessing ARM system would not work but please tell me if you know tried.
 * **What is the cache?** The main bottleneck was creating all the vector embeddings of the cards, so I decided to automatically store them in a pickled dataframe.
+* **What is sBERT?** Shot for sentence-BERT. BERT is a machine learning technology that allows to assign high dimensional vectors to words in the context of a sentence. Sentence-BERT is a new method that does essentially the same thing but on a whole sentence. You can read more [at their great website](https://www.sbert.net/).
 * **sBERT is interesting but I'd like to use tf-idf, is this possible?** I initially tried with it and with both combined but it was creating a messy code, you can't cache tf-idf, it slows down the script a lot because SVD does not seem as efficient, using BERT tokenizer and tf-idf means adding more than 20 parameters that I was not sure about. So I decided to go with only sBERT and it's awesome!
 
 
 ## How to use it
-* First, **read this page in its entierety, especially the FAQ**
+* First, **read this page in its entierety, this is a complicated piece of software and you don't want to use it irresponsibly on your cards.**
 * make sure the addon [anki-connect](https://github.com/FooSoft/anki-connect) is installed
 * Clone this repository: `git clone https://github.com/thiswillbeyourgithub/AnnA_Anki_neuronal_Appendix ; cd AnnA_Anki_neuronal_Appendix`
 * Use python to install the necessary packages : `pip install -r requirements.py`
@@ -38,20 +40,28 @@ Tired of having to deal with anki flashcards that are too similar when grinding 
 
 
 ## TODO
+* check the license
+* implement relative overdueness
+* understand why some vectors have to be recomputed each time
+* add an argument to reverse the scoring and tell that it can be used to learn languages for some reason
+* put the acronym and the greek letter in better file hierarchy
+* create a smaller script to simply call the search function on some text
+* chunked distance matrix
 * check that the cache works fine
 * add a weight parameter, balancing proximity and the other thing
 * put the user settings in a separate file
 * create a picture for the readme
+* replace dbscan with HDBSCAN and update the readme and requirement
 * optimize review order computation
-* rewrite the README + tried tf-idf + use another sbert if english + tell that it interferes with mod time
+* rewrite the README + tried tf-idf + use another sbert if english + tell that it interferes with mod time + args + usage
+* mode similarity for language learning
+* reddit + anki discord + psionica + anking + blum 
 * add tags after clusters
 * do a simple parallelization wrapper for the tqdm loops at the end: https://stackoverflow.com/questions/9786102/how-do-i-parallelize-a-simple-python-loop
-* run the script on notes and not cards
-* implement relative overdueness
+* pickle the whole class
 * ponder using df.compare to fetch more quickly the cached sbert vectors
 
 ### long term
-* add support for miniBatchKMeans and HDBSCAN
 * re read this article : http://mccormickml.com/2021/05/27/question-answering-system-tf-idf/
 * talk about this in the anki dev channel and create a subreddit post
 * automatically create a phylogeny of cards based on a distance matrix and see if it's an appropriate mind map, plotly is suitable for this kind of tree
@@ -59,6 +69,7 @@ Tired of having to deal with anki flashcards that are too similar when grinding 
 * investigate VR, minecraft integration, roblox, etc
 
 
+# The following is kept as a legacy but was more based on the non functional ancestor to AnnA, don't judge please.
 ## Crazy ideas 
 *Disclaimer : I'm a medical student extremely interested in AI but who has trouble devoting time to this passion. This project is a way to get to know machine learning tools but can have practical applications. I like to have crazy ideas to motivate my projects and they are listed belows. Don't laugh. Don't hesitate to contribute either.*
 * **Scheduling** If you have 100 reviews to do in a given anki session, anki currently shows them to you using `relative overdueness` (+ fuzzing) order. But is there a better way? What happens if you group semantically related cards closest to each other? That would probably be "cheating" as answering the `n` cards will remind you enough to answer `n+1`. So maybe the opposite would be useful : ordering the cards by being the farthest apart, semantically.
