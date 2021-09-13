@@ -550,22 +550,34 @@ using PCA...")
         print("Assigning scores...")
         df = self.df
         df_dist = self.df_dist
-
-        if reference_order != "lowest_interval":
-            print("Using another reference than lowest interval is not yet \
-supported")
-            reference_order = "lowest_interval"
+        desired_deck_size = self.desired_deck_size
 
         rated = self.rated_cards_list
         assert len([x for x in rated if df.loc[x, "status"] != "rated"]) == 0
         queue = []
         print(f"Already rated in the past relevant days: {len(rated)}")
 
-        if self.desired_deck_size > len(df.index)-len(rated):
+        if isinstance(desired_deck_size, float):
+            if desired_deck_size < 1.0:
+                desired_deck_size = str(desired_deck_size*100) + "%"
+        if isinstance(desired_deck_size, str):
+            if desired_deck_size == "all":
+              desired_deck_size = 99999999  
+            elif desired_deck_size.endswith("%"):
+                desired_deck_size = 0.01*desired_deck_size[:-1]*(len(df.index)-len(rated))
+                print(f"Taking {desired_deck_size[-1]}% of the deck.")
+
+        if reference_order != "lowest_interval":
+            print("Using another reference than lowest interval is not yet \
+supported")
+            reference_order = "lowest_interval"
+
+
+        if desired_deck_size > len(df.index)-len(rated):
             print(f"You wanted to create a deck with \
-{self.desired_deck_size} in it but the deck only contains \
+{desired_deck_size} in it but the deck only contains \
 {len(df.index)-len(rated)} cards. Taking the lowest value.")
-        queue_size_goal = min(self.desired_deck_size,
+        queue_size_goal = min(desired_deck_size,
                               len(df.index)-len(rated))
         ivl = df['interval'].to_numpy().reshape(-1, 1)
         df["ivl_std"] = self.scaler.fit_transform(ivl)
