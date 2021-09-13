@@ -86,7 +86,8 @@ class AnnA:
                  n_clusters=10,
                  pca_sBERT_dim=None,
                  # 300 pca dim should keep more than 95% of variance
-                 dont_send_to_anki=True
+                 dont_send_to_anki=True,
+                 queue_stride=1500
                  ):
         # printing banner
         if show_banner is True:
@@ -105,6 +106,7 @@ class AnnA:
         self.card_limit = card_limit
         self.n_clusters = n_clusters
         self.pca_sBERT_dim = pca_sBERT_dim
+        self.queue_stride = queue_stride
         if self.replace_acronym is not None:
             file = Path(replace_acronym)
             if not file.exists():
@@ -592,7 +594,7 @@ supported")
                   smoothing=0,
                   total=queue_size_goal) as pbar:
             while len(queue) < queue_size_goal:
-                for q in rated + queue:
+                for q in list(rated + queue)[0:self.queue_stride]:
                     df_temp[q] = df_dist[df.index.get_loc(q)]
                 df["score"] = df["ivl_std"] - np.min(df_temp, axis=1)
                 chosen_one = df.drop(labels=list(rated+queue))["score"].idxmin()

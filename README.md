@@ -43,7 +43,6 @@ Tired of having to deal with anki flashcards that are too similar when grinding 
 ## TODO
 * check the license
 * implement relative overdueness
-* only compare to the last 1300, can be changed in a setting
 * understand why some vectors have to be recomputed each time
 * add an argument to reverse the scoring and tell that it can be used to learn languages for some reason
 * put the acronym and the greek letter in better file hierarchy
