@@ -87,7 +87,8 @@ class AnnA:
                  pca_sBERT_dim=None,
                  # 300 pca dim should keep more than 95% of variance
                  dont_send_to_anki=True,
-                 queue_stride=1500
+                 queue_stride=1500,
+                 prefer_similar_card=False,
                  ):
         # printing banner
         if show_banner is True:
@@ -107,6 +108,7 @@ class AnnA:
         self.n_clusters = n_clusters
         self.pca_sBERT_dim = pca_sBERT_dim
         self.queue_stride = queue_stride
+        self.prefer_similar_card = prefer_similar_card
         if self.replace_acronym is not None:
             file = Path(replace_acronym)
             if not file.exists():
@@ -552,6 +554,10 @@ using PCA...")
         print("Assigning scores...")
         df = self.df
         df_dist = self.df_dist
+        if self.prefer_similar_card is True:
+            direction = 1
+        else:
+            direction = -1
         desired_deck_size = self.desired_deck_size
 
         rated = self.rated_cards_list
@@ -596,7 +602,7 @@ supported")
             while len(queue) < queue_size_goal:
                 for q in list(rated + queue)[0:self.queue_stride]:
                     df_temp[q] = df_dist[df.index.get_loc(q)]
-                df["score"] = df["ivl_std"] - np.min(df_temp, axis=1)
+                df["score"] = df["ivl_std"] + direction*np.min(df_temp, axis=1)
                 chosen_one = df.drop(labels=list(rated+queue))["score"].idxmin()
                 queue.append(chosen_one)
                 df_temp[chosen_one] = df_dist[df.index.get_loc(chosen_one)]
