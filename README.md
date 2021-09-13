@@ -43,16 +43,13 @@ Tired of having to deal with anki flashcards that are too similar when grinding 
 
 
 ## TODO
-* check the license
-* create a smaller script to simply call the search function on some text
 * chunked distance matrix
 * check that the cache works fine
-* add a weight parameter, balancing proximity and the other thing
-* put the user settings in a separate file
 * create a picture for the readme
-* replace dbscan with HDBSCAN and update the readme and requirement
+* replace dbscan with HDBSCAN
 * optimize review order computation
-* rewrite the README + tried tf-idf + use another sbert if english + tell that it interferes with mod time + args + usage
+* show usage and describe each argument of the main class
+* create a smaller script to simply call the search function on some text
 * mode similarity for language learning
 * reddit + anki discord + psionica + anking + blum 
 * add tags after clusters
