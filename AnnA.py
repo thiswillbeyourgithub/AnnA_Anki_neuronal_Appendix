@@ -90,6 +90,7 @@ class AnnA:
                  queue_stride=1500,
                  prefer_similar_card=False,
                  scoring_weights = (1,1),
+                 reference_order = "relative_overdueness",
                  ):
         # printing banner
         if show_banner is True:
@@ -111,6 +112,7 @@ class AnnA:
         self.queue_stride = queue_stride
         self.prefer_similar_card = prefer_similar_card
         self.scoring_weights = scoring_weights
+        self.reference_order = reference_order
         if self.replace_acronym is not None:
             file = Path(replace_acronym)
             if not file.exists():
@@ -540,7 +542,7 @@ using PCA...")
         print("Done.\n")
         return True
 
-    def assign_score(self, reference_order="relative_overdueness"):
+    def assign_score(self):
         """
         assign score to each card
         * this score reflects the order in which they should be reviewed
@@ -554,6 +556,7 @@ using PCA...")
         * the queue starts empty. At each turn, chosen_one is added to it
         """
         print("Assigning scores...")
+        reference_order = self.reference_order
         df = self.df
         w1 = self.scoring_weights[0]
         w2 = self.scoring_weights[1]
