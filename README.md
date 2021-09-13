@@ -45,7 +45,6 @@ Tired of having to deal with anki flashcards that are too similar when grinding 
 * implement relative overdueness
 * understand why some vectors have to be recomputed each time
 * add an argument to reverse the scoring and tell that it can be used to learn languages for some reason
-* put the acronym and the greek letter in better file hierarchy
 * create a smaller script to simply call the search function on some text
 * chunked distance matrix
 * check that the cache works fine
