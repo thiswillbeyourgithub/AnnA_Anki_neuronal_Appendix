@@ -9,6 +9,7 @@ import pandas as pd
 from pprint import pprint
 from tqdm import tqdm
 import re
+import importlib
 from prompt_toolkit import prompt
 from prompt_toolkit.completion import WordCompleter
 from pathlib import Path
@@ -76,7 +77,7 @@ class AnnA:
     def __init__(self,
                  deckname=None,
                  replace_greek=True,
-                 replace_acronym=True,
+                 replace_acronym="acronym_list.py",
                  keep_ocr=True,
                  desired_deck_size=500,
                  rated_last_X_days=7,
@@ -104,11 +105,14 @@ class AnnA:
         self.card_limit = card_limit
         self.n_clusters = n_clusters
         self.pca_sBERT_dim = pca_sBERT_dim
-
-        # loading backend stuf
-        if self.replace_acronym is True:
-            from user_acronym_list import acronym_list
-            self.acronym_list = acronym_list
+        if self.replace_acronym is not None:
+            file = Path(replace_acronym)
+            if not file.exists():
+                print(f"Acronym file was not found: {replace_acronym}")
+                raise SystemExit()
+            else:
+                imp = importlib.import_module(replace_acronym.replace(".py", ""))
+                self.acronym_list = imp.acronym_list
 
         # actual execution
         self.deckname = self._check_deck(deckname)
