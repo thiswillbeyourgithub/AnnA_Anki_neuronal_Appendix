@@ -89,6 +89,7 @@ class AnnA:
                  dont_send_to_anki=True,
                  queue_stride=1500,
                  prefer_similar_card=False,
+                 scoring_weights = (1,1),
                  ):
         # printing banner
         if show_banner is True:
@@ -109,6 +110,7 @@ class AnnA:
         self.pca_sBERT_dim = pca_sBERT_dim
         self.queue_stride = queue_stride
         self.prefer_similar_card = prefer_similar_card
+        self.scoring_weights = scoring_weights
         if self.replace_acronym is not None:
             file = Path(replace_acronym)
             if not file.exists():
@@ -553,6 +555,8 @@ using PCA...")
         """
         print("Assigning scores...")
         df = self.df
+        w1 = self.scoring_weights[0]
+        w2 = self.scoring_weights[1]
         df_dist = self.df_dist
         if self.prefer_similar_card is True:
             direction = 1
@@ -601,7 +605,7 @@ using PCA...")
             while len(queue) < queue_size_goal:
                 for q in list(rated + queue)[0:self.queue_stride]:
                     df_temp[q] = df_dist[df.index.get_loc(q)]
-                df["score"] = df["ref"] + direction*np.min(df_temp, axis=1)
+                df["score"] = w1*df["ref"] + w2*direction*np.min(df_temp, axis=1)
                 chosen_one = df.drop(labels=list(rated+queue))["score"].idxmin()
                 queue.append(chosen_one)
                 df_temp[chosen_one] = df_dist[df.index.get_loc(chosen_one)]
