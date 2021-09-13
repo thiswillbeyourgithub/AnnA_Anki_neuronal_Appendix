@@ -731,7 +731,7 @@ as best_review_order!")
                              "affinity": "cosine",
                              "memory": "/tmp/",
                              "linkage": "average"}
-        minibatchk_args = {"n_clusters": self.n_clusters,
+        minibatchk_args_deploy = {"n_clusters": self.n_clusters,
                            "max_iter": 100,
                            "batch_size": 100,
                            "verbose": 1,
