@@ -24,6 +24,7 @@ Tired of having to deal with anki flashcards that are too similar when grinding 
 * **What is the cache?** The main bottleneck was creating all the vector embeddings of the cards, so I decided to automatically store them in a pickled dataframe.
 * **What is sBERT?** Shot for sentence-BERT. BERT is a machine learning technology that allows to assign high dimensional vectors to words in the context of a sentence. Sentence-BERT is a new method that does essentially the same thing but on a whole sentence. You can read more [at their great website](https://www.sbert.net/).
 * **sBERT is interesting but I'd like to use tf-idf, is this possible?** I initially tried with it and with both combined but it was creating a messy code, you can't cache tf-idf, it slows down the script a lot because SVD does not seem as efficient, using BERT tokenizer and tf-idf means adding more than 20 parameters that I was not sure about. So I decided to go with only sBERT and it's awesome!
+* **Can this be made into an anki addon instead of a python script?** I have never packaged things into anki addons so I'm not so sure. I heard that packaging complexe modules into anki is a pain, and cross platform will be an issue. But I think that I could store the vector information in the `data` column of each card in anki's database. Then rebuilding the deck can be done with only simple math and no libraries. If you'd like to make this a reality, show yourself by openning an issue!
 
 
 ## How to use it
@@ -42,6 +43,7 @@ Tired of having to deal with anki flashcards that are too similar when grinding 
 ## TODO
 * check the license
 * implement relative overdueness
+* only compare to the last 1300, can be changed in a setting
 * understand why some vectors have to be recomputed each time
 * add an argument to reverse the scoring and tell that it can be used to learn languages for some reason
 * put the acronym and the greek letter in better file hierarchy
