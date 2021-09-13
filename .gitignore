@@ -5,4 +5,4 @@ __pycache__/
 AMIMA_jupyter.py
 *.pickle
 ./DF_backups
-./user_acronym_list.py
+acronym_list.py
