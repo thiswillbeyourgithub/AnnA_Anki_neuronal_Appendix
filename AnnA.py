@@ -538,7 +538,7 @@ using PCA...")
         print("Done.\n")
         return True
 
-    def assign_score(self, reference_order="lowest_interval"):
+    def assign_score(self, reference_order="relative_overdueness"):
         """
         assign score to each card
         * this score reflects the order in which they should be reviewed
@@ -559,6 +559,14 @@ using PCA...")
         else:
             direction = -1
         desired_deck_size = self.desired_deck_size
+        if reference_order.lower() in "relative_overdueness":
+            ro = -1 * (df["odue"].values / df["interval"].values)
+            breakpoint()
+            df["ref"] = self.scaler.fit_transform(ro.to_numpy().reshape(-1, 1))
+
+        elif reference_order.lower() in "lowest_interval":
+            ivl = df['interval'].to_numpy().reshape(-1, 1)
+            df["ref"] = self.scaler.fit_transform(ivl)
 
         rated = self.rated_cards_list
         assert len([x for x in rated if df.loc[x, "status"] != "rated"]) == 0
@@ -575,24 +583,15 @@ using PCA...")
                 desired_deck_size = 0.01*desired_deck_size[:-1]*(len(df.index)-len(rated))
                 print(f"Taking {desired_deck_size[-1]}% of the deck.")
 
-        if reference_order != "lowest_interval":
-            print("Using another reference than lowest interval is not yet \
-supported")
-            reference_order = "lowest_interval"
-
-
         if desired_deck_size > len(df.index)-len(rated):
             print(f"You wanted to create a deck with \
 {desired_deck_size} in it but the deck only contains \
 {len(df.index)-len(rated)} cards. Taking the lowest value.")
         queue_size_goal = min(desired_deck_size,
                               len(df.index)-len(rated))
-        ivl = df['interval'].to_numpy().reshape(-1, 1)
-        df["ivl_std"] = self.scaler.fit_transform(ivl)
 
         if len(rated) == 0:
-            if reference_order == "lowest_interval":
-                queue.append(df["ivl_std"].idxmin())
+            queue.append(df["ref"].idxmin())
 
         df_temp = pd.DataFrame(columns=rated, index=df.index)
         with tqdm(desc="Finding optimal review order",
@@ -602,7 +601,7 @@ supported")
             while len(queue) < queue_size_goal:
                 for q in list(rated + queue)[0:self.queue_stride]:
                     df_temp[q] = df_dist[df.index.get_loc(q)]
-                df["score"] = df["ivl_std"] + direction*np.min(df_temp, axis=1)
+                df["score"] = df["ref"] + direction*np.min(df_temp, axis=1)
                 chosen_one = df.drop(labels=list(rated+queue))["score"].idxmin()
                 queue.append(chosen_one)
                 df_temp[chosen_one] = df_dist[df.index.get_loc(chosen_one)]
