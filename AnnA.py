@@ -343,7 +343,7 @@ from this deck...")
         if self.replace_acronym is True:
             global acronym_list
             for a, b in self.acronym_list.items():
-                text = re.sub(rf"\b{a}\b", b, text)
+                text = re.sub(rf"\b{a}\b", f"{a} ({b})", text)
                 # \b matches beginning and end of a word
         text = re.sub(r'[a-zA-Z0-9-]+\....', " ", text)  # media file name
         text = re.sub('\\n|<div>|</div>|<br>|<span>|</span>|<li>|</li>|<ul>|</ul>',
