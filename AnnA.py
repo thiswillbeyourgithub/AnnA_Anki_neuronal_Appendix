@@ -603,7 +603,8 @@ using PCA...")
             while len(queue) < queue_size_goal:
                 for q in list(rated + queue)[-self.queue_stride:-1]:
                     df_temp[q] = df_dist[df.index.get_loc(q)]
-                df["score"] = w1*df["ref"] + w2*direction*np.min(df_temp, axis=1)
+                df["score"] = w1*df["ref"] + w2*direction*np.min(
+                                                    df_temp, axis=1)
                 chosen_one = df.drop(index=list(rated+queue))["score"].idxmin()
                 queue.append(chosen_one)
                 df_temp[chosen_one] = df_dist[df.index.get_loc(chosen_one)]
