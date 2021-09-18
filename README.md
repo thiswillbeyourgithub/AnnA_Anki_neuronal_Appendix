@@ -45,18 +45,20 @@ Tired of having to deal with anki flashcards that are too similar when grinding 
 
 
 ## TODO
-* chunked distance matrix
-* check that the cache works fine
-* replace dbscan with HDBSCAN
-* optimize review order computation
+### URGENT:
+* ask damien how to add a flag without changing mod
+* optimize review order computation + chunked distance matrix
 * show usage and describe each argument of the main class
-* create a smaller script to simply call the search function on some text
-* mode similarity for language learning
-* reddit + anki discord + psionica + anking + blum 
-* add tags after clusters
-* do a simple parallelization wrapper for the tqdm loops at the end: https://stackoverflow.com/questions/9786102/how-do-i-parallelize-a-simple-python-loop
-* pickle the whole class
+
 * ponder using df.compare to fetch more quickly the cached sbert vectors
+* add a method that shows all acronyms
+* add a method that displays the cards in order
+* add a method to bury the card without creating a filtered deck
+* add tags after clustering
+* take a look at topic modelling techniques that might be cleaner to invoke than ctf-idf
+* replace dbscan with HDBSCAN
+* reddit + anki discord + psionica + anking + blum 
+* pickle the whole class
 
 ### long term
 * re read this article : http://mccormickml.com/2021/05/27/question-answering-system-tf-idf/
