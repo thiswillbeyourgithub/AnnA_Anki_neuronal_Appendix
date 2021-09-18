@@ -273,13 +273,13 @@ threads of {batchsize} cards to fetch {len(card_id)} cards...")
         n_rated_days = int(self.rated_last_X_days)
         query = f"deck:{self.deckname} is:due is:review -is:learn \
 -is:suspended -is:buried -is:new -rated:1"
-        print(query)
+        print(" >  '" + query + "'")
         due_cards = self._ankiconnect(action="findCards", query=query)
 
         print(f"Getting cards that where rated in the last {n_rated_days} days \
 from this deck...")
         query = f"deck:{self.deckname} rated:{n_rated_days} -is:suspended"
-        print(query)
+        print(" >  '" + query + "'")
         r_cards = self._ankiconnect(action="findCards", query=query)
 
         # removes overlap if found
