@@ -965,6 +965,7 @@ plotting...")
                     lambda x: pairwise_distances(embed.reshape(1, -1),
                                                  x.reshape(1, -1),
                                                  metric=dist))
+            df["distance"] = df["distance"].astype("float")
         except ValueError as e:
             print(f"Error {e}: did you select 'sBERT' instead of \
 'sBERT_before_pca'?")
