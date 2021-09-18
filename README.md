@@ -4,9 +4,11 @@ Tired of having to deal with anki flashcards that are too similar when grinding 
 
 ## Other features
 * Cluster your card collection using various algorithms (k-means (including minibatch version), DBSCAN, agglomerative clustering), also get the topic of each cluster and add it as tag to your cards.
-* Create a plot showing clusters of semantic meanings from your anki database. As you can see on this picture:
+* Create a plot showing clusters of semantic meanings from your anki database. As you can see on this picture (click to see it in big):
+<img title="Colored by tags" src="by_tags.png" width="250" height="250"/> <img title="Colored by clusters" src="by_clusters.png" width="250" height="250"/>
 * Look for cards in your database using a semantic query (typing something with a close `meaning` to a card will find it even if no words are in common.)
 * PEP compliant and with details docstrings.
+
 
 
 
@@ -45,7 +47,6 @@ Tired of having to deal with anki flashcards that are too similar when grinding 
 ## TODO
 * chunked distance matrix
 * check that the cache works fine
-* create a picture for the readme
 * replace dbscan with HDBSCAN
 * optimize review order computation
 * show usage and describe each argument of the main class
