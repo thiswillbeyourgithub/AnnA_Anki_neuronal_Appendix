@@ -589,13 +589,12 @@ using PCA...")
                 desired_deck_size = len(df.index) - len(rated)
             elif desired_deck_size.endswith("%"):
                 print(f"Taking {desired_deck_size[:-1]}% of the deck.")
-                desired_deck_size = int(0.01*int(desired_deck_size[:-1])*(
+                desired_deck_size = 0.01*int(desired_deck_size[:-1])*(
                             len(df.index)-len(rated)
-                            ))
-            else:
-                raise Exception
+                            )
+        desired_deck_size = int(desired_deck_size)
 
-        if desired_deck_size > len(df.index)-len(rated):
+        if desired_deck_size > int(len(df.index)-len(rated)):
             print(f"You wanted to create a deck with \
 {desired_deck_size} in it but the deck only contains \
 {len(df.index)-len(rated)} cards. Taking the lowest value.")
