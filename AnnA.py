@@ -584,11 +584,16 @@ using PCA...")
             if desired_deck_size < 1.0:
                 desired_deck_size = str(desired_deck_size*100) + "%"
         if isinstance(desired_deck_size, str):
-            if desired_deck_size == "all":
-              desired_deck_size = 99999999  
+            if desired_deck_size in ["all", "100%"]:
+                print("Taking the whole deck.")
+                desired_deck_size = len(df.index) - len(rated)
             elif desired_deck_size.endswith("%"):
-                desired_deck_size = 0.01*desired_deck_size[:-1]*(len(df.index)-len(rated))
-                print(f"Taking {desired_deck_size[-1]}% of the deck.")
+                print(f"Taking {desired_deck_size[:-1]}% of the deck.")
+                desired_deck_size = int(0.01*int(desired_deck_size[:-1])*(
+                            len(df.index)-len(rated)
+                            ))
+            else:
+                raise Exception
 
         if desired_deck_size > len(df.index)-len(rated):
             print(f"You wanted to create a deck with \
