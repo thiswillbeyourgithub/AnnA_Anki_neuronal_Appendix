@@ -949,9 +949,6 @@ plotting...")
             otherwise you'd have to re run the whole PCA, so it's quicker
             to just use the full vectors
         """
-        pd.set_option('display.max_rows', None)
-        pd.set_option('display.max_columns', None)
-        pd.set_option('display.width', None)
         pd.set_option('display.max_colwidth', None)
         df = self.df
 
@@ -986,9 +983,6 @@ plotting...")
             else:
                 break
             ans = input("Show more?\n(y/n)>")
-        pd.reset_option("display.max_rows")
-        pd.reset_option('display.max_columns')
-        pd.reset_option('display.width')
         pd.reset_option('display.max_colwidth')
         return True
 
