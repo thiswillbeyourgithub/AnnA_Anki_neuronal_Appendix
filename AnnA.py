@@ -202,7 +202,7 @@ class AnnA:
                 target_thread_n = 10
                 batchsize = len(card_id)//target_thread_n+3
                 print(f"Large number of cards to retrieve, creating 10 \
-threads of {batchsize} cards...")
+threads of {batchsize} cards to fetch {len(card_id)} cards...")
 
                 def retrieve_cards(card_list, lock, cnt, r_list):
                     "for multithreaded card retrieval"
@@ -224,11 +224,10 @@ threads of {batchsize} cards...")
                         cnt += 1
                         temp_card_id = card_id[nb: nb+batchsize]
                         thread = threading.Thread(target=retrieve_cards,
-                                                  args=(
-                                                      temp_card_id,
-                                                      lock,
-                                                      cnt,
-                                                      r_list),
+                                                  args=(temp_card_id,
+                                                        lock,
+                                                        cnt,
+                                                        r_list),
                                                   daemon=True)
                         thread.start()
                         threads.append(thread)
@@ -287,7 +286,7 @@ from this deck...")
 
         # removes overlap if found
         rated_cards = [x for x in r_cards if x not in due_cards]
-        print(f"Rated cards contained {len(rated_cards)} relevant cards (from {len(r_cards)}")
+        print(f"Rated cards contained {len(rated_cards)} relevant cards (from {len(r_cards)})")
         self.due_cards_list = due_cards
         self.rated_cards_list = rated_cards
 
@@ -427,7 +426,7 @@ troubleshoot formating issues:")
         pd.set_option('display.width', None)
         pd.set_option('display.max_colwidth', None)
         for i in range(5):
-            print(df.sample(1)["text"], end="\n\n")
+            print(df.sample(1)["text"], end="\n")
         pd.reset_option("display.max_rows")
         pd.reset_option('display.max_columns')
         pd.reset_option('display.width')
@@ -572,7 +571,6 @@ using PCA...")
         desired_deck_size = self.desired_deck_size
         if reference_order.lower() in "relative_overdueness":
             ro = -1 * (df["odue"].values / df["interval"].values)
-            breakpoint()
             df["ref"] = self.scaler.fit_transform(ro.to_numpy().reshape(-1, 1))
 
         elif reference_order.lower() in "lowest_interval":
@@ -642,12 +640,13 @@ using PCA...")
         somehow got rebuild and lost the right order
         * The reason I'm using the orange flag hack is that there is a
             request size limit when creating a filtered deck.
+        * To speed up the process, I decided to create a threaded function call
+        * -100 000 seems to be the default value for due order in filtered decks
         """
 
         filtered_deck_name = str(deck_template + f" - {self.deckname}")
         filtered_deck_name = filtered_deck_name.replace("::", "_")
         self.filtered_deck_name = filtered_deck_name
-        deck = self.deckname.replace('::', '_')
 
         while filtered_deck_name in self._ankiconnect(action="deckNames"):
             print(f"\nFound existing filtered deck: {filtered_deck_name} \
@@ -826,7 +825,7 @@ as best_review_order!")
         self.df = df.sort_index()
         return True
 
-    def show_latent_space(self,
+    def plot_latent_space(self,
                           specific_index=None,
                           reduce_dim="umap",
                           color_col="tags",
