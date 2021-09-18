@@ -601,7 +601,7 @@ using PCA...")
                   unit=" card",
                   total=queue_size_goal) as pbar:
             while len(queue) < queue_size_goal:
-                for q in list(rated + queue)[0:self.queue_stride]:
+                for q in list(rated + queue)[-self.queue_stride:-1]:
                     df_temp[q] = df_dist[df.index.get_loc(q)]
                 df["score"] = w1*df["ref"] + w2*direction*np.min(df_temp, axis=1)
                 chosen_one = df.drop(labels=list(rated+queue))["score"].idxmin()
