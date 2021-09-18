@@ -137,8 +137,6 @@ class AnnA:
         if dont_send_to_anki is False:
             self.send_to_anki()
 
-        print("Re-optimizing Anki database")
-        self._ankiconnect(action="guiCheckDatabase")
 
     def _reset_index_dtype(self, df):
         """
@@ -728,6 +726,8 @@ as best_review_order!")
                                      card=int(c),
                                      keys=["due"],
                                      newValues=[incrementer])
+        print("Re-optimizing Anki database")
+        self._ankiconnect(action="guiCheckDatabase")
         print("All done!\n\n")
         return True
 
