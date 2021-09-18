@@ -87,7 +87,7 @@ class AnnA:
                  pca_sBERT_dim=None,
                  # 300 pca dim should keep more than 95% of variance
                  dont_send_to_anki=True,
-                 queue_stride=1500,
+                 queue_stride=5000,
                  prefer_similar_card=False,
                  scoring_weights = (1, 1.3),
                  reference_order = "interval",
