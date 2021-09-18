@@ -471,8 +471,6 @@ troubleshoot formating issues:")
                 df_cache = self._reset_index_dtype(df_cache)
                 for i in df.index:
                     if i in df_cache.index and \
-                            (str(df_cache.loc[i, "mod"]) ==
-                                str(df.loc[i, "mod"])) and \
                             (str(df_cache.loc[i, "text"]) ==
                                 str(df.loc[i, "text"])):
                         df.at[i, "sBERT"] = df_cache.loc[i, "sBERT"]
