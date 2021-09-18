@@ -765,10 +765,10 @@ as best_review_order!")
                          input_col="sBERT",
                          output_col="clusters",
                          n_topics=5,
-                         minibatchk_args=None,
-                         kmeans_args=None,
-                         agglo_args=None,
-                         dbscan_args=None):
+                         minibatchk_kwargs=None,
+                         kmeans_kwargs=None,
+                         agglo_kwargs=None,
+                         dbscan_kwargs=None):
         """
         finds cluster of cards and their respective topics
         * this is not mandatory to create the filtered deck but it's rather
@@ -782,40 +782,40 @@ as best_review_order!")
         if self.n_clusters is None and method.lower() in "kmeans":
             self.n_clusters = len(df.index)//100
             print(f"No number of clustrs supplied, will try {self.n_clusters}")
-        kmeans_args_deploy = {"n_clusters": self.n_clusters}
-        dbscan_args_deploy = {"eps": 0.75,
+        kmeans_kwargs_deploy = {"n_clusters": self.n_clusters}
+        dbscan_kwargs_deploy = {"eps": 0.75,
                               "min_samples": 3,
                               "n_jobs": -1}
-        agglo_args_deploy = {"n_clusters": self.n_clusters,
+        agglo_kwargs_deploy = {"n_clusters": self.n_clusters,
                              # "distance_threshold": 0.6,
                              "affinity": "cosine",
                              "memory": "/tmp/",
                              "linkage": "average"}
-        minibatchk_args_deploy = {"n_clusters": self.n_clusters,
-                           "max_iter": 100,
-                           "batch_size": 100,
-                           "verbose": 1,
-                           }
-        if minibatchk_args is not None:
-            minibatchk_args_deploy.update(minibatchk_args)
-        if kmeans_args is not None:
-            kmeans_args_deploy.update(kmeans_args)
-        if dbscan_args is not None:
-            dbscan_args_deploy.update(dbscan_args)
-        if agglo_args is not None:
-            agglo_args_deploy.update(agglo_args)
+        minibatchk_kwargs_deploy = {"n_clusters": self.n_clusters,
+                                  "max_iter": 100,
+                                  "batch_size": 100,
+                                  "verbose": 1,
+                                  }
+        if minibatchk_kwargs is not None:
+            minibatchk_kwargs_deploy.update(minibatchk_kwargs)
+        if kmeans_kwargs is not None:
+            kmeans_kwargs_deploy.update(kmeans_kwargs)
+        if dbscan_kwargs is not None:
+            dbscan_kwargs_deploy.update(dbscan_kwargs)
+        if agglo_kwargs is not None:
+            agglo_kwargs_deploy.update(agglo_kwargs)
 
         if method.lower() in "minibatch-kmeans":
-            clust = MiniBatchKMeans(**minibatchk_args_deploy)
+            clust = MiniBatchKMeans(**minibatchk_kwargs_deploy)
             method = "minibatch-K-Means"
         elif method.lower() in "kmeans":
-            clust = KMeans(**kmeans_args_deploy)
+            clust = KMeans(**kmeans_kwargs_deploy)
             method = "K-Means"
         elif method.lower() in "DBSCAN":
-            clust = DBSCAN(**dbscan_args_deploy)
+            clust = DBSCAN(**dbscan_kwargs_deploy)
             method = "DBSCAN"
         elif method.lower() in "agglomerative":
-            clust = AgglomerativeClustering(**agglo_args_deploy)
+            clust = AgglomerativeClustering(**agglo_kwargs_deploy)
             method = "Agglomerative Clustering"
         print(f"Clustering using {method}...")
 
@@ -866,35 +866,34 @@ as best_review_order!")
                                       "cluster_topic"],
                           coordinate_col="sBERT",
                           disable_legend=True,
-                          umap_args=None,
-                          plotly_args=None,
-                          pca_args=None,
+                          umap_kwargs=None,
+                          plotly_kwargs=None,
+                          pca_kwargs=None,
                           ):
         "open a 2D plot showing cards."
-        # args management
         df = self.df
-        pca_args_deploy = {"n_components": 2, "random_state": 42}
-        umap_args_deploy = {"n_jobs": -1,
+        pca_kwargs_deploy = {"n_components": 2, "random_state": 42}
+        umap_kwargs_deploy = {"n_jobs": -1,
                             "verbose": 1,
                             "n_components": 2,
                             "metric": "cosine",
                             "init": 'spectral',
                             "random_state": 42,
                             "transform_seed": 42,
-                            "n_neighbors": 100,
+                            "n_neighbors": 50,
                             "min_dist": 0.1}
-        plotly_args_deploy = {"data_frame": df,
+        plotly_kwargs_deploy = {"data_frame": df,
                               "title": "AnnA Anki neuronal Appendix",
                               "x": "X",
                               "y": "Y",
                               "hover_data": hover_cols,
                               "color": color_col}
-        if umap_args is not None:
-            umap_args_deploy.update(umap_args)
-        if plotly_args is not None:
-            plotly_args_deploy.update(plotly_args)
-        if pca_args is not None:
-            pca_args_deploy.update(pca_args)
+        if umap_kwargs is not None:
+            umap_kwargs_deploy.update(umap_kwargs)
+        if plotly_kwargs is not None:
+            plotly_kwargs_deploy.update(plotly_kwargs)
+        if pca_kwargs is not None:
+            pca_kwargs_deploy.update(pca_kwargs)
 
         if reduce_dim is not None:
             if specific_index is not None:
@@ -910,14 +909,14 @@ as best_review_order!")
             print(f"Reduce to 2 dimensions using {reduce_dim} before \
 plotting...")
         if reduce_dim.lower() in "pca":
-            pca_2D = PCA(**pca_args_deploy)
+            pca_2D = PCA(**pca_kwargs_deploy)
             res = pca_2D.fit_transform(df_temp).T
             x_coor = res[0]
             y_coor = res[1]
         elif reduce_dim.lower() in "umap":
-            res = umap.UMAP(**umap_args_deploy).fit_transform(df_temp)
-            x_coor = res.T[0]
-            y_coor = res.T[1]
+            res = umap.UMAP(**umap_kwargs_deploy).fit_transform(df_temp).T
+            x_coor = res[0]
+            y_coor = res[1]
         elif reduce_dim is None:
             x_coor = [x[0] for x in df[coordinate_col]],
             x_coor = list(x_coor)[0]
@@ -932,7 +931,7 @@ plotting...")
             df["clusters"] = 0
         if "cluster_topic" not in df.columns:
             df["cluster_topic"] = 0
-        fig = px.scatter(**plotly_args_deploy)
+        fig = px.scatter(**plotly_kwargs_deploy)
         if disable_legend is True:
             fig = fig.update_layout(showlegend=False)
         fig.show()
