@@ -655,45 +655,83 @@ deck.")
         orange_list = self._ankiconnect(action="findCards",
                                         query="\"flag:2\"")
 
+        def _threaded_value_setter(card_list, tqdm_desc, keys, newValues):
+            """
+            create 10 threads to edit card values quickly
+            """
+            def do_action(card_list,
+                          sub_card_list,
+                          keys,
+                          newValues,
+                          lock,
+                          pbar):
+                for c in sub_card_list:
+                    if keys == ["due"]:
+                        newValues = [-100000 + card_list.index(c)]
+                    self._ankiconnect(action="setSpecificValueOfCard",
+                                      card=int(c),
+                                      keys=keys,
+                                      newValues=newValues)
+                    lock.acquire()
+                    pbar.update(1)
+                    lock.release()
+                return True
+
+            with tqdm(desc=tqdm_desc,
+                      unit="card",
+                      total=len(card_list),
+                      dynamic_ncols=True,
+                      smoothing=1) as pbar:
+                lock = threading.Lock()
+                threads = []
+                batchsize = len(card_list)//5+1
+                for nb in range(0, len(card_list), batchsize):
+                    sub_card_list = card_list[nb: nb+batchsize]
+                    thread = threading.Thread(target=do_action,
+                                              args=(card_list,
+                                                    sub_card_list,
+                                                    keys,
+                                                    newValues,
+                                                    lock,
+                                                    pbar),
+                                              daemon=True)
+                    thread.start()
+                    threads.append(thread)
+                for t in threads:
+                    t.join()
+            return True
+
         if len(orange_list) != 0:
-            for c in tqdm(orange_list,
-                          desc="Removing orange flag from all cards",
-                          unit="card"):
-                self._ankiconnect(action="setSpecificValueOfCard",
-                                         card=int(c),
-                                         keys=["flags"],
-                                         newValues=[0])
-        for c in tqdm(self.best_review_order,
-                      desc="Adding flag 'orange' to cards to review",
-                      unit="card"):
-            self._ankiconnect(action="setSpecificValueOfCard",
-                                     card=int(c),
-                                     keys=["flags"],
-                                     newValues=[2])
+            _threaded_value_setter(card_list=orange_list,
+                                   tqdm_desc="Removing orange flag from all \
+cards",
+                                   keys=["flags"],
+                                   newValues=[0])
+        _threaded_value_setter(card_list=self.best_review_order,
+                               tqdm_desc="Adding flag 'orange' to cards to \
+review",
+                               keys=["flags"],
+                               newValues=[2])
 
         print(f"Creating deck: {filtered_deck_name}")
         self._ankiconnect(action="createFilteredDeck",
                                  newDeckName=filtered_deck_name,
-                                 searchQuery=f"\"flag:2\"",
+                                 searchQuery="\"flag:2\"",
                                  gatherCount=2*len(self.best_review_order),
                                  reschedule=True,
                                  sortOrder=0,
                                  createEmpty=False)
-        for c in tqdm(self.best_review_order,
-                      desc="Removing flag 'orange' from cards to review",
-                      unit="card"):
-            self._ankiconnect(action="setSpecificValueOfCard",
-                                     card=int(c),
-                                     keys=["flags"],
-                                     newValues=[0])
+        _threaded_value_setter(card_list=self.best_review_order,
+                               tqdm_desc="Removing flag 'orange' from cards \
+to review",
+                               keys=["flags"],
+                               newValues=[0])
         if len(orange_list) != 0:
-            for c in tqdm(orange_list,
-                          desc="Restoring orange flags from other cards",
-                          unit="card"):
-                self._ankiconnect(action="setSpecificValueOfCard",
-                                         card=int(c),
-                                         keys=["flags"],
-                                         newValues=[2])
+            _threaded_value_setter(card_list=orange_list,
+                                   tqdm_desc="Restoring orange flags of \
+original cards",
+                                   keys=["flags"],
+                                   newValues=[2])
 
         print("Checking that the content of filtered deck name is the same as \
  the order infered by AnnA...", end="")
@@ -709,16 +747,10 @@ as best_review_order!")
         else:
             print(" Done.")
 
-        incrementer = -100000  # this seems to be about the same values used
-        # by default by anki
-        for c in tqdm(self.best_review_order,
-                      desc="Altering due order",
-                      unit="card"):
-            incrementer += 1
-            self._ankiconnect(action="setSpecificValueOfCard",
-                                     card=int(c),
-                                     keys=["due"],
-                                     newValues=[incrementer])
+        _threaded_value_setter(card_list=self.best_review_order,
+                               tqdm_desc="Altering due order",
+                               keys=["due"],
+                               newValues=None)
         print("Re-optimizing Anki database")
         self._ankiconnect(action="guiCheckDatabase")
         print("All done!\n\n")
