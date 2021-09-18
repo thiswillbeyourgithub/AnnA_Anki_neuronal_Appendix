@@ -106,7 +106,7 @@ class AnnA:
         self.keep_ocr = keep_ocr
         self.desired_deck_size = desired_deck_size
         self.rated_last_X_days = rated_last_X_days
-        self.card_limit = card_limit
+        self.debug_card_limit = debug_card_limit
         self.n_clusters = n_clusters
         self.pca_sBERT_dim = pca_sBERT_dim
         self.queue_stride = queue_stride
@@ -291,7 +291,7 @@ from this deck...")
         self.due_cards_list = due_cards
         self.rated_cards_list = rated_cards
 
-        limit = self.card_limit if self.card_limit else -1
+        limit = self.debug_card_limit if self.debug_card_limit else -1
         combined_card_list = list(rated_cards + due_cards)[:limit]
 
         if len(combined_card_list) < 50:
