@@ -101,7 +101,6 @@ class AnnA:
         # loading args etc
         if deckname is None:
             deckname = "*"
-        self.replace_acronym = replace_acronym
         self.deckname = self._check_deck(deckname)
         self.replace_greek = replace_greek
         self.keep_ocr = keep_ocr
@@ -115,6 +114,7 @@ class AnnA:
         self.scoring_weights = scoring_weights
         self.reference_order = reference_order
         self.chunked_distance = chunked_distance
+        self.replace_acronym = replace_acronym
         if self.replace_acronym is not None:
             file = Path(replace_acronym)
             if not file.exists():
