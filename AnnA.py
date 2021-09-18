@@ -80,17 +80,17 @@ class AnnA:
                  replace_acronym="acronym_list.py",
                  keep_ocr=True,
                  desired_deck_size=500,
-                 rated_last_X_days=7,
+                 rated_last_X_days=5,
                  show_banner=True,
-                 card_limit=None,
+                 debug_card_limit=None,
                  n_clusters=10,
                  pca_sBERT_dim=None,
                  # 300 pca dim should keep more than 95% of variance
                  dont_send_to_anki=True,
                  queue_stride=1500,
                  prefer_similar_card=False,
-                 scoring_weights = (1,1),
-                 reference_order = "relative_overdueness",
+                 scoring_weights = (1, 1.3),
+                 reference_order = "interval",
                  chunked_distance=False,
                  ):
         # printing banner
@@ -101,8 +101,8 @@ class AnnA:
         # loading args etc
         if deckname is None:
             deckname = "*"
-        self.deckname = deckname
         self.replace_acronym = replace_acronym
+        self.deckname = self._check_deck(deckname)
         self.replace_greek = replace_greek
         self.keep_ocr = keep_ocr
         self.desired_deck_size = desired_deck_size
@@ -125,7 +125,6 @@ class AnnA:
                 self.acronym_list = imp.acronym_list
 
         # actual execution
-        self.deckname = self._check_deck(deckname)
         import_thread.join()  # asynchronous importing of large module
         time.sleep(0.5)  # sometimes import_thread takes too long apparently
         self._create_and_fill_df()
