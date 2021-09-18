@@ -558,13 +558,22 @@ using PCA...")
         else:
             direction = -1
         desired_deck_size = self.desired_deck_size
-        if reference_order.lower() in "relative_overdueness":
-            ro = -1 * (df["odue"].values / df["interval"].values)
-            df["ref"] = self.scaler.fit_transform(ro.to_numpy().reshape(-1, 1))
 
-        elif reference_order.lower() in "lowest_interval":
-            ivl = df['interval'].to_numpy().reshape(-1, 1)
-            df["ref"] = self.scaler.fit_transform(ivl)
+        ivl = df['interval'].to_numpy().reshape(-1, 1)
+        df["interval_cs"] = self.scaler.fit_transform(ivl)
+
+        if reference_order.lower() in "relative_overdueness":
+            for i in df.index:
+                df.at[i, "ref_due"] = df.loc[i, "odue"]
+                if df.loc[i, "ref_due"] == 0:
+                    df.at[i, "ref_due"] = df.at[i, "due"]
+            overdue = df["ref_due"].to_numpy().reshape(-1, 1)
+            overdue_cs = self.scaler.fit_transform(overdue)
+
+            ro = overdue_cs.T / df["interval_cs"].values
+            df["ref"] = self.scaler.fit_transform(ro.T)
+        else:
+            df["ref"] = df["interval_cs"]
 
         rated = self.rated_cards_list
         assert len([x for x in rated if df.loc[x, "status"] != "rated"]) == 0
