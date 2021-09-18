@@ -647,11 +647,6 @@ You have to delete it manually, the cards will be returned to their original \
 deck.")
             input("Done? >")
 
-        note_list = list(set([
-                              int(self.df.loc[x, "note"])
-                              for x in self.best_review_order
-                              ]))
-
         orange_list = self._ankiconnect(action="findCards",
                                         query="\"flag:2\"")
 
