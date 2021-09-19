@@ -550,13 +550,13 @@ using PCA...")
         print("Assigning scores...")
         reference_order = self.reference_order
         df = self.df
-        w1 = self.scoring_weights[0]
-        w2 = self.scoring_weights[1]
         df_dist = self.df_dist
         if self.prefer_similar_card is True:
             direction = 1
         else:
             direction = -1
+        w1 = self.scoring_weights[0]
+        w2 = self.scoring_weights[1]*direction
         desired_deck_size = self.desired_deck_size
 
         ivl = df['interval'].to_numpy().reshape(-1, 1)
@@ -611,8 +611,7 @@ using PCA...")
             while len(queue) < queue_size_goal:
                 for q in list(rated + queue)[-self.queue_stride:-1]:
                     df_temp[q] = df_dist[df.index.get_loc(q)]
-                df["score"] = w1*df["ref"] + w2*direction*np.min(
-                                                    df_temp, axis=1)
+                df["score"] = w1*df["ref"] + w2*np.min(df_temp, axis=1)
                 chosen_one = df.drop(index=list(rated+queue))["score"].idxmin()
                 queue.append(chosen_one)
                 df_temp[chosen_one] = df_dist[df.index.get_loc(chosen_one)]
