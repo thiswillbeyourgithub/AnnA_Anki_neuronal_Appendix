@@ -46,19 +46,20 @@ Tired of having to deal with anki flashcards that are too similar when grinding 
 
 ## TODO
 ### URGENT:
+* mention usual values for weights
+* change dont send to send and false to true etc
 * ask damien how to add a flag without changing mod
-* optimize review order computation + chunked distance matrix
+* remove mention of chunked distance matrix as it was not what I thought
+* optimize review order computation
 * show usage and describe each argument of the main class
 
-* ponder using df.compare to fetch more quickly the cached sbert vectors
+* add tags containing cluster_topics
 * add a method that shows all acronyms
-* add a method that displays the cards in order
+* add a method that displays the cards in best order, to troubleshoot issues
 * add a method to bury the card without creating a filtered deck
-* add tags after clustering
 * take a look at topic modelling techniques that might be cleaner to invoke than ctf-idf
-* replace dbscan with HDBSCAN
 * reddit + anki discord + psionica + anking + blum 
-* pickle the whole class
+* pickle the whole class at the end, to be able to rerun it in case something went wrong
 
 ### long term
 * re read this article : http://mccormickml.com/2021/05/27/question-answering-system-tf-idf/
