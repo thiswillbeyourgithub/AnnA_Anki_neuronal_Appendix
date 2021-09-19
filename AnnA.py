@@ -86,7 +86,7 @@ class AnnA:
                  n_clusters=10,
                  pca_sBERT_dim=300,
                  # 300 pca dim should keep more than 95% of variance
-                 dont_send_to_anki=True,
+                 send_to_anki=False,
                  queue_stride=5000,
                  prefer_similar_card=False,
                  scoring_weights = (1, 1.3),
@@ -134,7 +134,7 @@ class AnnA:
         self._compute_sBERT_vec()
         self._compute_distance_matrix()
         self.assign_score()
-        if dont_send_to_anki is False:
+        if send_to_anki is True:
             self.send_to_anki()
 
 
