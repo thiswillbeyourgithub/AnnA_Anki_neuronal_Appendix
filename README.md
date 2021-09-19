@@ -5,11 +5,11 @@ Tired of having to deal with anki flashcards that are too similar when grinding 
 When you don't have the time to complete all your daily reviews, use this to create a special filtered deck that makes sure you will only review the cards that are most different from the rest of your reviews.
 
 ## Other features
-* Cluster your card collection using various algorithms (k-means (including minibatch version), DBSCAN, agglomerative clustering), also get the topic of each cluster and add it as tag to your cards.
+* Look for cards in your database using a semantic query (typing something with a close `meaning` to a card will find it even if no words are in common.)
+* Cluster your card collection using various algorithms (k-means (including minibatch k-means), DBSCAN, agglomerative clustering). Get the topic of each cluster and add it as tag to your cards.
 * Create a plot showing clusters of semantic meanings from your anki database. As you can see on this picture (click to see it in big):
 <img title="Colored by tags" src="by_tags.png" width="250" height="250"/> <img title="Colored by clusters" src="by_clusters.png" width="250" height="250"/>
-* Look for cards in your database using a semantic query (typing something with a close `meaning` to a card will find it even if no words are in common.)
-* PEP compliant and with details docstrings.
+* Code is PEP compliant, dynamically typed, all the functions have a detailed docstrings. Contribution is welcome, opening issues is encouraged.
 
 
 
