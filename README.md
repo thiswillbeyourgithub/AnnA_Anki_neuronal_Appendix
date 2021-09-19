@@ -1,6 +1,8 @@
 # AnnA : Anki neuronal Appendix
 Tired of having to deal with anki flashcards that are too similar when grinding through your backlog? This python script creates filtered deck in optimal review order. It uses Machine Learning / AI to make semantically linked cards far from one another.
-**Note: this project is currently being refactored, the README is not finished and I am still actively contributing until the end of my hollidays. The code is still completely functionnal**
+
+## One sentence summary
+When you don't have the time to complete all your daily reviews, use this to create a special filtered deck that makes sure you will only review the cards that are most different from the rest of your reviews.
 
 ## Other features
 * Cluster your card collection using various algorithms (k-means (including minibatch version), DBSCAN, agglomerative clustering), also get the topic of each cluster and add it as tag to your cards.
