@@ -578,7 +578,7 @@ using PCA...")
         rated = self.rated_cards_list
         assert len([x for x in rated if df.loc[x, "status"] != "rated"]) == 0
         queue = []
-        print(f"Already rated in the past relevant days: {len(rated)}")
+        print(f"Already rated in the past relevant days: {len(rated)} cards.")
 
         if isinstance(desired_deck_size, float):
             if desired_deck_size < 1.0:

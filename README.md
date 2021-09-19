@@ -46,7 +46,6 @@ Tired of having to deal with anki flashcards that are too similar when grinding 
 
 ## TODO
 ### URGENT:
-* mention usual values for weights
 * change dont send to send and false to true etc
 * ask damien how to add a flag without changing mod
 * remove mention of chunked distance matrix as it was not what I thought
