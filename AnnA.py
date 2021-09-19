@@ -84,7 +84,7 @@ class AnnA:
                  show_banner=True,
                  debug_card_limit=None,
                  n_clusters=10,
-                 pca_sBERT_dim=None,
+                 pca_sBERT_dim=300,
                  # 300 pca dim should keep more than 95% of variance
                  dont_send_to_anki=True,
                  queue_stride=5000,
