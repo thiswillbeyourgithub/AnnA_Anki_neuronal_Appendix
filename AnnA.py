@@ -87,7 +87,7 @@ class AnnA:
                  pca_sBERT_dim=300,
                  # 300 pca dim should keep more than 95% of variance
                  send_to_anki=False,
-                 queue_stride=5000,
+                 stride=3000,
                  prefer_similar_card=False,
                  scoring_weights = (1, 1.3),
                  reference_order = "interval",
@@ -109,7 +109,7 @@ class AnnA:
         self.debug_card_limit = debug_card_limit
         self.n_clusters = n_clusters
         self.pca_sBERT_dim = pca_sBERT_dim
-        self.queue_stride = queue_stride
+        self.stride = stride
         self.prefer_similar_card = prefer_similar_card
         self.scoring_weights = scoring_weights
         self.reference_order = reference_order
@@ -609,7 +609,7 @@ using PCA...")
                   unit=" card",
                   total=queue_size_goal) as pbar:
             while len(queue) < queue_size_goal:
-                for q in list(rated + queue)[-self.queue_stride:-1]:
+                for q in list(rated + queue)[-self.stride:-1]:
                     df_temp[q] = df_dist[df.index.get_loc(q)]
                 df["score"] = w1*df["ref"] + w2*np.min(df_temp, axis=1)
                 chosen_one = df.drop(index=list(rated+queue))["score"].idxmin()
