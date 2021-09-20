@@ -113,15 +113,14 @@ class AnnA:
         self.prefer_similar_card = prefer_similar_card
         self.scoring_weights = scoring_weights
         self.reference_order = reference_order
-        self.chunked_distance = chunked_distance
-        self.replace_acronym = replace_acronym
-        if self.replace_acronym is not None:
-            file = Path(replace_acronym)
+        self.optional_acronym_list = optional_acronym_list
+        if self.optional_acronym_list is not None:
+            file = Path(optional_acronym_list)
             if not file.exists():
-                print(f"Acronym file was not found: {replace_acronym}")
+                print(f"Acronym file was not found: {optional_acronym_list}")
                 raise SystemExit()
             else:
-                imp = importlib.import_module(replace_acronym.replace(".py", ""))
+                imp = importlib.import_module(optional_acronym_list.replace(".py", ""))
                 self.acronym_list = imp.acronym_list
 
         # actual execution
@@ -346,7 +345,7 @@ from this deck...")
         if self.replace_greek is True:
             for a, b in greek_alphabet_mapping.items():
                 text = re.sub(a, b, text)
-        if self.replace_acronym is True:
+        if self.optional_acronym_list is True:
             global acronym_list
             for a, b in self.acronym_list.items():
                 text = re.sub(rf"\b{a}\b", f"{a} ({b})", text)
