@@ -645,22 +645,15 @@ using PCA...")
         create a filtered deck containing the cards to review in the
             optimal order
 
-        * AnnA gets the list of cards that have an orange flag
-        * then remove their orange flag
-        * then adds the orange flag to the cards to review
-        * then create the filtered deck, with instruction to take
-            the cards that have the an orange flag
-        * then the orange flag is removed from the cards to review
-            and readded to the original orange cards
+        * then create the filtered deck, containing all the cards that are in
+            self.opti_rev_order
+
+        * When first creating the filtered deck, I chose 'sortOrder = 0'
+            ("oldest seen first") this way I will notice if the deck
+            somehow got rebuild and lost the right order
+        * To speed up the process, I decided to create a threaded function call
         * then does a few sanity check to see if the filtered deck
             does indeed contain the right number of cards and the right cards
-
-        * When creating the filtered deck, I chose 'sortOrder = 0'
-        ("oldest seen first") this way I will notice if the deck
-        somehow got rebuild and lost the right order
-        * The reason I'm using the orange flag hack is that there is a
-            request size limit when creating a filtered deck.
-        * To speed up the process, I decided to create a threaded function call
         * -100 000 seems to be the default value for due order in filtered
             decks
         """
@@ -674,9 +667,6 @@ using PCA...")
 You have to delete it manually, the cards will be returned to their original \
 deck.")
             input("Done? >")
-
-        orange_list = self._ankiconnect(action="findCards",
-                                        query="\"flag:2\"")
 
         def _threaded_value_setter(card_list, tqdm_desc, keys, newValues):
             """
@@ -724,58 +714,37 @@ deck.")
                     t.join()
             return True
 
-        if len(orange_list) != 0:
-            _threaded_value_setter(card_list=orange_list,
-                                   tqdm_desc="Removing orange flag from all \
-cards",
-                                   keys=["flags"],
-                                   newValues=[0])
-        _threaded_value_setter(card_list=self.best_review_order,
-                               tqdm_desc="Adding flag 'orange' to cards to \
-review",
-                               keys=["flags"],
-                               newValues=[2])
-
-        print(f"Creating deck: {filtered_deck_name}")
+        print(f"Creating deck containing the cards to review: \
+{filtered_deck_name}")
+        query = "cid:" + ','.join([str(x) for x in self.opti_rev_order])
         self._ankiconnect(action="createFilteredDeck",
-                                 newDeckName=filtered_deck_name,
-                                 searchQuery="\"flag:2\"",
-                                 gatherCount=2*len(self.best_review_order),
-                                 reschedule=True,
-                                 sortOrder=0,
-                                 createEmpty=False)
-        _threaded_value_setter(card_list=self.best_review_order,
-                               tqdm_desc="Removing flag 'orange' from cards \
-to review",
-                               keys=["flags"],
-                               newValues=[0])
-        if len(orange_list) != 0:
-            _threaded_value_setter(card_list=orange_list,
-                                   tqdm_desc="Restoring orange flags of \
-original cards",
-                                   keys=["flags"],
-                                   newValues=[2])
+                          newDeckName=filtered_deck_name,
+                          searchQuery=query,
+                          gatherCount=len(self.opti_rev_order)+1,
+                          reschedule=True,
+                          sortOrder=0,
+                          createEmpty=False)
 
         print("Checking that the content of filtered deck name is the same as \
  the order infered by AnnA...", end="")
         cur_in_deck = self._ankiconnect(action="findCards",
                                         query=f"\"deck:{filtered_deck_name}\"")
-        diff = [x for x in self.best_review_order + cur_in_deck
-                if x not in self.best_review_order or x not in cur_in_deck]
+        diff = [x for x in self.opti_rev_order + cur_in_deck
+                if x not in self.opti_rev_order or x not in cur_in_deck]
         if len(diff) != 0:
             print("Inconsistency! The deck does not contain the same cards \
-as best_review_order!")
+as opti_rev_order!")
             pprint(diff)
             print(f"\nNumber of inconsistent cards: {len(diff)}")
         else:
             print(" Done.")
 
-        _threaded_value_setter(card_list=self.best_review_order,
+        _threaded_value_setter(card_list=self.opti_rev_order,
                                tqdm_desc="Altering due order",
                                keys=["due"],
                                newValues=None)
-        print("Re-optimizing Anki database")
-        self._ankiconnect(action="guiCheckDatabase")
+#        print("Re-optimizing Anki database")
+#        self._ankiconnect(action="guiCheckDatabase")
         print("All done!\n\n")
         return True
 
