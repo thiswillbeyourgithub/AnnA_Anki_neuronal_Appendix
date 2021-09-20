@@ -697,7 +697,7 @@ deck.")
                       smoothing=1) as pbar:
                 lock = threading.Lock()
                 threads = []
-                batchsize = len(card_list)//5+1
+                batchsize = len(card_list)//10+1
                 for nb in range(0, len(card_list), batchsize):
                     sub_card_list = card_list[nb: nb+batchsize]
                     thread = threading.Thread(target=do_action,
