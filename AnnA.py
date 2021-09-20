@@ -792,7 +792,7 @@ as best_review_order!")
         * To find the topic of each cluster, ctf-idf is used
         """
         df = self.df
-        if self.n_clusters is None and method.lower() in "kmeans":
+        if self.n_clusters is None or self.n_clusters == "auto":
             self.n_clusters = len(df.index)//100
             print(f"No number of clustrs supplied, will try {self.n_clusters}")
         kmeans_kwargs_deploy = {"n_clusters": self.n_clusters}
