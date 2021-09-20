@@ -955,7 +955,9 @@ plotting...")
                          nlimit=5,
                          user_col="sBERT",
                          do_format_input=False,
-                         dist="cosine", reverse=False):
+                         anki_or_print="anki",
+                         dist="cosine",
+                         reverse=False):
         """
         given a text input, find notes with highest cosine similarity
         * note that you cannot use the pca version of the sBERT vectors
@@ -989,10 +991,17 @@ plotting...")
         while True:
             cnt += 1
             if ans != "n":
-                print(df.loc[
-                             good_order[
-                                 nlimit*cnt:nlimit*(cnt+1)
-                                 ], ["text", "distance"]])
+                if anki_or_print == "print":
+                    print(df.loc[
+                                 good_order[
+                                     nlimit*cnt:nlimit*(cnt+1)
+                                     ], ["text", "distance"]])
+                elif anki_or_print == "anki":
+                    query = "' OR 'cid:".join(good_order[nlimit*cnt:nlimit*(cnt+1)]) + "'"
+                    breakpoint()
+                    self._ankiconnect(
+                            action="guiBrowse",
+                            query=query)
             else:
                 break
             ans = input("Show more?\n(y/n)>")
