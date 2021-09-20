@@ -588,7 +588,7 @@ using PCA...")
         rated = self.rated_cards_list
         assert len([x for x in rated if df.loc[x, "status"] != "rated"]) == 0
         queue = []
-        print(f"Cards already rated in the past relevant days: {len(rated)}")
+        print(f"Cards rated in the past relevant days: {len(rated)}")
 
         if isinstance(desired_deck_size, float):
             if desired_deck_size < 1.0:
@@ -628,15 +628,15 @@ using PCA...")
                 pbar.update(1)
 
         print("Done. Now all that is left is to send all of this to anki.\n")
-        self.best_review_order = queue
+        self.opti_rev_order = queue
         return True
 
-    def display_best_review_order(self, display_limit=50):
+    def display_opti_rev_order(self, display_limit=50):
         """
         display the cards in the best optimal order. Useful to see if something
         went wrong before creating the filtered deck
         """
-        order = self.best_review_order[:display_limit]
+        order = self.opti_rev_order[:display_limit]
         print(self.df.loc[order, "text"])
         return True
 
