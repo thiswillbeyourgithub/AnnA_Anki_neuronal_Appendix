@@ -74,19 +74,14 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 
 
 ## TODO
-### URGENT:
-* change dont send to send and false to true etc
-* ask damien how to add a flag without changing mod
-* remove mention of chunked distance matrix as it was not what I thought
 * optimize review order computation
-* show usage and describe each argument of the main class
-
+* enable gui display of search results
+* investigate weather np.dot is faster than computing the whole distance matrix
 * add tags containing cluster_topics
 * add a method that shows all acronyms
-* add a method that displays the cards in best order, to troubleshoot issues
 * add a method to bury the card without creating a filtered deck
 * take a look at topic modelling techniques that might be cleaner to invoke than ctf-idf
-* reddit + anki discord + psionica + anking + blum 
+* reddit + anki discord + psionica + anking + blum + glutanimate
 * pickle the whole class at the end, to be able to rerun it in case something went wrong
 
 ### long term
