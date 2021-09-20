@@ -132,7 +132,7 @@ class AnnA:
         self._format_card()
         self._compute_sBERT_vec()
         self._compute_distance_matrix()
-        self.assign_score()
+        self._compute_score()
         if send_to_anki is True:
             self.send_to_anki()
 
@@ -530,7 +530,7 @@ using PCA...")
         self.df_dist = df_dist
         return True
 
-    def assign_score(self):
+    def _compute_score(self):
         """
         assign score to each card
         * this score reflects the order in which they should be reviewed
