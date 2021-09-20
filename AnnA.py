@@ -552,11 +552,11 @@ using PCA...")
         df = self.df
         df_dist = self.df_dist
         if self.prefer_similar_card is True:
-            direction = 1
+            sign = 1
         else:
-            direction = -1
+            sign = -1
         w1 = self.scoring_weights[0]
-        w2 = self.scoring_weights[1]*direction
+        w2 = self.scoring_weights[1]*sign
         desired_deck_size = self.desired_deck_size
 
         ivl = df['interval'].to_numpy().reshape(-1, 1)
