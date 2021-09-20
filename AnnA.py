@@ -953,7 +953,7 @@ plotting...")
     def search_for_notes(self,
                          user_input,
                          nlimit=5,
-                         user_col="sBERT",
+                         user_col="sBERT_before_pca",
                          do_format_input=False,
                          anki_or_print="anki",
                          dist="cosine",
