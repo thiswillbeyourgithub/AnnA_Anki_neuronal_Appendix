@@ -571,7 +571,7 @@ using PCA...")
             overdue_cs = self.scaler.fit_transform(overdue)
 
             ro = overdue_cs.T / df["interval_cs"].values
-            df["ref"] = self.scaler.fit_transform(ro.T)
+            df["ref"] = -1 * self.scaler.fit_transform(ro.T)
         else:
             df["ref"] = df["interval_cs"]
 
