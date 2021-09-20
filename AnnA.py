@@ -1004,7 +1004,7 @@ plotting...")
                                      nlimit*cnt:nlimit*(cnt+1)
                                      ], ["text", "distance"]])
                 elif anki_or_print == "anki":
-                    query = "cid:" + " OR cid:".join(
+                    query = "cid:" + ",".join(
                             [str(x)
                                 for x in good_order[
                                     nlimit*cnt:nlimit*(cnt+1)]]
