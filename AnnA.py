@@ -590,7 +590,7 @@ using PCA...")
         if isinstance(desired_deck_size, str):
             if desired_deck_size in ["all", "100%"]:
                 print("Taking the whole deck.")
-                desired_deck_size = len(df.index) - len(rated)
+                desired_deck_size = len(self.due_cards_list)
             elif desired_deck_size.endswith("%"):
                 print(f"Taking {desired_deck_size[:-1]}% of the deck.")
                 desired_deck_size = 0.01*int(desired_deck_size[:-1])*(
