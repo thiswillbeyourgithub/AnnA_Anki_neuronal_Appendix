@@ -573,8 +573,11 @@ using PCA...")
 
             ro = overdue_cs.T / df["interval_cs"].values
             df["ref"] = -1 * self.scaler.fit_transform(ro.T)
-        else:
+        elif reference_order.lower() in "lowest_interval":
             df["ref"] = df["interval_cs"]
+        else:
+            print(f"Error, wrong 'reference_order' value: {reference_order}")
+            return False
 
         rated = self.rated_cards_list
         assert len([x for x in rated if df.loc[x, "status"] != "rated"]) == 0
