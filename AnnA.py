@@ -568,11 +568,17 @@ using PCA...")
                 df.at[i, "ref_due"] = df.loc[i, "odue"]
                 if df.loc[i, "ref_due"] == 0:
                     df.at[i, "ref_due"] = df.at[i, "due"]
-            overdue = df["ref_due"].to_numpy().reshape(-1, 1)
-            overdue_cs = self.scaler.fit_transform(overdue)
+            anki_col_time = int(self._ankiconnect(
+                action="runConsoleCmd",
+                cmd="print(aqt.mw.col.crt)",
+                token="I understand that calling this is a security risk!"
+                ).strip())
 
-            ro = overdue_cs.T / df["interval_cs"].values
-            df["ref"] = -1 * self.scaler.fit_transform(ro.T)
+            time_offset = int((time.time() - anki_col_time) // 86400)
+            overdue = (df["ref_due"] - time_offset).to_numpy().reshape(-1, 1)
+
+            ro = -1 * (df["interval"].values + 0.001) / (overdue.T + 0.001)
+            df["ref"] = self.scaler.fit_transform(ro.T)
         elif reference_order.lower() in "lowest_interval":
             df["ref"] = df["interval_cs"]
         else:
