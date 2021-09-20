@@ -973,6 +973,7 @@ plotting...")
         print("")
         tqdm.pandas(desc="Searching")
         try:
+            df["distance"] = 0.0
             df["distance"] = df[user_col].progress_apply(
                     lambda x: pairwise_distances(embed.reshape(1, -1),
                                                  x.reshape(1, -1),
@@ -997,8 +998,11 @@ plotting...")
                                      nlimit*cnt:nlimit*(cnt+1)
                                      ], ["text", "distance"]])
                 elif anki_or_print == "anki":
-                    query = "' OR 'cid:".join(good_order[nlimit*cnt:nlimit*(cnt+1)]) + "'"
-                    breakpoint()
+                    query = "cid:" + " OR cid:".join(
+                            [str(x)
+                                for x in good_order[
+                                    nlimit*cnt:nlimit*(cnt+1)]]
+                            )
                     self._ankiconnect(
                             action="guiBrowse",
                             query=query)
