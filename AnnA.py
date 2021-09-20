@@ -77,20 +77,20 @@ class AnnA:
     def __init__(self,
                  deckname=None,
                  replace_greek=True,
-                 replace_acronym="acronym_list.py",
+                 optional_acronym_list="acronym_list.py",
                  keep_ocr=True,
-                 desired_deck_size=500,
+                 desired_deck_size="75%",
                  rated_last_X_days=5,
+                 rated_last_X_cards=2000,
                  show_banner=True,
                  debug_card_limit=None,
-                 n_clusters=10,
+                 n_clusters="auto",
                  pca_sBERT_dim=300,
-                 # 300 pca dim should keep more than 95% of variance
                  send_to_anki=False,
                  stride=3000,
                  prefer_similar_card=False,
                  scoring_weights = (1, 1.3),
-                 reference_order = "interval",
+                 reference_order = "relative_overdueness",
                  ):
         # printing banner
         if show_banner is True:
@@ -105,6 +105,7 @@ class AnnA:
         self.keep_ocr = keep_ocr
         self.desired_deck_size = desired_deck_size
         self.rated_last_X_days = rated_last_X_days
+        self.rated_last_X_cards = rated_last_X_cards
         self.debug_card_limit = debug_card_limit
         self.n_clusters = n_clusters
         self.pca_sBERT_dim = pca_sBERT_dim
