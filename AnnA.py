@@ -548,7 +548,7 @@ using PCA...")
         * the chosen one is the card with the lowest score at each round
         * the queue starts empty. At each turn, chosen_one is added to it
         """
-        print("Assigning scores...")
+        print("Computing similarity scores...")
         reference_order = self.reference_order
         df = self.df
         df_dist = self.df_dist
@@ -582,7 +582,7 @@ using PCA...")
         rated = self.rated_cards_list
         assert len([x for x in rated if df.loc[x, "status"] != "rated"]) == 0
         queue = []
-        print(f"Already rated in the past relevant days: {len(rated)} cards.")
+        print(f"Cards already rated in the past relevant days: {len(rated)}")
 
         if isinstance(desired_deck_size, float):
             if desired_deck_size < 1.0:
@@ -609,7 +609,7 @@ using PCA...")
             queue.append(df["ref"].idxmin())
 
         df_temp = pd.DataFrame(columns=rated, index=df.index)
-        with tqdm(desc="Finding optimal review order",
+        with tqdm(desc="Computing optimal review order",
                   unit=" card",
                   total=queue_size_goal) as pbar:
             while len(queue) < queue_size_goal:
@@ -634,7 +634,6 @@ using PCA...")
         print(self.df.loc[order, "text"])
         return True
 
-
     def send_to_anki(self, deck_template="AnnA - Optimal Review Order"):
         """
         create a filtered deck containing the cards to review in the
@@ -656,7 +655,8 @@ using PCA...")
         * The reason I'm using the orange flag hack is that there is a
             request size limit when creating a filtered deck.
         * To speed up the process, I decided to create a threaded function call
-        * -100 000 seems to be the default value for due order in filtered decks
+        * -100 000 seems to be the default value for due order in filtered
+            decks
         """
 
         filtered_deck_name = str(deck_template + f" - {self.deckname}")
