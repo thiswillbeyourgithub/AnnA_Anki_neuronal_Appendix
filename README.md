@@ -43,7 +43,7 @@ When you don't have the time to complete all your daily reviews, use this to cre
 * Open ipython: `ipython3`
 * `from AnnA import * ; a = AnnA(YOUR ARGUMENTS HERE)`, to know arguments, read the `usage` section
 * *wait a while, the first time you run it on a deck is long because sBERT has to compute all the embeddinsg*
-* Enjoy your filtered deck, but don't empty it or rebuilt it.
+* Enjoy your filtered deck, but don't empty it or rebuilt it. You can delete it though.
 * Open an issue telling me your remarks and suggestion
 
 ## Usage
