@@ -47,7 +47,7 @@ def asynchronous_importer():
         AgglomerativeClustering, transformers, sp, normalize, TfidfVectorizer,\
         CountVectorizer, TruncatedSVD, StandardScaler, \
         pairwise_distances, PCA, px, umap, np, tokenizer_bert, sBERT, \
-        MiniBatchKMeans, pairwise_distances_chunked
+        MiniBatchKMeans
     print("Importing modules.")
     from nltk.corpus import stopwords
     from sklearn.feature_extraction.text import TfidfVectorizer
@@ -58,7 +58,7 @@ def asynchronous_importer():
     from sklearn.cluster import MiniBatchKMeans
     import plotly.express as px
     import umap.umap_
-    from sklearn.metrics import pairwise_distances, pairwise_distances_chunked
+    from sklearn.metrics import pairwise_distances
     from sklearn.preprocessing import normalize
     from sklearn.decomposition import TruncatedSVD
     from sklearn.decomposition import PCA
@@ -91,7 +91,6 @@ class AnnA:
                  prefer_similar_card=False,
                  scoring_weights = (1, 1.3),
                  reference_order = "interval",
-                 chunked_distance=False,
                  ):
         # printing banner
         if show_banner is True:
@@ -523,13 +522,10 @@ using PCA...")
             columns=["V"+str(x+1)
                      for x in range(len(df.loc[df.index[0], input_col]))],
             data=[x[0:] for x in df[input_col]])
-        if self.chunked_distance is False:
-            print("\nComputing the distance matrix...", end="")
-            df_dist = pairwise_distances(df_temp, n_jobs=-1, metric=method)
-            print(" Done.\n")
-        else:
-            print("Using chunked distance matrix.")
-            df_dist = pairwise_distances_chunked(df_temp, n_jobs=-1, metric=method)
+
+        print("\nComputing the distance matrix...", end="")
+        df_dist = pairwise_distances(df_temp, n_jobs=-1, metric=method)
+        print(" Done.\n")
 
         self.df_dist = df_dist
         return True
