@@ -625,6 +625,16 @@ using PCA...")
         self.best_review_order = queue
         return True
 
+    def display_best_review_order(self, display_limit=50):
+        """
+        display the cards in the best optimal order. Useful to see if something
+        went wrong before creating the filtered deck
+        """
+        order = self.best_review_order[:display_limit]
+        print(self.df.loc[order, "text"])
+        return True
+
+
     def send_to_anki(self, deck_template="AnnA - Optimal Review Order"):
         """
         create a filtered deck containing the cards to review in the
