@@ -346,7 +346,7 @@ will only keep {self.rated_last_X_cards} to ease calculation.")
         text = str(text).replace("\n", " ")
         if self.keep_ocr is True:
             # keep image title (usually OCR)
-            text = re.sub("title=(\".*?\")", "> Image: \\1. <", text)
+            text = re.sub("title=(\".*?\")", "> An image contains the caption '\\1.' <", text)
         if self.replace_greek is True:
             for a, b in greek_alphabet_mapping.items():
                 text = re.sub(a, b, text)
