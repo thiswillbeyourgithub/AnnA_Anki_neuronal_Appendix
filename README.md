@@ -9,7 +9,7 @@ When you don't have the time to complete all your daily reviews, use this to cre
 * Group your cards by semantic cluster using various algorithms (k-means, minibatch k-means, DBSCAN, agglomerative clustering). The topic of each cluster can then be added as tag to your cards. Here's an example on my med school cards:
     <img title="Cluster tags" src="screenshots/cluster_tags.png" width="600" height="300"/>
 * Create a plot showing clusters of semantic meanings from your anki collection. As you can see on this picture (click to see it in big):
-    <img title="Colored by tags" src="screenshots/by_tags.png" width="250" height="250"/> <img title="Colored by clusters" src="screnshots/by_clusters.png" width="250" height="250"/>
+    <img title="Colored by tags" src="screenshots/by_tags.png" width="250" height="250"/> <img title="Colored by clusters" src="screenshots/by_clusters.png" width="250" height="250"/>
 * Keeps the OCR data of pictures in your cards, if you analyzed them beforehand using [AnkiOCR](https://github.com/cfculhane/AnkiOCR/).
 * Code is PEP compliant, dynamically typed, all the functions have a detailed docstrings. Contributions are welcome, opening issues is encouraged and appreciated.
 
