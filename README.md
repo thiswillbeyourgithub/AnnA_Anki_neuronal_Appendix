@@ -38,6 +38,7 @@ When you don't have the time to complete all your daily reviews, use this to cre
 * **Isn't your implementation unecessarily slow and a bit dumb?** Suggestions are very very welcome. I needed this to work fast so I made it naively. I intend to make it better as time goes on but breakthrough ideas are welcome. Currently, the bottleneck is computing the optimal review order.
 * **Can I use this if I don't know python?** Yes! Installing the thing might not be easy but it's absolutely doable. And you don't need to know python to **run** AnnA.
 * **What is the field_mapping.py file?** It's a file with a unique python dictionary used by AnnA to figure out which field of which card to keep. Using it is optional. By default, each notetype will see only it's first field kept. But if you use this file you can keep multiple fields.
+* **What argument to you use?** Personally I got with `a = AnnA(desired_deck_size="100%", rated_last_X_days=2, reference_order="relative_overdueness", send_to_anki=True)`
 
 
 ## How to use it
