@@ -121,7 +121,8 @@ class AnnA:
                 print(f"Acronym file was not found: {optional_acronym_list}")
                 raise SystemExit()
             else:
-                imp = importlib.import_module(optional_acronym_list.replace(".py", ""))
+                imp = importlib.import_module(
+                        optional_acronym_list.replace(".py", ""))
                 self.acronym_list = imp.acronym_list
 
         # actual execution
@@ -137,7 +138,6 @@ class AnnA:
             self._compute_score()
             if send_to_anki is True:
                 self.send_to_anki()
-
 
     def _reset_index_dtype(self, df):
         """
