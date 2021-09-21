@@ -966,9 +966,9 @@ plotting...")
         * note that you cannot use the pca version of the sBERT vectors
             otherwise you'd have to re run the whole PCA, so it's quicker
             to just use the full vectors
-        * note that if the results are displayed in the browser, the order 
-            cannot be maintained. So you will get the nlimit best match 
-            randomly displayed, then the nlimit+1 to 2*nlimit best match 
+        * note that if the results are displayed in the browser, the order
+            cannot be maintained. So you will get the nlimit best match
+            randomly displayed, then the nlimit+1 to 2*nlimit best match
             randomly displayed etc
         """
         pd.set_option('display.max_colwidth', None)
