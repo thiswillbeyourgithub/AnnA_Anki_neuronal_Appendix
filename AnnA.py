@@ -218,7 +218,7 @@ threads of {batchsize} cards to fetch {len(card_id)} cards...")
                           unit="thread",
                           dynamic_ncols=True,
                           desc="Finished threads",
-                          delay=2,
+                          delay=1,
                           smoothing=0) as pbar:
                     for nb in range(0, len(card_id), batchsize):
                         cnt += 1
