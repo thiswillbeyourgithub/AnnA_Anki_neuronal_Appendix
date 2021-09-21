@@ -86,11 +86,11 @@ class AnnA:
                  debug_card_limit=None,
                  n_clusters="auto",
                  pca_sBERT_dim=300,
-                 send_to_anki=False,
                  stride=3000,
                  prefer_similar_card=False,
                  scoring_weights = (1, 1.3),
                  reference_order = "relative_overdueness",
+                 send_to_anki=False,
                  ):
         # printing banner
         if show_banner is True:
