@@ -1029,8 +1029,10 @@ plotting...")
             df = self.df
         if out_name is None:
             out_name = "AnnA_Saved_DF"
-        name = f"{out_name}_{self.deckname}_{int(time.time())}.pickle"
-        df.to_pickle("./DF_backups/" + name)
+        cur_time = "_".join(time.asctime().split()[0:4]).replace(
+                ":", "h")[0:-3]
+        name = f"{out_name}_{self.deckname}_{cur_time}.pickle"
+        df.to_pickle("./DataFrame_backups/" + name)
         print(f"Dataframe exported to {name}")
         return True
 
