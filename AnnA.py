@@ -532,9 +532,6 @@ using PCA...")
         compute distance matrix between all the cards
         * the distance matrix can be parallelised by scikit learn so I didn't
             bother saving and reusing the matrix
-        * given that the L2 norm is used throughout the script, and that all
-            values are normalized, it might be faster to use np.dot
-            instead of cosine distance
         """
         df = self.df
 
