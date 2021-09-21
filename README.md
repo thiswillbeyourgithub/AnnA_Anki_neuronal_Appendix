@@ -96,8 +96,8 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * investigate crazy ideas list
 
 
-# The following is kept as a legacy but was more based on the non functional ancestor to AnnA, don't judge please.
 ## Crazy ideas 
+### The following is kept as a legacy but was more based on the non functional ancestor to AnnA, don't judge please.
 *Disclaimer : I'm a medical student extremely interested in AI but who has trouble devoting time to this passion. This project is a way to get to know machine learning tools but can have practical applications. I like to have crazy ideas to motivate my projects and they are listed belows. Don't laugh. Don't hesitate to contribute either.*
 * **Scheduling** Using AnnA to do more different reviews might, somehow, increase the likelihood of [eureka moments](https://en.wikipedia.org/wiki/Eureka_(word)) where your brain just created a new neural paths. That would supposedly help to remember and master a field.
 * **Optimize learning via cues** : A weird idea of mine is about the notion that hearing a tone when you're learning something will increase your recall if you have the same tone playing while taking the test. So maybe it would be useful to assign a tone that increases in pitch while you advance in the queue of due cards? I told you it was crazy ideas... Also this tone could play the tone assigned to the cluster when doing random reviews.
