@@ -89,8 +89,6 @@ class AnnA:
             print("(Anki neuronal Appendix)\n\n")
 
         # loading args etc
-        if deckname is None:
-            deckname = "*"
         self.deckname = self._check_deck(deckname)
         self.replace_greek = replace_greek
         self.keep_ocr = keep_ocr
@@ -247,7 +245,7 @@ threads of {batchsize} cards to fetch {len(card_id)} cards...")
             return self._ankiconnect(action="cardsInfo",
                                             cards=[card_id])
 
-    def _check_deck(self, deckname=None):
+    def _check_deck(self, deckname):
         """
         used to check if the deckname is correct
         if incorrect, user is asked to enter the name, using autocompletion
