@@ -88,8 +88,8 @@ class AnnA:
                  pca_sBERT_dim=300,
                  stride=3000,
                  prefer_similar_card=False,
-                 scoring_weights = (1, 1.3),
-                 reference_order = "relative_overdueness",
+                 scoring_weights=(1, 1.3),
+                 reference_order="relative_overdueness",
                  compute_score=True,
                  send_to_anki=False,
                  ):
@@ -286,9 +286,11 @@ from this deck...")
 
             # removes overlap if found
             rated_cards = [x for x in r_cards if x not in due_cards]
-            print(f"Rated cards contained {len(rated_cards)} relevant cards (from {len(r_cards)})")
+            print(f"Rated cards contained {len(rated_cards)} relevant cards \
+(from {len(r_cards)})")
 
-            if self.rated_last_X_cards is not None and len(rated_cards) > self.rated_last_X_cards:
+            if self.rated_last_X_cards is not None and \
+                    len(rated_cards) > self.rated_last_X_cards:
                 print(f"Found {len(rated_cards)} cards rated in the last few days, but \
 will only keep {self.rated_last_X_cards} to ease calculation.")
                 rated_cards = rated_cards[:self.rated_last_X_cards]
@@ -352,7 +354,8 @@ will only keep {self.rated_last_X_cards} to ease calculation.")
         text = str(text).replace("\n", " ")
         if self.keep_ocr is True:
             # keep image title (usually OCR)
-            text = re.sub("title=(\".*?\")", "> An image contains the caption '\\1.' <", text)
+            text = re.sub("title=(\".*?\")", "> An image contains the caption \
+'\\1.' <", text)
         if self.replace_greek is True:
             for a, b in greek_alphabet_mapping.items():
                 text = re.sub(a, b, text)
@@ -362,7 +365,8 @@ will only keep {self.rated_last_X_cards} to ease calculation.")
                 text = re.sub(rf"\b{a}\b", f"{a} ({b})", text)
                 # \b matches beginning and end of a word
         text = re.sub(r'[a-zA-Z0-9-]+\....', " ", text)  # media file name
-        text = re.sub('\\n|<div>|</div>|<br>|<span>|</span>|<li>|</li>|<ul>|</ul>',
+        text = re.sub('\\n|<div>|</div>|<br>|<span>|</span>|<li>|</li>|<ul>|\
+</ul>',
                       " ", text)  # newline
         text = re.sub("<a href.*?</a>", " ", text)  # html links
         text = re.sub(r'http[s]?://\S*', " ", text)  # plaintext links
@@ -778,18 +782,18 @@ as opti_rev_order!")
             print(f"No number of clustrs supplied, will try {self.n_clusters}")
         kmeans_kwargs_deploy = {"n_clusters": self.n_clusters}
         dbscan_kwargs_deploy = {"eps": 0.75,
-                              "min_samples": 3,
-                              "n_jobs": -1}
+                                "min_samples": 3,
+                                "n_jobs": -1}
         agglo_kwargs_deploy = {"n_clusters": self.n_clusters,
-                             # "distance_threshold": 0.6,
-                             "affinity": "cosine",
-                             "memory": "/tmp/",
-                             "linkage": "average"}
+                               # "distance_threshold": 0.6,
+                               "affinity": "cosine",
+                               "memory": "/tmp/",
+                               "linkage": "average"}
         minibatchk_kwargs_deploy = {"n_clusters": self.n_clusters,
-                                  "max_iter": 100,
-                                  "batch_size": 100,
-                                  "verbose": 1,
-                                  }
+                                    "max_iter": 100,
+                                    "batch_size": 100,
+                                    "verbose": 1,
+                                    }
         if minibatchk_kwargs is not None:
             minibatchk_kwargs_deploy.update(minibatchk_kwargs)
         if kmeans_kwargs is not None:
@@ -868,20 +872,20 @@ as opti_rev_order!")
         df = self.df
         pca_kwargs_deploy = {"n_components": 2, "random_state": 42}
         umap_kwargs_deploy = {"n_jobs": -1,
-                            "verbose": 1,
-                            "n_components": 2,
-                            "metric": "cosine",
-                            "init": 'spectral',
-                            "random_state": 42,
-                            "transform_seed": 42,
-                            "n_neighbors": 50,
-                            "min_dist": 0.1}
+                              "verbose": 1,
+                              "n_components": 2,
+                              "metric": "cosine",
+                              "init": 'spectral',
+                              "random_state": 42,
+                              "transform_seed": 42,
+                              "n_neighbors": 50,
+                              "min_dist": 0.1}
         plotly_kwargs_deploy = {"data_frame": df,
-                              "title": "AnnA Anki neuronal Appendix",
-                              "x": "X",
-                              "y": "Y",
-                              "hover_data": hover_cols,
-                              "color": color_col}
+                                "title": "AnnA Anki neuronal Appendix",
+                                "x": "X",
+                                "y": "Y",
+                                "hover_data": hover_cols,
+                                "color": color_col}
         if umap_kwargs is not None:
             umap_kwargs_deploy.update(umap_kwargs)
         if plotly_kwargs is not None:
