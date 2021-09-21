@@ -1,4 +1,5 @@
 import time
+import random
 import pdb
 import signal
 import os
@@ -625,8 +626,11 @@ using PCA...")
         queue_size_goal = min(desired_deck_size,
                               len(df.index)-len(rated))
 
-        if len(rated) == 0:
-            queue.append(df["ref"].idxmin())
+        if len(rated) < 3:
+            pool = df["ref"].nsmallest(
+                    n=min(50, len(self.due_cards_list))
+                    ).index
+            queue.extend(random.choices(pool, k=3))
 
         df_temp = pd.DataFrame(columns=rated, index=df.index)
         with tqdm(desc="Computing optimal review order",
