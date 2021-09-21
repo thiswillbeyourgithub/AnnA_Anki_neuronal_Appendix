@@ -109,8 +109,7 @@ class AnnA:
         if self.optional_acronym_list is not None:
             file = Path(optional_acronym_list)
             if not file.exists():
-                print(f"Acronym file was not found: {optional_acronym_list}")
-                raise SystemExit()
+                raise Exception(f"Acronym file was not found: {optional_acronym_list}")
             else:
                 imp = importlib.import_module(
                         optional_acronym_list.replace(".py", ""))
@@ -166,8 +165,7 @@ values.")
                                         'http://localhost:8765',
                                         requestJson)))
         except (ConnectionRefusedError, urllib.error.URLError) as e:
-            print(f"{e}: is Anki open and ankiconnect enabled?")
-            raise SystemExit()
+            raise Exception(f"{e}: is Anki open and ankiconnect enabled?")
 
         if len(response) != 2:
             raise Exception('response has an unexpected number of fields')
@@ -306,8 +304,7 @@ will only keep {self.rated_last_X_cards} to ease calculation.")
         combined_card_list = list(rated_cards + due_cards)[:limit]
 
         if len(combined_card_list) < 50:
-            print("You don't have enough cards!\nExiting.")
-            raise SystemExit()
+            raise Exception("You don't have enough cards!\nExiting.")
 
         list_cardInfo = []
 
