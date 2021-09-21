@@ -755,8 +755,8 @@ as opti_rev_order!")
                                tqdm_desc="Altering due order",
                                keys=["due"],
                                newValues=None)
-#        print("Re-optimizing Anki database")
-#        self._ankiconnect(action="guiCheckDatabase")
+        print("Re-optimizing Anki database")
+        self._ankiconnect(action="guiCheckDatabase")
         print("All done!\n\n")
         return True
 
