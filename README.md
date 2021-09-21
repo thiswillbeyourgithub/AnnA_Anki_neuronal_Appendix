@@ -75,7 +75,7 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * `plot_latent_space` can be used to display a 2D projection of your cards using plotly. This opens a new tab in your browser and loads an interactive interface in it. You can color it using tags, clusters, etc. If you have a blank plot without any points, call the method again. I don't understand this issue with plotly yet and help is appreciated :/
 * `search_for_notes` will look for cards that are similar to your input. That means that you can type in "localisation of pain in case of kidney stones" and it should find the cards dealing with those concepts even if they don't contain any of those words. This depends on how good sBERT performs on your topic. Different sBERT models can be found.
 * `display_best_review_order` used as a debugging tool. Allows to check if the order seems correct without having to create a filtered deck.
-* `save_df` saves the dataframe containing the cards and all other infos needed by AnnA as a pickle file. Used mainly for debugging
+* `save_df` saves the dataframe containing the cards and all other infos needed by AnnA as a pickle file. Used mainly for debugging. Files will be saved to the folder `DF_backups`
 
 
 ## TODO
