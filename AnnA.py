@@ -80,7 +80,7 @@ class AnnA:
                  prefer_similar_card=False,
                  scoring_weights=(1, 1.3),
                  reference_order="relative_overdueness",
-                 compute_score=True,
+                 compute_opti_rev_order=True,
                  send_to_anki=False,
                  ):
         # printing banner
@@ -137,8 +137,8 @@ values.")
         self._format_card()
         self._compute_sBERT_vec()
         self._compute_distance_matrix()
-        if compute_score is True:
-            self._compute_score()
+        if compute_opti_rev_order is True:
+            self._compute_opti_rev_order()
             if send_to_anki is True:
                 self.send_to_anki()
 
@@ -550,7 +550,7 @@ using PCA...")
         self.df_dist = df_dist
         return True
 
-    def _compute_score(self):
+    def _compute_opti_rev_order(self):
         """
         assign score to each card
         * this score reflects the order in which they should be reviewed

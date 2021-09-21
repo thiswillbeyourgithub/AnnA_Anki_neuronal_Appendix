@@ -70,7 +70,7 @@ AnnA was made with usability in mind. With the right arguments, you can have to 
  * `reference_order` either "relative_overdueness" or "lowest_interval". It is the reference used to sort the card before adjusting them using the similarity scores. Default is `"relative_overdueness"`. Keep in mind that this is a reimplantation of the default overdueness of anki and is not absolutely exactly the same.
  * `scoring_weights` a tuple used to adjust the value of the reference order compared to how similar the cards are. Default is `(1, 1.3)`, it means that the algorithm will spread the similar cards farther apart.
  * `send_to_anki` tells AnnA to automatically create the filtered deck or not. Default is `False`.
- * `compute_score` don't compute optimal review order, if set to False, it will set `send_to_anki` to False. Default to True.
+ * `compute_opti_rev_order` don't compute optimal review order, if set to False, it will set `send_to_anki` to False. Default to True.
 
 AnnA has a number of other built-in methods you can run after instantiating the class. They are especially usefil if "send_to_anki" is set to `False`. Note that methods beginning with a "_" are not supposed to be called by the user and are reserved for backend use. Here's a list of useful methods:
 
