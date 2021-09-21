@@ -108,7 +108,6 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 
 
 ## Credits and links that helped me a lot
-
-    * [Corentin Sautier](https://github.com/CSautier/) for his many many insights and suggestions on ML and python. He was also instrumental in devising the score formula used to order the filtered deck.
-    * [A post about class based tf idf by Maarten Grootendorst on Towardsdatascience](https://towardsdatascience.com/creating-a-class-based-tf-idf-with-scikit-learn-caea7b15b858)
-    * [The authors of sentence-bert and their very informative website](https://github.com/UKPLab/sentence-transformers)
+* [Corentin Sautier](https://github.com/CSautier/) for his many many insights and suggestions on ML and python. He was also instrumental in devising the score formula used to order the filtered deck.
+* [A post about class based tf idf by Maarten Grootendorst on Towardsdatascience](https://towardsdatascience.com/creating-a-class-based-tf-idf-with-scikit-learn-caea7b15b858)
+* [The authors of sentence-bert and their very informative website](https://github.com/UKPLab/sentence-transformers)
