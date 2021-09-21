@@ -113,3 +113,4 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * [Corentin Sautier](https://github.com/CSautier/) for his many many insights and suggestions on ML and python. He was also instrumental in devising the score formula used to order the filtered deck.
 * [A post about class based tf idf by Maarten Grootendorst on Towardsdatascience](https://towardsdatascience.com/creating-a-class-based-tf-idf-with-scikit-learn-caea7b15b858)
 * [The authors of sentence-bert and their very informative website](https://github.com/UKPLab/sentence-transformers)
+* [The author of the addon anki-connect](https://github.com/FooSoft/anki-connect), as this project was very useful to test some features.
