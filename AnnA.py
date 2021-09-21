@@ -766,7 +766,8 @@ as opti_rev_order!")
                          minibatchk_kwargs=None,
                          kmeans_kwargs=None,
                          agglo_kwargs=None,
-                         dbscan_kwargs=None):
+                         dbscan_kwargs=None,
+                         add_as_tags=True):
         """
         finds cluster of cards and their respective topics
         * this is not mandatory to create the filtered deck but it's rather
@@ -852,6 +853,19 @@ as opti_rev_order!")
 
         self.w_by_class = w_by_class
         self.df = df.sort_index()
+
+        if add_as_tags is True:
+            df["cluster_topic"] = df["cluster_topic"].str.replace(" ", "_")
+            cluster_list = list(set(list(df["clusters"])))
+            for i in tqdm(cluster_list, desc="Adding cluster tags",
+                          unit="cluster"):
+                cur_time = int(time.time())
+                newTag = f"AnnA::cluster_topic::{cur_time}::cluster_#{str(i)}"
+                newTag += f"::{df[df['clusters']==i]['cluster_topic'].iloc[0]}"
+                note_list = list(df[df["clusters"] == i]["note"])
+                self._ankiconnect(action="addTags",
+                                  notes=note_list,
+                                  tags=newTag)
         return True
 
     def plot_latent_space(self,

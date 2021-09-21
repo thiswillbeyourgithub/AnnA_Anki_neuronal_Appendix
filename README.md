@@ -78,7 +78,6 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * optimize review order computation
 * pickle the whole class at the end, to be able to rerun it in case something went wrong
 * add a method that shows all acronyms
-* add tags containing cluster_topics
 * add a method to bury the card without creating a filtered deck
 * investigate weather np.dot is faster than computing the whole distance matrix
 * take a look at topic modelling techniques that might be cleaner to invoke than ctf-idf
