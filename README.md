@@ -88,7 +88,6 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * pickle the whole class at the end, to be able to rerun it in case something went wrong
 * add a method that shows all acronyms in your collection
 * add a method to bury the card without creating a filtered deck
-* investigate weather np.dot is faster than computing the whole distance matrix
 * take a look at topic modelling techniques that might be cleaner to invoke than ctf-idf
 * reddit + anki discord + anking + blum
 * re read this article for inspiration : http://mccormickml.com/2021/05/27/question-answering-system-tf-idf/
