@@ -738,7 +738,7 @@ deck.")
                           createEmpty=False)
 
         print("Checking that the content of filtered deck name is the same as \
- the order infered by AnnA...", end="")
+ the order inferred by AnnA...", end="")
         cur_in_deck = self._ankiconnect(action="findCards",
                                         query=f"\"deck:{filtered_deck_name}\"")
         diff = [x for x in self.opti_rev_order + cur_in_deck
