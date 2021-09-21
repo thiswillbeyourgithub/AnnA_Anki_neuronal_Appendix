@@ -60,10 +60,11 @@ AnnA was made with usability in mind. With the right arguments, you can have to 
      * `debug_card_limit` limit the number of due cards to take into account. It is used for debugging as it allows to run the script quickly. Default is None.
      * `n_clusters` number specifying the number of clusters to look for. Only relevant for some clustering algorithms. Default is "auto", this will look for one cluster every 100 cards.
      * `pca_sBERT_dim` number of dimensions to keep after doing a PCA reduction. This can speed up the computation somewhat, but with reduced precision. Default is 300, this retains usually more than 90% of the variance. The original number of dimension is 512, but that might depend on the "sbert" model if you decide to change it.
-     * `send_to_anki` tells AnnA to automatically create the filtered deck or not. Default is False.
      * `prefer_similar_card` I don't know who would use that. It allows to create a filtered deck grouping your cards that are closest to each other.
      * `reference_order` either "relative_overdueness" or "lowest_interval". It is the reference used to order the card before adjusting them using the similarity scores. Default is "relative_overdueness". Keep in mind that this is a reimplantation of the default overdueness of anki and is not absolutely exactly the same.
      * `scoring_weights` a tuple used to adjust the value of the reference order compared to how similar the cards are. Default is (1, 1.3), it means that the algorithm will spread the similar cards farther appart.
+     * `send_to_anki` tells AnnA to automatically create the filtered deck or not. Default is False.
+     * `compute_score` skips computing score, useful with send_to_anki to False. Default to True.
 
 AnnA has a number of other built-in methods you can run after instantiating the class. Especially if "send_to_anki" is set to False. Note that methods beginning with a "_" are not supposed to be called by the user and are reserved for backend use. Here's a list:
     * `compute_clusters` can be used to group the cards by semantic clusters. Several algorithm are implemented: kmeans, minibatch-kmeans, agglomerative clustering, DBSCAN. I can add more if needed.

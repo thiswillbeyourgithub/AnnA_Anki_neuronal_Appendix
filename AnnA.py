@@ -90,6 +90,7 @@ class AnnA:
                  prefer_similar_card=False,
                  scoring_weights = (1, 1.3),
                  reference_order = "relative_overdueness",
+                 compute_score=True,
                  send_to_anki=False,
                  ):
         # printing banner
@@ -132,9 +133,10 @@ class AnnA:
         self._format_card()
         self._compute_sBERT_vec()
         self._compute_distance_matrix()
-        self._compute_score()
-        if send_to_anki is True:
-            self.send_to_anki()
+        if compute_score is True:
+            self._compute_score()
+            if send_to_anki is True:
+                self.send_to_anki()
 
 
     def _reset_index_dtype(self, df):
