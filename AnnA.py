@@ -66,6 +66,7 @@ class AnnA:
     def __init__(self,
                  deckname=None,
                  replace_greek=True,
+                 field_mapping="field_mapping.py",
                  optional_acronym_list="acronym_list.py",
                  keep_ocr=True,
                  desired_deck_size="75%",
