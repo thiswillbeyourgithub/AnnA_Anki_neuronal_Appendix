@@ -32,6 +32,8 @@ When you don't have the time to complete all your daily reviews, use this to cre
 * **Will this change anything to my anki collection?** No, if you delete the filtered deck, everything will be back to normal.
 * **Why is creating the queue taking longer and longer?** Each card is added to the queue after having been compared to the rated cards of the last few days and the current queue. As the queue grows, more computation have to be done. If this is an issue, consider creating decks that are as big as you think you can review in a day.
 * **Isn't your implementation unecessarily slow and a bit dumb?** Suggestions are very very welcome. I needed this to work fast so I made it naively. I intend to make it better as time goes on but breakthrough ideas are welcome. Currently, the bottleneck is computing the optimal review order.
+* **Can I use this if I don't know python?** Yes! Installing the thing might not be easy but it's absolutely doable. And you don't need to know python to **run** AnnA.
+* **What is the field_mapping.py file?** It's a file with a unique python dictionary used by AnnA to figure out which field of which card to keep. Using it is optional. By default, each notetype will see only it's first field kept. But if you use this file you can keep multiple fields.
 
 
 ## How to use it
