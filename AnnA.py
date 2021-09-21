@@ -28,7 +28,7 @@ signal.signal(signal.SIGINT, (lambda signal, frame: pdb.set_trace()))
 
 def asynchronous_importer():
     """
-    used to asynchronously import heavy modules, this way between
+    used to asynchronously import large modules, this way between
     importing AnnA and creating the instance of the class, the language model
     have some more time to load
     """
@@ -186,7 +186,7 @@ values.")
         either int of list of int
 
         * Due to the time it takes to get thousands of cards, I decided
-        to used Threading extensively.
+            to used Threading extensively to speed it up.
         """
         if isinstance(card_id, list):
             if len(card_id) < 50:
@@ -270,7 +270,7 @@ threads of {batchsize} cards to fetch {len(card_id)} cards...")
     def _create_and_fill_df(self):
         """
         create a pandas DataFrame, fill it with the information gathered from
-        self._get_cards_info_from_card_id
+        anki connect like card content, intervals, etc
         """
 
         print("Getting due card from this deck...")
@@ -349,10 +349,10 @@ will only keep {self.rated_last_X_cards} to ease calculation.")
 
     def _format_text(self, text):
         """
-        take text and output processed text
+        take text and output processed and formatted text
         Acronyms will be replaced if the corresponding arguments is passed
             when instantiating AnnA
-        Greek letters can also be replaced
+        Greek letters can also be replaced on the fly
         """
         text = str(text).replace("\n", " ")
         if self.keep_ocr is True:
@@ -388,7 +388,8 @@ will only keep {self.rated_last_X_cards} to ease calculation.")
         """
         filter the fields of each card and keep only the relevant fields
         a "relevant field" is one that is mentionned in the variable field_dic
-        which can be found at the top of the file
+        which can be found at the top of the file. If not relevant field are
+        found then only the first field is kept.
         """
         df = self.df
 
@@ -445,9 +446,9 @@ troubleshoot formating issues:")
 
     def _compute_sBERT_vec(self, df=None, use_sBERT_cache=True):
         """
-        Assigne vectors to each card
-        df["sBERT_before_pca"] if exists, contains the 512 vectors of sBERT
-        df["sBERT"] contains either the 512 vectors or less because you
+        Assigne sBERT vectors to each card
+        df["sBERT_before_pca"] if exists, contains the vectors from sBERT
+        df["sBERT"] contains either all the vectors from sBERT or less if you
             enabled pca reduction
         * given how long it is to compute the vectors I decided to store
             all already computed sBERT to a pickled DataFrame at each run
@@ -531,8 +532,9 @@ using PCA...")
         compute distance matrix between all the cards
         * the distance matrix can be parallelised by scikit learn so I didn't
             bother saving and reusing the matrix
-        * given that the L2 norm is used throughout the script,
-            it might be faster to use np.dot instead of cosine distance
+        * given that the L2 norm is used throughout the script, and that all
+            values are normalized, it might be faster to use np.dot
+            instead of cosine distance
         """
         df = self.df
 
@@ -555,11 +557,14 @@ using PCA...")
         * the intuition is that anki doesn't know before hand if some cards
             are semantically close and can have you review them the same day
         * The score is computed according to the formula:
-           score = reference - min of (similarity to each card of the queue)
-        * reference is either the interval (lower is urgent) or the relative
-            overdueness (higher is urgent), it is centered and scaled
-        * the chosen one is the card with the lowest score at each round
-        * the queue starts empty. At each turn, chosen_one is added to it
+           score = ref - min of (similarity to each card of the big_queue)
+           (big_queue here referes to the recently rated cards concatenated
+            with the queue cards)
+        * ref is either the interval or the negative relative overdueness),
+            it is centered and scaled. In both case, a lower ref is indicating
+            that reviewing the card is urgent.
+        * the_chosen_one is the card with the lowest score at each round
+        * the queue starts empty. At each turn, the_chosen_one is added to it
         """
         print("Computing similarity scores...")
         reference_order = self.reference_order
@@ -655,19 +660,15 @@ using PCA...")
 
     def send_to_anki(self, deck_template="AnnA - Optimal Review Order"):
         """
-        create a filtered deck containing the cards to review in the
-            optimal order
-
-        * then create the filtered deck, containing all the cards that are in
-            self.opti_rev_order
+        create a filtered deck containing the cards to review in optimal order
 
         * When first creating the filtered deck, I chose 'sortOrder = 0'
             ("oldest seen first") this way I will notice if the deck
             somehow got rebuild and lost the right order
         * To speed up the process, I decided to create a threaded function call
-        * then does a few sanity check to see if the filtered deck
+        * I do a few sanity check to see if the filtered deck
             does indeed contain the right number of cards and the right cards
-        * -100 000 seems to be the default value for due order in filtered
+        * -100 000 seems to be the starting value for due order in filtered
             decks
         """
 
@@ -774,10 +775,10 @@ as opti_rev_order!")
         """
         finds cluster of cards and their respective topics
         * this is not mandatory to create the filtered deck but it's rather
-            fast so I prefer to keep it
+            fast
         * Several algorithm are supported for clustering: kmeans, DBSCAN,
             agglomerative clustering
-        * n_topics is the number of topics to get for each cluster
+        * n_topics is the number of topics (=word) to get for each cluster
         * To find the topic of each cluster, ctf-idf is used
         """
         df = self.df
@@ -886,7 +887,9 @@ as opti_rev_order!")
                           plotly_kwargs=None,
                           pca_kwargs=None,
                           ):
-        "open a 2D plot showing cards."
+        """
+        open a browser tab with a 2D plot showing your cards and their relations
+        """
         df = self.df
         pca_kwargs_deploy = {"n_components": 2, "random_state": 42}
         umap_kwargs_deploy = {"n_jobs": -1,
