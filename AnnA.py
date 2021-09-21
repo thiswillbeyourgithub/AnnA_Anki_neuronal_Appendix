@@ -118,13 +118,15 @@ class AnnA:
                 self.acronym_list = imp.acronym_list
         if self.field_mapping is not None:
             file = Path(self.field_mapping)
-            if not file.exists():
-                print(f"Field mapping file was not found: {self.field_mapping}")
-                raise SystemExit()
-            else:
+            try:
+                assert file.exists()
                 imp = importlib.import_module(
                         self.field_mapping.replace(".py", ""))
                 self.field_dic = imp.field_dic
+            except Exception:
+                print("Error with field mapping file, will use default \
+values.")
+                self.field_dic = {"dummyvalue": "dummyvalue"}
 
         # actual execution
         import_thread.join()  # asynchronous importing of large module
