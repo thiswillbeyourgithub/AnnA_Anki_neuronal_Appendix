@@ -83,7 +83,7 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 
 ## TODO
 * fix: the rated_card limit threshold is not computed like it should
-* optimize review order computation
+* computing the optimal review order can be made faster
 * pickle the whole class at the end, to be able to rerun it in case something went wrong
 * add a method that shows all acronyms in your collection
 * add a method to bury the card without creating a filtered deck
