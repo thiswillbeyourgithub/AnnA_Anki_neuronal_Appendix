@@ -377,7 +377,7 @@ will only keep {self.rated_last_X_cards} to ease calculation.")
         text = re.sub(r"\d", " ", text)
         text = text.replace("&amp;", "&")
         text = text.replace("&gt;", ">")
-        text = text.replace("&l;;", "<")
+        text = text.replace("&lt;", "<")
         text = " ".join(text.split())  # multiple spaces
         text = text.strip()
         return text
