@@ -493,7 +493,7 @@ troubleshoot formating issues:")
                 sentence_list = [df.loc[x, "text"]
                                  for x in df.index if x in id_to_recompute]
                 sentence_embeddings = sBERT.encode(sentence_list,
-                                                   normalize_embeddings=False,
+                                                   normalize_embeddings=True,
                                                    show_progress_bar=True)
 
                 for i, ind in enumerate(tqdm(id_to_recompute)):
@@ -976,7 +976,7 @@ plotting...")
 
         if do_format_input is True:
             user_input = self._format_text(user_input)
-        embed = sBERT.encode(user_input, normalize_embeddings=False)
+        embed = sBERT.encode(user_input, normalize_embeddings=True)
         print("")
         tqdm.pandas(desc="Searching")
         try:
