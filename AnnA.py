@@ -101,6 +101,7 @@ class AnnA:
         self.stride = stride
         self.prefer_similar_card = prefer_similar_card
         self.scoring_weights = scoring_weights
+        assert reference_order in ["lowest_interval", "relative_overdueness"]
         self.reference_order = reference_order
         self.field_mapping = field_mapping
         self.optional_acronym_list = optional_acronym_list
@@ -579,7 +580,7 @@ using PCA...")
         ivl = df['interval'].to_numpy().reshape(-1, 1)
         df["interval_cs"] = self.scaler.fit_transform(ivl)
 
-        if reference_order.lower() in "relative_overdueness":
+        if reference_order == "relative_overdueness":
             for i in df.index:
                 df.at[i, "ref_due"] = df.loc[i, "odue"]
                 if df.loc[i, "ref_due"] == 0:
@@ -595,11 +596,8 @@ using PCA...")
 
             ro = -1 * (df["interval"].values + 0.001) / (overdue.T + 0.001)
             df["ref"] = self.scaler.fit_transform(ro.T)
-        elif reference_order.lower() in "lowest_interval":
+        else:  # then is "lowest interval"
             df["ref"] = df["interval_cs"]
-        else:
-            print(f"Error, wrong 'reference_order' value: {reference_order}")
-            return False
 
         rated = self.rated_cards_list
         assert len([x for x in rated if df.loc[x, "status"] != "rated"]) == 0
