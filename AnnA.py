@@ -249,7 +249,7 @@ threads of {batchsize} cards to fetch {len(card_id)} cards...")
         used to check if the deckname is correct
         if incorrect, user is asked to enter the name, using autocompletion
         """
-        decklist = self._ankiconnect(action="deckNames")
+        decklist = self._ankiconnect(action="deckNames") + ["*"]
         if deckname is not None:
             if deckname not in decklist:
                 print("Couldn't find this deck.", end=" ")
