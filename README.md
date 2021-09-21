@@ -6,7 +6,7 @@ When you don't have the time to complete all your daily reviews, use this to cre
 
 ## Note to readers
 1. I would really like to integrate this into anki somehow but am not knowledgeable enough about how to do it, how to manage anki versions, how to handle different platforms etc. All help is much appreciated!
-2. This project relies on [AnkiConnect](https://github.com/FooSoft/anki-connect). I made some contributions to it to add a few features but they have not all been reviewed yet. I am afraid you have to either wait for AnkiConnect to approve of the changes or replace your AnkiConnect folder with [my own](https://github.com/thiswillbeyourgithub/anki-connect)
+2. This project relies on [AnkiConnect](https://github.com/FooSoft/anki-connect). I made some contributions to it to add a few features but they have not all been reviewed yet. I am afraid you have to either wait for AnkiConnect to approve of the changes or replace your AnkiConnect folder with [my own](https://github.com/thiswillbeyourgithub/anki-connect). In the mean time, I think you can toy around with this but won't be able to use "relative_overdueness" when sending a deck to anki, you'll have to use "lowest_interval".
 
 ## Other features
 * Search for cards in your collection using semantic queries (i.e. typing something with a close `meaning` to a card will find it even if no words are in common).
@@ -18,28 +18,30 @@ When you don't have the time to complete all your daily reviews, use this to cre
 * Code is PEP compliant, dynamically typed, all the functions have a detailed docstrings. Contributions are welcome, opening issues is encouraged and appreciated.
 
 ## FAQ
+* **How does it work? (Layman version)** Magic.
+* **How does it work? (Technical version)** The objective is to review the most useful cards, according to the [pareto distribution](https://en.wikipedia.org/wiki/Pareto_distribution) (i.e. review less cards, but the right one and you should be able to keep afloat in med school). The code is mainly composed of a python class called AnnA. When you create an instance, you have to supply the name of the deck you want to filter from. It will then automatically fetch the cards from your collection, assign [sentence-BERT](https://www.sbert.net/) vectors to each, compute the distance matrix of the cards and create a filtered deck containing the cards in the optimal order. You can then call other methods if you want. Note that rated cards of the last X days of the same deck will be used as reference to avoid having cards that are too similar to yesterday's reviews. If you want to know more, either ask me or read the docstrings.
+* **Which arguments do you use personnaly?** Personally I got with `a = AnnA(desired_deck_size="100%", rated_last_X_days=2, reference_order="relative_overdueness", send_to_anki=True)`, and when I have really too much review I'll lower the %.
+
+* **Will this change anything to my anki collection?** No, if you delete the filtered deck, everything will be back to normal.
+* **Can I use this if I don't know python?** Yes! Installing the thing might not be easy but it's absolutely doable. And you don't need to know python to **run** AnnA.
 * **What do you call "optimal review order"?** The order that minimizes the chance of reviewing similar cards in a day. You see, Anki has no knowledge of the content of cards and only cares about their interval and ease. Its built-in system of "siblings" is useful but I think we can do better. AnnA was made to create filtered decks sorted by "relative_overdueness" BUT in a way that keeps *semantic* siblings far from each other.
 * **When should I use this?** It seems a good for dealing with the huge backlog you get in medical school. If you have 2 000 reviews to do, but can only do 500 in a day: AnnA is making sure that you will get the most out of those 500. I don't expect the plotting and clustering features to be really used but I had to code them to make sure AnnA was working fine so I might as well leave it :)
-* **What is the current status of this project?** I use it daily and intend to keep developing until I have no free time left. Take a look at the TODO list if you want to know what's in the works. When in doubt, open an issue.
-* **How does it work? (Layman version)** Magic.
-* **How does it work? (Technical version)** The code is mainly composed of a python class called AnnA. When you create an instance, you have to supply the name of the deck you want to filter from. It will then automatically fetch the cards from your collection, assign [sentence-BERT](https://www.sbert.net/) vectors to each, compute the distance matrix of the cards and create a filtered deck containing the cards in the optimal order. You can then call other methods if you want. Note that rated cards of the last X days of the same deck will be used as reference to avoid having cards that are too similar to yesterday's reviews. If you want to know more, either ask me or read the docstrings.
+
 * **What are the power requirements to run this?** I wanted to make it as efficient as possible but am still improving the code. Computing the distance matrix can be long if you do this on very large amount of cards but this step is done in parallel on all cores so should not be the bottleneck. Let me know if some steps are unusually slow and I will try to optimize it. With one argument you can use PCA to do a dimension reduction on your cards, making the rest of the script faster, at the cost of precision.
-* **Do you mind if I open an issue?** Not at all! It is very much encouraged, even just for a typo. That will at least make me happy. Of course PR are always welcome too.
-* **What is the `keep_ocr` argument?** If you set this to True when creating the instance, AnnA will extract the text from images, provided you create it with [Anki OCR](https://github.com/cfculhane/AnkiOCR/) addon beforehand.
-* **If I create a filtered deck using AnnA, how can I rebuild it?** You can't rebuilt it or empty it. It would leave you with anki's order and not AnnA's. You have to delete the filtered deck then run the script. Hence, I suggest creating large filtered decks in advance. 
+* **Why is creating the queue taking longer and longer?** Each card is added to the queue after having been compared to the rated cards of the last few days and the current queue. As the queue grows, more computation have to be done. If this is an issue, consider creating decks that are as big as you think you can review in a day.
 * **Does this work only on Linux?** It should work on all platform, provided you have anki installed and [anki-connect](https://github.com/FooSoft/anki-connect) enabled. But it uses some dependencies that might only work on some CPU architectures, so I'm guessing ARM system would not work but please tell me if you know tried.
+* **What is the current status of this project?** I use it daily and intend to keep developing until I have no free time left. Take a look at the TODO list if you want to know what's in the works. When in doubt, open an issue.
+* **Do you mind if I open an issue?** Not at all! It is very much encouraged, even just for a typo. That will at least make me happy. Of course PR are always welcome too.
+* **Can this be made into an anki addon instead of a python script?** I have never packaged things into anki addons so I'm not so sure. I heard that packaging complex modules into anki is a pain, and cross platform will be an issue. But I think that I could store the vector information in the `data` column of each card in anki's collection. Then rebuilding the deck can be done with only simple math and no libraries. If you'd like to make this a reality, show yourself by opening an issue! I would really like this to be implemented into anki, as the search function would be pretty nice :)
+
+* **If I create a filtered deck using AnnA, how can I rebuild it?** You can't rebuilt it or empty it. It would leave you with anki's order and not AnnA's. You have to delete the filtered deck then run the script. Hence, I suggest creating large filtered decks in advance. 
 * **What is sBERT?** Shot for sentence-BERT. BERT is a machine learning technology that allows to assign high dimensional vectors to words in the context of a sentence. Sentence-BERT is a new method that does essentially the same thing but on a whole sentence. You can read more [at their great website](https://www.sbert.net/).
 * **What is the sBERT cache file?** Efficiency-wise, the main bottleneck was creating all the sBERT vector embeddings, so I decided to automatically store them in a pickled dataframe, as new vectors have to be computed only when the card's content has changed.
+* **Can I use another sBERT model?** Yes, the model by default is a multilingual model but the English only is supposedly even more awesome. You should consider using it if your cards are only in english.
 * **sBERT is interesting but I'd like to use tf-idf, is this possible?** I initially tried with it and with both combined but it was creating a messy code, you can't cache tf-idf, it slows down the script a lot because SVD does not seem as efficient as PCA, using BERT tokenizer and tf-idf means adding more than 20 parameters that I was not sure about. So I decided to go with only sBERT and it's surprisingly awesome!
-* **Can this be made into an anki addon instead of a python script?** I have never packaged things into anki addons so I'm not so sure. I heard that packaging complex modules into anki is a pain, and cross platform will be an issue. But I think that I could store the vector information in the `data` column of each card in anki's collection. Then rebuilding the deck can be done with only simple math and no libraries. If you'd like to make this a reality, show yourself by opening an issue! I would really like this to be implemented into anki, as the search function would be pretty nice :)
-* **Can I use another sBERT model?** Yes, the model by default is a multilanguage model but the english only is supposedly even more awesome. You should consider using it if your cards are only in english.
-* **Will this change anything to my anki collection?** No, if you delete the filtered deck, everything will be back to normal.
-* **Why is creating the queue taking longer and longer?** Each card is added to the queue after having been compared to the rated cards of the last few days and the current queue. As the queue grows, more computation have to be done. If this is an issue, consider creating decks that are as big as you think you can review in a day.
-* **Isn't your implementation unecessarily slow and a bit dumb?** Suggestions are very very welcome. I needed this to work fast so I made it naively. I intend to make it better as time goes on but breakthrough ideas are welcome. Currently, the bottleneck is computing the optimal review order.
-* **Can I use this if I don't know python?** Yes! Installing the thing might not be easy but it's absolutely doable. And you don't need to know python to **run** AnnA.
-* **What is the field_mapping.py file?** It's a file with a unique python dictionary used by AnnA to figure out which field of which card to keep. Using it is optional. By default, each notetype will see only it's first field kept. But if you use this file you can keep multiple fields.
-* **What argument to you use?** Personally I got with `a = AnnA(desired_deck_size="100%", rated_last_X_days=2, reference_order="relative_overdueness", send_to_anki=True)`
 
+* **Isn't your implementation unecessarily slow and a bit dumb?** Suggestions are very very welcome. I needed this to work fast so I made it naively. I intend to make it better as time goes on but breakthrough ideas are welcome. Currently, the bottleneck is computing the optimal review order.
+* **What is the field_mapping.py file?** It's a file with a unique python dictionary used by AnnA to figure out which field of which card to keep. Using it is optional. By default, each notetype will see only it's first field kept. But if you use this file you can keep multiple fields.
 
 ## How to use it
 * First, **read this page in its entierety, this is a complicated piece of software and you don't want to use it irresponsibly on your cards.**
@@ -48,7 +50,7 @@ When you don't have the time to complete all your daily reviews, use this to cre
 * Edit the file `field_mapping.py` and `acronym_list.py`
 * Use python to install the necessary packages : `pip install -r requirements.py`
 * Open ipython: `ipython3` (or any other python console)
-* `from AnnA import * ; a = AnnA(YOUR ARGUMENTS HERE)`, to know arguments, read the `usage` section
+* `from AnnA import * ; a = AnnA(YOUR ARGUMENTS HERE)`, to figure out which arguments to use, read the `usage` section below
 * *wait a while, the first time you run it on a deck is long because sBERT has to compute all the embeddings*
 * Enjoy your filtered deck, but don't empty it or rebuilt it. You can delete it though.
 * Open an issue telling me your remarks and suggestion
@@ -82,7 +84,6 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * `display_best_review_order` used as a debugging tool. Allows to check if the order seems correct without having to create a filtered deck.
 * `save_df` saves the dataframe containing the cards and all other infos needed by AnnA as a pickle file. Used mainly for debugging. Files will be saved to the folder `DF_backups`
 
-
 ## TODO
 * fix: the rated_card limit threshold is not computed like it should
 * computing the optimal review order can be made faster
@@ -97,6 +98,11 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * turn into anki as an addon
 * investigate crazy ideas list
 
+## Credits and links that were helpful
+* [Corentin Sautier](https://github.com/CSautier/) for his many many insights and suggestions on ML and python. He was also instrumental in devising the score formula used to order the filtered deck.
+* [A post about class based tf idf by Maarten Grootendorst on Towardsdatascience](https://towardsdatascience.com/creating-a-class-based-tf-idf-with-scikit-learn-caea7b15b858)
+* [The authors of sentence-bert and their very informative website](https://github.com/UKPLab/sentence-transformers)
+* [The author of the addon anki-connect](https://github.com/FooSoft/anki-connect), as this project was very useful to test some features.
 
 ## Crazy ideas 
 ### The following is kept as legacy but was made while working on the ancestor of AnnA, don't judge please.
@@ -109,8 +115,3 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * **Source Walking** : it would be interesting to do the anki reviews in VR where the floor would be your source (pdf, epub, ppt, whatever). The cards would be spread over the document, approximately located above the actual source sentence. Hence leveraging the power of mental palace while doing your reviews. Accessing the big picture AND the small picture.
 
 
-## Credits and links that helped me a lot
-* [Corentin Sautier](https://github.com/CSautier/) for his many many insights and suggestions on ML and python. He was also instrumental in devising the score formula used to order the filtered deck.
-* [A post about class based tf idf by Maarten Grootendorst on Towardsdatascience](https://towardsdatascience.com/creating-a-class-based-tf-idf-with-scikit-learn-caea7b15b858)
-* [The authors of sentence-bert and their very informative website](https://github.com/UKPLab/sentence-transformers)
-* [The author of the addon anki-connect](https://github.com/FooSoft/anki-connect), as this project was very useful to test some features.
