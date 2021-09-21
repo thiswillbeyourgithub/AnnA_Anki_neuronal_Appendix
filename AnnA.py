@@ -104,7 +104,9 @@ class AnnA:
         self.prefer_similar_card = prefer_similar_card
         self.scoring_weights = scoring_weights
         self.reference_order = reference_order
+        self.field_mapping = field_mapping
         self.optional_acronym_list = optional_acronym_list
+
         if self.optional_acronym_list is not None:
             file = Path(optional_acronym_list)
             if not file.exists():
@@ -114,6 +116,15 @@ class AnnA:
                 imp = importlib.import_module(
                         optional_acronym_list.replace(".py", ""))
                 self.acronym_list = imp.acronym_list
+        if self.field_mapping is not None:
+            file = Path(self.field_mapping)
+            if not file.exists():
+                print(f"Field mapping file was not found: {self.field_mapping}")
+                raise SystemExit()
+            else:
+                imp = importlib.import_module(
+                        self.field_mapping.replace(".py", ""))
+                self.field_dic = imp.field_dic
 
         # actual execution
         import_thread.join()  # asynchronous importing of large module
@@ -388,6 +399,7 @@ will only keep {self.rated_last_X_cards} to ease calculation.")
             # determines which is the corresponding model described
             # in field_dic
             cnt = 0
+            field_dic = self.field_dic
             for user_model in field_dic.keys():
                 if user_model.lower() in card_model.lower():
                     cnt += 1
