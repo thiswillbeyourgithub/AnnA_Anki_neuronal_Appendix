@@ -89,7 +89,8 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * pickle the whole class at the end, to be able to rerun it in case something went wrong
 * add a method that shows all acronyms in your collection
 * add a method to bury the card without creating a filtered deck
-* take a look at topic modelling techniques that might be cleaner to invoke than ctf-idf
+* look into sentence mining methods from sbert, that might be a useful idea
+* take a look at topic modelling techniques that might be cleaner to invoke than the whole ctf-idf section
 * reddit + anki discord + anking + blum
 * re read this article for inspiration : http://mccormickml.com/2021/05/27/question-answering-system-tf-idf/
 * automatically create a phylogeny of cards based on a distance matrix and see if it's an appropriate mind map, plotly is suitable for this kind of tree
