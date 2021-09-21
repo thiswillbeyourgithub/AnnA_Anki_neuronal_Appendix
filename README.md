@@ -6,9 +6,8 @@ When you don't have the time to complete all your daily reviews, use this to cre
 
 ## Other features
 * Look for cards in your database using a semantic query (typing something with a close `meaning` to a card will find it even if no words are in common.)
-* Cluster your card collection using various algorithms (k-means (including minibatch k-means), DBSCAN, agglomerative clustering). Get the topic of each cluster and add it as tag to your cards.
-* Create a plot showing clusters of semantic meanings from your anki database. As you can see on this picture (click to see it in big):
-<img title="Colored by tags" src="by_tags.png" width="250" height="250"/> <img title="Colored by clusters" src="by_clusters.png" width="250" height="250"/>
+* Cluster your card collection using various algorithms (k-means (including minibatch k-means), DBSCAN, agglomerative clustering). Get the topic of each cluster and add it as tag to your cards. Picture: <img title="Cluster tags" src="cluster_tags.png" width="400" height="200"/>
+* Create a plot showing clusters of semantic meanings from your anki database. As you can see on this picture (click to see it in big): <img title="Colored by tags" src="by_tags.png" width="250" height="250"/> <img title="Colored by clusters" src="by_clusters.png" width="250" height="250"/>
 * Code is PEP compliant, dynamically typed, all the functions have a detailed docstrings. Contribution is welcome, opening issues is encouraged.
 
 
@@ -48,30 +47,32 @@ When you don't have the time to complete all your daily reviews, use this to cre
 
 ## Usage
 AnnA was made with usability in mind. With the right arguments, you can have to enter only one command in the console to get your filtered decks. All the settings you might want to edit are in the agument of the AnnA Class. Here are the arguments with the relevant explanation:
-     * `deckname` the original deck containing the cards you want to review. If you don't supply this value or make a mistake, AnnA will ask you to type in the deckname, with autocompletion enabled (use <TAB>). Default is None.
-     * `replace_greek` if True, all greek letters will be replaces with a spelled version. For example `\u03C3` becomes `sigma`. Default is True.
-     * `optional_acronym_list` a python dictionnary containing acronym to replace. For example `CRC` can be replaced with `CRC (colorectal cancer)`. (The parenthesis are automatically added.) Default is "acronym_list.py".
-     * `keep_ocr` if True, the OCR text extracted using [the great AnkiOCR addon](https://github.com/cfculhane/AnkiOCR/) will be included in the card. Default is True.
-     * `desired_deck_size` indicates the size of the filtered deck to create. Can be the number of cards (500), a proportion of due cards ("75%" or 0.75) or the word "all". Default is "75%".
-     * `rated_last_X_days` indicates the number of passed days to take into account. If you rated 500 cards yesterday, then you don't want your today cards to be too close to what you viewed yesterday, so AnnA will find the 500 cards you reviewed yesterday, and all the cards you rated before that, up to the number of days in rated_last_X_days value. Default is 5.
-     * `rated_last_X_cards` used to limit the number of cards taken from the last `rated_last_X_days`. Default is 2000, you can disable it by setting it to `None`.
-     * `stride` if you have 5000 due cards, want to create a filtered deck containing all of them and have reviewed 2000 cards in the last relevant days, this value will make sure that the algorithm used to create the optimal review order only compares a maximum of 5000 cards at any given time. This eases calculation. Default is 3000.
-     * `show_banner` Used to display a nice banner when instantiating the database. Default is True.
-     * `debug_card_limit` limit the number of due cards to take into account. It is used for debugging as it allows to run the script quickly. Default is None.
-     * `n_clusters` number specifying the number of clusters to look for. Only relevant for some clustering algorithms. Default is "auto", this will look for one cluster every 100 cards.
-     * `pca_sBERT_dim` number of dimensions to keep after doing a PCA reduction. This can speed up the computation somewhat, but with reduced precision. Default is 300, this retains usually more than 90% of the variance. The original number of dimension is 512, but that might depend on the "sbert" model if you decide to change it.
-     * `prefer_similar_card` I don't know who would use that. It allows to create a filtered deck grouping your cards that are closest to each other.
-     * `reference_order` either "relative_overdueness" or "lowest_interval". It is the reference used to order the card before adjusting them using the similarity scores. Default is "relative_overdueness". Keep in mind that this is a reimplantation of the default overdueness of anki and is not absolutely exactly the same.
-     * `scoring_weights` a tuple used to adjust the value of the reference order compared to how similar the cards are. Default is (1, 1.3), it means that the algorithm will spread the similar cards farther appart.
-     * `send_to_anki` tells AnnA to automatically create the filtered deck or not. Default is False.
-     * `compute_score` skips computing score, useful with send_to_anki to False. Default to True.
+
+ * `deckname` the original deck containing the cards you want to review. If you don't supply this value or make a mistake, AnnA will ask you to type in the deckname, with autocompletion enabled (use <TAB>). Default is None.
+ * `replace_greek` if True, all greek letters will be replaces with a spelled version. For example `\u03C3` becomes `sigma`. Default is True.
+ * `optional_acronym_list` a python dictionnary containing acronym to replace. For example `CRC` can be replaced with `CRC (colorectal cancer)`. (The parenthesis are automatically added.) Default is "acronym_list.py".
+ * `keep_ocr` if True, the OCR text extracted using [the great AnkiOCR addon](https://github.com/cfculhane/AnkiOCR/) will be included in the card. Default is True.
+ * `desired_deck_size` indicates the size of the filtered deck to create. Can be the number of cards (500), a proportion of due cards ("75%" or 0.75) or the word "all". Default is "75%".
+ * `rated_last_X_days` indicates the number of passed days to take into account. If you rated 500 cards yesterday, then you don't want your today cards to be too close to what you viewed yesterday, so AnnA will find the 500 cards you reviewed yesterday, and all the cards you rated before that, up to the number of days in rated_last_X_days value. Default is 5.
+ * `rated_last_X_cards` used to limit the number of cards taken from the last `rated_last_X_days`. Default is 2000, you can disable it by setting it to `None`.
+ * `stride` if you have 5000 due cards, want to create a filtered deck containing all of them and have reviewed 2000 cards in the last relevant days, this value will make sure that the algorithm used to create the optimal review order only compares a maximum of 5000 cards at any given time. This eases calculation. Default is 3000.
+ * `show_banner` Used to display a nice banner when instantiating the database. Default is True.
+ * `debug_card_limit` limit the number of due cards to take into account. It is used for debugging as it allows to run the script quickly. Default is None.
+ * `n_clusters` number specifying the number of clusters to look for. Only relevant for some clustering algorithms. Default is "auto", this will look for one cluster every 100 cards.
+ * `pca_sBERT_dim` number of dimensions to keep after doing a PCA reduction. This can speed up the computation somewhat, but with reduced precision. Default is 300, this retains usually more than 90% of the variance. The original number of dimension is 512, but that might depend on the "sbert" model if you decide to change it.
+ * `prefer_similar_card` I don't know who would use that. It allows to create a filtered deck grouping your cards that are closest to each other.
+ * `reference_order` either "relative_overdueness" or "lowest_interval". It is the reference used to order the card before adjusting them using the similarity scores. Default is "relative_overdueness". Keep in mind that this is a reimplantation of the default overdueness of anki and is not absolutely exactly the same.
+ * `scoring_weights` a tuple used to adjust the value of the reference order compared to how similar the cards are. Default is (1, 1.3), it means that the algorithm will spread the similar cards farther appart.
+ * `send_to_anki` tells AnnA to automatically create the filtered deck or not. Default is False.
+ * `compute_score` skips computing score, useful with send_to_anki to False. Default to True.
 
 AnnA has a number of other built-in methods you can run after instantiating the class. Especially if "send_to_anki" is set to False. Note that methods beginning with a "_" are not supposed to be called by the user and are reserved for backend use. Here's a list:
-    * `compute_clusters` can be used to group the cards by semantic clusters. Several algorithm are implemented: kmeans, minibatch-kmeans, agglomerative clustering, DBSCAN. I can add more if needed.
-    * `plot_latent_space` can be used to display a 2D projection of your cards using plotly. This opens a new tab in your browser and loads an interactive interface in it. You can color it using tags, clusters, etc.
-    * `search_for_notes` will look for notes that have the same similarity as your input. That means that you can type in "kidney stones" and it should find you relevant cards, even if they don't contain any of those words. This depends on how well the sBERT model is on your topic.
-    * `display_best_review_order` used as a debugging tool. Allows to check if the order seems correct without having to create a filtered deck.
-    * `save_df` saves the dataframe containing the cards and all other infos needed by AnnA as a pickle file. Used mainly for debugging
+
+* `compute_clusters` can be used to group the cards by semantic clusters. Several algorithm are implemented: kmeans, minibatch-kmeans, agglomerative clustering, DBSCAN. I can add more if needed.
+* `plot_latent_space` can be used to display a 2D projection of your cards using plotly. This opens a new tab in your browser and loads an interactive interface in it. You can color it using tags, clusters, etc.
+* `search_for_notes` will look for notes that have the same similarity as your input. That means that you can type in "kidney stones" and it should find you relevant cards, even if they don't contain any of those words. This depends on how well the sBERT model is on your topic.
+* `display_best_review_order` used as a debugging tool. Allows to check if the order seems correct without having to create a filtered deck.
+* `save_df` saves the dataframe containing the cards and all other infos needed by AnnA as a pickle file. Used mainly for debugging
 
 
 ## TODO
