@@ -61,7 +61,7 @@ class AnnA:
     """
     main class: used to centralize everything
     just instantiating the class does most of the job, as you can see
-    in the __init__
+    in self.__init__
     """
     def __init__(self,
                  deckname=None,
