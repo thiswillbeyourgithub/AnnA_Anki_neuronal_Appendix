@@ -859,7 +859,8 @@ as opti_rev_order!")
             cluster_list = list(set(list(df["clusters"])))
             for i in tqdm(cluster_list, desc="Adding cluster tags",
                           unit="cluster"):
-                cur_time = int(time.time())
+                cur_time = "_".join(time.asctime().split()[0:4]).replace(
+                        ":", "h")[0:-3]
                 newTag = f"AnnA::cluster_topic::{cur_time}::cluster_#{str(i)}"
                 newTag += f"::{df[df['clusters']==i]['cluster_topic'].iloc[0]}"
                 note_list = list(df[df["clusters"] == i]["note"])
