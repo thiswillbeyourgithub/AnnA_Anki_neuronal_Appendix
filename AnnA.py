@@ -948,6 +948,8 @@ plotting...")
         * note that you cannot use the pca version of the sBERT vectors
             otherwise you'd have to re run the whole PCA, so it's quicker
             to just use the full vectors
+        * nlimit is used to get the results by batch, but is multiplied by 10
+            if anki_or_print is set to "anki" for ease of use.
         """
         pd.set_option('display.max_colwidth', None)
         df = self.df
@@ -983,6 +985,7 @@ plotting...")
                                      nlimit*cnt:nlimit*(cnt+1)
                                      ], ["text", "distance"]])
                 elif anki_or_print == "anki":
+                    nlimit *= 10
                     query = "cid:" + ",".join(
                             [str(x)
                                 for x in good_order[
