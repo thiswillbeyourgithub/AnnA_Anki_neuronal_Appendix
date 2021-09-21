@@ -20,7 +20,8 @@ When you don't have the time to complete all your daily reviews, use this to cre
 ## FAQ
 * **How does it work? (Layman version)** Magic.
 * **How does it work? (Technical version)** The objective is to review the most useful cards, according to the [pareto distribution](https://en.wikipedia.org/wiki/Pareto_distribution) (i.e. review less cards, but the right one and you should be able to keep afloat in med school). The code is mainly composed of a python class called AnnA. When you create an instance, you have to supply the name of the deck you want to filter from. It will then automatically fetch the cards from your collection, assign [sentence-BERT](https://www.sbert.net/) vectors to each, compute the distance matrix of the cards and create a filtered deck containing the cards in the optimal order. You can then call other methods if you want. Note that rated cards of the last X days of the same deck will be used as reference to avoid having cards that are too similar to yesterday's reviews. If you want to know more, either ask me or read the docstrings.
-* **Which arguments do you use personnaly?** Personally I got with `a = AnnA(desired_deck_size="100%", rated_last_X_days=2, reference_order="relative_overdueness", send_to_anki=True)`, and when I have really too much review I'll lower the %.
+* **Which arguments do you use personnaly?** Personally, for studying I go with `a = AnnA(desired_deck_size="80%", rated_last_X_days=2, send_to_anki=True)`, and when I have really too much review I'll usually lower the %. For searching cards I'll go with `a = AnnA(deckname="*", compute_opti_rev_order=False)`. 
+
 
 * **Will this change anything to my anki collection?** No, if you delete the filtered deck, everything will be back to normal.
 * **Can I use this if I don't know python?** Yes! Installing the thing might not be easy but it's absolutely doable. And you don't need to know python to **run** AnnA.
