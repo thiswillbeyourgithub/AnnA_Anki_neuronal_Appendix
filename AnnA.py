@@ -304,7 +304,7 @@ will only keep {self.rated_last_X_cards} to ease calculation.")
         self.due_cards = due_cards
         self.rated_cards = rated_cards
 
-        limit = self.debug_card_limit if self.debug_card_limit else -1
+        limit = self.debug_card_limit if self.debug_card_limit else None
         combined_card_list = list(rated_cards + due_cards)[:limit]
 
         if len(combined_card_list) < 50:
