@@ -53,7 +53,7 @@ def asynchronous_importer():
     from sklearn.decomposition import TruncatedSVD
     from sklearn.decomposition import PCA
     from sklearn.preprocessing import StandardScaler
-    print("Finished importing modules")
+    print("Finished importing modules", end="\n\n")
 import_thread = threading.Thread(target=asynchronous_importer, daemon=True)
 import_thread.start()
 
@@ -201,8 +201,8 @@ values.")
                 r_list = []
                 target_thread_n = 10
                 batchsize = len(card_id)//target_thread_n+3
-                print(f"Large number of cards to retrieve, creating 10 \
-threads of {batchsize} cards to fetch {len(card_id)} cards...")
+                print(f"Large number of cards to retrieve: creating 10 \
+threads of size {batchsize} (total: {len(card_id)} cards)...")
 
                 def retrieve_cards(card_list, lock, cnt, r_list):
                     "for multithreaded card retrieval"
@@ -217,8 +217,8 @@ threads of {batchsize} cards to fetch {len(card_id)} cards...")
                 with tqdm(total=target_thread_n,
                           unit=" thread",
                           dynamic_ncols=True,
-                          desc="Finished threads",
                           delay=1,
+                          desc="Done threads",
                           smoothing=0) as pbar:
                     for nb in range(0, len(card_id), batchsize):
                         cnt += 1
@@ -275,17 +275,17 @@ threads of {batchsize} cards to fetch {len(card_id)} cards...")
         """
 
         print("Getting due card from this deck...")
-        n_rated_days = int(self.rated_last_X_days)
         query = f"deck:{self.deckname} is:due is:review -is:learn \
 -is:suspended -is:buried -is:new -rated:1"
-        print(" >  '" + query + "'")
+        print(" >  '" + query + "'", end="\n\n")
         due_cards = self._ankiconnect(action="findCards", query=query)
 
+        n_rated_days = int(self.rated_last_X_days)
         if n_rated_days is not None and n_rated_days != 0:
             print(f"Getting cards that where rated in the last {n_rated_days} days \
 from this deck...")
             query = f"deck:{self.deckname} rated:{n_rated_days} -is:suspended"
-            print(" >  '" + query + "'")
+            print(" >  '" + query + "'", end="\n\n")
             r_cards = self._ankiconnect(action="findCards", query=query)
 
             # removes overlap if found
@@ -301,8 +301,8 @@ will only keep {self.rated_last_X_cards} to ease calculation.")
         else:
             print("Will not look for cards rated in past days.")
             rated_cards = []
-        self.due_cards_list = due_cards
-        self.rated_cards_list = rated_cards
+        self.due_cards = due_cards
+        self.rated_cards = rated_cards
 
         limit = self.debug_card_limit if self.debug_card_limit else -1
         combined_card_list = list(rated_cards + due_cards)[:limit]
@@ -313,15 +313,16 @@ will only keep {self.rated_last_X_cards} to ease calculation.")
         list_cardInfo = []
 
         n = len(combined_card_list)
-        print(f"Asking Anki for information about {n} cards...")
+        print(f"\nAsking Anki for information about {n} cards...")
         start = time.time()
         list_cardInfo.extend(
                 self._get_cards_info_from_card_id(
                     card_id=combined_card_list))
-        print(f"Extracted information in {int(time.time()-start)} seconds.")
+        print(f"Extracted information in {int(time.time()-start)} seconds.",
+                end="\n\n")
 
         for i, card in enumerate(tqdm(list_cardInfo,
-                                      desc="Filtering only relevant fields...",
+                                      desc="Keeping only relevant info fields",
                                       unit=" card")):
             # removing large fields:
             list_cardInfo[i].pop("question")
@@ -393,7 +394,7 @@ will only keep {self.rated_last_X_cards} to ease calculation.")
         """
         df = self.df
 
-        for index in tqdm(df.index, desc="Parsing text content", unit=" card"):
+        for index in tqdm(df.index, desc="Keeping only relevant card fields", unit=" card"):
             card_model = df.loc[index, "modelName"]
             take_first_field = False
             fields_to_keep = []
@@ -435,10 +436,10 @@ Edit the variable 'field_dic' to use {card_model}")
                       for x in tqdm(
                       df["comb_text"],
                       desc="Formating text")]
-        print("\n\n5 random samples of your formated text, to help \
-troubleshoot formating issues:")
-        pd.set_option('display.max_colwidth', 100)
-        print(df.sample(5)["text"], end="\n")
+        print("\n\nPrinting 5 random samples of your formated text, to help \
+adjust formating issues:")
+        pd.set_option('display.max_colwidth', 80)
+        print(df.sample(5)["text"])
         pd.reset_option('display.max_colwidth')
         print("\n\n")
         self.df = df.sort_index()
@@ -513,7 +514,7 @@ troubleshoot formating issues:")
             df_cache.to_pickle("sBERT_cache.pickle")
 
         if self.pca_sBERT_dim is not None:
-            print(f"Reducing dimension of sBERT to {self.pca_sBERT_dim} \
+            print(f"Reducing sBERT to {self.pca_sBERT_dim} dimensions \
 using PCA...")
             pca_sBERT = PCA(n_components=self.pca_sBERT_dim, random_state=42)
             df_temp = pd.DataFrame(
@@ -540,8 +541,7 @@ using PCA...")
                      for x in range(len(df.loc[df.index[0], input_col]))],
             data=[x[0:] for x in df[input_col]])
 
-        print("\nComputing the distance matrix on all available cores...",
-                end="")
+        print("\nComputing the distance matrix on all available cores...")
         df_dist = pairwise_distances(df_temp, n_jobs=-1, metric=method)
         print(" Done.\n")
 
@@ -613,7 +613,7 @@ using PCA...")
                 print("Taking the whole deck.")
                 desired_deck_size = len(df.index) - len(rated)
             elif desired_deck_size.endswith("%"):
-                print(f"Taking {desired_deck_size[:-1]}% of the deck.")
+                print(f"Taking {desired_deck_size} of the deck.")
                 desired_deck_size = 0.01*int(desired_deck_size[:-1])*(
                             len(df.index)-len(rated)
                             )
@@ -629,7 +629,7 @@ using PCA...")
         if len(rated) < 2:  # can't start with an empty queue
             # so picking 2 urgent cards
             pool = df["ref"].nsmallest(
-                    n=min(50, len(self.due_cards_list))
+                    n=min(50, len(self.due_cards))
                     ).index
             queue.extend(random.choices(pool, k=2))
 
@@ -638,7 +638,7 @@ using PCA...")
                   initial=len(rated),
                   smoothing=1,
                   total=queue_size_goal+len(rated)) as pbar:
-            #df_temp = pd.DataFrame(columns=rated, index=df.index)
+            # df_temp = pd.DataFrame(columns=rated, index=df.index)
             while len(queue) < queue_size_goal:
                 df2 = df.drop(index=rated+queue)[["ref"]]
                 indiceT = [df.index.get_loc(x)
