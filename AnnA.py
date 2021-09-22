@@ -585,6 +585,10 @@ using PCA...")
         w1 = self.scoring_weights[0]
         w2 = self.scoring_weights[1]*sign
 
+        # alter the value from rated cards as they will not be useful
+        df.loc[rated, "due"] = np.median(df.loc[due, "due"].values)
+        df.loc[rated, "interval"] = np.median(df.loc[due, "interval"].values)
+
         # preparing interval column
         ivl = df['interval'].to_numpy().reshape(-1, 1)
         df["interval_cs"] = self.scaler.fit_transform(ivl)
