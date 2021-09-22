@@ -567,13 +567,15 @@ using PCA...")
         reference_order = self.reference_order
         df = self.df
         df_dist = self.df_dist
+        desired_deck_size = self.desired_deck_size
+        rated = self.rated_cards_list
+        queue = []
         if self.prefer_similar_card is True:
             sign = 1
         else:
             sign = -1
         w1 = self.scoring_weights[0]
         w2 = self.scoring_weights[1]*sign
-        desired_deck_size = self.desired_deck_size
 
         ivl = df['interval'].to_numpy().reshape(-1, 1)
         df["interval_cs"] = self.scaler.fit_transform(ivl)
@@ -594,12 +596,10 @@ using PCA...")
 
             ro = -1 * (df["interval"].values + 0.001) / (overdue.T + 0.001)
             df["ref"] = self.scaler.fit_transform(ro.T)
-        else:  # then is "lowest interval"
+        elif reference_order == "lowest_interval":
             df["ref"] = df["interval_cs"]
 
-        rated = self.rated_cards_list
         assert len([x for x in rated if df.loc[x, "status"] != "rated"]) == 0
-        queue = []
         print(f"Cards rated in the past relevant days: {len(rated)}")
 
         if isinstance(desired_deck_size, float):
