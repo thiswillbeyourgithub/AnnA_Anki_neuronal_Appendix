@@ -215,7 +215,7 @@ threads of {batchsize} cards to fetch {len(card_id)} cards...")
                     return True
 
                 with tqdm(total=target_thread_n,
-                          unit="thread",
+                          unit=" thread",
                           dynamic_ncols=True,
                           desc="Finished threads",
                           delay=1,
@@ -322,7 +322,7 @@ will only keep {self.rated_last_X_cards} to ease calculation.")
 
         for i, card in enumerate(tqdm(list_cardInfo,
                                       desc="Filtering only relevant fields...",
-                                      unit="card")):
+                                      unit=" card")):
             # removing large fields:
             list_cardInfo[i].pop("question")
             list_cardInfo[i].pop("answer")
@@ -393,7 +393,7 @@ will only keep {self.rated_last_X_cards} to ease calculation.")
         """
         df = self.df
 
-        for index in tqdm(df.index, desc="Parsing text content", unit="card"):
+        for index in tqdm(df.index, desc="Parsing text content", unit=" card"):
             card_model = df.loc[index, "modelName"]
             take_first_field = False
             fields_to_keep = []
@@ -702,7 +702,7 @@ deck.")
                 return True
 
             with tqdm(desc=tqdm_desc,
-                      unit="card",
+                      unit=" card",
                       total=len(card_list),
                       dynamic_ncols=True,
                       smoothing=1) as pbar:
@@ -859,7 +859,7 @@ as opti_rev_order!")
             df["cluster_topic"] = df["cluster_topic"].str.replace(" ", "_")
             cluster_list = list(set(list(df["clusters"])))
             for i in tqdm(cluster_list, desc="Adding cluster tags",
-                          unit="cluster"):
+                          unit=" cluster"):
                 cur_time = "_".join(time.asctime().split()[0:4]).replace(
                         ":", "h")[0:-3]
                 newTag = f"AnnA::cluster_topic::{cur_time}::cluster_#{str(i)}"
