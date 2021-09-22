@@ -636,7 +636,6 @@ using PCA...")
         turn = 0
         with tqdm(desc="Computing optimal review order",
                   unit=" card",
-                  smoothing=0.7,
                   total=queue_size_goal) as pbar:
             df_temp = pd.DataFrame(columns=rated, index=df.index)
             queue2 = queue[:]
