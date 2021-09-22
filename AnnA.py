@@ -217,8 +217,8 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
                 with tqdm(total=target_thread_n,
                           unit=" thread",
                           dynamic_ncols=True,
-                          delay=1,
                           desc="Done threads",
+                          delay=2,
                           smoothing=0) as pbar:
                     for nb in range(0, len(card_id), batchsize):
                         cnt += 1
