@@ -76,6 +76,7 @@ class AnnA:
                  rated_last_X_cards=2000,
                  show_banner=True,
                  debug_card_limit=None,
+                 debug_force_score_formula=None,
                  n_clusters="auto",
                  pca_sBERT_dim=300,
                  stride=2500,
@@ -107,6 +108,7 @@ class AnnA:
         self.reference_order = reference_order
         self.field_mapping = field_mapping
         self.optional_acronym_list = optional_acronym_list
+        self.debug_force_score_formula = debug_force_score_formula
 
         if self.optional_acronym_list is not None:
             file = Path(optional_acronym_list)
@@ -634,6 +636,13 @@ using PCA...")
                     n=min(50, len(self.due_cards))
                     ).index
             queue.extend(random.choices(pool, k=2))
+
+        if self.debug_force_score_formula is not None:
+            if self.debug_force_score_formula == "different":
+                df["ref"] = 0
+            if self.debug_force_score_formula == "similar":
+                df["ref"] = 0
+                df_dist = np.ones_like(df_dist)
 
         with tqdm(desc="Computing optimal review order",
                   unit=" card",
