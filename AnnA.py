@@ -598,6 +598,8 @@ using PCA...")
             df["ref"] = self.scaler.fit_transform(ro.T)
         elif reference_order == "lowest_interval":
             df["ref"] = df["interval_cs"]
+        df["ref"] = df["ref"]*w1
+        df_dist = df_dist*w2
 
         assert len([x for x in rated if df.loc[x, "status"] != "rated"]) == 0
         print(f"Cards rated in the past relevant days: {len(rated)}")
@@ -636,10 +638,12 @@ using PCA...")
             while len(queue) < queue_size_goal:
                 for q in list(rated + queue)[-self.stride:-1]:
                     df_temp[q] = df_dist[df.index.get_loc(q)]
-                df["score"] = w1*df["ref"] + w2*np.min(df_temp, axis=1)
+                df["score"] = df["ref"] + np.min(df_temp, axis=1)
                 chosen_one = df.drop(index=list(rated+queue))["score"].idxmin()
                 queue.append(chosen_one)
+
                 df_temp[chosen_one] = df_dist[df.index.get_loc(chosen_one)]
+
                 pbar.update(1)
 
         print("Done. Now all that is left is to send all of this to anki.\n")
