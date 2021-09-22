@@ -325,7 +325,7 @@ will only keep {self.rated_last_X_cards} to ease calculation.")
                 end="\n\n")
 
         for i, card in enumerate(tqdm(list_cardInfo,
-                                      desc="Keeping only relevant info fields",
+                                      desc="Keeping only relevant info",
                                       unit=" card")):
             # removing large fields:
             list_cardInfo[i].pop("question")
@@ -397,7 +397,7 @@ will only keep {self.rated_last_X_cards} to ease calculation.")
         """
         df = self.df
 
-        for index in tqdm(df.index, desc="Keeping only relevant card fields", unit=" card"):
+        for index in tqdm(df.index, desc="Keeping only relevant fields", unit=" card"):
             card_model = df.loc[index, "modelName"]
             take_first_field = False
             fields_to_keep = []
