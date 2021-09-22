@@ -38,7 +38,7 @@ def asynchronous_importer():
         CountVectorizer, TruncatedSVD, StandardScaler, \
         pairwise_distances, PCA, px, umap, np, tokenizer_bert, sBERT, \
         MiniBatchKMeans, interpolate
-    print("Importing modules.")
+    print("Importing modules...")
     from nltk.corpus import stopwords
     from sklearn.feature_extraction.text import TfidfVectorizer
     from sklearn.feature_extraction.text import CountVectorizer
