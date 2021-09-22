@@ -81,7 +81,7 @@ class AnnA:
                  pca_sBERT_dim=300,
                  stride=2500,
                  prefer_similar_card=False,
-                 scoring_weights=(1, 1.3),
+                 scoring_weights=(1, 1.5),
                  reference_order="lowest_interval",
                  compute_opti_rev_order=True,
                  send_to_anki=False,
