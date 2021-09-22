@@ -540,7 +540,8 @@ using PCA...")
                      for x in range(len(df.loc[df.index[0], input_col]))],
             data=[x[0:] for x in df[input_col]])
 
-        print("\nComputing the distance matrix...", end="")
+        print("\nComputing the distance matrix on all available cores...",
+                end="")
         df_dist = pairwise_distances(df_temp, n_jobs=-1, metric=method)
         print(" Done.\n")
 
