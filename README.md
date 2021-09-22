@@ -86,9 +86,10 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * `save_df` saves the dataframe containing the cards and all other infos needed by AnnA as a pickle file. Used mainly for debugging. Files will be saved to the folder `DF_backups`
 
 ## TODO
-* fix: investigate if relative overdueness is not broken
-* fix: investigate if acronym replacement is not broken
+* fix: investigate if relative overdueness is not broken :(
+* fix: investigate if acronym replacement is not broken :(
 * fix: the rated_card limit threshold is not computed like it should
+* add argument debug_force_rank that can be ro_only, li_only, score, rev_score
 * computing the optimal review order can be made faster
 * pickle the whole class at the end, to be able to rerun it in case something went wrong
 * add a "search_mode" argument that scans ALL unsuspended cards in the collection to allow for searching + a search_offline mode that only search through the cache
