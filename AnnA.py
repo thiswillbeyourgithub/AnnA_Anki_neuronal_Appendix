@@ -642,6 +642,12 @@ using PCA...")
             ro_cs = self.scaler.fit_transform(ro_intp.T)
             df["ref"] = ro_cs
 
+        # centering and scaling df_dist after clipping
+        df_dist = self.scaler.fit_transform(
+                np.clip(df_dist, 0.2, df_dist.max())
+                )
+
+        # adjusting with weights
         df["ref"] = df["ref"]*w1
         df_dist = df_dist*w2
 
