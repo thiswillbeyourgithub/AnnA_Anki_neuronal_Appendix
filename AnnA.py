@@ -635,7 +635,9 @@ using PCA...")
 
         with tqdm(desc="Computing optimal review order",
                   unit=" card",
-                  total=queue_size_goal) as pbar:
+                  initial=len(rated),
+                  smoothing=1,
+                  total=queue_size_goal+len(rated)) as pbar:
             #df_temp = pd.DataFrame(columns=rated, index=df.index)
             while len(queue) < queue_size_goal:
                 df2 = df.drop(index=rated+queue)[["ref"]]
