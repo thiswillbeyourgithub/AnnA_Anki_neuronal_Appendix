@@ -294,7 +294,7 @@ from this deck...")
             # removes overlap if found
             rated_cards = [x for x in r_cards if x not in due_cards]
             print(f"Rated cards contained {len(rated_cards)} relevant cards \
-(from {len(r_cards)})")
+(from {len(r_cards)}).")
 
             if self.rated_last_X_cards is not None and \
                     len(rated_cards) > self.rated_last_X_cards:
@@ -569,11 +569,14 @@ using PCA...")
         * the queue starts empty. At each turn, the_chosen_one is added to it
         """
         print("Computing similarity scores...")
+
+        # getting args
         reference_order = self.reference_order
-        df = self.df
+        df = self.df.copy()
         df_dist = self.df_dist
         desired_deck_size = self.desired_deck_size
-        rated = self.rated_cards_list
+        rated = self.rated_cards
+        due = self.due_cards
         queue = []
         if self.prefer_similar_card is True:
             sign = 1
@@ -582,27 +585,33 @@ using PCA...")
         w1 = self.scoring_weights[0]
         w2 = self.scoring_weights[1]*sign
 
+        # preparing interval column
         ivl = df['interval'].to_numpy().reshape(-1, 1)
         df["interval_cs"] = self.scaler.fit_transform(ivl)
 
+        # lowest interval is still centered and scaled
+        if reference_order == "lowest_interval":
+            df["ref"] = df["interval_cs"]
+
+        # computes relative_overdueness
         if reference_order == "relative_overdueness":
+            # getting due date
             for i in df.index:
                 df.at[i, "ref_due"] = df.loc[i, "odue"]
                 if df.loc[i, "ref_due"] == 0:
                     df.at[i, "ref_due"] = df.at[i, "due"]
+
+            # computing overdue
             anki_col_time = int(self._ankiconnect(
                 action="runConsoleCmd",
                 cmd="print(aqt.mw.col.crt)",
                 token="I understand that calling this is a security risk!"
                 ).strip())
-
             time_offset = int((time.time() - anki_col_time) // 86400)
             overdue = (df["ref_due"] - time_offset).to_numpy().reshape(-1, 1)
 
+            # computing relative overdueness
             ro = -1 * (df["interval"].values + 0.001) / (overdue.T + 0.001)
-            df["ref"] = self.scaler.fit_transform(ro.T)
-        elif reference_order == "lowest_interval":
-            df["ref"] = df["interval_cs"]
         df["ref"] = df["ref"]*w1
         df_dist = df_dist*w2
 
