@@ -641,14 +641,15 @@ using PCA...")
             #df_temp = pd.DataFrame(columns=rated, index=df.index)
             while len(queue) < queue_size_goal:
                 df2 = df.drop(index=rated+queue)[["ref"]]
-                indiceT = [df.index.get_loc(x) for x in df2.index]
-                indiceQ = [df.index.get_loc(x) for x in rated+queue]
+                indiceT = [df.index.get_loc(x)
+                           for x in df2.index]
+                indiceQ = [df.index.get_loc(x)
+                           for x in (rated+queue)[-self.stride:]]
 
                 sub_dist = np.array([x[indiceT] for x in df_dist[indiceQ]]).T
                 df2["score"] = df2["ref"].values + np.min(sub_dist, axis=1)
 
                 chosen_one = df2["score"].idxmin()
-                queue.append(chosen_one)
 
                 # I had some trouble with implementing this loop
                 # so I am keeping the legacy code as fallback
@@ -658,12 +659,13 @@ using PCA...")
 #
 #                chosen_one = df.drop(index=(rated+queue))["score"].idxmin()
 #                df_temp[chosen_one] = df_dist[df.index.get_loc(chosen_one)]
-#                queue.append(chosen_one)
 #
 #                if chosen_one2 != chosen_one:
 #                    tqdm.write("NO")
 #                else:
 #                    tqdm.write(" > YES")
+
+                queue.append(chosen_one)
                 pbar.update(1)
 
         print("Done. Now all that is left is to send all of this to anki.\n")
