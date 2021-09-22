@@ -80,7 +80,7 @@ class AnnA:
                  stride=2500,
                  prefer_similar_card=False,
                  scoring_weights=(1, 1.3),
-                 reference_order="relative_overdueness",
+                 reference_order="lowest_interval",
                  compute_opti_rev_order=True,
                  send_to_anki=False,
                  ):
@@ -632,19 +632,36 @@ using PCA...")
                     ).index
             queue.extend(random.choices(pool, k=2))
 
-        df_temp = pd.DataFrame(columns=rated, index=df.index)
         with tqdm(desc="Computing optimal review order",
                   unit=" card",
                   smoothing=0.7,
                   total=queue_size_goal) as pbar:
+            #df_temp = pd.DataFrame(columns=rated, index=df.index)
+            todo = df.drop(index=(rated+queue)).index.tolist()
+            df2 = df.drop(index=rated+queue)[["ref"]]
+            indiceT = [df.index.get_loc(x) for x in todo]
+            indiceQ = [df.index.get_loc(x) for x in rated+queue]
             while len(queue) < queue_size_goal:
-                for q in list(rated + queue)[-self.stride:-1]:
-                    df_temp[q] = df_dist[df.index.get_loc(q)]
-                df["score"] = df["ref"] + np.min(df_temp, axis=1)
-                chosen_one = df.drop(index=list(rated+queue))["score"].idxmin()
-                queue.append(chosen_one)
+                # new way
+                grid = np.meshgrid(indiceT, indiceQ, indexing='ij')
+                scores = df2["ref"].values + np.min(df_dist[grid], axis=1)
 
-                df_temp[chosen_one] = df_dist[df.index.get_loc(chosen_one)]
+                chosen_one2 = df2.index[scores.argmin()]
+
+                df2.drop(index=chosen_one2, inplace=True)
+                todo.remove(chosen_one2)
+                indiceT.remove(df.index.get_loc(chosen_one2))
+                indiceQ.append(df.index.get_loc(chosen_one2))
+
+                # original way
+#                for q in (rated+queue)[-self.stride:]:
+#                    df_temp[q] = df_dist[df.index.get_loc(q)]
+#                df["score"] = df["ref"] + np.min(df_temp, axis=1)
+#
+#                chosen_one = df.drop(index=(rated+queue))["score"].idxmin()
+#                queue.append(chosen_one)
+#
+#                df_temp[chosen_one] = df_dist[df.index.get_loc(chosen_one)]
 
                 pbar.update(1)
 
