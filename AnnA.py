@@ -567,6 +567,11 @@ using PCA...")
             that reviewing the card is urgent.
         * the_chosen_one is the card with the lowest score at each round
         * the queue starts empty. At each turn, the_chosen_one is added to it
+        * before being added, some values are clipped,cented, scaled. Relative
+            overdueness is weird so I'm trying clipping at 500 and -500
+            before that or interpolating values above.
+        * I clipped the distance value below 0.2 as they were messing with the
+            scaling afterwards
         """
         print("Computing similarity scores...")
 
