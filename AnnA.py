@@ -635,6 +635,7 @@ using PCA...")
         df_temp = pd.DataFrame(columns=rated, index=df.index)
         with tqdm(desc="Computing optimal review order",
                   unit=" card",
+                  smoothing=0.7,
                   total=queue_size_goal) as pbar:
             while len(queue) < queue_size_goal:
                 for q in list(rated + queue)[-self.stride:-1]:
