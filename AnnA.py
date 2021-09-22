@@ -621,6 +621,27 @@ using PCA...")
 
             # computing relative overdueness
             ro = -1 * (df["interval"].values + 0.001) / (overdue.T + 0.001)
+
+            # either: clipping abnormal values
+#            ro_intp = np.clip(ro, -500, 500)
+
+            # or: interpolating values
+            n_pos = sum(sum(ro > 500))
+            n_neg = sum(sum(ro < -500))
+            ro_intp = ro
+            if n_pos != 0:
+                f = interpolate.interp1d(x=ro[ro > 500],
+                                         y=[500+x for x in range(n_pos)])
+                ro_intp[ro > 500] = f(ro[ro > 500])
+            if n_neg != 0:
+                f = interpolate.interp1d(x=ro[ro < -500],
+                                         y=[-500-x for x in range(n_neg)])
+                ro_intp[ro < -500] = f(ro[ro < -500])
+
+            # center and scale
+            ro_cs = self.scaler.fit_transform(ro_intp.T)
+            df["ref"] = ro_cs
+
         df["ref"] = df["ref"]*w1
         df_dist = df_dist*w2
 
