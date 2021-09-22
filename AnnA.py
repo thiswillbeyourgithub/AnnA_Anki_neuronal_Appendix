@@ -34,10 +34,10 @@ def asynchronous_importer():
     have some more time to load
     """
     global stopwords, SentenceTransformer, KMeans, DBSCAN, \
-        AgglomerativeClustering, transformers, sp, normalize, TfidfVectorizer,\
+        AgglomerativeClustering, transformers, normalize, TfidfVectorizer,\
         CountVectorizer, TruncatedSVD, StandardScaler, \
         pairwise_distances, PCA, px, umap, np, tokenizer_bert, sBERT, \
-        MiniBatchKMeans
+        MiniBatchKMeans, interpolate
     print("Importing modules.")
     from nltk.corpus import stopwords
     from sklearn.feature_extraction.text import TfidfVectorizer
@@ -53,6 +53,7 @@ def asynchronous_importer():
     from sklearn.decomposition import TruncatedSVD
     from sklearn.decomposition import PCA
     from sklearn.preprocessing import StandardScaler
+    from scipy import interpolate
     print("Finished importing modules", end="\n\n")
 import_thread = threading.Thread(target=asynchronous_importer, daemon=True)
 import_thread.start()
@@ -543,7 +544,8 @@ using PCA...")
 
         print("\nComputing the distance matrix on all available cores...")
         df_dist = pairwise_distances(df_temp, n_jobs=-1, metric=method)
-        print(" Done.\n")
+#        print("Interpolating matrix between 0 and 1...")
+#        df_dist = np.interp(df_dist, (df_dist.min(), df_dist.max()), (0, 1))
 
         self.df_dist = df_dist
         return True
