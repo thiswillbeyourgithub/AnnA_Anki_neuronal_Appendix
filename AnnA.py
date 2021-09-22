@@ -633,38 +633,42 @@ using PCA...")
                     ).index
             queue.extend(random.choices(pool, k=2))
 
+        turn = 0
         with tqdm(desc="Computing optimal review order",
                   unit=" card",
                   smoothing=0.7,
                   total=queue_size_goal) as pbar:
-            #df_temp = pd.DataFrame(columns=rated, index=df.index)
-            todo = df.drop(index=(rated+queue)).index.tolist()
-            df2 = df.drop(index=rated+queue)[["ref"]]
-            indiceT = [df.index.get_loc(x) for x in todo]
-            indiceQ = [df.index.get_loc(x) for x in rated+queue]
+            df_temp = pd.DataFrame(columns=rated, index=df.index)
+            queue2 = queue[:]
             while len(queue) < queue_size_goal:
                 # new way
-                grid = np.meshgrid(indiceT, indiceQ, indexing='ij')
-                scores = df2["ref"].values + np.min(df_dist[grid], axis=1)
+                df2 = df.drop(index=rated+queue2)[["ref"]]
+                indiceT = [df.index.get_loc(x) for x in df2.index]
+                indiceQ = [df.index.get_loc(x) for x in rated+queue]
 
-                chosen_one2 = df2.index[scores.argmin()]
+                sub_dist = np.array([x[indiceT] for x in df_dist[indiceQ]]).T
+                df2["score"] = df2["ref"].values + np.min(sub_dist, axis=1)
 
-                df2.drop(index=chosen_one2, inplace=True)
-                todo.remove(chosen_one2)
-                indiceT.remove(df.index.get_loc(chosen_one2))
-                indiceQ.append(df.index.get_loc(chosen_one2))
+                chosen_one2 = df2["score"].idxmin()
+                queue2.append(chosen_one2)
 
                 # original way
-#                for q in (rated+queue)[-self.stride:]:
-#                    df_temp[q] = df_dist[df.index.get_loc(q)]
-#                df["score"] = df["ref"] + np.min(df_temp, axis=1)
-#
-#                chosen_one = df.drop(index=(rated+queue))["score"].idxmin()
-#                queue.append(chosen_one)
-#
-#                df_temp[chosen_one] = df_dist[df.index.get_loc(chosen_one)]
+                for q in (rated+queue)[-self.stride:]:
+                    df_temp[q] = df_dist[df.index.get_loc(q)]
+                df["score"] = df["ref"].values + np.min(df_temp, axis=1)
 
+                chosen_one = df.drop(index=(rated+queue))["score"].idxmin()
+                df_temp[chosen_one] = df_dist[df.index.get_loc(chosen_one)]
+                queue.append(chosen_one)
+
+                if chosen_one2 != chosen_one:
+                    tqdm.write("NO")
+                else:
+                    tqdm.write(" > YES")
                 pbar.update(1)
+                turn += 1
+                if turn == 750:
+                    breakpoint()
 
         print("Done. Now all that is left is to send all of this to anki.\n")
         self.opti_rev_order = queue
