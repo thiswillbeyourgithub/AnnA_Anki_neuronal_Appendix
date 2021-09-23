@@ -41,7 +41,7 @@ When you don't have the time to complete all your daily reviews, use this to cre
 * **Can I use another sBERT model?** Yes, the model by default is a multilingual model but the English only is supposedly even more awesome. You should consider using it if your cards are only in english.
 * **sBERT is interesting but I'd like to use tf-idf, is this possible?** I initially tried with it and with both combined but it was creating a messy code, you can't cache tf-idf, it slows down the script a lot because SVD does not seem as efficient as PCA, using BERT tokenizer and tf-idf means adding more than 20 parameters that I was not sure about. So I decided to go with only sBERT and it's surprisingly awesome!
 
-* **Isn't your implementation unecessarily slow and a bit dumb?** Suggestions are very very welcome. I needed this to work fast so I made it naively. I intend to make it better as time goes on but breakthrough ideas are welcome. Currently, the bottleneck is computing the optimal review order.
+* **Isn't your implementation unecessarily slow and a bit dumb?** Suggestions are very very welcome. I needed this to work fast so I made it naively. I intend to make it better as time goes on but breakthrough ideas are welcome.
 * **What is the field_mapping.py file?** It's a file with a unique python dictionary used by AnnA to figure out which field of which card to keep. Using it is optional. By default, each notetype will see only it's first field kept. But if you use this file you can keep multiple fields.
 
 ## How to use it
