@@ -710,7 +710,6 @@ using PCA...")
                   initial=len(rated),
                   smoothing=0,
                   total=queue_size_goal+len(rated)) as pbar:
-            # df_temp = pd.DataFrame(columns=rated, index=df.index)
             turn = 0  # debug
             while len(queue) < queue_size_goal:
                 df2 = df.drop(index=rated+queue)[["ref"]]
@@ -726,6 +725,7 @@ using PCA...")
 
                 # I had some trouble with implementing this loop
                 # so I am keeping the legacy code as fallback
+#                df_temp = pd.DataFrame(columns=rated, index=df.index)
 #                for q in (rated+queue)[-self.stride:]:
 #                    df_temp[q] = df_dist[df.index.get_loc(q)]
 #                df["score"] = df["ref"].values + np.min(df_temp, axis=1)
