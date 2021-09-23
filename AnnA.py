@@ -726,6 +726,7 @@ using PCA...")
                 # I had some trouble with implementing this loop
                 # so I am keeping the legacy code as fallback
 #                df_temp = pd.DataFrame(columns=rated, index=df.index)
+#                queue2.append(chosen_one)
 #                for q in (rated+queue)[-self.stride:]:
 #                    df_temp[q] = df_dist[df.index.get_loc(q)]
 #                df["score"] = df["ref"].values + np.min(df_temp, axis=1)
@@ -733,8 +734,10 @@ using PCA...")
 #                chosen_one = df.drop(index=(rated+queue))["score"].idxmin()
 #                df_temp[chosen_one] = df_dist[df.index.get_loc(chosen_one)]
 #
-#                if chosen_one2 != chosen_one:
-#                    tqdm.write("NO")
+#                # debug
+#                if queue2[-1] != chosen_one:
+#                    tqdm.write(f"NO > {queue2[-1]}")
+#                    breakpoint()
 #                else:
 #                    tqdm.write("YES")
 
