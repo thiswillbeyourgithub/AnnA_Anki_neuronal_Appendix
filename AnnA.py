@@ -132,11 +132,11 @@ values.")
                 self.field_dic = {"dummyvalue": "dummyvalue"}
 
         # actual execution
-        import_thread.join()  # asynchronous importing of large module
-        time.sleep(0.5)  # sometimes import_thread takes too long apparently
         self._create_and_fill_df()
         self.df = self._reset_index_dtype(self.df)
         self._format_card()
+        import_thread.join()  # asynchronous importing of large module
+        time.sleep(0.5)  # sometimes import_thread takes too long apparently
         self._compute_sBERT_vec()
         self._compute_distance_matrix()
         if compute_opti_rev_order is True:
