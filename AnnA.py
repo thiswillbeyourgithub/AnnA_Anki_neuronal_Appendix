@@ -27,20 +27,18 @@ os.environ["TOKENIZERS_PARALLELISM"] = "true"
 signal.signal(signal.SIGINT, (lambda signal, frame: pdb.set_trace()))
 
 
-
 def asynchronous_importer():
     """
     used to asynchronously import large modules, this way between
     importing AnnA and creating the instance of the class, the language model
     have some more time to load
     """
-    global stopwords, SentenceTransformer, KMeans, DBSCAN, \
+    global SentenceTransformer, KMeans, DBSCAN, \
         AgglomerativeClustering, transformers, normalize, TfidfVectorizer,\
         CountVectorizer, TruncatedSVD, StandardScaler, \
         pairwise_distances, PCA, px, umap, np, tokenizer_bert, sBERT, \
         MiniBatchKMeans, interpolate
     print("Began importing modules...")
-    from nltk.corpus import stopwords
     from sklearn.feature_extraction.text import TfidfVectorizer
     from sklearn.feature_extraction.text import CountVectorizer
     from sentence_transformers import SentenceTransformer
