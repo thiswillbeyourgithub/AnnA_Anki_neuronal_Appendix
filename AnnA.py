@@ -147,6 +147,8 @@ values.")
 
         # pickle itself
         print("Saving instance as 'last_run.pickle'...")
+        if Path("last_run.pickle").exists():
+            Path("last_run.pickle").unlink()
         f = open("last_run.pickle", "wb")
         pickle.dump(self, f)
         print("Done, you can now restore this instance without having to \
