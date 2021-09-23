@@ -713,8 +713,7 @@ using PCA...")
             turn = 0  # debug
             while len(queue) < queue_size_goal:
                 df2 = df.drop(index=rated+queue)[["ref"]]
-                indiceT = [df.index.get_loc(x)
-                           for x in df2.index]
+                indiceT = [df.index.get_loc(x) for x in df2.index]
                 indiceQ = [df.index.get_loc(x)
                            for x in (rated+queue)[-self.stride:]]
 
