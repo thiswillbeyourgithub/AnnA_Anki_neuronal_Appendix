@@ -53,7 +53,7 @@ def asynchronous_importer():
     from sklearn.decomposition import PCA
     from sklearn.preprocessing import StandardScaler
     from scipy import interpolate
-    print("Finished importing modules", end="\n\n")
+    tqdm.write("Finished importing modules", end="\n\n")
 
 
 import_thread = threading.Thread(target=asynchronous_importer, daemon=True)
