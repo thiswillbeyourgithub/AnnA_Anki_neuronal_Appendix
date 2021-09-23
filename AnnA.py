@@ -711,6 +711,7 @@ using PCA...")
                   smoothing=0,
                   total=queue_size_goal+len(rated)) as pbar:
             # df_temp = pd.DataFrame(columns=rated, index=df.index)
+            turn = 0  # debug
             while len(queue) < queue_size_goal:
                 df2 = df.drop(index=rated+queue)[["ref"]]
                 indiceT = [df.index.get_loc(x)
@@ -739,6 +740,7 @@ using PCA...")
 
                 queue.append(chosen_one)
                 pbar.update(1)
+                turn += 1
 
         print("Done.\n")
         self.opti_rev_order = queue
