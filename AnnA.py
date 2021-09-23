@@ -54,6 +54,8 @@ def asynchronous_importer():
     from sklearn.preprocessing import StandardScaler
     from scipy import interpolate
     print("Finished importing modules", end="\n\n")
+
+
 import_thread = threading.Thread(target=asynchronous_importer, daemon=True)
 import_thread.start()
 
@@ -133,7 +135,6 @@ values.")
         import_thread.join()  # asynchronous importing of large module
         time.sleep(0.5)  # sometimes import_thread takes too long apparently
         self._create_and_fill_df()
-        self.scaler = StandardScaler()
         self.df = self._reset_index_dtype(self.df)
         self._format_card()
         self._compute_sBERT_vec()
@@ -603,7 +604,7 @@ using PCA...")
 
         # preparing interval column
         ivl = df['interval'].to_numpy().reshape(-1, 1)
-        df["interval_cs"] = self.scaler.fit_transform(ivl)
+        df["interval_cs"] = StandardScaler.fit_transform(ivl)
 
         # lowest interval is still centered and scaled
         if reference_order == "lowest_interval":
@@ -647,12 +648,12 @@ using PCA...")
                 ro_intp[ro < -500] = f(ro[ro < -500])
 
             # center and scale
-            ro_cs = self.scaler.fit_transform(ro_intp.T)
+            ro_cs = StandardScaler.fit_transform(ro_intp.T)
             df["ref"] = ro_cs
 
         # centering and scaling df_dist after clipping
         print("Centering and scaling distance matrix...")
-        df_dist = self.scaler.fit_transform(
+        df_dist = StandardScaler.fit_transform(
                 np.clip(df_dist, 0.2, df_dist.max())
                 )
 
