@@ -1,3 +1,4 @@
+import pickle
 import time
 import random
 import pdb
@@ -143,6 +144,14 @@ values.")
             self._compute_opti_rev_order()
             if send_to_anki is True:
                 self.send_to_anki()
+
+        # pickle itself
+        print("Saving instance as 'last_run.pickle'...")
+        f = open("last_run.pickle", "wb")
+        pickle.dump(self, f)
+        print("Done, you can now restore this instance without having to \
+rerun the code using 'import pickle ; a = pickle.load(open(\"last_run.pickle\
+\", \"rb\"))'")
 
     def _reset_index_dtype(self, df):
         """
