@@ -698,6 +698,13 @@ using PCA...")
                 df["ref"] = 0
                 df_dist = np.ones_like(df_dist)
 
+        print("Reference score stats:")
+        print(df["ref"].describe())
+        print("Distance matrix stats:")
+        print(f"mean: {df_dist.mean()}")
+        print(f"std: {df_dist.std()}")
+        print(f"max: {df_dist.max()}", end="\n\n")
+
         with tqdm(desc="Computing optimal review order",
                   unit=" card",
                   initial=len(rated),
