@@ -1131,7 +1131,7 @@ plotting...")
         if df is None:
             df = self.df
         if out_name is None:
-            out_name = "AnnA_Saved_DF"
+            out_name = "AnnA_Saved_DataFrame"
         cur_time = "_".join(time.asctime().split()[0:4]).replace(
                 ":", "h")[0:-3]
         name = f"{out_name}_{self.deckname}_{cur_time}.pickle"
