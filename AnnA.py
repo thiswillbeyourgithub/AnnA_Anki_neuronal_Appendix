@@ -39,7 +39,7 @@ def asynchronous_importer():
         CountVectorizer, TruncatedSVD, StandardScaler, \
         pairwise_distances, PCA, px, umap, np, tokenizer_bert, sBERT, \
         MiniBatchKMeans, interpolate
-    print("Importing modules...")
+    print("Began importing modules...")
     from nltk.corpus import stopwords
     from sklearn.feature_extraction.text import TfidfVectorizer
     from sklearn.feature_extraction.text import CountVectorizer
@@ -447,13 +447,13 @@ Edit the variable 'field_dic' to use {card_model}")
         df["text"] = [self._format_text(x)
                       for x in tqdm(
                       df["comb_text"],
-                      desc="Formating text")]
+                      desc="Formating text", unit=" card")]
         print("\n\nPrinting 5 random samples of your formated text, to help \
 adjust formating issues:")
         pd.set_option('display.max_colwidth', 80)
         print(df.sample(5)["text"])
         pd.reset_option('display.max_colwidth')
-        print("\n\n")
+        print("\n")
         self.df = df.sort_index()
         return True
 
@@ -553,7 +553,7 @@ using PCA...")
                      for x in range(len(df.loc[df.index[0], input_col]))],
             data=[x[0:] for x in df[input_col]])
 
-        print("\nComputing the distance matrix on all available cores...")
+        print("\nComputing distance matrix on all available cores...")
         df_dist = pairwise_distances(df_temp, n_jobs=-1, metric=method)
 #        print("Interpolating matrix between 0 and 1...")
 #        df_dist = np.interp(df_dist, (df_dist.min(), df_dist.max()), (0, 1))
@@ -582,8 +582,6 @@ using PCA...")
         * I clipped the distance value below 0.2 as they were messing with the
             scaling afterwards
         """
-        print("Computing similarity scores...")
-
         # getting args
         reference_order = self.reference_order
         df = self.df.copy()
@@ -613,6 +611,7 @@ using PCA...")
 
         # computes relative_overdueness
         if reference_order == "relative_overdueness":
+            print("Computing relative overdueness...")
             # getting due date
             for i in df.index:
                 df.at[i, "ref_due"] = df.loc[i, "odue"]
@@ -652,6 +651,7 @@ using PCA...")
             df["ref"] = ro_cs
 
         # centering and scaling df_dist after clipping
+        print("Centering and scaling distance matrix...")
         df_dist = self.scaler.fit_transform(
                 np.clip(df_dist, 0.2, df_dist.max())
                 )
@@ -661,7 +661,7 @@ using PCA...")
         df_dist = df_dist*w2
 
         assert len([x for x in rated if df.loc[x, "status"] != "rated"]) == 0
-        print(f"Cards rated in the past relevant days: {len(rated)}")
+        print(f"\nCards rated in the past relevant days: {len(rated)}")
 
         if isinstance(desired_deck_size, float):
             if desired_deck_size < 1.0:
@@ -728,12 +728,12 @@ using PCA...")
 #                if chosen_one2 != chosen_one:
 #                    tqdm.write("NO")
 #                else:
-#                    tqdm.write(" > YES")
+#                    tqdm.write("YES")
 
                 queue.append(chosen_one)
                 pbar.update(1)
 
-        print("Done. Now all that is left is to send all of this to anki.\n")
+        print("Done.\n")
         self.opti_rev_order = queue
         return True
 
