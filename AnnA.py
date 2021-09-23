@@ -718,8 +718,9 @@ using PCA...")
                 indiceQ = [df.index.get_loc(x)
                            for x in (rated+queue)[-self.stride:]]
 
-                sub_dist = np.array([x[indiceT] for x in df_dist[indiceQ]]).T
-                df2["score"] = df2["ref"].values + np.min(sub_dist, axis=1)
+                df2["score"] = (df2["ref"].values + np.min(
+                        df_dist[[indiceQ], :].T[[indiceT], :].T,
+                        axis=1)[0].T).T
 
                 chosen_one = df2["score"].idxmin()
 
