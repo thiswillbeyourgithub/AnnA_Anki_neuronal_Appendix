@@ -992,7 +992,7 @@ as opti_rev_order!")
         """
         open a browser tab with a 2D plot showing your cards and their relations
         """
-        df = self.df
+        df = self.df.copy()
         pca_kwargs_deploy = {"n_components": 2, "random_state": 42}
         umap_kwargs_deploy = {"n_jobs": -1,
                               "verbose": 1,
@@ -1077,7 +1077,7 @@ plotting...")
             randomly displayed etc
         """
         pd.set_option('display.max_colwidth', None)
-        df = self.df
+        df = self.df.copy()
 
         if do_format_input is True:
             user_input = self._format_text(user_input)
@@ -1129,7 +1129,7 @@ plotting...")
         export dataframe as pickle format a DF_backups
         """
         if df is None:
-            df = self.df
+            df = self.df.copy()
         if out_name is None:
             out_name = "AnnA_Saved_DataFrame"
         cur_time = "_".join(time.asctime().split()[0:4]).replace(
