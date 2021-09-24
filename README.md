@@ -84,6 +84,7 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * `search_for_notes` will look for cards that are similar to your input. That means that you can type in "localisation of pain in case of kidney stones" and it should find the cards dealing with those concepts even if they don't contain any of those words. This depends on how good sBERT performs on your topic. Different sBERT models can be found.
 * `display_best_review_order` used as a debugging tool. Allows to check if the order seems correct without having to create a filtered deck.
 * `save_df` saves the dataframe containing the cards and all other infos needed by AnnA as a pickle file. Used mainly for debugging. Files will be saved to the folder `DF_backups`
+* `show_acronyms` shows the acronym present in your deck that were not extended. Useful if you want to adjust your acronym list.
 
 ## TODO
 * make sure the score computer docstrings is up to date
@@ -92,7 +93,6 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * fix: the rated_card limit threshold is not computed like it should
 * fix: investigate if relative overdueness is not broken :(
 * add a "search_mode" argument that scans ALL unsuspended cards in the collection to allow for searching + a search_offline mode that only search through the cache
-* add a method that shows all acronyms in your collection
 * add a method to bury the card without creating a filtered deck
 * look into sentence mining methods from sbert, that might be a useful idea
 * take a look at topic modelling techniques that might be cleaner to invoke than the whole ctf-idf section

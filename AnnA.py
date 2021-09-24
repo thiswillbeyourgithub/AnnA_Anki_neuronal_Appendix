@@ -1139,6 +1139,28 @@ plotting...")
         print(f"Dataframe exported to {name}")
         return True
 
+    def show_acronyms(self):
+        """
+        shows acronym present in your collection that were not found in
+        the file supplied by the argument `optional_acronym_list`
+        """
+        matched = set(re.findall("[A-Z]{2,}", str(self.df["text"])))
+        if self.optional_acronym_list is None:
+            print("You did not supply an acronym list, printing all acronym \
+found...")
+            pprint(matched)
+        else:
+            acro_list = self.acronym_list.keys()
+            print("List of acronyms that were already replaced:")
+            pprint(sorted(acro_list))
+
+            print("List of acronym still found:")
+            out = {acr for acr in filter(
+                   lambda x: x not in acro_list,
+                   matched)}
+            pprint(sorted(out))
+        return True
+
 
 class CTFIDFVectorizer(TfidfTransformer):
     """
