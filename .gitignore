@@ -5,4 +5,4 @@ __pycache__/
 AMIMA_jupyter.py
 *.pickle
 acronym_list.py
-./autorun.py
+autorun.py
