@@ -378,7 +378,7 @@ will only keep {self.rated_last_X_cards} to ease calculation.")
         if self.optional_acronym_list is True:
             global acronym_list
             for a, b in self.acronym_list.items():
-                text = re.sub(rf"\b{a}\b", f"{a} ({b})", text, flags=re.IGNORECASE)
+                text = re.sub(rf"{a}", f"{a} ({b})", text, flags=re.IGNORECASE)
                 # \b matches beginning and end of a word
         text = re.sub(r'[a-zA-Z0-9-]+\....', " ", text)  # media file name
         text = re.sub('\\n|<div>|</div>|<br>|<span>|</span>|<li>|</li>|<ul>|\
