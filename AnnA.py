@@ -629,7 +629,7 @@ using PCA...")
 
         # preparing interval column
         ivl = df['interval'].to_numpy().reshape(-1, 1)
-        df["interval_cs"] = StandardScaler.fit_transform(ivl)
+        df["interval_cs"] = StandardScaler().fit_transform(ivl)
 
         # lowest interval is still centered and scaled
         if reference_order == "lowest_interval":
@@ -674,12 +674,12 @@ using PCA...")
                 ro_intp[ro < -500] = f(ro[ro < -500])
 
             # center and scale
-            ro_cs = StandardScaler.fit_transform(ro_intp.T)
+            ro_cs = StandardScaler().fit_transform(ro_intp.T)
             df["ref"] = ro_cs
 
         # centering and scaling df_dist after clipping
         print("Centering and scaling distance matrix...")
-        df_dist = StandardScaler.fit_transform(
+        df_dist = StandardScaler().fit_transform(
                 np.clip(df_dist, 0.3, df_dist.max())
                 )
 
