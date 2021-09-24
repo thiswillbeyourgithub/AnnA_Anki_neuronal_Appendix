@@ -83,6 +83,7 @@ class AnnA:
                  prefer_similar_card=False,
                  scoring_weights=(1, 1),
                  reference_order="lowest_interval",
+                 do_clustering=False,
                  compute_opti_rev_order=True,
                  send_to_anki=False,
                  ):
@@ -136,6 +137,8 @@ values.")
         import_thread.join()  # asynchronous importing of large module
         time.sleep(0.5)  # sometimes import_thread takes too long apparently
         self._compute_sBERT_vec()
+        if do_clustering is True:
+            self.compute_clusters(minibatchk_kwargs = {"verbose": 0})
         self._compute_distance_matrix()
         if compute_opti_rev_order is True:
             self._compute_opti_rev_order()
