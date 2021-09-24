@@ -245,6 +245,8 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
                         thread.start()
                         threads.append(thread)
                         time.sleep(0.1)
+                        while sum([t.is_alive() for t in threads]) >= 15:
+                            time.sleep(0.5)
                     print("")
                     [t.join() for t in threads]
                 assert len(r_list) == len(card_id)
@@ -467,6 +469,8 @@ Edit the variable 'field_dic' to use {card_model}")
                                               daemon=True)
                     thread.start()
                     threads.append(thread)
+                    while sum([t.is_alive() for t in threads]) >= 15:
+                        time.sleep(0.5)
             [t.join() for t in threads]
 
         df = self.df.copy()
@@ -855,6 +859,8 @@ deck.")
                                               daemon=True)
                     thread.start()
                     threads.append(thread)
+                    while sum([t.is_alive() for t in threads]) >= 15:
+                        time.sleep(0.5)
                 [t.join() for t in threads]
             return True
 
