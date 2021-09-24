@@ -382,7 +382,7 @@ from this deck...")
         text = re.sub('\u001F|&nbsp;', " ", text)
         text = re.sub(r"{{c\d+?::", "", text)
         text = re.sub("{{c|{{|}}|::", " ", text)
-        text = re.sub(r"\d", " ", text)
+        #text = re.sub(r"\d", " ", text)  # removes numbers
         text = text.replace("&amp;", "&")
         text = text.replace("&gt;", ">")
         text = text.replace("&lt;", "<")
