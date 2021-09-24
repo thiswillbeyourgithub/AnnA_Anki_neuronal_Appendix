@@ -2,7 +2,7 @@
 # keep in mind that the acronym will be matched even if it's lowercase
 # for example with items "TACH": "tachycardia":
 # 'John has TACH' becomes 'John has TACH (tachycardia)'
-acronym_list = {
+acronym_dict = {
         "AI": "artificial intelligence",
         "ML": "machine learning",
         "CNN": "convolutionnal neural network",

@@ -116,7 +116,7 @@ class AnnA:
             else:
                 imp = importlib.import_module(
                         optional_acronym_list.replace(".py", ""))
-                self.acronym_list = imp.acronym_list
+                self.acronym_dict = imp.acronym_dict
         if self.field_mapping is not None:
             file = Path(self.field_mapping)
             try:
@@ -369,8 +369,8 @@ from this deck...")
             for a, b in greek_alphabet_mapping.items():
                 text = re.sub(a, b, text)
         if self.optional_acronym_list is True:
-            global acronym_list
-            for a, b in self.acronym_list.items():
+            global acronym_dict
+            for a, b in self.acronym_dict.items():
                 text = re.sub(rf"{a}", f"{a} ({b})", text, flags=re.IGNORECASE)
                 # \b matches beginning and end of a word
         text = re.sub(r'[a-zA-Z0-9-]+\....', " ", text)  # media file name
@@ -1147,7 +1147,7 @@ plotting...")
 found...")
             pprint(matched)
         else:
-            acro_list = self.acronym_list.keys()
+            acro_list = self.acronym_dict.keys()
             print("List of acronyms that were already replaced:")
             pprint(sorted(acro_list))
 
