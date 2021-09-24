@@ -77,7 +77,7 @@ AnnA was made with usability in mind. With the right arguments, you can have to 
  * `send_to_anki` tells AnnA to automatically create the filtered deck or not. Default is `False`.
  * `compute_opti_rev_order` don't compute optimal review order, if set to False, it will set `send_to_anki` to False. Default to True.
 
-AnnA has a number of other built-in methods you can run after instantiating the class. They are especially usefil if "send_to_anki" is set to `False`. Note that methods beginning with a "_" are not supposed to be called by the user and are reserved for backend use. Here's a list of useful methods:
+AnnA has a number of other built-in methods you can run after instantiating the class. They are especially useful if "send_to_anki" is set to `False`. Note that methods beginning with a "_" are not supposed to be called by the user and are reserved for backend use. Here's a list of useful methods:
 
 * `compute_clusters` can be used to group the cards by semantic clusters. Several algorithms are implemented: kmeans, minibatch-kmeans, agglomerative clustering, DBSCAN. I can add more if needed.
 * `plot_latent_space` can be used to display a 2D projection of your cards using plotly. This opens a new tab in your browser and loads an interactive interface in it. You can color it using tags, clusters, etc. If you have a blank plot without any points, call the method again. I don't understand this issue with plotly yet and help is appreciated :/
