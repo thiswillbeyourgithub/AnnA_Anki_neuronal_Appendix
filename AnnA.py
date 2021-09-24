@@ -1039,16 +1039,36 @@ as opti_rev_order!")
 
             df["cluster_topic"] = df["cluster_topic"].str.replace(" ", "_")
             cluster_list = list(set(list(df["clusters"])))
-            for i in tqdm(cluster_list, desc="Adding cluster tags",
-                          unit=" cluster"):
+
+            def _threaded_add_cluster_tags(i, lock, pbar):
                 cur_time = "_".join(time.asctime().split()[0:4]).replace(
                         ":", "h")[0:-3]
                 newTag = f"AnnA::cluster_topic::{cur_time}::cluster_#{str(i)}"
                 newTag += f"::{df[df['clusters']==i]['cluster_topic'].iloc[0]}"
-                note_list = list(df[df["clusters"] == i]["note"])
+                note_list = list(set(df[df["clusters"] == i]["note"].tolist()))
                 self._ankiconnect(action="addTags",
                                   notes=note_list,
                                   tags=newTag)
+                with lock:
+                    pbar.update(1)
+                return True
+            with tqdm(total=len(cluster_list),
+                      desc="Adding new cluster tags",
+                      unit="cluster") as pbar:
+                threads = []
+                lock = threading.Lock()
+                for i in cluster_list:
+                    thread = threading.Thread(
+                                        target=_threaded_add_cluster_tags,
+                                        args=(i, lock, pbar), daemon=False)
+                    thread.start()
+                    threads.append(thread)
+                    time.sleep(0.1)
+                    while sum([t.is_alive() for t in threads]) >= 10:
+                        time.sleep(0.5)
+                [t.join() for t in threads]
+
+            self._ankiconnect(action="clearUnusedTags")
         return True
 
     def plot_latent_space(self,
