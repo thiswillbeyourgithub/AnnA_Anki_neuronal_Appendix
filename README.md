@@ -65,7 +65,6 @@ AnnA was made with usability in mind. With the right arguments, you can have to 
  * `keep_ocr` if True, the OCR text extracted using [the great AnkiOCR addon](https://github.com/cfculhane/AnkiOCR/) will be included in the card. Default is `True`.
  * `desired_deck_size` indicates the size of the filtered deck to create. Can be the number of cards (500), a proportion of due cards ("75%" or 0.75) or the word "all". Default is `"75%"`.
  * `rated_last_X_days` indicates the number of passed days to take into account. If you rated 500 cards yesterday, then you don't want your today cards to be too close to what you viewed yesterday, so AnnA will find the 500 cards you reviewed yesterday, and all the cards you rated before that, up to the number of days in rated_last_X_days value. Default is `2` (meaning rated today + rated yesterday).
- * `rated_last_X_cards` used to limit the number of cards taken from the last `rated_last_X_days`. Default is `2000`, you can disable it by setting it to `None`.
  * `stride` if you have X due cards, want to create a filtered deck containing all of them and have reviewed Y cards yesterday, the stride value will make computing the optimal review order only compares a maximum of `STRIDE` cards at any given time. This eases calculation. Default is `2500`.
  * `show_banner` used to display a nice banner when instantiating the collection. Default is `True`.
  * `debug_card_limit` limit the number of due cards to take into account. It is used for debugging as it allows to run the script quickly. Default is `None`.
@@ -89,7 +88,6 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 ## TODO
 * parallelize card formatting steps
 * auto remove passed tags when adding new ones
-* fix: the rated_card limit threshold is not computed like it should
 * add a "search_mode" argument that scans ALL unsuspended cards in the collection to allow for searching + a search_offline mode that only search through the cache
 * add a method to bury the card without creating a filtered deck
 * look into sentence mining methods from sbert, that might be a useful idea

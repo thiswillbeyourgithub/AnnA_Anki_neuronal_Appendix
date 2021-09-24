@@ -74,7 +74,6 @@ class AnnA:
                  keep_ocr=True,
                  desired_deck_size="75%",
                  rated_last_X_days=2,
-                 rated_last_X_cards=2000,
                  show_banner=True,
                  debug_card_limit=None,
                  debug_force_score_formula=None,
@@ -98,7 +97,6 @@ class AnnA:
         self.keep_ocr = keep_ocr
         self.desired_deck_size = desired_deck_size
         self.rated_last_X_days = rated_last_X_days
-        self.rated_last_X_cards = rated_last_X_cards
         self.debug_card_limit = debug_card_limit
         self.n_clusters = n_clusters
         self.pca_sBERT_dim = pca_sBERT_dim
@@ -306,11 +304,6 @@ from this deck...")
             print(f"Rated cards contained {len(rated_cards)} relevant cards \
 (out of {len(r_cards)}).")
 
-            if self.rated_last_X_cards is not None and \
-                    len(rated_cards) > self.rated_last_X_cards:
-                print(f"Found {len(rated_cards)} cards rated in the last few days, but \
-will only keep {self.rated_last_X_cards} to ease calculation.")
-                rated_cards = rated_cards[:self.rated_last_X_cards]
         else:
             print("Will not look for cards rated in past days.")
             rated_cards = []
