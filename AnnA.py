@@ -564,7 +564,10 @@ using PCA...")
 
     def _compute_opti_rev_order(self):
         """
-        assign score to each card
+        a loop that assigns a score to each card, the lowest score at each
+            turn is added to the queue, each new turn compares the cards to
+            the present queue
+
         * this score reflects the order in which they should be reviewed
         * the intuition is that anki doesn't know before hand if some cards
             are semantically close and can have you review them the same day
@@ -576,11 +579,12 @@ using PCA...")
             it is centered and scaled. In both case, a lower ref is indicating
             that reviewing the card is urgent.
         * the_chosen_one is the card with the lowest score at each round
-        * the queue starts empty. At each turn, the_chosen_one is added to it
-        * before being added, some values are clipped,cented, scaled. Relative
-            overdueness is weird so I'm trying clipping at 500 and -500
-            before that or interpolating values above.
-        * I clipped the distance value below 0.2 as they were messing with the
+        * the queue starts empty. At the end of each turn, the_chosen_one is
+            added to it
+        * some values are clipped,cented, scaled. Relative
+            overdueness is weird so I'm trying interpolating if > 500 o
+            < -500
+        * I clipped the distance value below 0.3 as they were messing with the
             scaling afterwards
         """
         # getting args

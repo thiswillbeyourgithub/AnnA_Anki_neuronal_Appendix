@@ -87,7 +87,6 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * `show_acronyms` shows the acronym present in your deck that were not extended. Useful if you want to adjust your acronym list.
 
 ## TODO
-* make sure the score computer docstrings is up to date
 * parallelize card formatting steps
 * auto remove passed tags when adding new ones
 * fix: the rated_card limit threshold is not computed like it should
