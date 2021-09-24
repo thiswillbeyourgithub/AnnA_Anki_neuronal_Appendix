@@ -87,6 +87,7 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * `show_acronyms` shows the acronym present in your deck that were not extended. Useful if you want to adjust your acronym list.
 
 ## TODO
+* use pd.describe on df_dist to get quantile distribution
 * figure out why computing review order tqdm finishes at -1
 * add a method to anki connect that returns the collection creation
 * find a way to remove already created filtered decks
