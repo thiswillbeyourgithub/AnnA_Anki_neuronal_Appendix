@@ -327,6 +327,7 @@ from this deck...")
 
         for i, card in enumerate(tqdm(list_cardInfo,
                                       desc="Keeping only relevant info",
+                                      smoothing=0,
                                       unit=" card")):
             # removing large fields:
             list_cardInfo[i].pop("question")
@@ -463,10 +464,12 @@ Edit the variable 'field_dic' to use {card_model}")
                     thread.start()
                     threads.append(thread)
             [t.join() for t in threads]
+
+        df = self.df.copy()
         df["text"] = [self._format_text(x)
                       for x in tqdm(
                       df["comb_text"],
-                      desc="Formating text", unit=" card")]
+                      desc="Formating text", smoothing=0, unit=" card")]
         print("\n\nPrinting 5 random samples of your formated text, to help \
 adjust formating issues:")
         pd.set_option('display.max_colwidth', 80)
@@ -722,9 +725,11 @@ using PCA...")
                 df["ref"] = 0
                 df_dist = np.ones_like(df_dist)
 
-        print("Reference score stats:")
-        print(df["ref"].describe())
-        print("Distance matrix stats:")
+        print("\nReference score stats:")
+        print(f"mean: {df['ref'].mean()}")
+        print(f"std: {df['ref'].std()}")
+        print(f"max: {df['ref'].max()}")
+        print("\nDistance matrix stats:")
         print(f"mean: {df_dist.mean()}")
         print(f"std: {df_dist.std()}")
         print(f"max: {df_dist.max()}", end="\n\n")
@@ -831,7 +836,7 @@ deck.")
                       unit=" card",
                       total=len(card_list),
                       dynamic_ncols=True,
-                      smoothing=1) as pbar:
+                      smoothing=0) as pbar:
                 lock = threading.Lock()
                 threads = []
                 batchsize = len(card_list)//10+1
