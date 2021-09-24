@@ -398,6 +398,7 @@ from this deck...")
         text = text.replace("/", " / ")
         text = " ".join(text.split())  # multiple spaces
         text = re.sub("[.?!] ([a-zA-Z])", lambda x: x.group(0).upper(), text)
+        text = text.replace(" : ", ": ")
         if len(text) < 10:
             if "src=" in orig:
                 text = text + " " + " ".join(re.findall('src="(.*?)">', orig))
