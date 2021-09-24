@@ -1175,14 +1175,15 @@ plotting...")
 found...")
             pprint(matched)
         else:
-            acro_list = self.acronym_dict.keys()
+            acro_list = sorted(self.acronym_dict.keys())
             print("List of acronyms that were already replaced:")
-            pprint(sorted(acro_list))
+            pprint(acro_list)
+            acro_list = [x.lower() for x in acro_list]
 
             print("List of acronym still found:")
-            out = {acr for acr in filter(
-                   lambda x: x not in acro_list,
-                   matched)}
+            out = {acr for acr in filter(lambda x: x.lower() not in acro_list,
+                                         matched)
+                   }
             pprint(sorted(out))
         return True
 
