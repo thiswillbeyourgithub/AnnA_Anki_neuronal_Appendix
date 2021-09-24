@@ -398,14 +398,14 @@ from this deck...")
         text = text.replace("/", " / ")
         text = " ".join(text.split())  # multiple spaces
         text = re.sub("[.?!] ([a-zA-Z])", lambda x: x.group(0).upper(), text)
-        if len(text) > 2 and text[-1] not in ["?", ".", "!"]:
-            text += "."
-        if len(text) < 2:
+        if len(text) < 10:
             if "src=" in orig:
-                return text +  " ".join(re.findall('src="(.*?)">',
-                    orig))
-        else:
-            return text[0].upper() + text[1:]
+                text = text + " " + " ".join(re.findall('src="(.*?)">', orig))
+        if len(text) > 2:
+            text = text[0].upper() + text[1:]
+            if text[-1] not in ["?", ".", "!"]:
+                text += "."
+        return text
 
     def _format_card(self):
         """
