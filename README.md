@@ -91,7 +91,6 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * parallelize card formatting steps
 * auto remove passed tags when adding new ones
 * fix: the rated_card limit threshold is not computed like it should
-* fix: investigate if relative overdueness is not broken :(
 * add a "search_mode" argument that scans ALL unsuspended cards in the collection to allow for searching + a search_offline mode that only search through the cache
 * add a method to bury the card without creating a filtered deck
 * look into sentence mining methods from sbert, that might be a useful idea
