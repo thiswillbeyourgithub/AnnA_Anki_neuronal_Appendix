@@ -1004,6 +1004,39 @@ as opti_rev_order!")
         self.df = df.sort_index()
 
         if add_as_tags is True:
+
+            # remove old cluster tags
+            full_note_list = list(set(df["note"].tolist()))
+            present_tags = list(set(df["tags"].tolist()))
+            if "" in present_tags:
+                present_tags.remove("")
+            to_remove = list(set([x for x in filter(
+                                  lambda x: "AnnA::cluster_topic::" in x,
+                                  present_tags)]))
+
+            if len(to_remove) != 0:
+                def _threaded_remove_tags(tag, lock, pbar):
+                    self._ankiconnect(action="removeTags",
+                                      notes=full_note_list,
+                                      tags=str(tag))
+                    with lock:
+                        pbar.update(1)
+                with tqdm(desc="Removing old cluster tags...",
+                          unit="cluster",
+                          total=len(to_remove)) as pbar:
+                    lock = threading.Lock()
+                    threads = []
+                    for tag in to_remove:
+                        thread = threading.Thread(target=_threaded_remove_tags,
+                                                  args=(tag, lock, pbar),
+                                                  daemon=False)
+                        thread.start()
+                        threads.append(thread)
+                        time.sleep(0.1)
+                        while sum([t.is_alive() for t in threads]) >= 15:
+                            time.sleep(0.5)
+                    [t.join() for t in threads]
+
             df["cluster_topic"] = df["cluster_topic"].str.replace(" ", "_")
             cluster_list = list(set(list(df["clusters"])))
             for i in tqdm(cluster_list, desc="Adding cluster tags",

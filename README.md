@@ -89,7 +89,6 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * find a way to remove already created filtered decks
 * add ability to extend the due query
 * add colours to the prints
-* auto remove passed tags when adding new ones, then enabled clustering by default
 * clip above 1 sigma for each value then rescale it?
 * add a "index_all" argument that scans ALL unsuspended cards in the collection to allow for searching
     * and a "search_offline" mode that only search through the cache
