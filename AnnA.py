@@ -398,7 +398,7 @@ from this deck...")
         text = text.replace("/", " / ")
         text = " ".join(text.split())  # multiple spaces
         text = re.sub("[.?!] ([a-zA-Z])", lambda x: x.group(0).upper(), text)
-        if text[-1] not in ["?", ".", "!"]:
+        if len(text > 2) and text[-1] not in ["?", ".", "!"]:
             text += "."
         if len(text) < 2:
             if "src=" in orig:
