@@ -86,8 +86,10 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * `show_acronyms` shows the acronym present in your deck that were not extended. Useful if you want to adjust your acronym list.
 
 ## TODO
+* clip above 1 sigma for each value then rescale it?
 * auto remove passed tags when adding new ones
-* add a "search_mode" argument that scans ALL unsuspended cards in the collection to allow for searching + a search_offline mode that only search through the cache
+* add a "index_all" argument that scans ALL unsuspended cards in the collection to allow for searching
+    * and a "search_offline" mode that only search through the cache
 * add a method to bury the card without creating a filtered deck
 * look into sentence mining methods from sbert, that might be a useful idea
 * take a look at topic modelling techniques that might be cleaner to invoke than the whole ctf-idf section
