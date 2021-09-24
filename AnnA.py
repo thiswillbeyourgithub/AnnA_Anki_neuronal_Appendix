@@ -402,9 +402,8 @@ from this deck...")
             text += "."
         if len(text) < 2:
             if "src=" in orig:
-                out = text +  " ".join(re.findall('src="(.*?)">',
+                return text +  " ".join(re.findall('src="(.*?)">',
                     orig))
-            return out
         else:
             return text[0].upper() + text[1:]
 
