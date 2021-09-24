@@ -56,7 +56,7 @@ def asynchronous_importer():
     tqdm.write("Finished importing modules.", end="\n\n")
 
 
-import_thread = threading.Thread(target=asynchronous_importer, daemon=True)
+import_thread = threading.Thread(target=asynchronous_importer, daemon=False)
 import_thread.start()
 
 
@@ -241,7 +241,7 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
                                                         lock,
                                                         cnt,
                                                         r_list),
-                                                  daemon=True)
+                                                  daemon=False)
                         thread.start()
                         threads.append(thread)
                         time.sleep(0.1)
@@ -466,7 +466,7 @@ Edit the variable 'field_dic' to use {card_model}")
                                                     sub_card_list,
                                                     lock,
                                                     pbar),
-                                              daemon=True)
+                                              daemon=False)
                     thread.start()
                     threads.append(thread)
                     while sum([t.is_alive() for t in threads]) >= 15:
@@ -856,7 +856,7 @@ deck.")
                                                     newValues,
                                                     lock,
                                                     pbar),
-                                              daemon=True)
+                                              daemon=False)
                     thread.start()
                     threads.append(thread)
                     while sum([t.is_alive() for t in threads]) >= 15:
