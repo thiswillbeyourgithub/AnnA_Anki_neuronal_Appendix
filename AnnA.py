@@ -219,10 +219,9 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
                     "for multithreaded card retrieval"
                     out_list = self._ankiconnect(action="cardsInfo",
                                                         cards=card_list)
-                    lock.acquire()
-                    r_list.extend(out_list)
-                    pbar.update(1)
-                    lock.release()
+                    with lock:
+                        r_list.extend(out_list)
+                        pbar.update(1)
                     return True
 
                 with tqdm(total=target_thread_n,
@@ -244,8 +243,7 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
                         threads.append(thread)
                         time.sleep(0.1)
                     print("")
-                    for t in threads:
-                        t.join()
+                    [t.join() for t in threads]
                 assert len(r_list) == len(card_id)
                 r_list = sorted(r_list,
                                 key=lambda x: x["cardId"],
@@ -271,9 +269,9 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
                                           match_middle=True,
                                           ignore_case=True)
             deckname = ""
-            import_thread.join()  # otherwise some message can appear 
+            # import_thread.join()  # otherwise some message can appear
             # in the middle of the prompt
-            time.sleep(0.5)
+            #time.sleep(0.5)
             while deckname not in decklist:
                 deckname = prompt("Enter the name of the deck:\n>",
                                   completer=auto_complete)
@@ -798,9 +796,8 @@ deck.")
                                       card=int(c),
                                       keys=keys,
                                       newValues=newValues)
-                    lock.acquire()
-                    pbar.update(1)
-                    lock.release()
+                    with lock:
+                        pbar.update(1)
                 return True
 
             with tqdm(desc=tqdm_desc,
@@ -823,8 +820,7 @@ deck.")
                                               daemon=True)
                     thread.start()
                     threads.append(thread)
-                for t in threads:
-                    t.join()
+                [t.join() for t in threads]
             return True
 
         print(f"Creating deck containing the cards to review: \
