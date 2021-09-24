@@ -396,46 +396,73 @@ from this deck...")
         which can be found at the top of the file. If not relevant field are
         found then only the first field is kept.
         """
-        df = self.df
+        def _threaded_field_filter(df, index_list, lock, pbar):
+            """
+            threaded implementaation to speed up execution
+            """
+            for index in index_list:
+                card_model = df.loc[index, "modelName"]
+                take_first_field = False
+                fields_to_keep = []
 
-        for index in tqdm(df.index, desc="Keeping only relevant fields", unit=" card"):
-            card_model = df.loc[index, "modelName"]
-            take_first_field = False
-            fields_to_keep = []
-
-            # determines which is the corresponding model described
-            # in field_dic
-            cnt = 0
-            field_dic = self.field_dic
-            for user_model in field_dic.keys():
-                if user_model.lower() in card_model.lower():
-                    cnt += 1
-                    target_model = user_model
-            if cnt == 0:
-                take_first_field = True
-            elif cnt == 1:
-                fields_to_keep = field_dic[target_model]
-            elif cnt > 1:
-                tqdm.write(f"Several corresponding model found!\
+                # determines which is the corresponding model described
+                # in field_dic
+                cnt = 0
+                field_dic = self.field_dic
+                for user_model in field_dic.keys():
+                    if user_model.lower() in card_model.lower():
+                        cnt += 1
+                        target_model = user_model
+                if cnt == 0:
+                    take_first_field = True
+                elif cnt == 1:
+                    fields_to_keep = field_dic[target_model]
+                elif cnt > 1:
+                    tqdm.write(f"Several corresponding model found!\
 Edit the variable 'field_dic' to use {card_model}")
-                take_first_field = True
+                    take_first_field = True
 
-            # concatenates the corresponding fields into one string:
-            if take_first_field is True:  # case where no corresponding model
-                # found in field_dic
-                field_list = list(df.loc[index, "fields"])
-                for f in field_list:
-                    order = df.loc[index, "fields"][f]["order"]
-                    if order == 0:
-                        break
-                fields_to_keep = [f]
+                # concatenates the corresponding fields into one string:
+                if take_first_field is True:  # if no corresponding model
+                    # was found in field_dic
+                    field_list = list(df.loc[index, "fields"])
+                    for f in field_list:
+                        order = df.loc[index, "fields"][f]["order"]
+                        if order == 0:
+                            break
+                    fields_to_keep = [f]
 
-            comb_text = ""
-            for f in fields_to_keep:
-                to_add = df.loc[index, "fields"][f]["value"].strip()
-                if to_add != "":
-                    comb_text = comb_text + to_add + " "
-            df.loc[index, "comb_text"] = comb_text.strip().replace(": :", "")
+                comb_text = ""
+                for f in fields_to_keep:
+                    to_add = df.loc[index, "fields"][f]["value"].strip()
+                    if to_add != "":
+                        comb_text = comb_text + to_add + " "
+                final_text = comb_text.strip().replace(": :", "")
+
+                with lock:
+                    self.df.at[index, "comb_text"] = final_text
+                    pbar.update(1)
+
+        df = self.df.copy()
+        n = len(df.index)
+        batchsize = n//5+1
+        lock = threading.Lock()
+        threads = []
+        with tqdm(total=n,
+                  desc="Keeping only relevant fields",
+                  smoothing=0,
+                  unit=" card") as pbar:
+            for nb in range(0, n, batchsize):
+                    sub_card_list = df.index[nb: nb+batchsize]
+                    thread = threading.Thread(target=_threaded_field_filter,
+                                              args=(df,
+                                                    sub_card_list,
+                                                    lock,
+                                                    pbar),
+                                              daemon=True)
+                    thread.start()
+                    threads.append(thread)
+            [t.join() for t in threads]
         df["text"] = [self._format_text(x)
                       for x in tqdm(
                       df["comb_text"],
