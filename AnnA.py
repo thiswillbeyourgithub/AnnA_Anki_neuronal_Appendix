@@ -613,6 +613,7 @@ using PCA...")
         # computes relative_overdueness
         if reference_order == "relative_overdueness":
             print("Computing relative overdueness...")
+            print("BEWARE: relative overdueness mode is still in BETA.")
             # getting due date
             for i in df.index:
                 df.at[i, "ref_due"] = df.loc[i, "odue"]
