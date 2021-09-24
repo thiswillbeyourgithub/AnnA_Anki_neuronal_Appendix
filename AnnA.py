@@ -145,13 +145,13 @@ values.")
                 self.send_to_anki()
 
         # pickle itself
-        print("Saving instance as 'last_run.pickle'...")
+        print("\nSaving instance as 'last_run.pickle'...")
         if Path("last_run.pickle").exists():
             Path("last_run.pickle").unlink()
         f = open("last_run.pickle", "wb")
         pickle.dump(self, f)
         print("Done, you can now restore this instance without having to \
-rerun the code using 'import pickle ; a = pickle.load(open(\"last_run.pickle\
+rerun the code using:\n'import pickle ; a = pickle.load(open(\"last_run.pickle\
 \", \"rb\"))'")
 
     def _reset_index_dtype(self, df):
@@ -228,7 +228,7 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
                     return True
 
                 with tqdm(total=target_thread_n,
-                          unit=" thread",
+                          unit="thread",
                           dynamic_ncols=True,
                           desc="Done threads",
                           delay=2,
@@ -304,7 +304,7 @@ from this deck...")
             # removes overlap if found
             rated_cards = [x for x in r_cards if x not in due_cards]
             print(f"Rated cards contained {len(rated_cards)} relevant cards \
-(from {len(r_cards)}).")
+(out of {len(r_cards)}).")
 
             if self.rated_last_X_cards is not None and \
                     len(rated_cards) > self.rated_last_X_cards:
