@@ -369,6 +369,7 @@ from this deck...")
         if self.keep_ocr is True:
             # keep image title (usually OCR)
             text = re.sub("title=(\".*?\")", "> Caption: '\\1' <", text)
+            text = text.replace('Caption: \'""\'', "")
         if self.replace_greek is True:
             for a, b in greek_alphabet_mapping.items():
                 text = re.sub(a, b, text)
