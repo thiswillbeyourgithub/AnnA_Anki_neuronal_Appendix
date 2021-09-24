@@ -213,7 +213,7 @@ rerun the code using:\n'import pickle ; a = pickle.load(open(\"last_run.pickle\
                 threads = []
                 cnt = 0
                 r_list = []
-                target_thread_n = 10
+                target_thread_n = 5
                 batchsize = len(card_id)//target_thread_n+3
                 print(f"Large number of cards to retrieve: creating 10 \
 threads of size {batchsize} (total: {len(card_id)} cards)...")
@@ -820,7 +820,7 @@ deck.")
 
         def _threaded_value_setter(card_list, tqdm_desc, keys, newValues):
             """
-            create 10 threads to edit card values quickly
+            create threads to edit card values quickly
             """
             def do_action(card_list,
                           sub_card_list,
@@ -846,7 +846,7 @@ deck.")
                       smoothing=0) as pbar:
                 lock = threading.Lock()
                 threads = []
-                batchsize = len(card_list)//10+1
+                batchsize = len(card_list)//3+1
                 for nb in range(0, len(card_list), batchsize):
                     sub_card_list = card_list[nb: nb+batchsize]
                     thread = threading.Thread(target=do_action,
