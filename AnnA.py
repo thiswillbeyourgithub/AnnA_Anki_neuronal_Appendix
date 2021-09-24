@@ -365,6 +365,7 @@ from this deck...")
             when instantiating AnnA
         Greek letters can also be replaced on the fly
         """
+        orig = text
         text = str(text).replace("\n", " ")
         if self.keep_ocr is True:
             # keep image title (usually OCR)
@@ -395,7 +396,13 @@ from this deck...")
         text = text.replace("&lt;", "<")
         text = text.replace("/", " / ")
         text = " ".join(text.split())  # multiple spaces
-        return text
+        if len(text) < 2:
+            if "src=" in orig:
+                out = text +  " ".join(re.findall('src="(.*?)">',
+                    orig))
+            return out
+        else:
+            return text[0].upper() + text[1:]
 
     def _format_card(self):
         """
