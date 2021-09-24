@@ -61,7 +61,7 @@ AnnA was made with usability in mind. With the right arguments, you can have to 
 
  * `deckname` the deck containing the cards you want to review. If you don't supply this value or make a mistake, AnnA will ask you to type in the deckname, with autocompletion enabled (use `<TAB>`). Default is `None`.
  * `replace_greek` if True, all greek letters will be replaced with a spelled version. For example `\u03C3` becomes `sigma`. Default is `True`.
- * `optional_acronym_list` a python dictionnary containing acronyms to replace. For example `CRC` can be replaced with `CRC (colorectal cancer)`. (The parenthesis are automatically added.) Default is `"acronym_list.py"`.
+ * `optional_acronym_list` a python dictionary containing acronyms to extend. For example `CRC` can be extended to `CRC (colorectal cancer)`. (The parenthesis are automatically added.) Default is `"acronym_list.py"`. Keep in mind that lowercase acronym will also be matched.
  * `keep_ocr` if True, the OCR text extracted using [the great AnkiOCR addon](https://github.com/cfculhane/AnkiOCR/) will be included in the card. Default is `True`.
  * `desired_deck_size` indicates the size of the filtered deck to create. Can be the number of cards (500), a proportion of due cards ("75%" or 0.75) or the word "all". Default is `"75%"`.
  * `rated_last_X_days` indicates the number of passed days to take into account. If you rated 500 cards yesterday, then you don't want your today cards to be too close to what you viewed yesterday, so AnnA will find the 500 cards you reviewed yesterday, and all the cards you rated before that, up to the number of days in rated_last_X_days value. Default is `2` (meaning rated today + rated yesterday).
