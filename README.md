@@ -90,6 +90,7 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 
 ## TODO
 * add tf-idf functionnality to bypass sbert, for some weird users
+* investigate implementing a correction vector, for example "+radiography" would give a bonus to cards alignes with this word and "-radiography" would do the opposite. To help you adjust your revisions.
 * use pd.describe on df_dist to get quantile distribution
 * figure out why computing review order tqdm finishes at -1
 * add a method to anki connect that returns the collection creation
