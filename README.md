@@ -1,12 +1,12 @@
 # AnnA : Anki neuronal Appendix
 Tired of having to deal with anki flashcards that are too similar when grinding through your backlog? This python script creates filtered deck in optimal review order. It uses Machine Learning / AI to make semantically linked cards far from one another.
 
-##Table of contents
+## Table of contents
 * [One sentence summary](#One-sentence-summary)
 * [Note to readers](#Note-to-readers)
 * [Other features](#Other-features)
 * [FAQ](#FAQ)
-* [How to use it](#How-to-use-it)
+* [Getting started](#Getting-started)
 * [Usage and arguments](#Usage-and-arguments)
 * [Credits and links that were helpful](#Credits-and-links-that-were-helpful)
 * [Crazy Ideas](#Crazy-ideas)
@@ -57,7 +57,7 @@ When you don't have the time to complete all your daily reviews, use this to cre
 * **Isn't your implementation unecessarily slow and a bit dumb?** Suggestions are very very welcome. I needed this to work quickly before the end of the summer so some parts might be naive. I intend to make it better as time goes on but breakthrough ideas are welcome.
 * **What is the field_mapping.py file?** It's a file with a unique python dictionary used by AnnA to figure out which field of which card to keep. Using it is optional. By default, each notetype will see only it's first field kept. But if you use this file you can keep multiple fields.
 
-## How to use it
+## Getting started
 * First, **read this page in its entirety, this is a complicated piece of software and you don't want to use it irresponsibly on your cards.**
 * make sure the addon [anki-connect](https://github.com/FooSoft/anki-connect) is installed and that you set `allowToRunDebugConsoleCmd` to `yes` in the settings. (**only if you want to use relative_overdueness, see notes above**)
 * Clone this repository: `git clone https://github.com/thiswillbeyourgithub/AnnA_Anki_neuronal_Appendix`
