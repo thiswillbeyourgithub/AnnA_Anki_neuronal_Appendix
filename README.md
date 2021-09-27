@@ -100,17 +100,16 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * `show_acronyms` shows the acronym present in your deck that were not extended. Useful if you want to adjust your acronym list.
 
 ## TODO
+* add tf-idf functionnality to bypass sbert, for some weird users + close the relevant issue after telling the author that it's done
+* investigate implementing a correction vector, for example "+radiography" would give a bonus to cards alignes with this word and "-radiography" would do the opposite. To help you adjust your revisions.
 * investigate wether lapsed cards have to be counted differently
 * investigate if it's possible to OCR the subpart of an image occlusion
-* add tf-idf functionnality to bypass sbert, for some weird users
-* investigate implementing a correction vector, for example "+radiography" would give a bonus to cards alignes with this word and "-radiography" would do the opposite. To help you adjust your revisions.
 * use pd.describe on df_dist to get quantile distribution
 * figure out why computing review order tqdm finishes at -1
-* add a method to anki connect that returns the collection creation
+* add a method to anki connect that returns the collection creation date
 * find a way to remove already created filtered decks
 * add ability to extend the due query
 * add colours to the prints
-* clip above 1 sigma for each value then rescale it?
 * add a "index_all" argument that scans ALL unsuspended cards in the collection to allow for searching
     * and a "search_offline" mode that only search through the cache
 * add a method to bury the card without creating a filtered deck
