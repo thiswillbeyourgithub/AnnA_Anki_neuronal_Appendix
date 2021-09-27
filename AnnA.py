@@ -43,14 +43,14 @@ def asynchronous_importer():
     from sklearn.feature_extraction.text import CountVectorizer
     from sentence_transformers import SentenceTransformer
     sBERT = SentenceTransformer('distiluse-base-multilingual-cased-v1')
+    from sklearn.metrics import pairwise_distances
+    from sklearn.decomposition import PCA
     from sklearn.cluster import KMeans, DBSCAN, AgglomerativeClustering
     from sklearn.cluster import MiniBatchKMeans
     import plotly.express as px
     import umap.umap_
-    from sklearn.metrics import pairwise_distances
     from sklearn.preprocessing import normalize
     from sklearn.decomposition import TruncatedSVD
-    from sklearn.decomposition import PCA
     from sklearn.preprocessing import StandardScaler
     from scipy import interpolate
     tqdm.write("Finished importing modules.", end="\n\n")
