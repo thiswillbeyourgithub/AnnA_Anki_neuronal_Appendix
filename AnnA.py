@@ -56,10 +56,6 @@ def asynchronous_importer():
     tqdm.write("Finished importing modules.", end="\n\n")
 
 
-import_thread = threading.Thread(target=asynchronous_importer, daemon=False)
-import_thread.start()
-
-
 class AnnA:
     """
     main class: used to centralize everything
@@ -87,6 +83,9 @@ class AnnA:
                  compute_opti_rev_order=True,
                  send_to_anki=False,
                  ):
+        import_thread = threading.Thread(target=asynchronous_importer,
+                                         daemon=False)
+        import_thread.start()
         # printing banner
         if show_banner is True:
             print(pyfiglet.figlet_format("AnnA"))
