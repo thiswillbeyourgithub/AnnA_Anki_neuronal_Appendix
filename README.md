@@ -34,6 +34,7 @@ When you don't have the time to complete all your daily reviews, use this to cre
 
 
 * **Will this change anything to my anki collection?** No, if you delete the filtered deck, everything will be back to normal.
+* **Does it work if I have learning steps over multiple days?** Yes, that's my default as well. AnnA only deals with review queue, it ignores learning cards and new cards. If you have learning cards in your filtered deck it's because you lapsed those cards yesterday.
 * **Does this only work for english cards?** No! The model used by default is multilingual. It should work for over 50+ languages. If you only have English cards though, I suggest you use another model, the full list can be found [here](https://www.sbert.net/docs/pretrained_models.html). The best English model right now seems to be `all-mpnet-base-v2`.
 * **Can I use this if I don't know python?** Yes! Installing the thing might not be easy but it's absolutely doable. And you don't need to know python to *run* AnnA.
 * **What do you call "optimal review order"?** The order that minimizes the chance of reviewing similar cards in a day. You see, Anki has no knowledge of the content of cards and only cares about their interval and ease. Its built-in system of "siblings" is useful but I think we can do better. AnnA was made to create filtered decks sorted by "relative_overdueness" (or other) BUT in a way that keeps *semantic* siblings far from each other.
