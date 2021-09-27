@@ -100,6 +100,7 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * `show_acronyms` shows the acronym present in your deck that were not extended. Useful if you want to adjust your acronym list.
 
 ## TODO
+* investigate wether lapsed cards have to be counted differently
 * add tf-idf functionnality to bypass sbert, for some weird users
 * investigate implementing a correction vector, for example "+radiography" would give a bonus to cards alignes with this word and "-radiography" would do the opposite. To help you adjust your revisions.
 * use pd.describe on df_dist to get quantile distribution
