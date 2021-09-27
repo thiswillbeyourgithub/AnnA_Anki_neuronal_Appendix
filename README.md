@@ -68,6 +68,7 @@ When you don't have the time to complete all your daily reviews, use this to cre
 * `from AnnA import * ; a = AnnA(YOUR ARGUMENTS HERE)`, to figure out which arguments to use, read the `usage` section below
 * *wait a while, the first time you run it on a deck is long because sBERT has to compute all the embeddings*
 * Enjoy your filtered deck, but don't empty it or rebuilt it. You can delete it though.
+* To do this by batch, take a look at the file `autorun_example.py`
 * Open an issue telling me your remarks and suggestion
 
 ### Usage and arguments
