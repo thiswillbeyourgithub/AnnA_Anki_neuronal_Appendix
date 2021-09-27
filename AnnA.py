@@ -698,9 +698,7 @@ using PCA...")
 
         # centering and scaling df_dist after clipping
         print("Centering and scaling distance matrix...")
-        df_dist = StandardScaler().fit_transform(
-                np.clip(df_dist, 0.05, df_dist.max())
-                )
+        df_dist = StandardScaler().fit_transform(df_dist)
 
         # adjusting with weights
         df["ref"] = df["ref"]*w1
