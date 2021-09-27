@@ -1,6 +1,16 @@
 # AnnA : Anki neuronal Appendix
 Tired of having to deal with anki flashcards that are too similar when grinding through your backlog? This python script creates filtered deck in optimal review order. It uses Machine Learning / AI to make semantically linked cards far from one another.
 
+##Table of contents
+* [One sentence summary](#One-sentence-summary)
+* [Note to readers](#Note-to-readers)
+* [Other features](#Other-features)
+* [FAQ](#FAQ)
+* [How to use it](#How-to-use-it)
+* [Usage and arguments](#Usage-and-arguments)
+* [Credits and links that were helpful](#Credits-and-links-that-were-helpful)
+* [Crazy Ideas](#Crazy-ideas)
+
 ## One sentence summary
 When you don't have the time to complete all your daily reviews, use this to create a special filtered deck that makes sure you will only review the cards that are most different from the rest of your reviews.
 
@@ -59,7 +69,7 @@ When you don't have the time to complete all your daily reviews, use this to cre
 * Enjoy your filtered deck, but don't empty it or rebuilt it. You can delete it though.
 * Open an issue telling me your remarks and suggestion
 
-## Usage and arguments
+### Usage and arguments
 AnnA was made with usability in mind. With the right arguments, you can have to enter only one command in the console to get your filtered decks. All the settings you might want to edit are in the agument of the AnnA Class. Here are the arguments with the relevant explanation:
 
  * `deckname` the deck containing the cards you want to review. If you don't supply this value or make a mistake, AnnA will ask you to type in the deckname, with autocompletion enabled (use `<TAB>`). Default is `None`.
