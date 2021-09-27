@@ -627,6 +627,9 @@ using PCA...")
             < -500
         * I clipped the distance value below 0.3 as they were messing with the
             scaling afterwards
+
+        CAREFUL: this docstring might not be up to date as I am constantly
+            trying to improve the code
         """
         # getting args
         reference_order = self.reference_order
