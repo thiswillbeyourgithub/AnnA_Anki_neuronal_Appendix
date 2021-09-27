@@ -668,10 +668,7 @@ using PCA...")
 
             # computing overdue
             anki_col_time = int(self._ankiconnect(
-                action="runConsoleCmd",
-                cmd="print(aqt.mw.col.crt)",
-                token="I understand that calling this is a security risk!"
-                ).strip())
+                action="getCollectionCreationTime")
             time_offset = int((time.time() - anki_col_time) // 86400)
             overdue = (df["ref_due"] - time_offset).to_numpy().reshape(-1, 1)
 

@@ -59,7 +59,7 @@ When you don't have the time to complete all your daily reviews, use this to cre
 
 ## Getting started
 * First, **read this page in its entirety, this is a complicated piece of software and you don't want to use it irresponsibly on your cards.**
-* make sure the addon [anki-connect](https://github.com/FooSoft/anki-connect) is installed and that you set `allowToRunDebugConsoleCmd` to `yes` in the settings. (**only if you want to use relative_overdueness, see notes above**)
+* make sure the addon [anki-connect](https://github.com/FooSoft/anki-connect) is installed (**see notes above**)
 * Clone this repository: `git clone https://github.com/thiswillbeyourgithub/AnnA_Anki_neuronal_Appendix`
 * Edit `field_mapping.py` and `acronym_list_example.py` to your liking
 * Use python to install the necessary packages : `pip install -r requirements.py`
@@ -106,7 +106,6 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * investigate if it's possible to OCR the subpart of an image occlusion
 * use pd.describe on df_dist to get quantile distribution
 * figure out why computing review order tqdm finishes at -1
-* add a method to anki connect that returns the collection creation date
 * find a way to remove already created filtered decks
 * add ability to extend the due query
 * add colours to the prints
