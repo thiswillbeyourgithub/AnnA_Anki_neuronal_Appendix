@@ -1020,8 +1020,7 @@ as opti_rev_order!")
                     self._ankiconnect(action="removeTags",
                                       notes=full_note_list,
                                       tags=str(tag))
-                    with lock:
-                        pbar.update(1)
+                    pbar.update(1)
                 with tqdm(desc="Removing old cluster tags...",
                           unit="cluster",
                           total=len(to_remove)) as pbar:
