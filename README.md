@@ -59,16 +59,15 @@ When you don't have the time to complete all your daily reviews, use this to cre
 * **What is the field_mapping.py file?** It's a file with a unique python dictionary used by AnnA to figure out which field of which card to keep. Using it is optional. By default, each notetype will see only it's first field kept. But if you use this file you can keep multiple fields.
 
 ## Getting started
-* First, **read this page in its entirety, this is a complicated piece of software and you don't want to use it irresponsibly on your cards.**
+* First, **read this page in its entirety, this is a complicated piece of software and you don't want to use it irresponsibly on your cards. The [usage section](#Usage-and-arguments) is especially useful.**
 * make sure the addon [anki-connect](https://github.com/FooSoft/anki-connect) is installed (**see notes above**)
 * Clone this repository: `git clone https://github.com/thiswillbeyourgithub/AnnA_Anki_neuronal_Appendix`
 * Edit `field_mapping.py` and `acronym_list_example.py` to your liking
 * Use python to install the necessary packages : `pip install -r requirements.py`
-* Open ipython: `ipython3` (or any other python console)
-* `from AnnA import * ; a = AnnA(YOUR ARGUMENTS HERE)`, to figure out which arguments to use, read the `usage` section below
-* *wait a while, the first time you run it on a deck is long because sBERT has to compute all the embeddings*
+* edit the file `autorun_example.py` to suit your needs
+* open AnnA in a python console, for example: `ipython3 -c 'exec(open("autorun_example.py").read())'`.
+    *wait a while, the first time you run it on a deck is long because sBERT has to compute all the embeddings*
 * Enjoy your filtered deck, but don't empty it or rebuilt it. You can delete it though.
-* To do this by batch, take a look at the file `autorun_example.py`
 * Open an issue telling me your remarks and suggestion
 
 ### Usage and arguments
