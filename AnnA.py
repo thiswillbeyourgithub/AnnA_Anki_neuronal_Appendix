@@ -316,7 +316,8 @@ from this deck...")
         combined_card_list = list(rated_cards + due_cards)[:limit]
 
         if len(combined_card_list) < 50:
-            raise Exception("You don't have enough cards!\nExiting.")
+            print("You don't have enough cards!\nExiting.")
+            raise SystemExit()
 
         list_cardInfo = []
 
