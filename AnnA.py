@@ -69,7 +69,7 @@ class AnnA:
                  optional_acronym_list="acronym_list.py",
                  keep_ocr=True,
                  desired_deck_size="75%",
-                 rated_last_X_days=2,
+                 rated_last_X_days=4,
                  show_banner=True,
                  debug_card_limit=None,
                  debug_force_score_formula=None,
