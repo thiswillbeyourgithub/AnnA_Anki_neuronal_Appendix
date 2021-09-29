@@ -83,13 +83,14 @@ class AnnA:
                  compute_opti_rev_order=True,
                  send_to_anki=False,
                  ):
-        self.import_thread = threading.Thread(target=asynchronous_importer,
-                                         daemon=False)
-        self.import_thread.start()
         # printing banner
         if show_banner is True:
             print(pyfiglet.figlet_format("AnnA"))
             print("(Anki neuronal Appendix)\n\n")
+
+        self.import_thread = threading.Thread(target=asynchronous_importer,
+                                         daemon=False)
+        self.import_thread.start()
 
         # loading args etc
         self.deckname = self._check_deck(deckname)
