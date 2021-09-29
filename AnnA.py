@@ -458,7 +458,7 @@ Edit the variable 'field_dic' to use {card_model}")
                 for f in fields_to_keep:
                     to_add = df.loc[index, "fields"][f]["value"].strip()
                     if to_add != "":
-                        comb_text = comb_text + to_add + " "
+                        comb_text = comb_text + to_add + ": "
                 final_text = comb_text.strip().replace(": :", "")
 
                 with lock:
