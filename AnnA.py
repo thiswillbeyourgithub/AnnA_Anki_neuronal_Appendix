@@ -150,10 +150,13 @@ values.")
         if Path("last_run.pickle").exists():
             Path("last_run.pickle").unlink()
         f = open("last_run.pickle", "wb")
-        pickle.dump(self, f)
-        print("Done, you can now restore this instance without having to \
+        try:
+            pickle.dump(self, f)
+            print("Done, you can now restore this instance without having to \
 rerun the code using:\n'import pickle ; a = pickle.load(open(\"last_run.pickle\
 \", \"rb\"))'")
+        except TypeError as e:
+            print(f"Error when saving instance as pickle file: {e}")
 
     def _reset_index_dtype(self, df):
         """
