@@ -103,6 +103,7 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 
 ## TODO
 * add tf-idf functionnality to bypass sbert, for some weird users + close the relevant issue after telling the author that it's done
+* removing and adding cards should be done in parallel threads instead of one after the other
 * investigate implementing a correction vector, for example "+radiography" would give a bonus to cards alignes with this word and "-radiography" would do the opposite. To help you adjust your revisions.
 * investigate wether lapsed cards have to be counted differently
 * investigate if it's possible to OCR the subpart of an image occlusion
