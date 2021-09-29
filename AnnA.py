@@ -88,12 +88,11 @@ class AnnA:
             print(pyfiglet.figlet_format("AnnA"))
             print("(Anki neuronal Appendix)\n\n")
 
-        self.import_thread = threading.Thread(target=asynchronous_importer,
-                                         daemon=False)
-        self.import_thread.start()
+        import_thread = threading.Thread(target=asynchronous_importer)
+        import_thread.start()
 
         # loading args etc
-        self.deckname = self._check_deck(deckname)
+        self.deckname = self._check_deck(deckname, import_thread)
         self.replace_greek = replace_greek
         self.keep_ocr = keep_ocr
         self.desired_deck_size = desired_deck_size
@@ -134,7 +133,7 @@ values.")
         self._create_and_fill_df()
         self.df = self._reset_index_dtype(self.df)
         self._format_card()
-        self.import_thread.join()  # asynchronous importing of large module
+        import_thread.join()  # asynchronous importing of large module
         time.sleep(0.5)  # sometimes import_thread takes too long apparently
         self._compute_sBERT_vec()
         if do_clustering is True:
@@ -149,14 +148,15 @@ values.")
         print("\nSaving instance as 'last_run.pickle'...")
         if Path("last_run.pickle").exists():
             Path("last_run.pickle").unlink()
-        f = open("last_run.pickle", "wb")
-        try:
-            pickle.dump(self, f)
-            print("Done, you can now restore this instance without having to \
+        with open("last_run.pickle", "wb") as f:
+            try:
+                pickle.dump(self, f)
+                print("Done, you can now restore this instance without having to \
 rerun the code using:\n'import pickle ; a = pickle.load(open(\"last_run.pickle\
 \", \"rb\"))'")
-        except TypeError as e:
-            print(f"Error when saving instance as pickle file: {e}")
+            except TypeError as e:
+                print(f"Error when saving instance as pickle file: {e}")
+                breakpoint()
 
     def _reset_index_dtype(self, df):
         """
@@ -262,7 +262,7 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
             return self._ankiconnect(action="cardsInfo",
                                             cards=[card_id])
 
-    def _check_deck(self, deckname):
+    def _check_deck(self, deckname, import_thread):
         """
         used to check if the deckname is correct
         if incorrect, user is asked to enter the name, using autocompletion
@@ -277,7 +277,7 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
                                           match_middle=True,
                                           ignore_case=True)
             deckname = ""
-            self.import_thread.join()  # otherwise some message can appear
+            import_thread.join()  # otherwise some message can appear
             # in the middle of the prompt
             time.sleep(0.5)
             while deckname not in decklist:
