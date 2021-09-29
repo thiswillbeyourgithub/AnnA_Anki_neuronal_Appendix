@@ -397,9 +397,7 @@ from this deck...")
         text = re.sub(r"\[\d*\]", "", text)  # wiki citation
         #text = re.sub(r"\d", " ", text)  # removes numbers
         text = text.replace("&amp;", "&")
-        text = text.replace("&gt;|&lt;|<|>", "")
-#        text = text.replace("&gt;", ">")
-#        text = text.replace("&lt;", "<")
+        text = re.sub("&gt;|&lt;|<|>", "", a)
         text = text.replace("/", " / ")
         text = " ".join(text.split())  # multiple spaces
         text = re.sub("\w{1,5}>", " ", text)  # missed html tags
