@@ -610,7 +610,9 @@ using PCA...")
 #        print("Interpolating matrix between 0 and 1...")
 #        df_dist = np.interp(df_dist, (df_dist.min(), df_dist.max()), (0, 1))
 
-        self.df_dist = df_dist
+        self.df_dist = pd.DataFrame(columns=df.index,
+                                    index=df.index,
+                                    data=df_dist)
         return True
 
     def _compute_opti_rev_order(self):
@@ -708,7 +710,7 @@ using PCA...")
 
         # centering and scaling df_dist after clipping
         print("Centering and scaling distance matrix...")
-        df_dist = StandardScaler().fit_transform(df_dist)
+        df_dist.loc[:, :] = StandardScaler().fit_transform(df_dist)
 
         # adjusting with weights
         df["ref"] = df["ref"]*w1
@@ -750,57 +752,57 @@ using PCA...")
                 df["ref"] = 0
             if self.debug_force_score_formula == "similar":
                 df["ref"] = 0
-                df_dist = np.ones_like(df_dist)
+                df_dist.loc[:, :] = np.ones_like(df_dist.values)
 
         print("\nReference score stats:")
         print(f"mean: {df['ref'].mean()}")
         print(f"std: {df['ref'].std()}")
         print(f"max: {df['ref'].max()}")
         print("\nDistance matrix stats:")
-        print(f"mean: {df_dist.mean()}")
-        print(f"std: {df_dist.std()}")
-        print(f"max: {df_dist.max()}", end="\n\n")
+        print(f"mean: {df_dist.values.flatten().mean()}")
+        print(f"std: {df_dist.values.flatten().std()}")
+        print(f"max: {df_dist.values.flatten().max()}", end="\n\n")
 
         with tqdm(desc="Computing optimal review order",
                   unit=" card",
                   initial=len(rated),
                   smoothing=0,
                   total=queue_size_goal+len(rated)) as pbar:
-            turn = 0  # debug
+
+            df_sub = df.drop(index=rated+queue)[["ref"]].copy()
+            indTODO = [x for x in df_sub.index]
+            indQUEUE = (rated+queue)[-self.stride:]
             while len(queue) < queue_size_goal:
-                df2 = df.drop(index=rated+queue)[["ref"]]
-                indiceT = [df.index.get_loc(x) for x in df2.index]
-                indiceQ = [df.index.get_loc(x)
-                           for x in (rated+queue)[-self.stride:]]
-
-                df2["score"] = (df2["ref"].values + np.min(
-                        df_dist[[indiceQ], :].T[[indiceT], :].T,
-                        axis=1)[0].T).T
-
-                chosen_one = df2["score"].idxmin()
+                df_sub["score"] = df_sub["ref"].values + np.min(
+                                    df_dist.loc[indQUEUE,
+                                                :].loc[:,
+                                                       indTODO].values,
+                                    axis=0)
+                chosen_one = df_sub["score"].idxmin()
+                indQUEUE.append(indTODO.pop(indTODO.index(chosen_one)))
+                queue.append(chosen_one)
+                df_sub = df_sub.drop(index=chosen_one)
 
                 # I had some trouble with implementing this loop
                 # so I am keeping the legacy code as fallback
+#                queue2 = [x for x in queue]  # debug: to compare both algorithm and check
 #                df_temp = pd.DataFrame(columns=rated, index=df.index)
-#                queue2.append(chosen_one)
-#                for q in (rated+queue)[-self.stride:]:
-#                    df_temp[q] = df_dist[df.index.get_loc(q)]
+#                for q in (rated+queue2)[-self.stride:]:
+#                    df_temp[q] = df_dist.values[df.index.get_loc(q)]
 #                df["score"] = df["ref"].values + np.min(df_temp, axis=1)
 #
-#                chosen_one = df.drop(index=(rated+queue))["score"].idxmin()
-#                df_temp[chosen_one] = df_dist[df.index.get_loc(chosen_one)]
+#                chosen_one2 = df.drop(index=(rated+queue2))["score"].idxmin()
+#                queue2.append(chosen_one2)
+#                df_temp[chosen_one2] = df_dist.values[df.index.get_loc(chosen_one2)]
 #
 #                # debug
-#                if queue2[-1] != chosen_one:
-#                    tqdm.write(f"NO > {queue2[-1]}")
+#                if queue[-1] != queue2[-1]:
+#                    tqdm.write(f">   NO")
 #                    breakpoint()
 #                else:
 #                    tqdm.write("YES")
 
-                queue.append(chosen_one)
                 pbar.update(1)
-                turn += 1
-
         print("Done.\n")
         self.opti_rev_order = queue
         return True
