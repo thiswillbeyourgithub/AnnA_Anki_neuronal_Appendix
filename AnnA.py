@@ -495,7 +495,9 @@ Edit the variable 'field_dic' to use {card_model}")
         print("\n\nPrinting 5 random samples of your formated text, to help \
 adjust formating issues:")
         pd.set_option('display.max_colwidth', 80)
-        print(df.sample(5)["text"])
+        sub_index = random.choices(df.index.tolist(), k=5)
+        for i in sub_index:
+            print(f"{i}: {df.loc[i, 'text']}\n")
         pd.reset_option('display.max_colwidth')
         print("\n")
         self.df = df.sort_index()
