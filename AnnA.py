@@ -390,6 +390,7 @@ from this deck...")
         text = re.sub(r"{{c\d+?::", "", text)
         text = re.sub("{{c|{{|}}|::", " ", text)
         text = re.sub(r"\b(\d+)e\b", "\\1 euros", text)
+        text = re.sub(r"\[\d*\]", "", text)  # wiki citation
         #text = re.sub(r"\d", " ", text)  # removes numbers
         text = text.replace("&amp;", "&")
         text = text.replace("&gt;|&lt;|<|>", "")
@@ -397,6 +398,7 @@ from this deck...")
 #        text = text.replace("&lt;", "<")
         text = text.replace("/", " / ")
         text = " ".join(text.split())  # multiple spaces
+        text = re.sub("\w{1,5}>", " ", text)  # missed html tags
         text = re.sub("[.?!] ([a-zA-Z])", lambda x: x.group(0).upper(), text)
         text = text.replace(" : ", ": ")
         if len(text) < 10:
