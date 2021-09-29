@@ -273,7 +273,7 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
                                           match_middle=True,
                                           ignore_case=True)
             deckname = ""
-             import_thread.join()  # otherwise some message can appear
+            import_thread.join()  # otherwise some message can appear
             # in the middle of the prompt
             time.sleep(0.5)
             while deckname not in decklist:
