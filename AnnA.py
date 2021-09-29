@@ -569,7 +569,13 @@ adjust formating issues:")
                 df_cache.loc[i, "mod"] = df.loc[i, "mod"].astype("object")
                 df_cache.loc[i, "text"] = df.loc[i, "text"]
             df_cache = self._reset_index_dtype(df_cache)
-            df_cache.to_pickle("sBERT_cache.pickle")
+            try:
+                Path("sBERT_cache.pickle_temp").unlink()
+            except FileNotFoundError:
+                pass
+            df_cache.to_pickle("sBERT_cache.pickle_temp")
+            sBERT_file.unlink()
+            Path("sBERT_cache.pickle_temp").rename("sBERT_cache.pickle")
 
         if self.pca_sBERT_dim is not None:
             print(f"Reducing sBERT to {self.pca_sBERT_dim} dimensions \
