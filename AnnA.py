@@ -396,10 +396,10 @@ from this deck...")
         text = re.sub(r"\b(\d+)e\b", "\\1 euros", text)
         text = re.sub(r"\[\d*\]", "", text)  # wiki citation
         text = text.replace("&amp;", "&")
-        text = re.sub("&gt;|&lt;|<|>", "", a)
         text = text.replace("/", " / ")
         text = " ".join(text.split())  # multiple spaces
-        text = re.sub("\w{1,5}>", " ", text)  # missed html tags
+        text = re.sub(r"\w{1,5}>", " ", text)  # missed html tags
+        text = re.sub("&gt;|&lt;|<|>", "", a)
         text = re.sub("[.?!] ([a-zA-Z])", lambda x: x.group(0).upper(), text)
         text = text.replace(" : ", ": ")
         if len(text) < 10:
