@@ -1026,7 +1026,7 @@ as opti_rev_order!")
                                   present_tags)]))
 
             if len(to_remove) != 0:
-                def _threaded_remove_tags(tag, lock, pbar):
+                def _threaded_remove_tags(tag, pbar):
                     self._ankiconnect(action="removeTags",
                                       notes=full_note_list,
                                       tags=str(tag))
@@ -1034,11 +1034,10 @@ as opti_rev_order!")
                 with tqdm(desc="Removing old cluster tags...",
                           unit="cluster",
                           total=len(to_remove)) as pbar:
-                    lock = threading.Lock()
                     threads = []
                     for tag in to_remove:
                         thread = threading.Thread(target=_threaded_remove_tags,
-                                                  args=(tag, lock, pbar),
+                                                  args=(tag, pbar),
                                                   daemon=False)
                         thread.start()
                         threads.append(thread)
@@ -1050,7 +1049,7 @@ as opti_rev_order!")
             df["cluster_topic"] = df["cluster_topic"].str.replace(" ", "_")
             cluster_list = list(set(list(df["clusters"])))
 
-            def _threaded_add_cluster_tags(i, lock, pbar):
+            def _threaded_add_cluster_tags(i, pbar):
                 cur_time = "_".join(time.asctime().split()[0:4]).replace(
                         ":", "h")[0:-3]
                 newTag = f"AnnA::cluster_topic::{cur_time}::cluster_#{str(i)}"
@@ -1059,18 +1058,16 @@ as opti_rev_order!")
                 self._ankiconnect(action="addTags",
                                   notes=note_list,
                                   tags=newTag)
-                with lock:
-                    pbar.update(1)
+                pbar.update(1)
                 return True
             with tqdm(total=len(cluster_list),
                       desc="Adding new cluster tags",
                       unit="cluster") as pbar:
                 threads = []
-                lock = threading.Lock()
                 for i in cluster_list:
                     thread = threading.Thread(
                                         target=_threaded_add_cluster_tags,
-                                        args=(i, lock, pbar), daemon=False)
+                                        args=(i, pbar), daemon=False)
                     thread.start()
                     threads.append(thread)
                     time.sleep(0.1)
