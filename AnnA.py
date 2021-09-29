@@ -151,8 +151,8 @@ values.")
         with open("last_run.pickle", "wb") as f:
             try:
                 pickle.dump(self, f)
-                print("Done, you can now restore this instance without having to \
-rerun the code using:\n'import pickle ; a = pickle.load(open(\"last_run.pickle\
+                print("Done! You can now restore this instance of AnnA without having to \
+execute the code using:\n'import pickle ; a = pickle.load(open(\"last_run.pickle\
 \", \"rb\"))'")
             except TypeError as e:
                 print(f"Error when saving instance as pickle file: {e}")
