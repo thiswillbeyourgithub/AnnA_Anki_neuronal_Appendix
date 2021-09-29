@@ -83,13 +83,14 @@ class AnnA:
                  compute_opti_rev_order=True,
                  send_to_anki=False,
                  ):
-        import_thread = threading.Thread(target=asynchronous_importer,
-                                         daemon=False)
-        import_thread.start()
         # printing banner
         if show_banner is True:
             print(pyfiglet.figlet_format("AnnA"))
             print("(Anki neuronal Appendix)\n\n")
+
+        self.import_thread = threading.Thread(target=asynchronous_importer,
+                                         daemon=False)
+        self.import_thread.start()
 
         # loading args etc
         self.deckname = self._check_deck(deckname)
@@ -133,7 +134,7 @@ values.")
         self._create_and_fill_df()
         self.df = self._reset_index_dtype(self.df)
         self._format_card()
-        import_thread.join()  # asynchronous importing of large module
+        self.import_thread.join()  # asynchronous importing of large module
         time.sleep(0.5)  # sometimes import_thread takes too long apparently
         self._compute_sBERT_vec()
         if do_clustering is True:
@@ -273,7 +274,7 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
                                           match_middle=True,
                                           ignore_case=True)
             deckname = ""
-            import_thread.join()  # otherwise some message can appear
+            self.import_thread.join()  # otherwise some message can appear
             # in the middle of the prompt
             time.sleep(0.5)
             while deckname not in decklist:
