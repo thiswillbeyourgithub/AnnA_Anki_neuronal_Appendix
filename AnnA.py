@@ -395,7 +395,6 @@ from this deck...")
         text = re.sub("{{c|{{|}}|::", " ", text)
         text = re.sub(r"\b(\d+)e\b", "\\1 euros", text)
         text = re.sub(r"\[\d*\]", "", text)  # wiki citation
-        #text = re.sub(r"\d", " ", text)  # removes numbers
         text = text.replace("&amp;", "&")
         text = re.sub("&gt;|&lt;|<|>", "", a)
         text = text.replace("/", " / ")
