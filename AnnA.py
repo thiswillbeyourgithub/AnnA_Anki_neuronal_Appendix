@@ -397,11 +397,13 @@ from this deck...")
         text = re.sub(r"\[\d*\]", "", text)  # wiki citation
         text = text.replace("&amp;", "&")
         text = text.replace("/", " / ")
-        text = " ".join(text.split())  # multiple spaces
         text = re.sub(r"\w{1,5}>", " ", text)  # missed html tags
-        text = re.sub("&gt;|&lt;|<|>", "", a)
+        text = re.sub("&gt;|&lt;|<|>", "", text)
         text = re.sub("[.?!] ([a-zA-Z])", lambda x: x.group(0).upper(), text)
+        # adds capital letter after punctuation
+
         text = text.replace(" : ", ": ")
+        text = " ".join(text.split())  # multiple spaces
         if len(text) < 10:
             if "src=" in orig:
                 text = text + " " + " ".join(re.findall('src="(.*?)">', orig))
@@ -409,6 +411,7 @@ from this deck...")
             text = text[0].upper() + text[1:]
             if text[-1] not in ["?", ".", "!"]:
                 text += "."
+        text = text.replace(" :.", ".")
         return text
 
     def _format_card(self):
