@@ -111,12 +111,11 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * find a way to remove already created filtered decks
 * add ability to extend the due query
 * add colours to the prints
-* add a "index_all" argument that scans ALL unsuspended cards in the collection to allow for searching
-    * and a "search_offline" mode that only search through the cache
+* refactor like so: from AnnA import util => util.index_collection + util.offline_search + util.offline_image_search
 * add a method to bury the card without creating a filtered deck
 * look into sentence mining methods from sbert, that might contain useful ideas
-* take a look at topic modelling techniques that might be cleaner to invoke than the whole ctf-idf section
-* LW
+* take a look at topic modelling techniques that might be cleaner to invoke than the current ctf-idf implementation
+* warn LW
 * re read this article for inspiration : http://mccormickml.com/2021/05/27/question-answering-system-tf-idf/
 * automatically create a phylogeny of cards based on a distance matrix and see if it's an appropriate mind map, plotly is suitable for this kind of tree
 * turn into anki as an addon
