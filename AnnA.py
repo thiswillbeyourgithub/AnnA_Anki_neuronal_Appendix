@@ -1249,11 +1249,18 @@ plotting...")
         shows acronym present in your collection that were not found in
         the file supplied by the argument `optional_acronym_list`
         """
-        matched = set(re.findall("[A-Z]{2,}", str(self.df["text"])))
+        full_text = " ".join(self.df["text"].tolist())
+        matched = set(re.findall("[A-Z]{3,}", full_text))
+        acro_count = {}
+        for acr in matched:
+            acro_count.update({acr: full_text.count(acr)})
+        sorted_by_count = sorted([x for x in matched], key= lambda x: acro_count[x], reverse=True)
+        relevant = sorted_by_count[0:10]
+
         if self.optional_acronym_list is None:
             print("\nYou did not supply an acronym list, printing all acronym \
 found...")
-            pprint(matched)
+            pprint(relevant)
         else:
             acro_list = sorted(self.acronym_dict.keys())
             print("\nList of acronyms that were already replaced:")
@@ -1262,7 +1269,7 @@ found...")
 
             print("List of acronym still found:")
             out = {acr for acr in filter(lambda x: x.lower() not in acro_list,
-                                         matched)
+                                         relevant)
                    }
             pprint(sorted(out))
         print("")
