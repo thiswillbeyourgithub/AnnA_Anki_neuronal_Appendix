@@ -133,6 +133,7 @@ values.")
         self._create_and_fill_df()
         self.df = self._reset_index_dtype(self.df)
         self._format_card()
+        self.show_acronyms()
         self._compute_sBERT_vec(import_thread = import_thread)
         if do_clustering is True:
             self.compute_clusters(minibatchk_kwargs = {"verbose": 0})
