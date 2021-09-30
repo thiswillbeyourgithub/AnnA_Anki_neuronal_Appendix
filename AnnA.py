@@ -133,9 +133,7 @@ values.")
         self._create_and_fill_df()
         self.df = self._reset_index_dtype(self.df)
         self._format_card()
-        import_thread.join()  # asynchronous importing of large module
-        time.sleep(0.5)  # sometimes import_thread takes too long apparently
-        self._compute_sBERT_vec()
+        self._compute_sBERT_vec(import_thread = import_thread)
         if do_clustering is True:
             self.compute_clusters(minibatchk_kwargs = {"verbose": 0})
         self._compute_distance_matrix()
@@ -507,7 +505,7 @@ adjust formating issues:")
         self.df = df.sort_index()
         return True
 
-    def _compute_sBERT_vec(self, df=None, use_sBERT_cache=True):
+    def _compute_sBERT_vec(self, df=None, use_sBERT_cache=True, import_thread=None):
         """
         Assigne sBERT vectors to each card
         df["sBERT_before_pca"] if exists, contains the vectors from sBERT
@@ -552,6 +550,9 @@ adjust formating issues:")
 
             print(f"Loaded {loaded_sBERT} vectors from cache, will compute \
 {len(id_to_recompute)} others...")
+            if import_thread is not None:
+                import_thread.join()
+                time.sleep(0.5)
             if len(id_to_recompute) != 0:
                 sentence_list = [df.loc[x, "text"]
                                  for x in df.index if x in id_to_recompute]
