@@ -411,6 +411,7 @@ from this deck...")
             if text[-1] not in ["?", ".", "!"]:
                 text += "."
         text = text.replace(" :.", ".")
+        text = text.replace(":.", ".")
         return text
 
     def _format_card(self):
