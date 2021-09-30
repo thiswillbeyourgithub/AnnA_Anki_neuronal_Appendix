@@ -318,7 +318,7 @@ from this deck...")
         limit = self.debug_card_limit if self.debug_card_limit else None
         combined_card_list = list(rated_cards + due_cards)[:limit]
 
-        if len(combined_card_list) < 50:
+        if len(combined_card_list) < 20:
             print("You don't have enough cards!\nExiting.")
             raise SystemExit()
 
