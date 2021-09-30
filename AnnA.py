@@ -1019,8 +1019,9 @@ as opti_rev_order!")
         self.df = df.sort_index()
 
         if add_as_tags is True:
-
-            # remove old cluster tags
+            # creates two threads, the first one removes old tags and the
+            # other one adds the new one
+            threads = []
             full_note_list = list(set(df["note"].tolist()))
             present_tags = list(set(df["tags"].tolist()))
             if "" in present_tags:
@@ -1030,54 +1031,51 @@ as opti_rev_order!")
                                   present_tags)]))
 
             if len(to_remove) != 0:
-                def _threaded_remove_tags(tag, pbar):
-                    self._ankiconnect(action="removeTags",
-                                      notes=full_note_list,
-                                      tags=str(tag))
-                    pbar.update(1)
-                with tqdm(desc="Removing old cluster tags...",
+                def _threaded_remove_tags(tags, pbar_r):
+                    for tag in tags:
+                        self._ankiconnect(action="removeTags",
+                                          notes=full_note_list,
+                                          tags=str(tag))
+                        pbar_r.update(1)
+                pbar_r = tqdm(desc="Removing old cluster tags...",
                           unit="cluster",
-                          total=len(to_remove)) as pbar:
-                    threads = []
-                    for tag in to_remove:
-                        thread = threading.Thread(target=_threaded_remove_tags,
-                                                  args=(tag, pbar),
-                                                  daemon=False)
-                        thread.start()
-                        threads.append(thread)
-                        time.sleep(0.1)
-                        while sum([t.is_alive() for t in threads]) >= 15:
-                            time.sleep(0.5)
-                    [t.join() for t in threads]
+                          position=1,
+                          total=len(to_remove))
+                thread = threading.Thread(target=_threaded_remove_tags,
+                                          args=(to_remove, pbar_r),
+                                          daemon=False)
+                thread.start()
+                threads.append(thread)
 
             df["cluster_topic"] = df["cluster_topic"].str.replace(" ", "_")
             cluster_list = list(set(list(df["clusters"])))
 
-            def _threaded_add_cluster_tags(i, pbar):
-                cur_time = "_".join(time.asctime().split()[0:4]).replace(
-                        ":", "h")[0:-3]
-                newTag = f"AnnA::cluster_topic::{cur_time}::cluster_#{str(i)}"
-                newTag += f"::{df[df['clusters']==i]['cluster_topic'].iloc[0]}"
-                note_list = list(set(df[df["clusters"] == i]["note"].tolist()))
-                self._ankiconnect(action="addTags",
-                                  notes=note_list,
-                                  tags=newTag)
-                pbar.update(1)
+            def _threaded_add_cluster_tags(list_i, pbar_a):
+                for i in list_i:
+                    cur_time = "_".join(time.asctime().split()[0:4]).replace(
+                            ":", "h")[0:-3]
+                    newTag = f"AnnA::cluster_topic::{cur_time}::cluster_#{str(i)}"
+                    newTag += f"::{df[df['clusters']==i]['cluster_topic'].iloc[0]}"
+                    note_list = list(set(df[df["clusters"] == i]["note"].tolist()))
+                    self._ankiconnect(action="addTags",
+                                      notes=note_list,
+                                      tags=newTag)
+                    pbar_a.update(1)
                 return True
-            with tqdm(total=len(cluster_list),
+            pbar_a = tqdm(total=len(cluster_list),
                       desc="Adding new cluster tags",
-                      unit="cluster") as pbar:
-                threads = []
-                for i in cluster_list:
-                    thread = threading.Thread(
-                                        target=_threaded_add_cluster_tags,
-                                        args=(i, pbar), daemon=False)
-                    thread.start()
-                    threads.append(thread)
-                    time.sleep(0.1)
-                    while sum([t.is_alive() for t in threads]) >= 10:
-                        time.sleep(0.5)
-                [t.join() for t in threads]
+                      position=0,
+                      unit="cluster")
+            thread = threading.Thread(
+                                target=_threaded_add_cluster_tags,
+                                daemon=False,
+                                args=(cluster_list, pbar_a))
+            thread.start()
+            threads.append(thread)
+
+            [t.join() for t in threads]
+            pbar_a.close()
+            pbar_r.close()
 
             self._ankiconnect(action="clearUnusedTags")
         return True
