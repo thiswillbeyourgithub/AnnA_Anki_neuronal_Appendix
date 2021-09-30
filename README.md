@@ -57,6 +57,7 @@ When you don't have the time to complete all your daily reviews, use this to cre
 
 * **Isn't your implementation unecessarily slow and a bit dumb?** Suggestions are very very welcome. I needed this to work quickly before the end of the summer so some parts might be naive. I intend to make it better as time goes on but breakthrough ideas are welcome.
 * **What is the field_mapping.py file?** It's a file with a unique python dictionary used by AnnA to figure out which field of which card to keep. Using it is optional. By default, each notetype will see only it's first field kept. But if you use this file you can keep multiple fields.
+* **Why does the progress bar of "Computing optimal review order" doesn't always start at 0?** It's just cosmetic. At each step of the loop, the next card to review is computed by comparing it against the previously added cards and the cards rated in the last few days. This means that each turn is slower than the last. So the progress bar begins with the number of cards rated in the past to indicate that. It took great care to optimize the loop so it should not really be an issue.
 
 ## Getting started
 * First, **read this page in its entirety, this is a complicated piece of software and you don't want to use it irresponsibly on your cards. The [usage section](#Usage-and-arguments) is especially useful.**
