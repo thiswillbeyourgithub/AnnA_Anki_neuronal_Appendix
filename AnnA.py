@@ -74,7 +74,7 @@ class AnnA:
                  debug_card_limit=None,
                  debug_force_score_formula=None,
                  n_clusters="auto",
-                 pca_sBERT_dim=300,
+                 pca_sBERT_dim=None,
                  stride=2500,
                  prefer_similar_card=False,
                  scoring_weights=(1, 1),
@@ -510,7 +510,7 @@ adjust formating issues:")
     def _compute_sBERT_vec(self, df=None, use_sBERT_cache=True, import_thread=None):
         """
         Assigne sBERT vectors to each card
-        df["sBERT_before_pca"] if exists, contains the vectors from sBERT
+        df["sBERT_before_pca"], contains the vectors from sBERT
         df["sBERT"] contains either all the vectors from sBERT or less if you
             enabled pca reduction
         * given how long it is to compute the vectors I decided to store
@@ -584,6 +584,7 @@ adjust formating issues:")
             sBERT_file.unlink()
             Path("sBERT_cache.pickle_temp").rename("sBERT_cache.pickle")
 
+        df["sBERT_before_pca"] = df["sBERT"]
         if self.pca_sBERT_dim is not None:
             print(f"Reducing sBERT to {self.pca_sBERT_dim} dimensions \
 using PCA...")
@@ -595,9 +596,8 @@ using PCA...")
             out = pca_sBERT.fit_transform(df_temp)
             print(f"Explained variance ratio after PCA on sBERT: \
 {round(sum(pca_sBERT.explained_variance_ratio_)*100,1)}%")
-            df["sBERT_before_pca"] = df["sBERT"]
             df["sBERT"] = [x for x in out]
-            return True
+        return True
 
     def _compute_distance_matrix(self, method="cosine", input_col="sBERT"):
         """
