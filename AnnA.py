@@ -762,13 +762,8 @@ using PCA...")
                 df_dist.loc[:, :] = np.ones_like(df_dist.values)
 
         print("\nReference score stats:")
-        print(f"mean: {df['ref'].mean()}")
-        print(f"std: {df['ref'].std()}")
-        print(f"max: {df['ref'].max()}")
-        print("\nDistance matrix stats:")
-        print(f"mean: {df_dist.values.flatten().mean()}")
-        print(f"std: {df_dist.values.flatten().std()}")
-        print(f"max: {df_dist.values.flatten().max()}", end="\n\n")
+        print(f"mean: {df['ref'].describe()}", end="\n")
+        print(f"max: {pd.DataFrame(data=df_dist.values.flatten(), columns=['distance matrix']).describe()}", end="\n\n")
 
         with tqdm(desc="Computing optimal review order",
                   unit=" card",
