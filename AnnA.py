@@ -1253,13 +1253,13 @@ plotting...")
         """
         matched = set(re.findall("[A-Z]{2,}", str(self.df["text"])))
         if self.optional_acronym_list is None:
-            print("You did not supply an acronym list, printing all acronym \
+            print("\nYou did not supply an acronym list, printing all acronym \
 found...")
             pprint(matched)
         else:
             acro_list = sorted(self.acronym_dict.keys())
-            print("List of acronyms that were already replaced:")
-            pprint(acro_list)
+            print("\nList of acronyms that were already replaced:")
+            print(acro_list)
             acro_list = [x.lower() for x in acro_list]
 
             print("List of acronym still found:")
@@ -1267,6 +1267,7 @@ found...")
                                          matched)
                    }
             pprint(sorted(out))
+        print("")
         return True
 
 
