@@ -864,8 +864,7 @@ deck.")
                                       card=int(c),
                                       keys=keys,
                                       newValues=newValues)
-                    with lock:
-                        pbar.update(1)
+                    pbar.update(1)
                 return True
 
             with tqdm(desc=tqdm_desc,
