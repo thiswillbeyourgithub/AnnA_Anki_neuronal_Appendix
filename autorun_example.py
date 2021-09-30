@@ -6,6 +6,13 @@
 
 from AnnA import *
 
+def interscreen():
+    print("", end="\n\n")
+    for i in range(5):
+        print("="*10)
+    print("", end="\n\n")
+
+
 a = AnnA(deckname="Some_Deck",
         desired_deck_size="100",
         rated_last_X_days=3,
@@ -13,6 +20,7 @@ a = AnnA(deckname="Some_Deck",
         do_clustering=True,
         send_to_anki=True,
         )
+interscreen()
 b = AnnA(deckname="Some_OtherDeck::subdeck#1",
         desired_deck_size="80%",
         rated_last_X_days=3,
@@ -20,6 +28,7 @@ b = AnnA(deckname="Some_OtherDeck::subdeck#1",
         do_clustering=True,
         send_to_anki=True
         )
+interscreen()
 c = AnnA(deckname="Some_OtherDeck::subdeck#2",
         desired_deck_size="50",
         rated_last_X_days=3,
