@@ -882,7 +882,7 @@ deck.")
                                               daemon=False)
                     thread.start()
                     threads.append(thread)
-                    while sum([t.is_alive() for t in threads]) >= 15:
+                    while sum([t.is_alive() for t in threads]) >= 5:
                         time.sleep(0.5)
                 [t.join() for t in threads]
             return True
