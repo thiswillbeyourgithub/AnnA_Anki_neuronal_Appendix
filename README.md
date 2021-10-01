@@ -92,6 +92,7 @@ AnnA was made with usability in mind. With the right arguments, you can have to 
  * `scoring_weights` a tuple used to adjust the value of the reference order compared to how similar the cards are. Default is `(1, 1)`. For example: (1, 1.5) means that the algorithm will spread the similar cards farther apart.
  * `send_to_anki` tells AnnA to automatically create the filtered deck or not. Default is `False`.
  * `compute_opti_rev_order` don't compute optimal review order, if set to False, it will set `send_to_anki` to False. Default to True.
+ * `check_database` at the end of execution, ask anki to check the database or not. Default is `False`.
 
 AnnA has a number of other built-in methods you can run after instantiating the class. They are especially useful if "send_to_anki" is set to `False`. Note that methods beginning with a "_" are not supposed to be called by the user and are reserved for backend use. Here's a list of useful methods:
 

@@ -34,5 +34,6 @@ c = AnnA(deckname="Some_OtherDeck::subdeck#2",
         rated_last_X_days=3,
         reference_order="lowest_interval",
         do_clustering=True,
-        send_to_anki=True
+        send_to_anki=True,
+        check_database=True
         )

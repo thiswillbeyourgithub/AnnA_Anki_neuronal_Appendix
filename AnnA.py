@@ -82,6 +82,7 @@ class AnnA:
                  do_clustering=False,
                  compute_opti_rev_order=True,
                  send_to_anki=False,
+                 check_database=False
                  ):
         # printing banner
         if show_banner is True:
@@ -160,7 +161,10 @@ execute the code using:\n'import pickle ; a = pickle.load(open(\"last_run.pickle
 \", \"rb\"))'")
             except TypeError as e:
                 print(f"Error when saving instance as pickle file: {e}")
-                breakpoint()
+
+        if check_database is True:
+            print("Re-optimizing Anki database")
+            self._ankiconnect(action="guiCheckDatabase")
 
     def _reset_index_dtype(self, df):
         """
@@ -922,8 +926,6 @@ as opti_rev_order!")
                                tqdm_desc="Altering due order",
                                keys=["due"],
                                newValues=None)
-        print("Re-optimizing Anki database")
-        self._ankiconnect(action="guiCheckDatabase")
         print("All done!\n\n")
         return True
 
