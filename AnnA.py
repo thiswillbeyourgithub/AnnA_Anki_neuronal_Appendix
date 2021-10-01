@@ -791,7 +791,16 @@ using PCA...")
                 indQUEUE.append(indTODO.pop(indTODO.index(queue[-1])))
 
                 # I had some trouble with implementing this loop
-                # so I am keeping the legacy code as fallback:
+                # so I am keeping legacy code as fallback:
+                # canonical and check version give the same results
+                # canonical version:
+#                queue.append(indTODO[
+#                        (df.loc[indTODO, "ref"].values + np.min(
+#                            df_dist.loc[indQUEUE[-self.stride:], indTODO].values,
+#                            axis=0)
+#                         ).argmin()])
+
+                # check version:
 #                queue2 = [x for x in queue[:-1]]
 #                df_temp = pd.DataFrame(columns=rated, index=df.index)
 #                for q in (rated+queue2)[-self.stride:]:
