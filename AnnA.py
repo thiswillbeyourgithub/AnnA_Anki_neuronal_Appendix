@@ -1276,7 +1276,7 @@ found...")
             print(acro_list)
             acro_list = [x.lower() for x in acro_list]
 
-            print("List of acronym still found:")
+            print("List of some acronyms still found:")
             out = {acr for acr in filter(lambda x: x.lower() not in acro_list,
                                          relevant)
                    }
