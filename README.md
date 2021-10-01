@@ -106,6 +106,7 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * `show_acronyms` shows the acronym present in your deck that were not extended. Useful if you want to adjust your acronym list.
 
 ## TODO
+* tokenize cluster topics to make them meaningful
 * print the most dissimilar cards as well as the most similar
 * add tf-idf functionnality to bypass sbert, for some weird users + close the relevant issue after telling the author that it's done
 * investigate implementing a correction vector, for example "+radiography" would give a bonus to cards alignes with this word and "-radiography" would do the opposite. To help you adjust your revisions.

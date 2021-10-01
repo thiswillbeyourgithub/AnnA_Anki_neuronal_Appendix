@@ -1053,7 +1053,6 @@ as opti_rev_order!")
             to_remove = list(set([x for x in filter(
                                   lambda x: "AnnA::cluster_topic::" in x,
                                   present_tags)]))
-
             if len(to_remove) != 0:
                 def _threaded_remove_tags(tags, pbar_r):
                     for tag in tags:
