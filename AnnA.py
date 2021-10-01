@@ -101,6 +101,7 @@ class AnnA:
         self.n_clusters = n_clusters
         self.pca_sBERT_dim = pca_sBERT_dim
         self.stride = stride
+        assert stride > 0
         self.prefer_similar_card = prefer_similar_card
         self.scoring_weights = scoring_weights
         assert reference_order in ["lowest_interval", "relative_overdueness"]
