@@ -779,12 +779,11 @@ using PCA...")
             indTODO = [x for x in df_sub.index]
             indQUEUE = (rated+queue)[-self.stride:]
             while len(queue) < queue_size_goal:
-                df_sub["score"] = df_sub["ref"].values + np.min(
-                                    df_dist.loc[indQUEUE,
-                                                :].loc[:,
-                                                       indTODO].values,
-                                    axis=0)
-                chosen_one = df_sub["score"].idxmin()
+                chosen_one = df_sub.index[
+                        (df_sub["ref"].values + np.min(
+                            df_dist.loc[indQUEUE, :].loc[:, indTODO].values,
+                            axis=0)).argmin()]
+
                 indQUEUE.append(indTODO.pop(indTODO.index(chosen_one)))
                 queue.append(chosen_one)
                 df_sub = df_sub.drop(index=chosen_one)
