@@ -18,6 +18,7 @@ When you don't have the time to complete all your daily reviews, use this to cre
 1. I would really like to integrate this into anki somehow but am not knowledgeable enough about how to do it, how to manage anki versions, how to handle different platforms etc. All help is much appreciated!
 2. This project relies on [AnkiConnect](https://github.com/FooSoft/anki-connect). I made some contributions to it to add a few features but they have not all been reviewed yet. I am afraid you have to either wait for AnkiConnect to approve of the changes or replace your AnkiConnect folder with [my own](https://github.com/thiswillbeyourgithub/anki-connect). In the mean time, I think you can toy around with this but won't be able to use "relative_overdueness" when sending a deck to anki, you'll have to use "lowest_interval".
 3. I am still changing the code base almost every day, if you tried AnnA and were disappointed, maybe try it another time later. Improvements are major.
+4. This project is still very early and I don't recomand you start using it if you're not skilled enough to do damage control. I have lost a lot of my tags several times and some issue can still happen. Use at your own risks :)
 
 ## Other features
 * Search for cards in your collection using semantic queries (i.e. typing something with a close `meaning` to a card will find it even if no words are in common).
