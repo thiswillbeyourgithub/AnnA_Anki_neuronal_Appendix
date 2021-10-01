@@ -1263,7 +1263,8 @@ plotting...")
         for acr in matched:
             acro_count.update({acr: full_text.count(acr)})
         sorted_by_count = sorted([x for x in matched], key= lambda x: acro_count[x], reverse=True)
-        relevant = sorted_by_count[0:10]
+        relevant = random.choices(sorted_by_count[0:50],
+                k=min(len(sorted_by_count), 10))
 
         if self.optional_acronym_list is None:
             print("\nYou did not supply an acronym list, printing all acronym \
