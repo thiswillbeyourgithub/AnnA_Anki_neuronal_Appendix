@@ -782,23 +782,19 @@ using PCA...")
                   initial=len(rated),
                   smoothing=0,
                   total=queue_size_goal+len(rated)) as pbar:
-
             df_sub = df.drop(index=rated+queue)[["ref"]].copy()
-            indTODO = [x for x in df_sub.index]
+            indTODO = df_sub.index.tolist()
             indQUEUE = (rated+queue)[-self.stride:]
             while len(queue) < queue_size_goal:
-                chosen_one = df_sub.index[
-                        (df_sub["ref"].values + np.min(
-                            df_dist.loc[indQUEUE, :].loc[:, indTODO].values,
-                            axis=0)).argmin()]
-
-                indQUEUE.append(indTODO.pop(indTODO.index(chosen_one)))
-                queue.append(chosen_one)
-                df_sub = df_sub.drop(index=chosen_one)
+                queue.append(indTODO[
+                        (df_sub.loc[indTODO, "ref"].values + np.min(
+                            df_dist.loc[indQUEUE, indTODO].values,
+                            axis=0)).argmin()])
+                indQUEUE.append(indTODO.pop(indTODO.index(queue[-1])))
 
                 # I had some trouble with implementing this loop
                 # so I am keeping the legacy code as fallback
-#                queue2 = [x for x in queue]  # debug: to compare both algorithm and check
+#                queue2 = [x for x in queue[:-1]]
 #                df_temp = pd.DataFrame(columns=rated, index=df.index)
 #                for q in (rated+queue2)[-self.stride:]:
 #                    df_temp[q] = df_dist.values[df.index.get_loc(q)]
@@ -811,7 +807,6 @@ using PCA...")
 #                # debug
 #                if queue[-1] != queue2[-1]:
 #                    tqdm.write(f">   NO")
-#                    breakpoint()
 #                else:
 #                    tqdm.write("YES")
 
