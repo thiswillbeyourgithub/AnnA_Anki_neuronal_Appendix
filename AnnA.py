@@ -1020,11 +1020,12 @@ as opti_rev_order!")
                                                   n_samples=len(
                                                       df_by_cluster.index
                                                       )).toarray()
-        w_by_class = {str(label): [
+        w_by_class = {str(clust): [
                                    words[index]
                                    for index in
-                                   ctfidf[label].argsort()[-n_topics:]
-                                   ] for label in df_by_cluster.clusters}
+                                   ctfidf[ind].argsort()[-n_topics:]
+                                   ] for clust, ind in enumerate(
+                                       df_by_cluster.clusters)}
         df["cluster_topic"] = ""
         for i in df.index:
             clst_tpc = " ".join([x for x in w_by_class[
