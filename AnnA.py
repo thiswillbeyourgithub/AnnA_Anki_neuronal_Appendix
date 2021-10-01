@@ -75,7 +75,7 @@ class AnnA:
                  debug_force_score_formula=None,
                  n_clusters="auto",
                  pca_sBERT_dim=None,
-                 stride=1002500,
+                 stride=2500,
                  prefer_similar_card=False,
                  scoring_weights=(1, 1),
                  reference_order="lowest_interval",
@@ -778,20 +778,17 @@ using PCA...")
         print(f"mean: {df['ref'].describe()}", end="\n")
         print(f"max: {pd.DataFrame(data=df_dist.values.flatten(), columns=['distance matrix']).describe()}", end="\n\n")
 
-        # pending investigation
-        self.stride = 500000
-
         with tqdm(desc="Computing optimal review order",
                   unit=" card",
                   initial=len(rated),
                   smoothing=0,
                   total=queue_size_goal+len(rated)) as pbar:
             indTODO = df.drop(index=rated+queue).index.tolist()
-            indQUEUE = (rated+queue)[-self.stride:]
+            indQUEUE = (rated+queue)
             while len(queue) < queue_size_goal:
                 queue.append(indTODO[
                         (df.loc[indTODO, "ref"].values + np.min(
-                            df_dist.loc[indQUEUE, indTODO].values,
+                            df_dist.loc[indQUEUE[-self.stride:], indTODO].values,
                             axis=0)
                          ).argmin()])
                 indQUEUE.append(indTODO.pop(indTODO.index(queue[-1])))
@@ -810,7 +807,7 @@ using PCA...")
 #                    tqdm.write(f">   NO")
 #                else:
 #                    tqdm.write("YES")
-#
+
                 pbar.update(1)
         print("Done.\n")
         self.opti_rev_order = queue
