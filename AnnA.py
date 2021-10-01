@@ -756,9 +756,9 @@ using PCA...")
         queue_size_goal = min(desired_deck_size,
                               len(df.index)-len(rated))
 
-        if len(rated) < 2:  # can't start with an empty queue
-            # so picking 2 urgent cards
-            pool = df["ref"].nsmallest(
+        if len(rated) < 1:  # can't start with an empty queue
+            # so picking 1 urgent cards
+            pool = df.loc[df["status"] == "due", "ref"].nsmallest(
                     n=min(50, len(self.due_cards))
                     ).index
             queue.extend(random.choices(pool, k=2))
