@@ -1036,7 +1036,14 @@ as opti_rev_order!")
             # other one adds the new one
             threads = []
             full_note_list = list(set(df["note"].tolist()))
-            present_tags = list(set(df["tags"].tolist()))
+            all_tags =  df["tags"].tolist()
+            present_tags = []
+            for t in all_tags:
+                if " " in t:
+                    present_tags.extend(t.split(" "))
+                else:
+                    present_tags.append(t)
+            present_tags = list(set(present_tags))
             if "" in present_tags:
                 present_tags.remove("")
             to_remove = list(set([x for x in filter(
