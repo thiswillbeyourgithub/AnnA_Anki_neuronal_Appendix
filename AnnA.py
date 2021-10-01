@@ -1250,12 +1250,16 @@ plotting...")
         print(f"Dataframe exported to {name}")
         return True
 
-    def show_acronyms(self):
+    def show_acronyms(self, exclude_OCR_text=True):
         """
         shows acronym present in your collection that were not found in
         the file supplied by the argument `optional_acronym_list`
+        * acronyms found in OCR caption are removed by default
         """
         full_text = " ".join(self.df["text"].tolist())
+        if exclude_OCR_text is True:
+            print("(Excluding OCR text)")
+            full_text = re.sub("> Caption: '.*?' <", " ", full_text)
         matched = set(re.findall("[A-Z]{3,}", full_text))
         acro_count = {}
         for acr in matched:
