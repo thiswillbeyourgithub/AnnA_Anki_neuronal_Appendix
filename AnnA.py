@@ -342,10 +342,7 @@ from this deck...")
         print(f"Extracted information in {int(time.time()-start)} seconds.",
                 end="\n\n")
 
-        for i, card in enumerate(tqdm(list_cardInfo,
-                                      desc="Keeping only relevant info",
-                                      smoothing=0,
-                                      unit=" card")):
+        for i, card in enumerate(list_cardInfo):
             # removing large fields:
             list_cardInfo[i].pop("question")
             list_cardInfo[i].pop("answer")
