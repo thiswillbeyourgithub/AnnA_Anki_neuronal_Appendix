@@ -820,6 +820,9 @@ using PCA...")
 #                    tqdm.write("YES")
 
                 pbar.update(1)
+        if len(queue) == 0:
+            print("Error: optimum review order is empty!")
+            breakpoint()
         print("Done.\n")
         self.opti_rev_order = queue
         return True
