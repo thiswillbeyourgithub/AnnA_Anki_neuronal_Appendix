@@ -116,7 +116,11 @@ class AnnA:
             else:
                 imp = importlib.import_module(
                         optional_acronym_list.replace(".py", ""))
-                self.acronym_dict = imp.acronym_dict
+                acro_dict = imp.acronym_dict
+                if list(acro_dict.keys()) != list(
+                        set(list(acro_dict.keys()))):
+                    print("Acronym list contains duplicate keys!")
+                self.acronym_dict = acro_dict
         if self.field_mapping is not None:
             file = Path(self.field_mapping)
             try:
