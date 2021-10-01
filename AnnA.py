@@ -1251,7 +1251,6 @@ plotting...")
         """
         full_text = " ".join(self.df["text"].tolist())
         if exclude_OCR_text is True:
-            print("(Excluding OCR text)")
             full_text = re.sub("> Caption: '.*?' <", " ", full_text)
         matched = set(re.findall("[A-Z]{3,}", full_text))
         acro_count = {}
@@ -1272,6 +1271,8 @@ found...")
             acro_list = [x.lower() for x in acro_list]
 
             print("List of some acronyms still found:")
+            if exclude_OCR_text is True:
+                print("(Excluding OCR text)")
             out = {acr for acr in filter(lambda x: x.lower() not in acro_list,
                                          relevant)
                    }
