@@ -305,19 +305,19 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
         print(" >  '" + query + "'", end="\n\n")
         due_cards = self._ankiconnect(action="findCards", query=query)
 
-        n_rated_days = int(self.rated_last_X_days)
-        if n_rated_days is not None and n_rated_days != 0:
-            print(f"Getting cards that where rated in the last {n_rated_days} days \
+        n_rated_days = self.rated_last_X_days
+        if n_rated_days is not None:
+            if int(n_rated_days) != 0:
+                print(f"Getting cards that where rated in the last {n_rated_days} days \
 from this deck...")
-            query = f"deck:{self.deckname} rated:{n_rated_days} -is:suspended"
-            print(" >  '" + query + "'", end="\n\n")
-            r_cards = self._ankiconnect(action="findCards", query=query)
+                query = f"deck:{self.deckname} rated:{n_rated_days} -is:suspended"
+                print(" >  '" + query + "'", end="\n\n")
+                r_cards = self._ankiconnect(action="findCards", query=query)
 
-            # removes overlap if found
-            rated_cards = [x for x in r_cards if x not in due_cards]
-            print(f"Rated cards contained {len(rated_cards)} relevant cards \
+                # removes overlap if found
+                rated_cards = [x for x in r_cards if x not in due_cards]
+                print(f"Rated cards contained {len(rated_cards)} relevant cards \
 (out of {len(r_cards)}).")
-
         else:
             print("Will not look for cards rated in past days.")
             rated_cards = []
