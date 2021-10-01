@@ -786,34 +786,31 @@ using PCA...")
                   initial=len(rated),
                   smoothing=0,
                   total=queue_size_goal+len(rated)) as pbar:
-            df_sub = df.drop(index=rated+queue)[["ref"]].copy()
-            indTODO = df_sub.index.tolist()
+            indTODO = df.drop(index=rated+queue).index.tolist()
             indQUEUE = (rated+queue)[-self.stride:]
             while len(queue) < queue_size_goal:
                 queue.append(indTODO[
-                        (df_sub.loc[indTODO, "ref"].values + np.min(
+                        (df.loc[indTODO, "ref"].values + np.min(
                             df_dist.loc[indQUEUE, indTODO].values,
-                            axis=0)).argmin()])
+                            axis=0)
+                         ).argmin()])
                 indQUEUE.append(indTODO.pop(indTODO.index(queue[-1])))
 
                 # I had some trouble with implementing this loop
-                # so I am keeping the legacy code as fallback
+                # so I am keeping the legacy code as fallback:
 #                queue2 = [x for x in queue[:-1]]
 #                df_temp = pd.DataFrame(columns=rated, index=df.index)
 #                for q in (rated+queue2)[-self.stride:]:
 #                    df_temp[q] = df_dist.values[df.index.get_loc(q)]
 #                df["score"] = df["ref"].values + np.min(df_temp, axis=1)
-#
 #                chosen_one2 = df.drop(index=(rated+queue2))["score"].idxmin()
 #                queue2.append(chosen_one2)
 #                df_temp[chosen_one2] = df_dist.values[df.index.get_loc(chosen_one2)]
-#
-#                # debug
 #                if queue[-1] != queue2[-1]:
 #                    tqdm.write(f">   NO")
 #                else:
 #                    tqdm.write("YES")
-
+#
                 pbar.update(1)
         print("Done.\n")
         self.opti_rev_order = queue
