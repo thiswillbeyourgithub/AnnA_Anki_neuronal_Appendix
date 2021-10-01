@@ -774,6 +774,9 @@ using PCA...")
         print(f"mean: {df['ref'].describe()}", end="\n")
         print(f"max: {pd.DataFrame(data=df_dist.values.flatten(), columns=['distance matrix']).describe()}", end="\n\n")
 
+        # pending investigation
+        self.stride = 500000
+
         with tqdm(desc="Computing optimal review order",
                   unit=" card",
                   initial=len(rated),
