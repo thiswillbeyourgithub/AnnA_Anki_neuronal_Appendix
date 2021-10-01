@@ -1088,7 +1088,8 @@ as opti_rev_order!")
 
             [t.join() for t in threads]
             pbar_a.close()
-            pbar_r.close()
+            if len(to_remove) != 0:
+                pbar_r.close()
 
             self._ankiconnect(action="clearUnusedTags")
         return True
