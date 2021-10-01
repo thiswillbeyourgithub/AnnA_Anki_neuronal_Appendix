@@ -75,7 +75,7 @@ class AnnA:
                  debug_force_score_formula=None,
                  n_clusters="auto",
                  pca_sBERT_dim=None,
-                 stride=102500,
+                 stride=1002500,
                  prefer_similar_card=False,
                  scoring_weights=(1, 1),
                  reference_order="lowest_interval",
