@@ -1,3 +1,4 @@
+import sys
 import pickle
 import time
 import random
@@ -38,7 +39,11 @@ def asynchronous_importer():
         CountVectorizer, TruncatedSVD, StandardScaler, \
         pairwise_distances, PCA, px, umap, np, tokenizer_bert, sBERT, \
         MiniBatchKMeans, interpolate
-    print("Began importing modules...\n")
+    if "SentenceTransformer" not in sys.modules:
+        print("Began importing modules...\n")
+        print_when_ends = True
+    else:
+        print_when_ends = False
     from sklearn.feature_extraction.text import TfidfVectorizer
     from sklearn.feature_extraction.text import CountVectorizer
     from sentence_transformers import SentenceTransformer
@@ -53,7 +58,8 @@ def asynchronous_importer():
     from sklearn.decomposition import TruncatedSVD
     from sklearn.preprocessing import StandardScaler
     from scipy import interpolate
-    tqdm.write("Finished importing modules.", end="\n\n")
+    if print_when_ends:
+        tqdm.write("Finished importing modules.", end="\n\n")
 
 
 class AnnA:
