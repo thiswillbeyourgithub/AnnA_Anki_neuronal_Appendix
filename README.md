@@ -108,10 +108,12 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 
 ## TODO
 * tokenize cluster topics to make them meaningful
+* add a "verbose" argument to reduce printing to a minimum
+* replace new line in blockquotes by ;
 * add a cheatsheet in the usage
 * print the most dissimilar cards as well as the most similar
 * add tf-idf functionnality to bypass sbert, for some weird users + close the relevant issue after telling the author that it's done
-* investigate implementing a correction vector, for example "+radiography" would give a bonus to cards alignes with this word and "-radiography" would do the opposite. To help you adjust your revisions.
+* implement a correction vector, for example "+radiography" would give a bonus to cards alignes with this word and "-radiography" would do the opposite. To help you optimize review sessions.
 * investigate wether lapsed cards have to be counted differently
 * investigate if it's possible to OCR the subpart of an image occlusion
 * find a way to remove already created filtered decks
