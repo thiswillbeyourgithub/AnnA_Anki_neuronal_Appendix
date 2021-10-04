@@ -141,12 +141,13 @@ values.")
         # actual execution
         self.deckname = self._check_deck(deckname, import_thread)
         if just_bury_learning is not None:
-            # bypasses most of the rest of the code to simply bury some cards:
-            print(f"Will bury similar learning cards from deck {self.deckname}")
-            print("Resetting scoring weights to only take into account \
-similarity.")
-            self.scoring_weights = (0, 1)
-            print("Resetting rated_last_X_days.")
+            # bypasses most of the code to bury learning cards
+            # directly in the deck without creating filtered decks
+            print(f"Burying similar learning cards from deck {self.deckname}..\
+.")
+            print("Forcing 'reference_order' to 'lowest_interval'.")
+            self.reference_order = "lowest_interval"
+            print("Forcing rated_last_X_days to None.")
             self.rated_last_X_days = None
 
             self._create_and_fill_df(just_learning=True)
