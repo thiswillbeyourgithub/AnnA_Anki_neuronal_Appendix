@@ -39,7 +39,7 @@ def asynchronous_importer():
         CountVectorizer, TruncatedSVD, StandardScaler, \
         pairwise_distances, PCA, px, umap, np, tokenizer_bert, sBERT, \
         MiniBatchKMeans, interpolate
-    if "SentenceTransformer" not in sys.modules:
+    if "sentence_transformers" not in sys.modules:
         print("Began importing modules...\n")
         print_when_ends = True
     else:
