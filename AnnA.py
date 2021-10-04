@@ -793,7 +793,7 @@ using PCA...")
             pool = df.loc[df["status"] == "due", "ref"].nsmallest(
                     n=min(50, len(self.due_cards))
                     ).index
-            queue.extend(random.choices(pool, k=2))
+            queue.extend(random.choices(pool, k=1))
 
         if self.debug_force_score_formula is not None:
             if self.debug_force_score_formula == "different":
