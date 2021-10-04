@@ -92,13 +92,12 @@ AnnA was made with usability in mind. With the right arguments, you can have to 
  * `prefer_similar_card` I don't know who would use that. It reverses the optimal review order and allows to create a filtered deck grouping your cards that are semantically closest to each other. You can use it to convince yourself that the optimal review order is indeed working. Default is `False`.
  * `reference_order` either "relative_overdueness" or "lowest_interval". It is the reference used to sort the card before adjusting them using the similarity scores. Default is `"relative_overdueness"`. Keep in mind that my relative_overdueness is a reimplementation of the default overdueness of anki and is not absolutely exactly the same but should be a very close approximation. If you find edge cases, please open an issue.
  * `scoring_weights` a tuple used to adjust the value of the reference order compared to how similar the cards are. Default is `(1, 1)`. For example: (1, 1.5) means that the algorithm will spread the similar cards farther apart.
- * `send_to_anki` tells AnnA to automatically create the filtered deck or not. Default is `False`.
  * `to_anki` tells AnnA to automatically create the filtered deck or not. Default is `False`.
  * `compute_opti_rev_order` don't compute optimal review order, if set to False, it will set `to_anki` to False. Default to True.
  * `check_database` at the end of execution, ask anki to check the database or not. Default is `False`.
  * `just_bury_learning` **experimental**: will just bury some cards of your learning queue if they are too similar. This will bypass a lot of the other arguments and mostly take into account `deckname` and `desired_deck_size`. Default is False.
 
-AnnA has a number of other built-in methods you can run after instantiating the class. They are especially useful if "send_to_anki" is set to `False`. Note that methods beginning with a "_" are not supposed to be called by the user and are reserved for backend use. Here's a list of useful methods:
+AnnA has a number of other built-in methods you can run after instantiating the class. They are especially useful if "to_anki" is set to `False`. Note that methods beginning with a "_" are not supposed to be called by the user and are reserved for backend use. Here's a list of useful methods:
 
 * `compute_clusters` can be used to group the cards by semantic clusters. Several algorithms are implemented: kmeans, minibatch-kmeans, agglomerative clustering, DBSCAN. I can add more if needed.
 * `plot_latent_space` can be used to display a 2D projection of your cards using plotly. This opens a new tab in your browser and loads an interactive interface in it. You can color it using tags, clusters, etc. If you have a blank plot without any points, call the method again. I don't understand this issue with plotly yet and help is appreciated :/
@@ -109,6 +108,7 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 
 ## TODO
 * tokenize cluster topics to make them meaningful
+* add a cheatsheet in the usage
 * print the most dissimilar cards as well as the most similar
 * add tf-idf functionnality to bypass sbert, for some weird users + close the relevant issue after telling the author that it's done
 * investigate implementing a correction vector, for example "+radiography" would give a bonus to cards alignes with this word and "-radiography" would do the opposite. To help you adjust your revisions.
