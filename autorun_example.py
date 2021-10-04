@@ -27,6 +27,7 @@ b = AnnA(deckname="Some_OtherDeck::subdeck#1",
         reference_order="lowest_interval",
         do_clustering=True,
         to_anki=True
+        show_banner=False,
         )
 interscreen()
 c = AnnA(deckname="Some_OtherDeck::subdeck#2",
@@ -36,4 +37,5 @@ c = AnnA(deckname="Some_OtherDeck::subdeck#2",
         do_clustering=True,
         to_anki=True,
         check_database=True
+        show_banner=False,
         )
