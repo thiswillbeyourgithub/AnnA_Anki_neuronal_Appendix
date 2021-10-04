@@ -12,7 +12,8 @@ Tired of having to deal with anki flashcards that are too similar when grinding 
 * [Crazy Ideas](#Crazy-ideas)
 
 ## One sentence summary
-When you don't have the time to complete all your daily reviews, use this to create a special filtered deck that makes sure you will only review the cards that are most different from the rest of your reviews.
+* When you don't have the time to complete all your daily reviews, use this to create a special filtered deck that makes sure you will only review the cards that are most different from the rest of your reviews.
+* This helps to avoid reviewing **similar** cards on the same day.
 
 ## Note to readers
 1. I would really like to integrate this into anki somehow but am not knowledgeable enough about how to do it, how to manage anki versions, how to handle different platforms etc. All help is much appreciated!
