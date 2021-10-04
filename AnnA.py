@@ -330,7 +330,7 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
             due_cards = self._ankiconnect(action="findCards", query=query)
         else:
             print("Getting is:learn card from deck...")
-            query = f"deck:{self.deckname} is:learn -is:suspended"
+            query = f"deck:{self.deckname} is:learn -is:suspended -rated:1"
             print(" >  '" + query + "'", end="\n\n")
             due_cards = self._ankiconnect(action="findCards", query=query)
             print(f"Found {len(due_cards)} learning cards...")
