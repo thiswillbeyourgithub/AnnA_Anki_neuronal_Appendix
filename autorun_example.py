@@ -18,7 +18,7 @@ a = AnnA(deckname="Some_Deck",
         rated_last_X_days=3,
         reference_order="relative_overdueness",
         do_clustering=True,
-        send_to_anki=True,
+        to_anki=True,
         )
 interscreen()
 b = AnnA(deckname="Some_OtherDeck::subdeck#1",
@@ -26,7 +26,7 @@ b = AnnA(deckname="Some_OtherDeck::subdeck#1",
         rated_last_X_days=3,
         reference_order="lowest_interval",
         do_clustering=True,
-        send_to_anki=True
+        to_anki=True
         )
 interscreen()
 c = AnnA(deckname="Some_OtherDeck::subdeck#2",
@@ -34,6 +34,6 @@ c = AnnA(deckname="Some_OtherDeck::subdeck#2",
         rated_last_X_days=3,
         reference_order="lowest_interval",
         do_clustering=True,
-        send_to_anki=True,
+        to_anki=True,
         check_database=True
         )

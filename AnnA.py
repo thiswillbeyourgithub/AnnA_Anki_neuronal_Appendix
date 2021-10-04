@@ -87,14 +87,14 @@ class AnnA:
                  reference_order="lowest_interval",
                  do_clustering=False,
                  compute_opti_rev_order=True,
-                 send_to_anki=False,
+                 to_anki=False,
                  check_database=False
                  ):
-        # printing banner
         if show_banner is True:
             print(pyfiglet.figlet_format("AnnA"))
             print("(Anki neuronal Appendix)\n\n")
 
+        # start importing large modules
         import_thread = threading.Thread(target=asynchronous_importer)
         import_thread.start()
 
@@ -152,8 +152,8 @@ values.")
         self._compute_distance_matrix()
         if compute_opti_rev_order is True:
             self._compute_opti_rev_order()
-            if send_to_anki is True:
-                self.send_to_anki()
+            if to_anki is True:
+                self.to_anki(just_bury=True)
 
         # pickle itself
         print("\nSaving instance as 'last_run.pickle'...")
@@ -842,7 +842,9 @@ using PCA...")
         print(self.df.loc[order, "text"])
         return True
 
-    def send_to_anki(self, deck_template="AnnA - Optimal Review Order"):
+    def to_anki(self,
+                     deck_template="AnnA - Optimal Review Order",
+                     just_bury=False):
         """
         create a filtered deck containing the cards to review in optimal order
 
@@ -1310,6 +1312,7 @@ found...")
             pprint(sorted(out))
         print("")
         return True
+
 
 
 class CTFIDFVectorizer(TfidfTransformer):
