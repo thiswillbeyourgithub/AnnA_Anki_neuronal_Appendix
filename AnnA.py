@@ -108,14 +108,15 @@ class AnnA:
         self.n_clusters = n_clusters
         self.pca_sBERT_dim = pca_sBERT_dim
         self.stride = stride
-        assert stride > 0
         self.prefer_similar_card = prefer_similar_card
         self.scoring_weights = scoring_weights
-        assert reference_order in ["lowest_interval", "relative_overdueness"]
         self.reference_order = reference_order
         self.field_mapping = field_mapping
         self.optional_acronym_list = optional_acronym_list
         self.debug_force_score_formula = debug_force_score_formula
+
+        assert stride > 0
+        assert reference_order in ["lowest_interval", "relative_overdueness"]
 
         if self.optional_acronym_list is not None:
             file = Path(optional_acronym_list)
