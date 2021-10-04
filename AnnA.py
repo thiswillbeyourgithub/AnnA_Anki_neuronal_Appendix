@@ -389,7 +389,7 @@ from this deck...")
                 print(f"Error processing card with ID {card['cardId']}")
 
         if len(list_cardInfo) != len(list(set(combined_card_list))):
-            print("Duplicate elements!\nExiting.")
+            print("Error: duplicate cards in DataFrame!\nExiting.")
             pdb.set_trace()
 
         self.df = pd.DataFrame().append(list_cardInfo,
@@ -851,9 +851,7 @@ using PCA...")
 #                    tqdm.write("YES")
 
                 pbar.update(1)
-        if len(queue) == 0:
-            print("Error: optimum review order is empty!")
-            breakpoint()
+        assert len(queue) != 0
         print("Done.\n")
         self.opti_rev_order = queue
         return True
