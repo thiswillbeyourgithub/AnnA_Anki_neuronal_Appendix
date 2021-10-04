@@ -406,44 +406,48 @@ from this deck...")
             when instantiating AnnA
         Greek letters can also be replaced on the fly
         """
+        s = re.sub
+        r = str.replace
         orig = text
-        text = str(text).replace("\n", " ")
+        text = str(text).r("\n", " ")
         if self.keep_ocr is True:
             # keep image title (usually OCR)
-            text = re.sub("title=(\".*?\")", "> Caption: '\\1' <", text)
-            text = text.replace('Caption: \'""\'', "")
+            text = s("title=(\".*?\")", "> Caption: '\\1' <", text)
+            text = text.r('Caption: \'""\'', "")
         if self.replace_greek is True:
             for a, b in greek_alphabet_mapping.items():
-                text = re.sub(a, b, text)
+                text = s(a, b, text)
         if self.optional_acronym_list is True:
             global acronym_dict
             for a, b in self.acronym_dict.items():
-                text = re.sub(rf"{a}", f"{a} ({b})", text, flags=re.IGNORECASE)
+                text = s(rf"{a}", f"{a} ({b})", text, flags=re.IGNORECASE)
                 # \b matches beginning and end of a word
-        text = re.sub(r'[a-zA-Z0-9-]+\....', " ", text)  # media file name
-        text = re.sub('\\n|<div>|</div>|<br>|<span>|</span>|<li>|</li>|<ul>|\
-</ul>',
-                      " ", text)  # newline
-        text = re.sub("<a href.*?</a>", " ", text)  # html links
-        text = re.sub(r'http[s]?://\S*', " ", text)  # plaintext links
-        text = re.sub("<.*?>", " ", text)  # remaining html tags
-        text = re.sub('\u001F|&nbsp;', " ", text)
-        text = re.sub(r"{{c\d+?::", "", text)
-        text = re.sub("{{c|{{|}}|::", " ", text)
-        text = re.sub(r"\b(\d+)e\b", "\\1 euros", text)
-        text = re.sub(r"\b(\d+)j\b", "\\1 jours", text)
-        text = re.sub(r"\b(\d+)h\b", "\\1 heures", text)
-        text = re.sub(r"\b(\d+)m\b", "\\1 minutes", text)
-        text = re.sub(r"\b(\d+)s\b", "\\1 secondes", text)
-        text = re.sub(r"\[\d*\]", "", text)  # wiki citation
-        text = text.replace("&amp;", "&")
-        text = text.replace("/", " / ")
-        text = re.sub(r"\w{1,5}>", " ", text)  # missed html tags
-        text = re.sub("&gt;|&lt;|<|>", "", text)
-        text = re.sub("[.?!] ([a-zA-Z])", lambda x: x.group(0).upper(), text)
+        text = s(r'[a-zA-Z0-9-]+\....', " ", text)  # media file name
+        # replace indented newline by ;
+        text = s("<blockquote(.*?)</blockquote>",
+                 lambda x: x.group(0).r("<br>", " ; "), text)
+        text = s('\\n|<div>|</div>|<br>|<span>|</span>|<li>|</li>|<ul>|</ul>',
+                 " ", text)  # newlines
+        text = s("<a href.*?</a>", " ", text)  # html links
+        text = s(r'http[s]?://\S*', " ", text)  # plaintext links
+        text = s("<.*?>", " ", text)  # remaining html tags
+        text = s('\u001F|&nbsp;', " ", text)
+        text = s(r"{{c\d+?::", "", text)
+        text = s("{{c|{{|}}|::", " ", text)
+        text = s(r"\b(\d+)e\b", "\\1 euros", text)
+        text = s(r"\b(\d+)j\b", "\\1 jours", text)
+        text = s(r"\b(\d+)h\b", "\\1 heures", text)
+        text = s(r"\b(\d+)m\b", "\\1 minutes", text)
+        text = s(r"\b(\d+)s\b", "\\1 secondes", text)
+        text = s(r"\[\d*\]", "", text)  # wiki citation
+        text = text.r("&amp;", "&")
+        text = text.r("/", " / ")
+        text = s(r"\w{1,5}>", " ", text)  # missed html tags
+        text = s("&gt;|&lt;|<|>", "", text)
+        text = s("[.?!] ([a-zA-Z])", lambda x: x.group(0).upper(), text)
         # adds capital letter after punctuation
 
-        text = text.replace(" : ", ": ")
+        text = text.r(" : ", ": ")
         text = " ".join(text.split())  # multiple spaces
         if len(text) < 10:
             if "src=" in orig:
@@ -452,8 +456,8 @@ from this deck...")
             text = text[0].upper() + text[1:]
             if text[-1] not in ["?", ".", "!"]:
                 text += "."
-        text = text.replace(" :.", ".")
-        text = text.replace(":.", ".")
+        text = text.r(" :.", ".")
+        text = text.r(":.", ".")
         return text
 
     def _format_card(self):
