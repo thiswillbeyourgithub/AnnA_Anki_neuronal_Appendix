@@ -74,7 +74,7 @@ class AnnA:
                  field_mapping="field_mapping.py",
                  optional_acronym_list="acronym_list.py",
                  keep_ocr=True,
-                 desired_deck_size="75%",
+                 desired_deck_size="80%",
                  rated_last_X_days=4,
                  show_banner=True,
                  debug_card_limit=None,
