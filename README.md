@@ -93,8 +93,10 @@ AnnA was made with usability in mind. With the right arguments, you can have to 
  * `reference_order` either "relative_overdueness" or "lowest_interval". It is the reference used to sort the card before adjusting them using the similarity scores. Default is `"relative_overdueness"`. Keep in mind that my relative_overdueness is a reimplementation of the default overdueness of anki and is not absolutely exactly the same but should be a very close approximation. If you find edge cases, please open an issue.
  * `scoring_weights` a tuple used to adjust the value of the reference order compared to how similar the cards are. Default is `(1, 1)`. For example: (1, 1.5) means that the algorithm will spread the similar cards farther apart.
  * `send_to_anki` tells AnnA to automatically create the filtered deck or not. Default is `False`.
- * `compute_opti_rev_order` don't compute optimal review order, if set to False, it will set `send_to_anki` to False. Default to True.
+ * `to_anki` tells AnnA to automatically create the filtered deck or not. Default is `False`.
+ * `compute_opti_rev_order` don't compute optimal review order, if set to False, it will set `to_anki` to False. Default to True.
  * `check_database` at the end of execution, ask anki to check the database or not. Default is `False`.
+ * `just_bury_learning` **experimental**: will just bury some cards of your learning queue if they are too similar. This will bypass a lot of the other arguments and mostly take into account `deckname` and `desired_deck_size`. Default is False.
 
 AnnA has a number of other built-in methods you can run after instantiating the class. They are especially useful if "send_to_anki" is set to `False`. Note that methods beginning with a "_" are not supposed to be called by the user and are reserved for backend use. Here's a list of useful methods:
 
@@ -116,7 +118,6 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * add ability to extend the due query
 * add colours to the prints
 * refactor like so: from AnnA import util => util.index_collection + util.offline_search + util.offline_image_search
-* add a method to bury the card without creating a filtered deck
 * look into sentence mining methods from sbert, that might contain useful ideas
 * take a look at topic modelling techniques that might be cleaner to invoke than the current ctf-idf implementation
 * warn LW

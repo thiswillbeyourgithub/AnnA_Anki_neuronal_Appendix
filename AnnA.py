@@ -88,7 +88,8 @@ class AnnA:
                  do_clustering=False,
                  compute_opti_rev_order=True,
                  to_anki=False,
-                 check_database=False
+                 check_database=False,
+                 just_bury_learning=None,
                  ):
         if show_banner is True:
             print(pyfiglet.figlet_format("AnnA"))
@@ -142,18 +143,38 @@ values.")
                 self.field_dic = {"dummyvalue": "dummyvalue"}
 
         # actual execution
-        self._create_and_fill_df()
-        self.df = self._reset_index_dtype(self.df)
-        self._format_card()
-        self.show_acronyms()
-        self._compute_sBERT_vec(import_thread=import_thread)
-        if do_clustering is True:
-            self.compute_clusters(minibatchk_kwargs={"verbose": 0})
-        self._compute_distance_matrix()
-        if compute_opti_rev_order is True:
+        self.deckname = self._check_deck(deckname, import_thread)
+        if just_bury_learning is not None:
+            # bypasses most of the rest of the code to simply bury some cards:
+            print(f"Will bury similar learning cards from deck {self.deckname}")
+            print("Resetting scoring weights to only take into account \
+similarity.")
+            self.scoring_weights = (0, 1)
+            print("Resetting rated_last_X_days.")
+            self.rated_last_X_days = None
+
+            self._create_and_fill_df(just_learning=True)
+            self.df = self._reset_index_dtype(self.df)
+            self._format_card()
+            self.show_acronyms()
+            self._compute_sBERT_vec(import_thread=import_thread)
+            self._compute_distance_matrix()
             self._compute_opti_rev_order()
             if to_anki is True:
                 self.to_anki(just_bury=True)
+        else:
+            self._create_and_fill_df()
+            self.df = self._reset_index_dtype(self.df)
+            self._format_card()
+            self.show_acronyms()
+            self._compute_sBERT_vec(import_thread=import_thread)
+            if do_clustering is True:
+                self.compute_clusters(minibatchk_kwargs={"verbose": 0})
+            self._compute_distance_matrix()
+            if compute_opti_rev_order is True:
+                self._compute_opti_rev_order()
+                if to_anki is True:
+                    self.to_anki()
 
         # pickle itself
         print("\nSaving instance as 'last_run.pickle'...")
@@ -299,17 +320,25 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
                                   completer=auto_complete)
         return deckname
 
-    def _create_and_fill_df(self):
+    def _create_and_fill_df(self, just_learning=None):
         """
         create a pandas DataFrame, fill it with the information gathered from
         anki connect like card content, intervals, etc
         """
 
-        print("Getting due card from this deck...")
-        query = f"deck:{self.deckname} is:due is:review -is:learn \
+        if just_learning is None:
+            print("Getting due card from this deck...")
+            query = f"deck:{self.deckname} is:due is:review -is:learn \
 -is:suspended -is:buried -is:new -rated:1"
-        print(" >  '" + query + "'", end="\n\n")
-        due_cards = self._ankiconnect(action="findCards", query=query)
+            print(" >  '" + query + "'", end="\n\n")
+            due_cards = self._ankiconnect(action="findCards", query=query)
+        else:
+            print("Getting is:learn card from deck...")
+            query = f"deck:{self.deckname} is:learn -is:suspended"
+            print(" >  '" + query + "'", end="\n\n")
+            due_cards = self._ankiconnect(action="findCards", query=query)
+            print(f"Found {len(due_cards)} learning cards...")
+
 
         n_rated_days = self.rated_last_X_days
         if n_rated_days is not None:
@@ -856,7 +885,18 @@ using PCA...")
             does indeed contain the right number of cards and the right cards
         * -100 000 seems to be the starting value for due order in filtered
             decks
+        * if just_bury is True, then no filtered deck will be created and
+            AnnA will just bury the cards that are too similar
         """
+        if just_bury is True:
+            to_keep = self.opti_rev_order
+            to_bury = [x for x in self.due_cards if x not in to_keep]
+            assert len(to_bury) < len(self.due_cards)
+            print(f"Burying {len(to_bury)} cards out of {len(self.due_cards)}")
+            self._ankiconnect(action="bury",
+                              cards=to_bury)
+            print("Done.")
+            return True
 
         filtered_deck_name = str(deck_template + f" - {self.deckname}")
         filtered_deck_name = filtered_deck_name.replace("::", "_")
