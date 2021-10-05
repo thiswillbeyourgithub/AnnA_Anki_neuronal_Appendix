@@ -97,7 +97,7 @@ AnnA was made with usability in mind. With the right arguments, you can have to 
  * `compute_opti_rev_order` don't compute optimal review order, if set to False, it will set `to_anki` to False. Default to True.
  * `check_database` at the end of execution, ask anki to check the database or not. Default is `False`.
  * `just_bury_learning` **experimental**: will just bury some cards of your learning queue if they are too similar. This will bypass a lot of the other arguments and mostly take into account `deckname` and `desired_deck_size`. Default is False.
- * `log_level` can be "info+error", "error_only", "warning", "debug". Default is "info+error".
+ * `log_level` can be "info+error", "error_only", "warning", "debug". Default is "info+error". Note that logging is not stored and only printed on screen.
 
 AnnA has a number of other built-in methods you can run after instantiating the class. They are especially useful if "to_anki" is set to `False`. Note that methods beginning with a "_" are not supposed to be called by the user and are reserved for backend use. Here's a list of useful methods:
 
