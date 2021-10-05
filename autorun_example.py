@@ -19,6 +19,7 @@ a = AnnA(deckname="Some_Deck",
         reference_order="relative_overdueness",
         do_clustering=True,
         to_anki=True,
+        log_level="error_only",
         )
 interscreen()
 b = AnnA(deckname="Some_OtherDeck::subdeck#1",

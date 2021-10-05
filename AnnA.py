@@ -20,6 +20,7 @@ import threading
 from sklearn.feature_extraction.text import TfidfTransformer
 import scipy.sparse as sp
 import numpy as np
+import logging
 
 # avoids annoying warning
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
@@ -27,6 +28,16 @@ os.environ["TOKENIZERS_PARALLELISM"] = "true"
 # makes the script interuptible, resume it using c+enter
 signal.signal(signal.SIGINT, (lambda signal, frame: pdb.set_trace()))
 
+# adds logger
+log = logging.getLogger()
+out_hdlr = logging.StreamHandler(sys.stdout)
+out_hdlr.setFormatter(logging.Formatter('%(message)s'))
+out_hdlr.setLevel(logging.INFO)
+log.addHandler(out_hdlr)
+log.setLevel(logging.ERROR)
+inf = log.info
+war = log.warn
+err = log.error
 
 def asynchronous_importer():
     """
@@ -40,7 +51,7 @@ def asynchronous_importer():
         pairwise_distances, PCA, px, umap, np, tokenizer_bert, sBERT, \
         MiniBatchKMeans, interpolate
     if "sentence_transformers" not in sys.modules:
-        print("Began importing modules...\n")
+        inf("Began importing modules...\n")
         print_when_ends = True
     else:
         print_when_ends = False
@@ -59,7 +70,7 @@ def asynchronous_importer():
     from sklearn.preprocessing import StandardScaler
     from scipy import interpolate
     if print_when_ends:
-        tqdm.write("Finished importing modules.", end="\n\n")
+        inf("Finished importing modules.\n\n")
 
 
 class AnnA:
@@ -90,10 +101,21 @@ class AnnA:
                  to_anki=False,
                  check_database=False,
                  just_bury_learning=None,
+                 log_level="info+error",
                  ):
+        log.setLevel(logging.INFO)
+        if log_level == "error_only":
+            log.setLevel(logging.ERROR)
+        if log_level in "warnings":
+            log.setLevel(logging.WARNING)
+        if log_level in ["all", "debug"]:
+            log.setLevel(logging.DEBUG)
+
+
         if show_banner is True:
             print(pyfiglet.figlet_format("AnnA"))
             print("(Anki neuronal Appendix)\n\n")
+
 
         # start importing large modules
         import_thread = threading.Thread(target=asynchronous_importer)
@@ -134,7 +156,7 @@ class AnnA:
                         self.field_mapping.replace(".py", ""))
                 self.field_dic = imp.field_dic
             except Exception:
-                print("Error with field mapping file, will use default \
+                err("Error with field mapping file, will use default \
 values.")
                 self.field_dic = {"dummyvalue": "dummyvalue"}
 
@@ -143,11 +165,11 @@ values.")
         if just_bury_learning is not None:
             # bypasses most of the code to bury learning cards
             # directly in the deck without creating filtered decks
-            print(f"Burying similar learning cards from deck {self.deckname}..\
+            inf(f"Burying similar learning cards from deck {self.deckname}..\
 .")
-            print("Forcing 'reference_order' to 'lowest_interval'.")
+            inf("Forcing 'reference_order' to 'lowest_interval'.")
             self.reference_order = "lowest_interval"
-            print("Forcing rated_last_X_days to None.")
+            inf("Forcing rated_last_X_days to None.")
             self.rated_last_X_days = None
 
             self._create_and_fill_df(just_learning=True)
@@ -180,14 +202,14 @@ values.")
         with open("last_run.pickle", "wb") as f:
             try:
                 pickle.dump(self, f)
-                print("Done! You can now restore this instance of AnnA without having to \
+                inf("Done! You can now restore this instance of AnnA without having to \
 execute the code using:\n'import pickle ; a = pickle.load(open(\"last_run.pickle\
 \", \"rb\"))'")
             except TypeError as e:
-                print(f"Error when saving instance as pickle file: {e}")
+                err(f"Error when saving instance as pickle file: {e}")
 
         if check_database is True:
-            print("Re-optimizing Anki database")
+            inf("Re-optimizing Anki database")
             self._ankiconnect(action="guiCheckDatabase")
 
     def _reset_index_dtype(self, df):
@@ -250,7 +272,7 @@ execute the code using:\n'import pickle ; a = pickle.load(open(\"last_run.pickle
                 r_list = []
                 target_thread_n = 5
                 batchsize = len(card_id)//target_thread_n+3
-                print(f"Large number of cards to retrieve: creating 10 \
+                inf(f"Large number of cards to retrieve: creating 10 \
 threads of size {batchsize} (total: {len(card_id)} cards)...")
 
                 def retrieve_cards(card_list, lock, cnt, r_list):
@@ -302,7 +324,7 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
         decklist = self._ankiconnect(action="deckNames") + ["*"]
         if deckname is not None:
             if deckname not in decklist:
-                print("Couldn't find this deck.", end=" ")
+                err("Couldn't find this deck.")
                 deckname = None
         if deckname is None:
             auto_complete = WordCompleter(decklist,
@@ -327,12 +349,12 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
             print("Getting due card list...")
             query = f"deck:{self.deckname} is:due is:review -is:learn \
 -is:suspended -is:buried -is:new -rated:1"
-            print(" >  '" + query + "'", end="\n\n")
+            inf(" >  '" + query + "'\n\n")
             due_cards = self._ankiconnect(action="findCards", query=query)
         else:
             print("Getting is:learn card list...")
             query = f"deck:{self.deckname} is:learn -is:suspended -rated:1"
-            print(" >  '" + query + "'", end="\n\n")
+            inf(" >  '" + query + "'\n\n")
             due_cards = self._ankiconnect(action="findCards", query=query)
             print(f"Found {len(due_cards)} learning cards...")
 
@@ -343,7 +365,7 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
 {n_rated_days} days  ...")
                 query = f"deck:{self.deckname} rated:{n_rated_days} \
 -is:suspended"
-                print(" >  '" + query + "'", end="\n\n")
+                inf(" >  '" + query + "'\n\n")
                 r_cards = self._ankiconnect(action="findCards", query=query)
 
                 # removes overlap if found
@@ -360,7 +382,7 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
         combined_card_list = list(rated_cards + due_cards)[:limit]
 
         if len(combined_card_list) < 20:
-            print("You don't have enough cards!\nExiting.")
+            err("You don't have enough cards!\nExiting.")
             raise SystemExit()
 
         list_cardInfo = []
@@ -371,8 +393,7 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
         list_cardInfo.extend(
                 self._get_cards_info_from_card_id(
                     card_id=combined_card_list))
-        print(f"Extracted information in {int(time.time()-start)} seconds.",
-                end="\n\n")
+        inf(f"Extracted information in {int(time.time()-start)} seconds.\n\n")
 
         for i, card in enumerate(list_cardInfo):
             # removing large fields:
@@ -387,10 +408,10 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
                 list_cardInfo[i]["status"] = "rated"
             else:
                 list_cardInfo[i]["status"] = "ERROR"
-                print(f"Error processing card with ID {card['cardId']}")
+                err(f"Error processing card with ID {card['cardId']}")
 
         if len(list_cardInfo) != len(list(set(combined_card_list))):
-            print("Error: duplicate cards in DataFrame!\nExiting.")
+            err("Error: duplicate cards in DataFrame!\nExiting.")
             pdb.set_trace()
 
         self.df = pd.DataFrame().append(list_cardInfo,
@@ -545,12 +566,12 @@ Edit the variable 'field_dic' to use {card_model}")
                       for x in tqdm(
                       df["comb_text"],
                       desc="Formating text", smoothing=0, unit=" card")]
-        print("\n\nPrinting 5 random samples of your formated text, to help \
+        inf("\n\nPrinting 5 random samples of your formated text, to help \
 adjust formating issues:")
         pd.set_option('display.max_colwidth', 80)
         sub_index = random.choices(df.index.tolist(), k=5)
         for i in sub_index:
-            print(f"{i}: {df.loc[i, 'text']}\n")
+            inf(f"{i}: {df.loc[i, 'text']}\n")
         pd.reset_option('display.max_colwidth')
         print("\n")
         self.df = df.sort_index()
@@ -578,7 +599,7 @@ adjust formating issues:")
 
             # reloads sBERT vectors and only recomputes the new one:
             if not sBERT_file.exists():
-                print(" sBERT cache not found, will create it.")
+                inf(" sBERT cache not found, will create it.")
                 df_cache = pd.DataFrame(
                         columns=["cardId", "mod", "text", "sBERT"]
                         ).set_index("cardId")
@@ -643,7 +664,7 @@ using PCA...")
                          for x in range(len(df.loc[df.index[0], "sBERT"]))],
                 data=[x[0:] for x in df["sBERT"]])
             out = pca_sBERT.fit_transform(df_temp)
-            print(f"Explained variance ratio after PCA on sBERT: \
+            inf(f"Explained variance ratio after PCA on sBERT: \
 {round(sum(pca_sBERT.explained_variance_ratio_)*100,1)}%")
             df["sBERT"] = [x for x in out]
         return True
@@ -790,7 +811,7 @@ using PCA...")
         desired_deck_size = int(desired_deck_size)
 
         if desired_deck_size > int(len(df.index)-len(rated)):
-            print(f"You wanted to create a deck with \
+            err(f"You wanted to create a deck with \
 {desired_deck_size} in it but the deck only contains \
 {len(df.index)-len(rated)} cards. Taking the lowest value.")
         queue_size_goal = min(desired_deck_size,
@@ -810,9 +831,9 @@ using PCA...")
                 df["ref"] = 0
                 df_dist.loc[:, :] = np.ones_like(df_dist.values)
 
-        print("\nReference score stats:")
-        print(f"mean: {df['ref'].describe()}", end="\n")
-        print(f"max: {pd.DataFrame(data=df_dist.values.flatten(), columns=['distance matrix']).describe()}", end="\n\n")
+        inf("\nReference score stats:")
+        inf(f"mean: {df['ref'].describe()}\n")
+        inf(f"max: {pd.DataFrame(data=df_dist.values.flatten(), columns=['distance matrix']).describe()}\n\n")
 
         with tqdm(desc="Computing optimal review order",
                   unit=" card",
@@ -973,10 +994,10 @@ deck.")
         diff = [x for x in self.opti_rev_order + cur_in_deck
                 if x not in self.opti_rev_order or x not in cur_in_deck]
         if len(diff) != 0:
-            print("Inconsistency! The deck does not contain the same cards \
+            err("Inconsistency! The deck does not contain the same cards \
 as opti_rev_order!")
             pprint(diff)
-            print(f"\nNumber of inconsistent cards: {len(diff)}")
+            err(f"\nNumber of inconsistent cards: {len(diff)}")
         else:
             print(" Done.")
 
@@ -1271,7 +1292,7 @@ plotting...")
                                                  metric=dist))
             df["distance"] = df["distance"].astype("float")
         except ValueError as e:
-            print(f"Error {e}: did you select 'sBERT' instead of \
+            err(f"Error {e}: did you select 'sBERT' instead of \
 'sBERT_before_pca'?")
             return False
         index = df.index
@@ -1315,7 +1336,7 @@ plotting...")
                 ":", "h")[0:-3]
         name = f"{out_name}_{self.deckname}_{cur_time}.pickle"
         df.to_pickle("./DataFrame_backups/" + name)
-        print(f"Dataframe exported to {name}")
+        print(f"Dataframe exported to {name}.")
         return True
 
     def show_acronyms(self, exclude_OCR_text=True):
@@ -1336,7 +1357,7 @@ plotting...")
                 k=min(len(sorted_by_count), 10))
 
         if self.optional_acronym_list is None:
-            print("\nYou did not supply an acronym list, printing all acronym \
+            err("\nYou did not supply an acronym list, printing all acronym \
 found...")
             pprint(relevant)
         else:
@@ -1354,7 +1375,6 @@ found...")
             pprint(sorted(out))
         print("")
         return True
-
 
 
 class CTFIDFVectorizer(TfidfTransformer):
