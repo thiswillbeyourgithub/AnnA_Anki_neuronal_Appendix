@@ -19,7 +19,6 @@ from pathlib import Path
 import threading
 from sklearn.feature_extraction.text import TfidfTransformer
 import scipy.sparse as sp
-import numpy as np
 import logging
 
 # avoids annoying warning
@@ -45,7 +44,7 @@ def asynchronous_importer():
     importing AnnA and creating the instance of the class, the language model
     have some more time to load
     """
-    global SentenceTransformer, KMeans, DBSCAN, \
+    global np, SentenceTransformer, KMeans, DBSCAN, \
         AgglomerativeClustering, transformers, normalize, TfidfVectorizer,\
         CountVectorizer, TruncatedSVD, StandardScaler, \
         pairwise_distances, PCA, px, umap, np, tokenizer_bert, sBERT, \
@@ -55,6 +54,7 @@ def asynchronous_importer():
         print_when_ends = True
     else:
         print_when_ends = False
+    import numpy as np
     from sklearn.feature_extraction.text import TfidfVectorizer
     from sklearn.feature_extraction.text import CountVectorizer
     from sentence_transformers import SentenceTransformer
