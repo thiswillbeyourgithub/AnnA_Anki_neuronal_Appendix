@@ -101,15 +101,16 @@ class AnnA:
                  to_anki=False,
                  check_database=False,
                  just_bury_learning=None,
-                 log_level="info+error",
+                 log_level=0,
                  ):
-        log.setLevel(logging.INFO)
-        if log_level == "error_only":
+        if log_level == 0:
             log.setLevel(logging.ERROR)
-        if log_level in "warnings":
+        elif log_level == 1:
             log.setLevel(logging.WARNING)
-        if log_level in ["all", "debug"]:
+        elif log_level >= 2:
             log.setLevel(logging.DEBUG)
+        else:
+            log.setLevel(logging.INFO)
 
 
         if show_banner is True:
