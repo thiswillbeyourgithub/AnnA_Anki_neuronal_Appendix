@@ -324,25 +324,25 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
         """
 
         if just_learning is None:
-            print("Getting due card from this deck...")
+            print("Getting due card list...")
             query = f"deck:{self.deckname} is:due is:review -is:learn \
 -is:suspended -is:buried -is:new -rated:1"
             print(" >  '" + query + "'", end="\n\n")
             due_cards = self._ankiconnect(action="findCards", query=query)
         else:
-            print("Getting is:learn card from deck...")
+            print("Getting is:learn card list...")
             query = f"deck:{self.deckname} is:learn -is:suspended -rated:1"
             print(" >  '" + query + "'", end="\n\n")
             due_cards = self._ankiconnect(action="findCards", query=query)
             print(f"Found {len(due_cards)} learning cards...")
 
-
         n_rated_days = self.rated_last_X_days
         if n_rated_days is not None:
             if int(n_rated_days) != 0:
-                print(f"Getting cards that where rated in the last {n_rated_days} days \
-from this deck...")
-                query = f"deck:{self.deckname} rated:{n_rated_days} -is:suspended"
+                print(f"Getting cards that where rated in the last \
+{n_rated_days} days  ...")
+                query = f"deck:{self.deckname} rated:{n_rated_days} \
+-is:suspended"
                 print(" >  '" + query + "'", end="\n\n")
                 r_cards = self._ankiconnect(action="findCards", query=query)
 
