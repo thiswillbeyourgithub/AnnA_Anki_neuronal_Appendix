@@ -213,6 +213,8 @@ execute the code using:\n'import pickle ; a = pickle.load(open(\"last_run.pickle
             inf("Re-optimizing Anki database")
             self._ankiconnect(action="guiCheckDatabase")
 
+        print(f"Done with {self.deckname}")
+
     def _reset_index_dtype(self, df):
         """
         the index dtype (cardId) somehow gets turned into float so I
@@ -338,6 +340,7 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
             while deckname not in decklist:
                 deckname = prompt("Enter the name of the deck:\n>",
                                   completer=auto_complete)
+        print(f"Selected deck: {deckname}")
         return deckname
 
     def _create_and_fill_df(self, just_learning=None):
