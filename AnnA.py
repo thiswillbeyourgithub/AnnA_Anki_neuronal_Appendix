@@ -1095,88 +1095,91 @@ as opti_rev_order!")
                                                   n_samples=len(
                                                       df_by_cluster.index
                                                       )).toarray()
-        w_by_class = {str(clust): [
-                                   words[index]
-                                   for index in
-                                   ctfidf[ind].argsort()[-n_topics:]
-                                   ] for clust, ind in enumerate(
-                                       df_by_cluster.clusters)}
-        df["cluster_topic"] = ""
-        for i in df.index:
-            clst_tpc = " ".join([x for x in w_by_class[
-                                                  str(df.loc[i, "clusters"])]])
-            df.loc[i, "cluster_topic"] = clst_tpc
+        try:
+            w_by_class = {str(clust): [
+                                       words[index]
+                                       for index in
+                                       ctfidf[ind].argsort()[-n_topics:]
+                                       ] for clust, ind in enumerate(
+                                           df_by_cluster.clusters)}
+            df["cluster_topic"] = ""
+            for i in df.index:
+                clst_tpc = " ".join([x for x in w_by_class[
+                                                      str(df.loc[i, "clusters"])]])
+                df.loc[i, "cluster_topic"] = clst_tpc
 
-        self.w_by_class = w_by_class
-        self.df = df.sort_index()
+            self.w_by_class = w_by_class
+            self.df = df.sort_index()
 
-        if add_as_tags is True:
-            # creates two threads, the first one removes old tags and the
-            # other one adds the new one
-            threads = []
-            full_note_list = list(set(df["note"].tolist()))
-            all_tags =  df["tags"].tolist()
-            present_tags = []
-            for t in all_tags:
-                if " " in t:
-                    present_tags.extend(t.split(" "))
-                else:
-                    present_tags.append(t)
-            present_tags = list(set(present_tags))
-            if "" in present_tags:
-                present_tags.remove("")
-            to_remove = list(set([x for x in filter(
-                                  lambda x: "AnnA::cluster_topic::" in x,
-                                  present_tags)]))
-            if len(to_remove) != 0:
-                def _threaded_remove_tags(tags, pbar_r):
-                    for tag in tags:
-                        self._ankiconnect(action="removeTags",
-                                          notes=full_note_list,
-                                          tags=str(tag))
-                        pbar_r.update(1)
-                pbar_r = tqdm(desc="Removing old cluster tags...",
-                          unit="cluster",
-                          position=1,
-                          total=len(to_remove))
-                thread = threading.Thread(target=_threaded_remove_tags,
-                                          args=(to_remove, pbar_r),
-                                          daemon=False)
+            if add_as_tags is True:
+                # creates two threads, the first one removes old tags and the
+                # other one adds the new one
+                threads = []
+                full_note_list = list(set(df["note"].tolist()))
+                all_tags =  df["tags"].tolist()
+                present_tags = []
+                for t in all_tags:
+                    if " " in t:
+                        present_tags.extend(t.split(" "))
+                    else:
+                        present_tags.append(t)
+                present_tags = list(set(present_tags))
+                if "" in present_tags:
+                    present_tags.remove("")
+                to_remove = list(set([x for x in filter(
+                                      lambda x: "AnnA::cluster_topic::" in x,
+                                      present_tags)]))
+                if len(to_remove) != 0:
+                    def _threaded_remove_tags(tags, pbar_r):
+                        for tag in tags:
+                            self._ankiconnect(action="removeTags",
+                                              notes=full_note_list,
+                                              tags=str(tag))
+                            pbar_r.update(1)
+                    pbar_r = tqdm(desc="Removing old cluster tags...",
+                              unit="cluster",
+                              position=1,
+                              total=len(to_remove))
+                    thread = threading.Thread(target=_threaded_remove_tags,
+                                              args=(to_remove, pbar_r),
+                                              daemon=False)
+                    thread.start()
+                    threads.append(thread)
+
+                df["cluster_topic"] = df["cluster_topic"].str.replace(" ", "_")
+                cluster_list = list(set(list(df["clusters"])))
+
+                def _threaded_add_cluster_tags(list_i, pbar_a):
+                    for i in list_i:
+                        cur_time = "_".join(time.asctime().split()[0:4]).replace(
+                                ":", "h")[0:-3]
+                        newTag = f"AnnA::cluster_topic::{cur_time}::cluster_#{str(i)}"
+                        newTag += f"::{df[df['clusters']==i]['cluster_topic'].iloc[0]}"
+                        note_list = list(set(df[df["clusters"] == i]["note"].tolist()))
+                        self._ankiconnect(action="addTags",
+                                          notes=note_list,
+                                          tags=newTag)
+                        pbar_a.update(1)
+                    return True
+                pbar_a = tqdm(total=len(cluster_list),
+                          desc="Adding new cluster tags",
+                          position=0,
+                          unit="cluster")
+                thread = threading.Thread(
+                                    target=_threaded_add_cluster_tags,
+                                    daemon=False,
+                                    args=(cluster_list, pbar_a))
                 thread.start()
                 threads.append(thread)
 
-            df["cluster_topic"] = df["cluster_topic"].str.replace(" ", "_")
-            cluster_list = list(set(list(df["clusters"])))
+                [t.join() for t in threads]
+                pbar_a.close()
+                if len(to_remove) != 0:
+                    pbar_r.close()
 
-            def _threaded_add_cluster_tags(list_i, pbar_a):
-                for i in list_i:
-                    cur_time = "_".join(time.asctime().split()[0:4]).replace(
-                            ":", "h")[0:-3]
-                    newTag = f"AnnA::cluster_topic::{cur_time}::cluster_#{str(i)}"
-                    newTag += f"::{df[df['clusters']==i]['cluster_topic'].iloc[0]}"
-                    note_list = list(set(df[df["clusters"] == i]["note"].tolist()))
-                    self._ankiconnect(action="addTags",
-                                      notes=note_list,
-                                      tags=newTag)
-                    pbar_a.update(1)
-                return True
-            pbar_a = tqdm(total=len(cluster_list),
-                      desc="Adding new cluster tags",
-                      position=0,
-                      unit="cluster")
-            thread = threading.Thread(
-                                target=_threaded_add_cluster_tags,
-                                daemon=False,
-                                args=(cluster_list, pbar_a))
-            thread.start()
-            threads.append(thread)
-
-            [t.join() for t in threads]
-            pbar_a.close()
-            if len(to_remove) != 0:
-                pbar_r.close()
-
-            self._ankiconnect(action="clearUnusedTags")
+                self._ankiconnect(action="clearUnusedTags")
+        except Exception as e:
+            err(f"Index Error when finding cluster topic! {e}")
         return True
 
     def plot_latent_space(self,
