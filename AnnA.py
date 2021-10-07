@@ -104,6 +104,7 @@ class AnnA:
                  check_database=False,
                  just_bury_learning=None,
                  log_level=0,
+                 index_collection=False,
                  ):
         if log_level == 0:
             log.setLevel(logging.ERROR)
@@ -164,10 +165,20 @@ values.")
                 self.field_dic = {"dummyvalue": "dummyvalue"}
 
         # actual execution
-        self.deckname = self._check_deck(deckname, import_thread)
-        if just_bury_learning is not None:
+        if index_collection is True:
+            self.deckname = "*"
+            self.rated_last_X_days = None
+            self._create_and_fill_df(index_collection=index_collection)
+            self.df = self._reset_index_dtype(self.df)
+            self._format_card()
+            self.show_acronyms()
+            self._compute_sBERT_vec(import_thread=import_thread)
+            if do_clustering is True:
+                self.compute_clusters(minibatchk_kwargs={"verbose": 0})
+        elif just_bury_learning is not None:
             # bypasses most of the code to bury learning cards
             # directly in the deck without creating filtered decks
+            self.deckname = self._check_deck(deckname, import_thread)
             inf(f"Burying similar learning cards from deck {self.deckname}..\
 .")
             inf("Forcing 'reference_order' to 'lowest_interval'.")
@@ -185,6 +196,7 @@ values.")
             if to_anki is True:
                 self.to_anki(just_bury=True)
         else:
+            self.deckname = self._check_deck(deckname, import_thread)
             self._create_and_fill_df()
             self.df = self._reset_index_dtype(self.df)
             self._format_card()
@@ -345,7 +357,7 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
         print(f"Selected deck: {deckname}")
         return deckname
 
-    def _create_and_fill_df(self, just_learning=None):
+    def _create_and_fill_df(self, just_learning=None, index_collection=None):
         """
         create a pandas DataFrame, fill it with the information gathered from
         anki connect like card content, intervals, etc
@@ -357,12 +369,18 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
 -is:suspended -is:buried -is:new -rated:1"
             inf(" >  '" + query + "'\n\n")
             due_cards = self._ankiconnect(action="findCards", query=query)
-        else:
+        elif just_learning is not None:
             print("Getting is:learn card list...")
             query = f"deck:{self.deckname} is:learn -is:suspended -rated:1"
             inf(" >  '" + query + "'\n\n")
             due_cards = self._ankiconnect(action="findCards", query=query)
             print(f"Found {len(due_cards)} learning cards...")
+        elif index_collection is not None:
+            print("Getting all cards from collection...")
+            query = f"deck:{self.deckname}"
+            inf(" >  '" + query + "'\n\n")
+            due_cards = self._ankiconnect(action="findCards", query=query)
+            print(f"Found {len(due_cards)} cards...")
 
         n_rated_days = self.rated_last_X_days
         if n_rated_days is not None:

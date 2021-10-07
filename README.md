@@ -118,7 +118,7 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * find a way to remove already created filtered decks
 * add ability to extend the due query
 * add colours to the prints
-* refactor like so: from AnnA import util => util.index_collection + util.offline_search + util.offline_image_search
+* refactor like so: from AnnA import util => util.offline_search + util.offline_image_search
 * look into sentence mining methods from sbert, that might contain useful ideas
 * take a look at topic modelling techniques that might be cleaner to invoke than the current ctf-idf implementation
 * warn LW
