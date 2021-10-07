@@ -38,16 +38,16 @@ inf = log.info
 war = log.warn
 err = log.error
 
-def asynchronous_importer():
+def asynchronous_importer(TFIDF_enable):
     """
     used to asynchronously import large modules, this way between
     importing AnnA and creating the instance of the class, the language model
     have some more time to load
     """
-    global np, SentenceTransformer, KMeans, DBSCAN, tokenizer, stopwords, \
+    global np, KMeans, DBSCAN, tokenizer, \
         AgglomerativeClustering, transformers, normalize, TfidfVectorizer,\
         CountVectorizer, TruncatedSVD, StandardScaler, \
-        pairwise_distances, PCA, px, umap, np, tokenizer_bert, sBERT, \
+        pairwise_distances, PCA, px, umap, np, tokenizer_bert, \
         MiniBatchKMeans, interpolate
     if "sentence_transformers" not in sys.modules:
         inf("Began importing modules...\n")
@@ -57,11 +57,16 @@ def asynchronous_importer():
     import numpy as np
     from sklearn.feature_extraction.text import TfidfVectorizer
     from sklearn.feature_extraction.text import CountVectorizer
-    from sentence_transformers import SentenceTransformer
-    sBERT = SentenceTransformer('distiluse-base-multilingual-cased-v1')
+    if TFIDF_enable is False:
+        global sBERT
+        from sentence_transformers import SentenceTransformer
+        sBERT = SentenceTransformer('distiluse-base-multilingual-cased-v1')
+    else:
+        global stopwords
+        from nltk.corpus import stopwords
+
     from transformers import BertTokenizerFast
     tokenizer = BertTokenizerFast.from_pretrained("bert-base-multilingual-uncased")
-    from nltk.corpus import stopwords
     from sklearn.metrics import pairwise_distances
     from sklearn.decomposition import PCA
     from sklearn.cluster import KMeans, DBSCAN, AgglomerativeClustering
@@ -126,7 +131,8 @@ class AnnA:
 
 
         # start importing large modules
-        import_thread = threading.Thread(target=asynchronous_importer)
+        import_thread = threading.Thread(target=asynchronous_importer,
+                args=(TFIDF_enable))
         import_thread.start()
 
         # loading args
