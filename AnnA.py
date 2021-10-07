@@ -748,7 +748,6 @@ using PCA...")
                 self.t_red = [x for x in t_red]
 
         self.df = df
-        breakpoint()
         return True
 
     def _compute_distance_matrix(self, method="cosine", input_col="VEC"):
