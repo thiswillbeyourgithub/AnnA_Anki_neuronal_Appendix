@@ -521,7 +521,8 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
                 text += "."
         text = text.replace(" :.", ".")
         text = text.replace(":.", ".")
-        text = s("( ; ; )+", " ; ", text)
+        text = text.replace(" ; ; ", " ; ")
+        text = text.replace(" ; ; ", " ; ")
         text = text.replace(" ; ; ", " ; ")
         return text
 
