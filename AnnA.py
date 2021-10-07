@@ -1159,7 +1159,7 @@ as opti_rev_order!")
         df[output_col] = clust.fit_predict(df_temp)
 
 
-        cluster_list = list(set(list(df[output_col])))
+        cluster_list = sorted(list(set(list(df[output_col]))))
         cluster_nb = len(cluster_list)
         print(f"Getting cluster topics for {cluster_nb} clusters...")
 
