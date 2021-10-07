@@ -132,7 +132,7 @@ class AnnA:
 
         # start importing large modules
         import_thread = threading.Thread(target=asynchronous_importer,
-                args=(TFIDF_enable))
+                args=(TFIDF_enable,))
         import_thread.start()
 
         # loading args
