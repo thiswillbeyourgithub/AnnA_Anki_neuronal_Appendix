@@ -457,7 +457,9 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
         r = text.replace
 
         text = str(text)
-        text = r("\n", " ")
+        text = r("\n", " ; ")
+        text = r("+", " ")  # sbert does not work well with that
+        text = r("-", " ")
         if self.keep_ocr is True:
             # keep image title (usually OCR)
             text = s("title=(\".*?\")", "> Caption: '\\1' <", text)
