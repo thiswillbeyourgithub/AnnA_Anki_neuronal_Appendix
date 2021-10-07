@@ -108,7 +108,7 @@ class AnnA:
                  index_whole_deck=False,
                  TFIDF_enable=False,
                  TFIDF_dim=1000,
-                 TFIDF_stopw_lang=["english", "french", "spanish"],
+                 TFIDF_stopw_lang=["english", "french"],
                  ):
         if log_level == 0:
             log.setLevel(logging.ERROR)

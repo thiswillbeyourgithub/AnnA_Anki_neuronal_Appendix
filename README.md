@@ -101,7 +101,7 @@ AnnA was made with usability in mind. With the right arguments, you can have to 
  * `index_whole deck` index all the cards in a deck into the cache using sBERT. This should be rather long. Obviously this will bypass most arguments. Default is `False`.
  * `TFIDF_enable` use tfidf instead of sBERT. This will bypass the sBERT cache file and won't work with the `search_for_notes` function. Default is `False`.
  * `TFIDF_dim` the number of dimension to keep using [SVD](https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.TruncatedSVD.html). Default is `1000`.
- * `TFIDF_stopw_lang` a list of languages used to construct a list of stop words (i.e. words that will be ignored). Default is `["english", "french", "spanish"]`.
+ * `TFIDF_stopw_lang` a list of languages used to construct a list of stop words (i.e. words that will be ignored). Default is `["english", "french"]`.
 
 AnnA has a number of other built-in methods you can run after instantiating the class. They are especially useful if "to_anki" is set to `False`. Note that methods beginning with a "_" are not supposed to be called by the user and are reserved for backend use. Here's a list of useful methods:
 
