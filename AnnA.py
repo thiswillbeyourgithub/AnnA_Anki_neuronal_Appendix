@@ -44,7 +44,7 @@ def asynchronous_importer():
     importing AnnA and creating the instance of the class, the language model
     have some more time to load
     """
-    global np, SentenceTransformer, KMeans, DBSCAN, tokenizer,\
+    global np, SentenceTransformer, KMeans, DBSCAN, tokenizer, stopwords, \
         AgglomerativeClustering, transformers, normalize, TfidfVectorizer,\
         CountVectorizer, TruncatedSVD, StandardScaler, \
         pairwise_distances, PCA, px, umap, np, tokenizer_bert, sBERT, \
@@ -61,6 +61,7 @@ def asynchronous_importer():
     sBERT = SentenceTransformer('distiluse-base-multilingual-cased-v1')
     from transformers import BertTokenizerFast
     tokenizer = BertTokenizerFast.from_pretrained("bert-base-multilingual-uncased")
+    from nltk.corpus import stopwords
     from sklearn.metrics import pairwise_distances
     from sklearn.decomposition import PCA
     from sklearn.cluster import KMeans, DBSCAN, AgglomerativeClustering
@@ -105,6 +106,9 @@ class AnnA:
                  just_bury_learning=None,
                  log_level=0,
                  index_whole_deck=False,
+                 TFIDF_enable=False,
+                 TFIDF_dim=1000,
+                 TFIDF_stopw_lang=["english", "french", "spanish"],
                  ):
         if log_level == 0:
             log.setLevel(logging.ERROR)
@@ -140,6 +144,9 @@ class AnnA:
         self.field_mapping = field_mapping
         self.optional_acronym_list = optional_acronym_list
         self.debug_force_score_formula = debug_force_score_formula
+        self.TFIDF_enable  = TFIDF_enable
+        self.TFIDF_dim = TFIDF_dim
+        self.TFIDF_stopw_lang = TFIDF_stopw_lang
 
         assert stride > 0
         assert reference_order in ["lowest_interval", "relative_overdueness"]
@@ -165,8 +172,9 @@ values.")
                 self.field_dic = {"dummyvalue": "dummyvalue"}
 
         # actual execution
+        self.deckname = self._check_deck(deckname, import_thread)
         if index_whole_deck is True:
-            self.deckname = "*"
+            print(f"Task : cache vectors of deck: {self.deckname}")
             self.rated_last_X_days = None
             self._create_and_fill_df(index_whole_deck=index_whole_deck)
             self.df = self._reset_index_dtype(self.df)
@@ -178,7 +186,7 @@ values.")
         elif just_bury_learning is not None:
             # bypasses most of the code to bury learning cards
             # directly in the deck without creating filtered decks
-            self.deckname = self._check_deck(deckname, import_thread)
+            print("Task : bury some learning cards.")
             inf(f"Burying similar learning cards from deck {self.deckname}..\
 .")
             inf("Forcing 'reference_order' to 'lowest_interval'.")
@@ -196,7 +204,6 @@ values.")
             if to_anki is True:
                 self.to_anki(just_bury=True)
         else:
-            self.deckname = self._check_deck(deckname, import_thread)
             self._create_and_fill_df()
             self.df = self._reset_index_dtype(self.df)
             self._format_card()
@@ -357,7 +364,7 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
         print(f"Selected deck: {deckname}")
         return deckname
 
-    def _create_and_fill_df(self, just_learning=None, index_collection=None):
+    def _create_and_fill_df(self, just_learning=None, index_whole_deck=None):
         """
         create a pandas DataFrame, fill it with the information gathered from
         anki connect like card content, intervals, etc
@@ -606,96 +613,145 @@ adjust formating issues:")
     def _compute_sBERT_vec(self, df=None, use_sBERT_cache=True, import_thread=None):
         """
         Assigne sBERT vectors to each card
-        df["sBERT_before_pca"], contains the vectors from sBERT
-        df["sBERT"] contains either all the vectors from sBERT or less if you
-            enabled pca reduction
+        df["VEC_FULL"], contains the vectors
+        df["VEC"] contains either all the vectors or less if you
+            enabled dimensionality reduction
         * given how long it is to compute the vectors I decided to store
             all already computed sBERT to a pickled DataFrame at each run
         """
         if df is None:
             df = self.df
 
-        if use_sBERT_cache is True:
-            print("\nLooking for cached sBERT pickle file...", end="")
-            sBERT_file = Path("./sBERT_cache.pickle")
-            df["sBERT"] = 0*len(df.index)
-            df["sBERT"] = df["sBERT"].astype("object")
-            loaded_sBERT = 0
-            id_to_recompute = []
+        if self.TFIDF_enable is not True:
+            if use_sBERT_cache is True:
+                print("\nLooking for cached sBERT pickle file...", end="")
+                sBERT_file = Path("./sBERT_cache.pickle")
+                df["VEC"] = 0*len(df.index)
+                df["VEC"] = df["VEC"].astype("object")
+                loaded_sBERT = 0
+                id_to_recompute = []
 
-            # reloads sBERT vectors and only recomputes the new one:
-            if not sBERT_file.exists():
-                inf(" sBERT cache not found, will create it.")
-                df_cache = pd.DataFrame(
-                        columns=["cardId", "mod", "text", "sBERT"]
-                        ).set_index("cardId")
-                id_to_recompute = df.index
-            else:
-                print(" Found sBERT cache.")
-                df_cache = pd.read_pickle(sBERT_file)
-                df_cache["sBERT"] = df_cache["sBERT"].astype("object")
-                df_cache["mod"] = df_cache["mod"].astype("object")
-                df_cache["text"] = df_cache["text"]
-                df_cache = self._reset_index_dtype(df_cache)
-                for i in df.index:
-                    if i in df_cache.index and \
-                            (str(df_cache.loc[i, "text"]) ==
-                                str(df.loc[i, "text"])):
-                        df.at[i, "sBERT"] = df_cache.loc[i, "sBERT"]
-                        loaded_sBERT += 1
-                    else:
-                        id_to_recompute.append(i)
+                # reloads sBERT vectors and only recomputes the new one:
+                if not sBERT_file.exists():
+                    inf(" sBERT cache not found, will create it.")
+                    df_cache = pd.DataFrame(
+                            columns=["cardId", "mod", "text", "VEC"]
+                            ).set_index("cardId")
+                    id_to_recompute = df.index
+                else:
+                    print(" Found sBERT cache.")
+                    df_cache = pd.read_pickle(sBERT_file)
+                    df_cache["VEC"] = df_cache["VEC"].astype("object")
+                    df_cache["mod"] = df_cache["mod"].astype("object")
+                    df_cache["text"] = df_cache["text"]
+                    df_cache = self._reset_index_dtype(df_cache)
+                    for i in df.index:
+                        if i in df_cache.index and \
+                                (str(df_cache.loc[i, "text"]) ==
+                                    str(df.loc[i, "text"])):
+                            df.at[i, "VEC"] = df_cache.loc[i, "VEC"]
+                            loaded_sBERT += 1
+                        else:
+                            id_to_recompute.append(i)
 
-            print(f"Loaded {loaded_sBERT} vectors from cache, will compute \
+                print(f"Loaded {loaded_sBERT} vectors from cache, will compute \
 {len(id_to_recompute)} others...")
+                if import_thread is not None:
+                    import_thread.join()
+                    time.sleep(0.5)
+                if len(id_to_recompute) != 0:
+                    sentence_list = [df.loc[x, "text"]
+                                     for x in df.index if x in id_to_recompute]
+                    sentence_embeddings = sBERT.encode(sentence_list,
+                                                       normalize_embeddings=True,
+                                                       show_progress_bar=True)
+
+                    for i, ind in enumerate(tqdm(id_to_recompute)):
+                        df.at[ind, "VEC"] = sentence_embeddings[i]
+
+                # stores newly computed sBERT vectors in a file:
+                df_cache = self._reset_index_dtype(df_cache)
+                for i in [x for x in id_to_recompute if x not in df_cache.index]:
+                    df_cache.loc[i, "VEC"] = df.loc[i, "VEC"].astype("object")
+                    df_cache.loc[i, "mod"] = df.loc[i, "mod"].astype("object")
+                    df_cache.loc[i, "text"] = df.loc[i, "text"]
+                for i in [x for x in id_to_recompute if x in df_cache.index]:
+                    df_cache.loc[i, "VEC"] = df.loc[i, "VEC"].astype("object")
+                    df_cache.loc[i, "mod"] = df.loc[i, "mod"].astype("object")
+                    df_cache.loc[i, "text"] = df.loc[i, "text"]
+                df_cache = self._reset_index_dtype(df_cache)
+                try:
+                    Path("sBERT_cache.pickle_temp").unlink()
+                except FileNotFoundError:
+                    pass
+                df_cache.to_pickle("sBERT_cache.pickle_temp")
+                sBERT_file.unlink()
+                Path("sBERT_cache.pickle_temp").rename("sBERT_cache.pickle")
+
+            df["VEC_FULL"] = df["VEC"]
+            if self.pca_sBERT_dim is not None:
+                print(f"Reducing sBERT to {self.pca_sBERT_dim} dimensions \
+using PCA...")
+                pca_sBERT = PCA(n_components=self.pca_sBERT_dim, random_state=42)
+                df_temp = pd.DataFrame(
+                    columns=["V"+str(x+1)
+                             for x in range(len(df.loc[df.index[0], "VEC"]))],
+                    data=[x[0:] for x in df["VEC"]])
+                out = pca_sBERT.fit_transform(df_temp)
+                inf(f"Explained variance ratio after PCA on sBERT: \
+{round(sum(pca_sBERT.explained_variance_ratio_)*100,1)}%")
+                df["VEC"] = [x for x in out]
+
+        else:  # use TFIDF instead of sBERT
             if import_thread is not None:
                 import_thread.join()
                 time.sleep(0.5)
-            if len(id_to_recompute) != 0:
-                sentence_list = [df.loc[x, "text"]
-                                 for x in df.index if x in id_to_recompute]
-                sentence_embeddings = sBERT.encode(sentence_list,
-                                                   normalize_embeddings=True,
-                                                   show_progress_bar=True)
-
-                for i, ind in enumerate(tqdm(id_to_recompute)):
-                    df.at[ind, "sBERT"] = sentence_embeddings[i]
-
-            # stores newly computed sBERT vectors in a file:
-            df_cache = self._reset_index_dtype(df_cache)
-            for i in [x for x in id_to_recompute if x not in df_cache.index]:
-                df_cache.loc[i, "sBERT"] = df.loc[i, "sBERT"].astype("object")
-                df_cache.loc[i, "mod"] = df.loc[i, "mod"].astype("object")
-                df_cache.loc[i, "text"] = df.loc[i, "text"]
-            for i in [x for x in id_to_recompute if x in df_cache.index]:
-                df_cache.loc[i, "sBERT"] = df.loc[i, "sBERT"].astype("object")
-                df_cache.loc[i, "mod"] = df.loc[i, "mod"].astype("object")
-                df_cache.loc[i, "text"] = df.loc[i, "text"]
-            df_cache = self._reset_index_dtype(df_cache)
+            print("Creating stop words list...")
             try:
-                Path("sBERT_cache.pickle_temp").unlink()
-            except FileNotFoundError:
-                pass
-            df_cache.to_pickle("sBERT_cache.pickle_temp")
-            sBERT_file.unlink()
-            Path("sBERT_cache.pickle_temp").rename("sBERT_cache.pickle")
+                stops = []
+                for lang in self.TFIDF_stopw_lang:
+                    [stops.extend(
+                        tokenizer.tokenize(x)
+                        ) for x in stopwords.words(lang)]
+                stops = list(set(stops))
+            except Exception as e:
+                err(f"Error when extracting stop words: {e}")
+                err("Setting stop words list to None.")
+                stops = None
 
-        df["sBERT_before_pca"] = df["sBERT"]
-        if self.pca_sBERT_dim is not None:
-            print(f"Reducing sBERT to {self.pca_sBERT_dim} dimensions \
-using PCA...")
-            pca_sBERT = PCA(n_components=self.pca_sBERT_dim, random_state=42)
-            df_temp = pd.DataFrame(
-                columns=["V"+str(x+1)
-                         for x in range(len(df.loc[df.index[0], "sBERT"]))],
-                data=[x[0:] for x in df["sBERT"]])
-            out = pca_sBERT.fit_transform(df_temp)
-            inf(f"Explained variance ratio after PCA on sBERT: \
-{round(sum(pca_sBERT.explained_variance_ratio_)*100,1)}%")
-            df["sBERT"] = [x for x in out]
+            vectorizer = TfidfVectorizer(strip_accents="unicode",
+                                         lowercase=True,
+                                         tokenizer=lambda x: tokenizer.tokenize(x),
+                                         stop_words=stops,
+                                         ngram_range=(1, 5),
+                                         max_features=10000,
+                                         norm="l2")
+            t_vec = vectorizer.fit_transform(tqdm(df["text"],
+                                             desc="Vectorizing text using TFIDF"))
+            df["VEC_FULL"] = ""
+            df["VEC"] = ""
+            if self.TFIDF_dim is None:
+                df["VEC_FULL"] = [x for x in t_vec]
+                df["VEC"] = [x for x in t_vec]
+                self.t_vec = [x for x in t_vec]
+                self.t_red = None
+            else:
+                print(f"Reducing dimensions to {self.TFIDF_dim}")
+                svd = TruncatedSVD(n_components = min(self.TFIDF_dim,
+                                                      t_vec.shape[1]))
+                t_red = svd.fit_transform(t_vec)
+                inf(f"Explained variance ratio after SVD on Tf_idf: \
+{round(sum(svd.explained_variance_ratio_)*100,1)}%")
+                df["VEC_FULL"] = [x for x in t_vec]
+                df["VEC"] = [x for x in t_red]
+                self.t_vec = [x for x in t_vec]
+                self.t_red = [x for x in t_red]
+
+        self.df = df
+        breakpoint()
         return True
 
-    def _compute_distance_matrix(self, method="cosine", input_col="sBERT"):
+    def _compute_distance_matrix(self, method="cosine", input_col="VEC"):
         """
         compute distance matrix between all the cards
         * the distance matrix can be parallelised by scikit learn so I didn't
@@ -1036,7 +1092,7 @@ as opti_rev_order!")
 
     def compute_clusters(self,
                          method="minibatch-kmeans",
-                         input_col="sBERT",
+                         input_col="VEC",
                          output_col="clusters",
                          n_topics=5,
                          minibatchk_kwargs=None,
@@ -1222,7 +1278,7 @@ as opti_rev_order!")
                                       "tags",
                                       "clusters",
                                       "cluster_topic"],
-                          coordinate_col="sBERT",
+                          coordinate_col="VEC",
                           disable_legend=True,
                           umap_kwargs=None,
                           plotly_kwargs=None,
@@ -1300,7 +1356,7 @@ plotting...")
     def search_for_notes(self,
                          user_input,
                          nlimit=10,
-                         user_col="sBERT_before_pca",
+                         user_col="VEC_FULL",
                          do_format_input=False,
                          anki_or_print="anki",
                          dist="cosine",
@@ -1314,7 +1370,13 @@ plotting...")
             cannot be maintained. So you will get the nlimit best match
             randomly displayed, then the nlimit+1 to 2*nlimit best match
             randomly displayed etc
+        * note that this obviously only works using sBERT vectors and not TFIDF
+            (they would have to be recomputed each time)
         """
+        if self.TFIDF_enable is True:
+            err("Cannot search for note using TFIDF vectors, only sBERT can \
+be used.")
+            return False
         pd.set_option('display.max_colwidth', None)
         df = self.df.copy()
 
@@ -1331,8 +1393,8 @@ plotting...")
                                                  metric=dist))
             df["distance"] = df["distance"].astype("float")
         except ValueError as e:
-            err(f"Error {e}: did you select 'sBERT' instead of \
-'sBERT_before_pca'?")
+            err(f"Error {e}: did you select 'VEC' instead of \
+'VEC_FULL'?")
             return False
         index = df.index
         good_order = sorted(index,
