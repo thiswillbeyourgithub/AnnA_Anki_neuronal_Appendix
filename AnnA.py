@@ -454,16 +454,16 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
         orig = text
 
         s = re.sub
-        r = text.replace
 
         text = str(text)
-        text = r("\n", " ; ")
-        text = r("+", " ")  # sbert does not work well with that
-        text = r("-", " ")
+        text = s("\n+", ";", text)
+#        text = s(r"(;\W;)*", " ; ", text)
+        text = text.replace("+", " ")  # sbert does not work well with that
+        text = text.replace("-", " ")
         if self.keep_ocr is True:
             # keep image title (usually OCR)
             text = s("title=(\".*?\")", "> Caption: '\\1' <", text)
-            text = r('Caption: \'""\'', "")
+            text = text.replace('Caption: \'""\'', "")
         if self.replace_greek is True:
             for a, b in greek_alphabet_mapping.items():
                 text = s(a, b, text)
@@ -477,7 +477,7 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
         text = s("<blockquote(.*?)</blockquote>",
                  lambda x: x.group(0).replace("<br>", " ; "), text)
         text = s('\\n|<div>|</div>|<br>|<span>|</span>|<li>|</li>|<ul>|</ul>',
-                 " ", text)  # newlines
+                 " ; ", text)  # newlines
         text = s("<a href.*?</a>", " ", text)  # html links
         text = s(r'http[s]?://\S*', " ", text)  # plaintext links
         text = s("<.*?>", " ", text)  # remaining html tags
@@ -490,14 +490,14 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
         text = s(r"\b(\d+)m\b", "\\1 minutes", text)
         text = s(r"\b(\d+)s\b", "\\1 secondes", text)
         text = s(r"\[\d*\]", "", text)  # wiki citation
-        text = r("&amp;", "&")
-        text = r("/", " / ")
+        text = text.replace("&amp;", "&")
+        text = text.replace("/", " / ")
         text = s(r"\w{1,5}>", " ", text)  # missed html tags
         text = s("&gt;|&lt;|<|>", "", text)
         text = s("[.?!] ([a-zA-Z])", lambda x: x.group(0).upper(), text)
         # adds capital letter after punctuation
 
-        text = r(" : ", ": ")
+        text = text.replace(" : ", ": ")
         text = " ".join(text.split())  # multiple spaces
         if len(text) < 10:
             if "src=" in orig:
@@ -506,8 +506,8 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
             text = text[0].upper() + text[1:]
             if text[-1] not in ["?", ".", "!"]:
                 text += "."
-        text = r(" :.", ".")
-        text = r(":.", ".")
+        text = text.replace(" :.", ".")
+        text = text.replace(":.", ".")
         return text
 
     def _format_card(self):
@@ -592,12 +592,12 @@ Edit the variable 'field_dic' to use {card_model}")
                       for x in tqdm(
                       df["comb_text"],
                       desc="Formating text", smoothing=0, unit=" card")]
-        inf("\n\nPrinting 5 random samples of your formated text, to help \
+        print("\n\nPrinting 5 random samples of your formated text, to help \
 adjust formating issues:")
         pd.set_option('display.max_colwidth', 80)
         sub_index = random.choices(df.index.tolist(), k=5)
         for i in sub_index:
-            inf(f"{i}: {df.loc[i, 'text']}\n")
+            print(f"{i}: {df.loc[i, 'text']}\n")
         pd.reset_option('display.max_colwidth')
         print("\n")
         self.df = df.sort_index()
