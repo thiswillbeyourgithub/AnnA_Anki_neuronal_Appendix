@@ -44,7 +44,7 @@ def asynchronous_importer():
     importing AnnA and creating the instance of the class, the language model
     have some more time to load
     """
-    global np, SentenceTransformer, KMeans, DBSCAN, \
+    global np, SentenceTransformer, KMeans, DBSCAN, tokenizer,\
         AgglomerativeClustering, transformers, normalize, TfidfVectorizer,\
         CountVectorizer, TruncatedSVD, StandardScaler, \
         pairwise_distances, PCA, px, umap, np, tokenizer_bert, sBERT, \
@@ -59,6 +59,8 @@ def asynchronous_importer():
     from sklearn.feature_extraction.text import CountVectorizer
     from sentence_transformers import SentenceTransformer
     sBERT = SentenceTransformer('distiluse-base-multilingual-cased-v1')
+    from transformers import BertTokenizerFast
+    tokenizer = BertTokenizerFast.from_pretrained("bert-base-multilingual-uncased")
     from sklearn.metrics import pairwise_distances
     from sklearn.decomposition import PCA
     from sklearn.cluster import KMeans, DBSCAN, AgglomerativeClustering
@@ -1079,17 +1081,18 @@ as opti_rev_order!")
             data=[x[0:] for x in df[input_col]])
         df[output_col] = clust.fit_predict(df_temp)
 
+
         cluster_list = list(set(list(df[output_col])))
         cluster_nb = len(cluster_list)
         print(f"Getting cluster topics for {cluster_nb} clusters...")
         df_by_cluster = df.groupby(["clusters"],
-                                   as_index=False).agg({'text': ' '.join})
-        count = CountVectorizer().fit_transform(df_by_cluster.text)
+                                   as_index=False).agg({'tokenized': ' '.join})
+        count = CountVectorizer().fit_transform(df_by_cluster.tokenized)
         ctfidf = CTFIDFVectorizer().fit_transform(count,
                                                   n_samples=len(
                                                       df_by_cluster.index))
-        count_vectorizer = CountVectorizer().fit(df_by_cluster.text)
-        count = count_vectorizer.transform(df_by_cluster.text)
+        count_vectorizer = CountVectorizer().fit(df_by_cluster.tokenized)
+        count = count_vectorizer.transform(df_by_cluster.tokenized)
         words = count_vectorizer.get_feature_names()
         ctfidf = CTFIDFVectorizer().fit_transform(count,
                                                   n_samples=len(
@@ -1147,7 +1150,6 @@ as opti_rev_order!")
                     threads.append(thread)
 
                 df["cluster_topic"] = df["cluster_topic"].str.replace(" ", "_")
-                cluster_list = list(set(list(df["clusters"])))
 
                 def _threaded_add_cluster_tags(list_i, pbar_a):
                     for i in list_i:
@@ -1178,7 +1180,7 @@ as opti_rev_order!")
                     pbar_r.close()
 
                 self._ankiconnect(action="clearUnusedTags")
-        except Exception as e:
+        except IndexError as e:
             err(f"Index Error when finding cluster topic! {e}")
         return True
 
