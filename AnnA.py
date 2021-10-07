@@ -1105,6 +1105,16 @@ as opti_rev_order!")
         cluster_list = list(set(list(df[output_col])))
         cluster_nb = len(cluster_list)
         print(f"Getting cluster topics for {cluster_nb} clusters...")
+
+        # reordering cluster number, as they are sometimes offset
+        for i, clust_nb in enumerate(cluster_list):
+            df.loc[ df[output_col] == clust_nb, "output_col"] = i
+
+        df["tokenized"] = df.apply(
+                lambda row: " ".join(
+                    tokenizer.tokenize(row["text"])).replace("##", "#"),
+                axis=1)
+
         df_by_cluster = df.groupby(["clusters"],
                                    as_index=False).agg({'tokenized': ' '.join})
         count = CountVectorizer().fit_transform(df_by_cluster.tokenized)
