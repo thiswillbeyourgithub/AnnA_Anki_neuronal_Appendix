@@ -1401,9 +1401,9 @@ found...")
             pprint(relevant)
         else:
             acro_list = sorted(self.acronym_dict.keys())
-            print("\nList of acronyms that were already replaced:")
-            print(acro_list)
-            acro_list = [x.lower() for x in acro_list]
+#            print("\nList of acronyms that were already replaced:")
+#            print(acro_list)
+#            acro_list = [x.lower() for x in acro_list]
 
             print("List of some acronyms still found:")
             if exclude_OCR_text is True:
