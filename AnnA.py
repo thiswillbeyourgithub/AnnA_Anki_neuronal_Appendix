@@ -104,7 +104,7 @@ class AnnA:
                  check_database=False,
                  just_bury_learning=None,
                  log_level=0,
-                 index_collection=False,
+                 index_whole_deck=False,
                  ):
         if log_level == 0:
             log.setLevel(logging.ERROR)
@@ -165,10 +165,10 @@ values.")
                 self.field_dic = {"dummyvalue": "dummyvalue"}
 
         # actual execution
-        if index_collection is True:
+        if index_whole_deck is True:
             self.deckname = "*"
             self.rated_last_X_days = None
-            self._create_and_fill_df(index_collection=index_collection)
+            self._create_and_fill_df(index_whole_deck=index_whole_deck)
             self.df = self._reset_index_dtype(self.df)
             self._format_card()
             self.show_acronyms()
@@ -375,7 +375,7 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
             inf(" >  '" + query + "'\n\n")
             due_cards = self._ankiconnect(action="findCards", query=query)
             print(f"Found {len(due_cards)} learning cards...")
-        elif index_collection is not None:
+        elif index_whole_deck is not None:
             print("Getting all cards from collection...")
             query = f"deck:{self.deckname}"
             inf(" >  '" + query + "'\n\n")
