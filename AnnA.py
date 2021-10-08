@@ -378,25 +378,25 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
         print(f"Selected deck: {deckname}")
         return deckname
 
-    def _create_and_fill_df(self, just_learning=None, task_index_deck=None):
+    def _create_and_fill_df(self, just_learning=False, task_index_deck=False):
         """
         create a pandas DataFrame, fill it with the information gathered from
         anki connect like card content, intervals, etc
         """
 
-        if just_learning is None:
+        if just_learning is False:
             print("Getting due card list...")
             query = f"deck:{self.deckname} is:due is:review -is:learn \
 -is:suspended -is:buried -is:new -rated:1"
             inf(" >  '" + query + "'\n\n")
             due_cards = self._ankiconnect(action="findCards", query=query)
-        elif just_learning is not None:
+        elif just_learning is True:
             print("Getting is:learn card list...")
-            query = f"deck:{self.deckname} is:learn -is:suspended -rated:1"
+            query = f"deck:{self.deckname} is:learn -is:suspended is:due -rated:1"
             inf(" >  '" + query + "'\n\n")
             due_cards = self._ankiconnect(action="findCards", query=query)
             print(f"Found {len(due_cards)} learning cards...")
-        elif task_index_deck is not None:
+        elif task_index_deck is True:
             print("Getting all cards from collection...")
             query = f"deck:{self.deckname}"
             inf(" >  '" + query + "'\n\n")
