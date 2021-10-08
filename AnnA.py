@@ -260,6 +260,7 @@ execute the code using:\n'import pickle ; a = pickle.load(open(\"last_run.pickle
         df = temp.set_index("cardId")
         return df
 
+    @classmethod
     def _ankiconnect(self, action, **params):
         """
         used to send request to anki using the addon anki-connect
@@ -1373,6 +1374,7 @@ plotting...")
         fig.show()
         return True
 
+    @classmethod
     def search_for_notes(self,
                          user_input,
                          nlimit=10,
