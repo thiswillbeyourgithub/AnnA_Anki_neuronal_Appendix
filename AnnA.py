@@ -55,7 +55,7 @@ def coloured_log(string, mode):
         log.error(col_red + string + col_rst)
 
 
-def asynchronous_importer(TFIDF_enable):
+def asynchronous_importer(TFIDF_enable, task_index_deck):
     """
     used to asynchronously import large modules, this way between
     importing AnnA and creating the instance of the class, the language model
@@ -66,7 +66,7 @@ def asynchronous_importer(TFIDF_enable):
         CountVectorizer, TruncatedSVD, StandardScaler, \
         pairwise_distances, PCA, px, umap, np, tokenizer_bert, \
         MiniBatchKMeans, interpolate
-    if "sentence_transformers" not in sys.modules:
+    if "numpy" not in sys.modules:
         inf("Began importing modules...\n")
         print_when_ends = True
     else:
@@ -74,7 +74,7 @@ def asynchronous_importer(TFIDF_enable):
     import numpy as np
     from sklearn.feature_extraction.text import TfidfVectorizer
     from sklearn.feature_extraction.text import CountVectorizer
-    if TFIDF_enable is False:
+    if TFIDF_enable is False or task_index_deck is True:
         global sBERT
         from sentence_transformers import SentenceTransformer
         sBERT = SentenceTransformer('distiluse-base-multilingual-cased-v1')
@@ -157,7 +157,7 @@ class AnnA:
 
         # start importing large modules
         import_thread = threading.Thread(target=asynchronous_importer,
-                args=(TFIDF_enable,))
+                args=(TFIDF_enable, task_index_deck))
         import_thread.start()
 
         # loading args
@@ -206,6 +206,7 @@ values. {e}")
         self.deckname = self._check_deck(deckname, import_thread)
         if task_index_deck is True:
             print(f"Task : cache vectors of deck: {self.deckname}")
+            self.TFIDF_enable = False
             self.rated_last_X_days = None
             self._create_and_fill_df(task_index_deck=task_index_deck)
             self.df = self._reset_index_dtype(self.df)
