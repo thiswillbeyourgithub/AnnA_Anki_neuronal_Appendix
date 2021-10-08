@@ -34,9 +34,26 @@ out_hdlr.setFormatter(logging.Formatter('%(message)s'))
 out_hdlr.setLevel(logging.INFO)
 log.addHandler(out_hdlr)
 log.setLevel(logging.ERROR)
-inf = log.info
-war = log.warn
-err = log.error
+
+def war(string):
+    coloured_log(string, "war")
+def inf(string):
+    coloured_log(string, "inf")
+def err(string):
+    coloured_log(string, "err")
+
+def coloured_log(string, mode):
+    col_red = "\033[91m"
+    col_yel = "\033[93m"
+    col_rst = "\033[0m"
+
+    if mode == "inf":
+        log.info(col_rst + string + col_rst)
+    elif mode == "war":
+        log.warn(col_yel + string + col_rst)
+    elif mode == "err":
+        log.error(col_red + string + col_rst)
+
 
 def asynchronous_importer(TFIDF_enable):
     """
