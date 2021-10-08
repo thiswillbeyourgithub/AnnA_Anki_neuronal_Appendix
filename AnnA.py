@@ -988,7 +988,7 @@ using PCA...")
         return True
 
     def task_filtered_deck(self,
-                     deck_template="AnnA - Optimal Review Order",
+                     deck_template=None,
                      just_bury=False):
         """
         create a filtered deck containing the cards to review in optimal order
@@ -996,6 +996,9 @@ using PCA...")
         * When first creating the filtered deck, I chose 'sortOrder = 0'
             ("oldest seen first") this way I will notice if the deck
             somehow got rebuild and lost the right order
+        * deck_template can be used to group your filtered decks together.
+            Leaving it to None will make the filtered deck appear alongside
+            the original deck
         * To speed up the process, I decided to create a threaded function call
         * I do a few sanity check to see if the filtered deck
             does indeed contain the right number of cards and the right cards
@@ -1014,8 +1017,11 @@ using PCA...")
             print("Done.")
             return True
 
-        filtered_deck_name = str(deck_template + f" - {self.deckname}")
-        filtered_deck_name = filtered_deck_name.replace("::", "_")
+        if deck_template is not None:
+            filtered_deck_name = str(deck_template + f" - {self.deckname}")
+            filtered_deck_name = filtered_deck_name.replace("::", "_")
+        else:
+            filtered_deck_name = f"{self.deckname} - AnnA Optimum Reviews"
         self.filtered_deck_name = filtered_deck_name
 
         while filtered_deck_name in self._ankiconnect(action="deckNames"):
