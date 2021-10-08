@@ -1038,7 +1038,7 @@ using PCA...")
             filtered_deck_name = str(deck_template + f" - {self.deckname}")
             filtered_deck_name = filtered_deck_name.replace("::", "_")
         else:
-            filtered_deck_name = f"{self.deckname+ - AnnA Optimum Reviews"
+            filtered_deck_name = f"{self.deckname}+ - AnnA Optimum Reviews"
         self.filtered_deck_name = filtered_deck_name
 
         while filtered_deck_name in self._ankiconnect(action="deckNames"):
