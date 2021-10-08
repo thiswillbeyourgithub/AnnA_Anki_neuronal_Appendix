@@ -122,6 +122,7 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * `show_acronyms` shows the acronym present in your deck that were not extended. Useful if you want to adjust your acronym list.
 
 ## TODO
+* adjust both scoring to their 75% percentile before multiplying by the weights
 * add ability to extend the due query
 * add colours to the prints
 * find a way to remove already created filtered decks
@@ -130,7 +131,7 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * sBERT: implement a correction vector, for example "+radiography" would give a bonus to cards alignes with this word and "-radiography" would do the opposite. To help you optimize review sessions.
 * investigate wether lapsed cards have to be counted differently
 * investigate if it's possible to OCR the subpart of an image occlusion
-* refactor like so: from AnnA import util => util.offline_search + util.offline_image_search
+* refactor like so: from AnnA import util => util.offline_search (using @classmethod) + util.offline_image_search
 * look into sentence mining methods from sbert, that might contain useful ideas
 * take a look at topic modelling techniques that might be cleaner to invoke than the current ctf-idf implementation
 * warn LW
