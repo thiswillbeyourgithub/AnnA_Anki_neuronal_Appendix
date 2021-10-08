@@ -197,7 +197,7 @@ values.")
             self._compute_sBERT_vec(import_thread=import_thread)
             if clustering_enable is True:
                 self.compute_clusters(minibatchk_kwargs={"verbose": 0})
-        elif task_bury_learning is not False:
+        elif task_bury_learning is True:
             # bypasses most of the code to bury learning cards
             # directly in the deck without creating filtered decks
             print("Task : bury some learning cards.")
@@ -215,8 +215,7 @@ values.")
             self._compute_sBERT_vec(import_thread=import_thread)
             self._compute_distance_matrix()
             self._compute_opti_rev_order()
-            if task_filtered_deck is True:
-                self.task_filtered_deck(just_bury=True)
+            self.task_filtered_deck(just_bury=True)
         else:
             self._create_and_fill_df()
             self.df = self._reset_index_dtype(self.df)
