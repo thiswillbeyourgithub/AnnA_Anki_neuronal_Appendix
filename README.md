@@ -123,6 +123,7 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 
 ## TODO
 * combine tasks into a single argument
+* improve tokenizer settings for td_idf
 * adjust both scoring to their 75% percentile before multiplying by the weights
 * add ability to extend the due query
 * add colours to the prints
