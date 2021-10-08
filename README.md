@@ -116,7 +116,7 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 
 * `compute_clusters` can be used to group the cards by semantic clusters. Several algorithms are implemented: kmeans, minibatch-kmeans, agglomerative clustering, DBSCAN. I can add more if needed.
 * `plot_latent_space` can be used to display a 2D projection of your cards using plotly. This opens a new tab in your browser and loads an interactive interface in it. You can color it using tags, clusters, etc. If you have a blank plot without any points, call the method again. I don't understand this issue with plotly yet and help is appreciated :/
-* `search_for_notes` will look for cards that are similar to your input. That means that you can type in "localisation of pain in case of kidney stones" and it should find the cards dealing with those concepts even if they don't contain any of those words. This depends on how good sBERT performs on your topic. Different sBERT models can be found.
+* `search_for_notes` will look for cards that are similar to your input. That means that you can type in "localisation of pain in case of kidney stones" and it should find the cards dealing with those concepts even if they don't contain any of those words. This depends on how good sBERT performs on your topic. Different sBERT models can be found. You can use `offline=True` to search directly in the sBERT cache file.
 * `display_best_review_order` used as a debugging tool. Allows to check if the order seems correct without having to create a filtered deck.
 * `save_df` saves the dataframe containing the cards and all other infos needed by AnnA as a pickle file. Used mainly for debugging. Files will be saved to the folder `DF_backups`
 * `show_acronyms` shows the acronym present in your deck that were not extended. Useful if you want to adjust your acronym list.
@@ -133,7 +133,6 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * sBERT: implement a correction vector, for example "+radiography" would give a bonus to cards alignes with this word and "-radiography" would do the opposite. To help you optimize review sessions.
 * investigate wether lapsed cards have to be counted differently
 * investigate if it's possible to OCR the subpart of an image occlusion
-* refactor like so: from AnnA import util => util.offline_search (using @classmethod) + util.offline_image_search
 * look into sentence mining methods from sbert, that might contain useful ideas
 * take a look at topic modelling techniques that might be cleaner to invoke than the current ctf-idf implementation
 * warn LW

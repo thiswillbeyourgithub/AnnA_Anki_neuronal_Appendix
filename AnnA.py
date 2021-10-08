@@ -1400,7 +1400,8 @@ plotting...")
                          do_format_input=False,
                          anki_or_print="anki",
                          dist="cosine",
-                         reverse=False):
+                         reverse=False,
+                         offline=False):
         """
         given a text input, find notes with highest cosine similarity
         * note that you cannot use the pca version of the sBERT vectors
@@ -1413,12 +1414,28 @@ plotting...")
         * note that this obviously only works using sBERT vectors and not TFIDF
             (they would have to be recomputed each time)
         """
-        if self.TFIDF_enable is True:
+        pd.set_option('display.max_colwidth', None)
+        if offline is True:
+            sBERT_file = Path("./sBERT_cache.pickle")
+            if sBERT_file.exists():
+                df = pd.read_pickle(sBERT_file)
+            else:
+                err("sBERT cache file not found.")
+                return False
+
+            print("Loading sBERT model")
+            from sentence_transformers import SentenceTransformer
+            sBERT = SentenceTransformer('distiluse-base-multilingual-cased-v1')
+            from sklearn.metrics import pairwise_distances
+
+            anki_or_print = "print"
+            user_col="VEC"
+        elif self.TFIDF_enable is True:
             err("Cannot search for note using TFIDF vectors, only sBERT can \
 be used.")
             return False
-        pd.set_option('display.max_colwidth', None)
-        df = self.df.copy()
+        else:
+            df = self.df.copy()
 
         if do_format_input is True:
             user_input = self._format_text(user_input)
