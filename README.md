@@ -122,6 +122,7 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * `show_acronyms` shows the acronym present in your deck that were not extended. Useful if you want to adjust your acronym list.
 
 ## TODO
+* load the tokenizer so that it bypasses warning messages used for NLP
 * combine tasks into a single argument
 * improve tokenizer settings for td_idf
 * adjust both scoring to their 75% percentile before multiplying by the weights
