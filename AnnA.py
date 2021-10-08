@@ -385,7 +385,7 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
         anki connect like card content, intervals, etc
         """
 
-        if just_learning is False:
+        if just_learning is False and task_index_deck is False:
             print("Getting due card list...")
             query = f"deck:{self.deckname} is:due is:review -is:learn \
 -is:suspended -is:buried -is:new -rated:1"
