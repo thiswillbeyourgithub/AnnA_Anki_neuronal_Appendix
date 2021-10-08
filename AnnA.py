@@ -180,9 +180,9 @@ class AnnA:
                 imp = importlib.import_module(
                         self.field_mappings.replace(".py", ""))
                 self.field_dic = imp.field_dic
-            except Exception:
-                err("Error with field mapping file, will use default \
-values.")
+            except Exception as e:
+                err(f"Error with field mapping file, will use default \
+values. {e}")
                 self.field_dic = {"dummyvalue": "dummyvalue"}
 
         # actual execution
