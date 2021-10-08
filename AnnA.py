@@ -87,33 +87,41 @@ class AnnA:
     just instantiating the class does most of the job, as you can see
     in self.__init__
     """
-    def __init__(self,
+    def __init__(self, show_banner=True,
+                 # main settings
                  deckname=None,
-                 replace_greek=True,
-                 field_mapping="field_mapping.py",
-                 optional_acronym_list="acronym_list.py",
-                 keep_ocr=True,
+                 reference_order="lowest_interval",
                  desired_deck_size="80%",
                  rated_last_X_days=4,
-                 show_banner=True,
-                 debug_card_limit=None,
-                 debug_force_score_formula=None,
-                 n_clusters="auto",
-                 pca_sBERT_dim=None,
                  stride=2500,
-                 prefer_similar_card=False,
                  scoring_weights=(1, 1),
-                 reference_order="lowest_interval",
-                 do_clustering=False,
-                 compute_opti_rev_order=True,
-                 to_anki=False,
-                 check_database=False,
-                 just_bury_learning=None,
                  log_level=0,
-                 index_whole_deck=False,
-                 TFIDF_enable=False,
+                 replace_greek=True,
+                 keep_ocr=True,
+                 field_mappings="field_mappings.py",
+                 acronym_list="acronym_list.py",
+
+                 # steps:
+                 clustering_enable=True,
+                 clustering_nb_clust="auto",
+                 compute_opti_rev_order=True,
+                 check_database=False,
+
+                 # tasks:
+                 task_filtered_deck=True,
+                 task_bury_learning=False,
+                 task_index_deck=False,
+
+                 # vectorization:
+                 sBERT_dim=None,
+                 TFIDF_enable=True,
                  TFIDF_dim=1000,
                  TFIDF_stopw_lang=["english", "french"],
+
+                 # misc:
+                 debug_card_limit=None,
+                 debug_force_score_formula=None,
+                 prefer_similar_card=False,
                  ):
         if log_level == 0:
             log.setLevel(logging.ERROR)
@@ -141,14 +149,14 @@ class AnnA:
         self.desired_deck_size = desired_deck_size
         self.rated_last_X_days = rated_last_X_days
         self.debug_card_limit = debug_card_limit
-        self.n_clusters = n_clusters
-        self.pca_sBERT_dim = pca_sBERT_dim
+        self.clustering_nb_clust = clustering_nb_clust
+        self.sBERT_dim = sBERT_dim
         self.stride = stride
         self.prefer_similar_card = prefer_similar_card
         self.scoring_weights = scoring_weights
         self.reference_order = reference_order
-        self.field_mapping = field_mapping
-        self.optional_acronym_list = optional_acronym_list
+        self.field_mappings = field_mappings
+        self.acronym_list = acronym_list
         self.debug_force_score_formula = debug_force_score_formula
         self.TFIDF_enable  = TFIDF_enable
         self.TFIDF_dim = TFIDF_dim
@@ -157,20 +165,20 @@ class AnnA:
         assert stride > 0
         assert reference_order in ["lowest_interval", "relative_overdueness"]
 
-        if self.optional_acronym_list is not None:
-            file = Path(optional_acronym_list)
+        if self.acronym_list is not None:
+            file = Path(acronym_list)
             if not file.exists():
-                raise Exception(f"Acronym file was not found: {optional_acronym_list}")
+                raise Exception(f"Acronym file was not found: {acronym_list}")
             else:
                 imp = importlib.import_module(
-                        optional_acronym_list.replace(".py", ""))
+                        acronym_list.replace(".py", ""))
                 self.acronym_dict = imp.acronym_dict
-        if self.field_mapping is not None:
-            file = Path(self.field_mapping)
+        if self.field_mappings is not None:
+            file = Path(self.field_mappings)
             try:
                 assert file.exists()
                 imp = importlib.import_module(
-                        self.field_mapping.replace(".py", ""))
+                        self.field_mappings.replace(".py", ""))
                 self.field_dic = imp.field_dic
             except Exception:
                 err("Error with field mapping file, will use default \
@@ -179,17 +187,17 @@ values.")
 
         # actual execution
         self.deckname = self._check_deck(deckname, import_thread)
-        if index_whole_deck is True:
+        if task_index_deck is True:
             print(f"Task : cache vectors of deck: {self.deckname}")
             self.rated_last_X_days = None
-            self._create_and_fill_df(index_whole_deck=index_whole_deck)
+            self._create_and_fill_df(task_index_deck=task_index_deck)
             self.df = self._reset_index_dtype(self.df)
             self._format_card()
             self.show_acronyms()
             self._compute_sBERT_vec(import_thread=import_thread)
-            if do_clustering is True:
+            if clustering_enable is True:
                 self.compute_clusters(minibatchk_kwargs={"verbose": 0})
-        elif just_bury_learning is not None:
+        elif task_bury_learning is not False:
             # bypasses most of the code to bury learning cards
             # directly in the deck without creating filtered decks
             print("Task : bury some learning cards.")
@@ -207,21 +215,21 @@ values.")
             self._compute_sBERT_vec(import_thread=import_thread)
             self._compute_distance_matrix()
             self._compute_opti_rev_order()
-            if to_anki is True:
-                self.to_anki(just_bury=True)
+            if task_filtered_deck is True:
+                self.task_filtered_deck(just_bury=True)
         else:
             self._create_and_fill_df()
             self.df = self._reset_index_dtype(self.df)
             self._format_card()
             self.show_acronyms()
             self._compute_sBERT_vec(import_thread=import_thread)
-            if do_clustering is True:
+            if clustering_enable is True:
                 self.compute_clusters(minibatchk_kwargs={"verbose": 0})
             self._compute_distance_matrix()
             if compute_opti_rev_order is True:
                 self._compute_opti_rev_order()
-                if to_anki is True:
-                    self.to_anki()
+                if task_filtered_deck is True:
+                    self.task_filtered_deck()
 
         # pickle itself
         print("\nSaving instance as 'last_run.pickle'...")
@@ -370,7 +378,7 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
         print(f"Selected deck: {deckname}")
         return deckname
 
-    def _create_and_fill_df(self, just_learning=None, index_whole_deck=None):
+    def _create_and_fill_df(self, just_learning=None, task_index_deck=None):
         """
         create a pandas DataFrame, fill it with the information gathered from
         anki connect like card content, intervals, etc
@@ -388,7 +396,7 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
             inf(" >  '" + query + "'\n\n")
             due_cards = self._ankiconnect(action="findCards", query=query)
             print(f"Found {len(due_cards)} learning cards...")
-        elif index_whole_deck is not None:
+        elif task_index_deck is not None:
             print("Getting all cards from collection...")
             query = f"deck:{self.deckname}"
             inf(" >  '" + query + "'\n\n")
@@ -480,7 +488,7 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
         if self.replace_greek is True:
             for a, b in greek_alphabet_mapping.items():
                 text = s(a, b, text)
-        if self.optional_acronym_list is True:
+        if self.acronym_list is True:
             global acronym_dict
             for a, b in self.acronym_dict.items():
                 text = s(rf"{a}", f"{a} ({b})", text, flags=re.IGNORECASE)
@@ -698,10 +706,10 @@ adjust formating issues:")
                 Path("sBERT_cache.pickle_temp").rename("sBERT_cache.pickle")
 
             df["VEC_FULL"] = df["VEC"]
-            if self.pca_sBERT_dim is not None:
-                print(f"Reducing sBERT to {self.pca_sBERT_dim} dimensions \
+            if self.sBERT_dim is not None:
+                print(f"Reducing sBERT to {self.sBERT_dim} dimensions \
 using PCA...")
-                pca_sBERT = PCA(n_components=self.pca_sBERT_dim, random_state=42)
+                pca_sBERT = PCA(n_components=self.sBERT_dim, random_state=42)
                 df_temp = pd.DataFrame(
                     columns=["V"+str(x+1)
                              for x in range(len(df.loc[df.index[0], "VEC"]))],
@@ -915,9 +923,9 @@ using PCA...")
             queue.extend(random.choices(pool, k=1))
 
         if self.debug_force_score_formula is not None:
-            if self.debug_force_score_formula == "different":
+            if self.debug_force_score_formula == "only_different":
                 df["ref"] = 0
-            if self.debug_force_score_formula == "similar":
+            if self.debug_force_score_formula == "only_similar":
                 df["ref"] = 0
                 df_dist.loc[:, :] = np.ones_like(df_dist.values)
 
@@ -984,7 +992,7 @@ using PCA...")
         print(self.df.loc[order, "text"])
         return True
 
-    def to_anki(self,
+    def task_filtered_deck(self,
                      deck_template="AnnA - Optimal Review Order",
                      just_bury=False):
         """
@@ -1119,20 +1127,20 @@ as opti_rev_order!")
         * To find the topic of each cluster, ctf-idf is used
         """
         df = self.df
-        if self.n_clusters is None or self.n_clusters == "auto":
-            self.n_clusters = len(df.index)//20
+        if self.clustering_nb_clust is None or self.clustering_nb_clust == "auto":
+            self.clustering_nb_clust = len(df.index)//20
             print(f"No number of clusters supplied, will try with \
-{self.n_clusters}.")
-        kmeans_kwargs_deploy = {"n_clusters": self.n_clusters}
+{self.clustering_nb_clust}.")
+        kmeans_kwargs_deploy = {"n_clusters": self.clustering_nb_clust}
         dbscan_kwargs_deploy = {"eps": 0.75,
                                 "min_samples": 3,
                                 "n_jobs": -1}
-        agglo_kwargs_deploy = {"n_clusters": self.n_clusters,
+        agglo_kwargs_deploy = {"n_clusters": self.clustering_nb_clust,
                                # "distance_threshold": 0.6,
                                "affinity": "cosine",
                                "memory": "/tmp/",
                                "linkage": "average"}
-        minibatchk_kwargs_deploy = {"n_clusters": self.n_clusters,
+        minibatchk_kwargs_deploy = {"n_clusters": self.clustering_nb_clust,
                                     "max_iter": 100,
                                     "batch_size": 100,
                                     "verbose": 1,
@@ -1455,7 +1463,7 @@ be used.")
     def show_acronyms(self, exclude_OCR_text=True):
         """
         shows acronym present in your collection that were not found in
-        the file supplied by the argument `optional_acronym_list`
+        the file supplied by the argument `acronym_list`
         * acronyms found in OCR caption are removed by default
         """
         full_text = " ".join(self.df["text"].tolist())
@@ -1469,7 +1477,7 @@ be used.")
         relevant = random.choices(sorted_by_count[0:50],
                 k=min(len(sorted_by_count), 10))
 
-        if self.optional_acronym_list is None:
+        if self.acronym_list is None:
             err("\nYou did not supply an acronym list, printing all acronym \
 found...")
             pprint(relevant)

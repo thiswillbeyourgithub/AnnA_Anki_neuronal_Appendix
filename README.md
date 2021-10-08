@@ -79,29 +79,36 @@ Tired of having to deal with anki flashcards that are too similar when grinding 
 ### Usage and arguments
 AnnA was made with usability in mind. With the right arguments, you can have to enter only one command in the console to get your filtered decks. All the settings you might want to edit are in the agument of the AnnA Class. Here are the arguments with the relevant explanation:
 
+ * `show_banner` used to display a nice banner when instantiating the collection. Default is `True`.
  * `deckname` the deck containing the cards you want to review. If you don't supply this value or make a mistake, AnnA will ask you to type in the deckname, with autocompletion enabled (use `<TAB>`). Default is `None`.
- * `replace_greek` if True, all greek letters will be replaced with a spelled version. For example `\u03C3` becomes `sigma`. Default is `True`.
- * `optional_acronym_list` a python dictionary containing acronyms to extend. For example `CRC` can be extended to `CRC (colorectal cancer)`. (The parenthesis are automatically added.) Default is `"acronym_list.py"`. Keep in mind that lowercase acronym will also be matched.
- * `keep_ocr` if True, the OCR text extracted using [the great AnkiOCR addon](https://github.com/cfculhane/AnkiOCR/) will be included in the card. Default is `True`.
+ * `reference_order` either "relative_overdueness" or "lowest_interval". It is the reference used to sort the card before adjusting them using the similarity scores. Default is `"relative_overdueness"`. Keep in mind that my relative_overdueness is a reimplementation of the default overdueness of anki and is not absolutely exactly the same but should be a very close approximation. If you find edge cases, please open an issue.
  * `desired_deck_size` indicates the size of the filtered deck to create. Can be the number of cards (500), a proportion of due cards ("80%" or 0.80) or the word "all". Default is `"80%"`.
  * `rated_last_X_days` indicates the number of passed days to take into account. If you rated 500 cards yesterday, then you don't want your today cards to be too close to what you viewed yesterday, so AnnA will find the 500 cards you reviewed yesterday, and all the cards you rated before that, up to the number of days in rated_last_X_days value. Default is `4` (meaning rated today + rated yesterday).
  * `stride` if you have X due cards, want to create a filtered deck containing all of them and have reviewed Y cards yesterday, the stride value will make computing the optimal review order only compares a maximum of `STRIDE` cards at any given time. This eases calculation. Default is `2500`.
- * `show_banner` used to display a nice banner when instantiating the collection. Default is `True`.
- * `debug_card_limit` limit the number of due cards to take into account. It is used for debugging as it allows to run the script quickly. Default is `None`.
- * `n_clusters` number specifying the number of clusters to look for. Only relevant for some clustering algorithms. Default is `"auto"`, this will look for one cluster every 100 cards.
- * `pca_sBERT_dim` number of dimensions to keep after doing a PCA reduction. This can speed up the computation somewhat, but with reduced precision. Default is `300`, this retains usually more than 95% of the variance. The original number of dimension is 512, but that might depend on the "sBERT" model if you decide to change it. You can set it to `None` to disable PCA reduction.
- * `prefer_similar_card` I don't know who would use that. It reverses the optimal review order and allows to create a filtered deck grouping your cards that are semantically closest to each other. You can use it to convince yourself that the optimal review order is indeed working. Default is `False`.
- * `reference_order` either "relative_overdueness" or "lowest_interval". It is the reference used to sort the card before adjusting them using the similarity scores. Default is `"relative_overdueness"`. Keep in mind that my relative_overdueness is a reimplementation of the default overdueness of anki and is not absolutely exactly the same but should be a very close approximation. If you find edge cases, please open an issue.
  * `scoring_weights` a tuple used to adjust the value of the reference order compared to how similar the cards are. Default is `(1, 1)`. For example: (1, 1.5) means that the algorithm will spread the similar cards farther apart.
- * `to_anki` tells AnnA to automatically create the filtered deck or not. Default is `False`.
- * `compute_opti_rev_order` don't compute optimal review order, if set to False, it will set `to_anki` to False. Default to True.
+ * `log_level` can be any number between 0 and 2. Default is `0` to only print errors. 1 means print also useful information and 2 means print everything.
+ * `replace_greek` if True, all greek letters will be replaced with a spelled version. For example `\u03C3` becomes `sigma`. Default is `True`.
+ * `keep_ocr` if True, the OCR text extracted using [the great AnkiOCR addon](https://github.com/cfculhane/AnkiOCR/) will be included in the card. Default is `True`.
+ * `field_mappin` path of file that indicates which field to keep from which note type and in which order. Default value is `field_mappings.py`. If empty, AnnA only takes into account the main (=first) field.
+ * `acronym_list` a python dictionary containing acronyms to extend. For example `CRC` can be extended to `CRC (colorectal cancer)`. (The parenthesis are automatically added.) Default is `"acronym_list.py"`. Keep in mind that lowercase acronym will also be matched.
+
+ * `clustering_enable` whether to enable clustering or not. Default is `True`.
+ * `clustering_nb_clust` number specifying the number of clusters to look for. Only relevant for some clustering algorithms. Default is `"auto"`, this will look for one cluster every 20 cards.
+ * `compute_opti_rev_order` if `False` AnnA won't compute optimal review order and will set `to_anki` to False. Default to `True`.
  * `check_database` at the end of execution, ask anki to check the database or not. Default is `False`.
- * `just_bury_learning` **experimental**: will just bury some cards of your learning queue if they are too similar. This will bypass a lot other arguments and mostly take into account `deckname` and `desired_deck_size`. Default is False.
- * `log_level` can be any number between 0 and 2. Default is 0 to only print errors. 1 means print also useful information and 2 means print everything.
- * `index_whole deck` index all the cards in a deck into the cache using sBERT. This should be rather long. Obviously this will bypass most arguments. Default is `False`.
- * `TFIDF_enable` use tfidf instead of sBERT. This will bypass the sBERT cache file and won't work with the `search_for_notes` function. Default is `False`.
+
+ * `task_filtered_deck` automatically create the filtered deck or not. Default is `True`.
+ * `task_bury_learning` bury some cards of your learning queue if they are too similar. This will bypass a lot other arguments. Default is `False`.
+ * `task_index_deck` index all the cards in a deck into sBERT cache. This should be rather long. Obviously this will bypass most arguments. Default is `False`.
+
+ * `sBERT_dim` number of dimensions to keep after doing a PCA reduction. This can speed up the computation somewhat, but with reduced precision. Default is `None` (i.e. disabled by default), setting it to `300` will retain usually more than 95% of the variance. The original number of dimension is 512, but that might depend on the "sBERT" model if you decide to change it.
+ * `TFIDF_enable` use tfidf instead of sBERT. This will bypass the sBERT cache file and won't work with the `search_for_notes` function. Default is `True`.
  * `TFIDF_dim` the number of dimension to keep using [SVD](https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.TruncatedSVD.html). Default is `1000`.
  * `TFIDF_stopw_lang` a list of languages used to construct a list of stop words (i.e. words that will be ignored). Default is `["english", "french"]`.
+
+ * `debug_card_limit` limit the number of due cards to take into account. It is used for debugging as it allows to run the script quickly. Default is `None`.
+ * `debug_force_score_formula` can be used to force seeing similar or different cards etc, to test the algorithm. Default is `None`. Possible values are `only_different` and `only_similar`
+ * `prefer_similar_card` I don't know who would use that. It reverses the optimal review order and allows to create a filtered deck grouping your cards that are semantically closest to each other. You can use it to convince yourself that the optimal review order is indeed working. Default is `False`.
 
 AnnA has a number of other built-in methods you can run after instantiating the class. They are especially useful if "to_anki" is set to `False`. Note that methods beginning with a "_" are not supposed to be called by the user and are reserved for backend use. Here's a list of useful methods:
 
