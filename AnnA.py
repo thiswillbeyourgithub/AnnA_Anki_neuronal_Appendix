@@ -398,7 +398,7 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
             due_cards = self._ankiconnect(action="findCards", query=query)
             print(f"Found {len(due_cards)} learning cards...")
         elif task_index_deck is True:
-            print("Getting all cards from collection...")
+            print("Getting all cards from deck...")
             query = f"deck:{self.deckname}"
             inf(" >  '" + query + "'\n\n")
             due_cards = self._ankiconnect(action="findCards", query=query)
@@ -1433,7 +1433,7 @@ be used.")
                                                  metric=dist))
             df["distance"] = df["distance"].astype("float")
         except ValueError as e:
-            err(f"Error {e}: did you select 'VEC' instead of \
+            err(f"Error {e}: did you select column 'VEC' instead of \
 'VEC_FULL'?")
             return False
         index = df.index
