@@ -477,8 +477,7 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
         s = re.sub
 
         text = str(text)
-        text = s("\n+", ";", text)
-#        text = s(r"(;\W;)*", " ; ", text)
+        text = s("\n+", " ", text)
         text = text.replace("+", " ")  # sbert does not work well with that
         text = text.replace("-", " ")
         if self.keep_ocr is True:
@@ -494,11 +493,10 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
                 text = s(rf"{a}", f"{a} ({b})", text, flags=re.IGNORECASE)
                 # \b matches beginning and end of a word
         text = s(r'[a-zA-Z0-9-]+\....', " ", text)  # media file name
-        # replace indented newline by ;
         text = s("<blockquote(.*?)</blockquote>",
                  lambda x: x.group(0).replace("<br>", " ; "), text)
         text = s('\\n|<div>|</div>|<br>|<span>|</span>|<li>|</li>|<ul>|</ul>',
-                 " ; ", text)  # newlines
+                 " ", text)  # newlines
         text = s("<a href.*?</a>", " ", text)  # html links
         text = s(r'http[s]?://\S*', " ", text)  # plaintext links
         text = s("<.*?>", " ", text)  # remaining html tags
@@ -529,9 +527,6 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
                 text += "."
         text = text.replace(" :.", ".")
         text = text.replace(":.", ".")
-        text = text.replace(" ; ; ", " ; ")
-        text = text.replace(" ; ; ", " ; ")
-        text = text.replace(" ; ; ", " ; ")
         return text
 
     def _format_card(self):
