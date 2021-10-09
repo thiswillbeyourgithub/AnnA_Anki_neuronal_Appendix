@@ -883,11 +883,16 @@ using PCA...")
             n_pos = sum(sum(ro > 500))
             n_neg = sum(sum(ro < -500))
             ro_intp = ro
-            if n_pos != 0:
+            if n_pos == 1:
+                ro[ro > 500] = 500
+            elif n_pos > 1:
                 f = interpolate.interp1d(x=ro[ro > 500],
                                          y=[500+x for x in range(n_pos)])
                 ro_intp[ro > 500] = f(ro[ro > 500])
-            if n_neg != 0:
+
+            if n_neg == 1:
+                ro[ro < -500] = -500
+            elif n_neg > 1:
                 f = interpolate.interp1d(x=ro[ro < -500],
                                          y=[-500-x for x in range(n_neg)])
                 ro_intp[ro < -500] = f(ro[ro < -500])
