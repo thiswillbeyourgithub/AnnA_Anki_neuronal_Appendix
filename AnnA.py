@@ -1434,7 +1434,7 @@ plotting...")
             from sklearn.metrics import pairwise_distances
 
             anki_or_print = "print"
-            user_col="VEC"
+            user_col = "VEC"
         elif self.TFIDF_enable is True:
             err("Cannot search for note using TFIDF vectors, only sBERT can \
 be used.")
