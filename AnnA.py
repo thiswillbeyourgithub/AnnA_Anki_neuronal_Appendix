@@ -416,7 +416,7 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
             print(f"Found {len(due_cards)} learning cards...")
         elif task_index_deck is True:
             print("Getting all cards from deck...")
-            query = f"deck:{self.deckname}"
+            query = f"deck:{self.deckname} -is:suspended"
             inf(" >  '" + query + "'\n\n")
             due_cards = self._ankiconnect(action="findCards", query=query)
             print(f"Found {len(due_cards)} cards...")
