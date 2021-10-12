@@ -8,6 +8,7 @@ Tired of having to deal with anki flashcards that are too similar when grinding 
 * [FAQ](#FAQ)
 * [Getting started](#Getting-started)
 * [Usage and arguments](#Usage-and-arguments)
+* [TODO list](#TODO)
 * [Credits and links that were helpful](#Credits-and-links-that-were-helpful)
 * [Crazy Ideas](#Crazy-ideas)
 
