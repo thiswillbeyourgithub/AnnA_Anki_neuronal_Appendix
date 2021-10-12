@@ -122,26 +122,7 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * `show_acronyms` shows the acronym present in your deck that were not extended. Useful if you want to adjust your acronym list.
 
 ## TODO
-* improve tokenizer settings for td_idf
-* adjust both scoring to their 75% percentile before multiplying by the weights
-* add a vectorize argument that could be "sBERT" or "TF_IDF"
-* investigate applying max pooling over BERT vectors of words of cards instead of TF_IDF, might be even better!
-* combine tasks into a single argument
-* load the tokenizer so that it bypasses warning messages used for NLP
-* add ability to extend queries
-* add colours to the prints
-* find a way to remove already created filtered decks
-* show to user the most disimilar cards as well as the most similar
-* sBERT: implement a correction vector, for example "+radiography" would give a bonus to cards alignes with this word and "-radiography" would do the opposite. To help you optimize review sessions.
-* investigate wether lapsed cards have to be counted differently
-* investigate if it's possible to OCR the subpart of an image occlusion
-* look into sentence mining methods from sbert, that might contain useful ideas
-* take a look at topic modelling techniques that might be cleaner to invoke than the current ctf-idf implementation
-* warn LW
-* re read this article for inspiration : http://mccormickml.com/2021/05/27/question-answering-system-tf-idf/
-* automatically create a phylogeny of cards based on a distance matrix and see if it's an appropriate mind map, plotly is suitable for this kind of tree
-* turn into anki as an addon
-* investigate crazy ideas list
+* *see dev branch*
 
 ## Credits and links that were helpful
 * [Corentin Sautier](https://github.com/CSautier/) for his many many insights and suggestions on ML and python. He was also instrumental in devising the score formula used to order the filtered deck.
