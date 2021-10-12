@@ -122,14 +122,17 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * `show_acronyms` shows the acronym present in your deck that were not extended. Useful if you want to adjust your acronym list.
 
 ## TODO
-* auto export figure as html instead of openning it
-* load the tokenizer so that it bypasses warning messages used for NLP
 * improve tokenizer settings for td_idf
 * adjust both scoring to their 75% percentile before multiplying by the weights
-* add ability to extend the due query
+* add a vectorize argument that could be "sBERT" or "TF_IDF"
+* investigate applying max pooling over BERT vectors of words of cards instead of TF_IDF, might be even better!
+* combine tasks into a single argument
+* load the tokenizer so that it bypasses warning messages used for NLP
+* auto export figure as html instead of openning it
+* add ability to extend queries
+* add colours to the prints
 * find a way to remove already created filtered decks
-* show the most disimilar cards as well as the most similar
-* add a cheatsheet in the usage, showing frequent commands
+* show to user the most disimilar cards as well as the most similar
 * sBERT: implement a correction vector, for example "+radiography" would give a bonus to cards alignes with this word and "-radiography" would do the opposite. To help you optimize review sessions.
 * investigate wether lapsed cards have to be counted differently
 * investigate if it's possible to OCR the subpart of an image occlusion
