@@ -150,7 +150,7 @@ class AnnA:
             log.setLevel(logging.INFO)
 
 
-        if show_banner is True:
+        if show_banner:
             print(pyfiglet.figlet_format("AnnA"))
             print("(Anki neuronal Appendix)\n\n")
 
@@ -218,7 +218,7 @@ values. {e}")
             self._format_card()
             self.show_acronyms()
             self._compute_sBERT_vec(import_thread=import_thread)
-            if clustering_enable is True:
+            if clustering_enable:
                 self.compute_clusters(minibatchk_kwargs={"verbose": 0})
         elif task == "bury":
             # bypasses most of the code to bury learning cards
@@ -245,10 +245,10 @@ values. {e}")
             self._format_card()
             self.show_acronyms()
             self._compute_sBERT_vec(import_thread=import_thread)
-            if clustering_enable is True:
+            if clustering_enable:
                 self.compute_clusters(minibatchk_kwargs={"verbose": 0})
             self._compute_distance_matrix()
-            if compute_opti_rev_order is True:
+            if compute_opti_rev_order:
                 self._compute_opti_rev_order()
                 if task == "create_filtered":
                     self.task_filtered_deck()
@@ -266,7 +266,7 @@ execute the code using:\n'import pickle ; a = pickle.load(open(\"last_run.pickle
             except TypeError as e:
                 err(f"Error when saving instance as pickle file: {e}")
 
-        if check_database is True:
+        if check_database:
             inf("Re-optimizing Anki database")
             self._ankiconnect(action="guiCheckDatabase")
 
@@ -517,14 +517,14 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
         text = s("\n+", " ", text)
         text = text.replace("+", " ")  # sbert does not work well with that
         text = text.replace("-", " ")
-        if self.keep_ocr is True:
+        if self.keep_ocr:
             # keep image title (usually OCR)
             text = s("title=(\".*?\")", "> Caption: '\\1' <", text)
             text = text.replace('Caption: \'""\'', "")
-        if self.replace_greek is True:
+        if self.replace_greek:
             for a, b in greek_alphabet_mapping.items():
                 text = s(a, b, text)
-        if self.acronym_list is True:
+        if self.acronym_list:
             global acronym_dict
             for ac, word in self.acronym_dict.items():
                 bef = text
@@ -597,7 +597,7 @@ Edit the variable 'field_dic' to use {card_model}")
                     take_first_field = True
 
                 # concatenates the corresponding fields into one string:
-                if take_first_field is True:  # if no corresponding model
+                if take_first_field:  # if no corresponding model
                     # was found in field_dic
                     field_list = list(df.loc[index, "fields"])
                     for f in field_list:
@@ -669,7 +669,7 @@ adjust formating issues:")
             df = self.df
 
         if self.vectorizer == "sBERT":
-            if use_sBERT_cache is True:
+            if use_sBERT_cache:
                 print("\nLooking for cached sBERT pickle file...", end="")
                 sBERT_file = Path("./sBERT_cache.pickle")
                 df["VEC"] = 0*len(df.index)
@@ -855,7 +855,7 @@ using PCA...")
         rated = self.rated_cards
         due = self.due_cards
         queue = []
-        if self.prefer_similar_card is True:
+        if self.prefer_similar_card:
             sign = 1
         else:
             sign = -1
@@ -1240,7 +1240,7 @@ as opti_rev_order!")
         for i, clust_nb in enumerate(cluster_list):
             df.loc[ df[output_col] == clust_nb, "output_col"] = i
 
-        if tokenize_tags is True:
+        if tokenize_tags:
             df["tokenized"] = df.apply(
                     lambda row: " ".join(
                         tokenizer.tokenize(row["text"])),
@@ -1277,7 +1277,7 @@ as opti_rev_order!")
             self.w_by_class = w_by_class
             self.df = df.sort_index()
 
-            if add_as_tags is True:
+            if add_as_tags:
                 # creates two threads, the first one removes old tags and the
                 # other one adds the new one
                 threads = []
@@ -1425,7 +1425,7 @@ plotting...")
         if "cluster_topic" not in df.columns:
             df["cluster_topic"] = 0
         fig = px.scatter(**plotly_kwargs_deploy)
-        if disable_legend is True:
+        if disable_legend:
             fig = fig.update_layout(showlegend=False)
         fig.show()
         return True
@@ -1453,7 +1453,7 @@ plotting...")
             (they would have to be recomputed each time)
         """
         pd.set_option('display.max_colwidth', None)
-        if offline is True:
+        if offline:
             sBERT_file = Path("./sBERT_cache.pickle")
             if sBERT_file.exists():
                 df = pd.read_pickle(sBERT_file)
@@ -1475,7 +1475,7 @@ be used.")
         else:
             df = self.df.copy()
 
-        if do_format_input is True:
+        if do_format_input:
             user_input = self._format_text(user_input)
         embed = sBERT.encode(user_input, normalize_embeddings=True)
         print("")
@@ -1542,7 +1542,7 @@ be used.")
         * acronyms found in OCR caption are removed by default
         """
         full_text = " ".join(self.df["text"].tolist())
-        if exclude_OCR_text is True:
+        if exclude_OCR_text:
             full_text = re.sub("> Caption: '.*?' <", " ", full_text)
         matched = set(re.findall("[A-Z]{3,}", full_text))
         acro_count = {}
@@ -1563,7 +1563,7 @@ found...")
 #            acro_list = [x.lower() for x in acro_list]
 
             print("List of some acronyms still found:")
-            if exclude_OCR_text is True:
+            if exclude_OCR_text:
                 print("(Excluding OCR text)")
             out = {acr for acr in filter(lambda x: x.lower() not in acro_list,
                                          relevant)
