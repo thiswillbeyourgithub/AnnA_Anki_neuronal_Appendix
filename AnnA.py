@@ -526,16 +526,6 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
             # keep image title (usually OCR)
             text = s("title=(\".*?\")", "> Caption: '\\1' <", text)
             text = text.replace('Caption: \'""\'', "")
-        if self.replace_greek:
-            for a, b in greek_alphabet_mapping.items():
-                text = s(a, b, text)
-        if self.acronym_list:
-            global acronym_dict
-            for ac, word in self.acronym_dict.items():
-                bef = text
-                text = s(rf"\b{ac}\b", f"{ac} ({word})", text, flags=re.IGNORECASE)
-                if text != bef:
-                    breakpoint()
         text = s(r'[a-zA-Z0-9-]+\....', " ", text)  # media file name
         text = s("<blockquote(.*?)</blockquote>",
                  lambda x: x.group(0).replace("<br>", " ; "), text)
@@ -554,6 +544,15 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
         text = s("&gt;|&lt;|<|>", "", text)
         text = s("[.?!] ([a-zA-Z])", lambda x: x.group(0).upper(), text)
         # adds capital letter after punctuation
+        if self.replace_greek:
+            for a, b in greek_alphabet_mapping.items():
+                text = s(a, b, text)
+        if self.acronym_list is not None:
+            for compiled, word in self.acronym_dict.items():
+                bef = str(text)
+                text = s(compiled, lambda x: x.group(0) + f" ({word})", text)
+                if text != bef:
+                    print(f"{bef}  =>  {text}")
 
         text = text.replace(" : ", ": ")
         text = " ".join(text.split())  # multiple spaces
