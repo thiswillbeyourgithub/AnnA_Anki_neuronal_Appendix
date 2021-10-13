@@ -110,6 +110,8 @@ class AnnA:
                  reference_order="lowest_interval",
                  desired_deck_size="80%",
                  rated_last_X_days=4,
+                 highjack_due_query=None,
+                 highjack_rated_query=None,
                  stride=2500,
                  scoring_weights=(1, 1),
                  log_level=0,
@@ -166,6 +168,8 @@ class AnnA:
         self.debug_card_limit = debug_card_limit
         self.clustering_nb_clust = clustering_nb_clust
         self.sBERT_dim = sBERT_dim
+        self.highjack_due_query = highjack_due_query
+        self.highjack_rated_query = highjack_rated_query
         self.stride = stride
         self.prefer_similar_card = prefer_similar_card
         self.scoring_weights = scoring_weights
@@ -206,7 +210,7 @@ values. {e}")
         if task == "index":
             print(f"Task : cache vectors of deck: {self.deckname}")
             self.TFIDF_enable = False
-            self.rated_last_X_days = None
+            self.rated_last_X_days = 0
             self._create_and_fill_df(task=task)
             self.df = self._reset_index_dtype(self.df)
             self._format_card()
@@ -222,8 +226,8 @@ values. {e}")
 .")
             inf("Forcing 'reference_order' to 'lowest_interval'.")
             self.reference_order = "lowest_interval"
-            inf("Forcing rated_last_X_days to None.")
-            self.rated_last_X_days = None
+            inf("Forcing rated_last_X_days to 0.")
+            self.rated_last_X_days = 0
 
             self._create_and_fill_df(just_learning=True)
             self.df = self._reset_index_dtype(self.df)
@@ -401,12 +405,19 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
         anki connect like card content, intervals, etc
         """
 
-        if task not in ["bury", "index"]:
+        if self.highjack_due_query is not None:
+            print("Highjacking due card list:")
+            query = self.highjack_due_query
+            inf(" >  '" + query + "'\n\n")
+            due_cards = self._ankiconnect(action="findCards", query=query)
+            print(f"Found {len(due_cards)} cards...")
+        elif task == "create_filtered":
             print("Getting due card list...")
             query = f"deck:{self.deckname} is:due is:review -is:learn \
 -is:suspended -is:buried -is:new -rated:1"
             inf(" >  '" + query + "'\n\n")
             due_cards = self._ankiconnect(action="findCards", query=query)
+            print(f"Found {len(due_cards)} due cards...")
         elif task == "bury":
             print("Getting is:learn card list...")
             query = f"deck:{self.deckname} is:learn -is:suspended is:due -rated:1"
@@ -420,23 +431,30 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
             due_cards = self._ankiconnect(action="findCards", query=query)
             print(f"Found {len(due_cards)} cards...")
 
-        n_rated_days = self.rated_last_X_days
-        if n_rated_days is not None:
-            if int(n_rated_days) != 0:
-                print(f"Getting cards that where rated in the last \
-{n_rated_days} days  ...")
-                query = f"deck:{self.deckname} rated:{n_rated_days} \
+        rated_cards = []
+        if self.highjack_rated_query is not None:
+            print("Highjacking rated card list:")
+            query = self.highjack_rated_query
+            inf(" >  '" + query + "'\n\n")
+            rated_cards = self._ankiconnect(action="findCards", query=query)
+            print(f"Found {len(rated_cards)} cards...")
+        elif self.rated_last_X_days != 0:
+            print(f"Getting cards that where rated in the last \
+{self.rated_last_X_days} days  ...")
+            query = f"deck:{self.deckname} rated:{self.rated_last_X_days} \
 -is:suspended"
-                inf(" >  '" + query + "'\n\n")
-                r_cards = self._ankiconnect(action="findCards", query=query)
-
-                # removes overlap if found
-                rated_cards = [x for x in r_cards if x not in due_cards]
-                print(f"Rated cards contained {len(rated_cards)} relevant cards \
-(out of {len(r_cards)}).")
+            inf(" >  '" + query + "'\n\n")
+            r_cards = self._ankiconnect(action="findCards",
+                                        query=query)
         else:
             print("Will not look for cards rated in past days.")
             rated_cards = []
+        if rated_cards != []:
+            temp = [x for x in r_cards if x not in due_cards]
+            diff = len(rated_cards) - len(temp)
+            if diff != 0:
+                print(f"Removed overlap between rated cards and due cards: \
+{diff} cards removed.")
         self.due_cards = due_cards
         self.rated_cards = rated_cards
 
