@@ -213,7 +213,7 @@ values. {e}")
             print(f"Task : cache vectors of deck: {self.deckname}")
             self.vectorizer = "sBERT"
             self.rated_last_X_days = 0
-            self._create_and_fill_df(task=task)
+            self._create_and_fill_df()
             self.df = self._reset_index_dtype(self.df)
             self._format_card()
             self.show_acronyms()
@@ -231,7 +231,7 @@ values. {e}")
             inf("Forcing rated_last_X_days to 0.")
             self.rated_last_X_days = 0
 
-            self._create_and_fill_df(just_learning=True)
+            self._create_and_fill_df()
             self.df = self._reset_index_dtype(self.df)
             self._format_card()
             self.show_acronyms()
@@ -401,7 +401,7 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
         print(f"Selected deck: {deckname}")
         return deckname
 
-    def _create_and_fill_df(self, task=None):
+    def _create_and_fill_df(self):
         """
         create a pandas DataFrame, fill it with the information gathered from
         anki connect like card content, intervals, etc
@@ -413,20 +413,20 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
             inf(" >  '" + query + "'\n\n")
             due_cards = self._ankiconnect(action="findCards", query=query)
             print(f"Found {len(due_cards)} cards...")
-        elif task == "create_filtered":
+        elif self.task == "create_filtered":
             print("Getting due card list...")
             query = f"deck:{self.deckname} is:due is:review -is:learn \
 -is:suspended -is:buried -is:new -rated:1"
             inf(" >  '" + query + "'\n\n")
             due_cards = self._ankiconnect(action="findCards", query=query)
             print(f"Found {len(due_cards)} due cards...")
-        elif task == "bury":
+        elif self.task == "bury":
             print("Getting is:learn card list...")
             query = f"deck:{self.deckname} is:learn -is:suspended is:due -rated:1"
             inf(" >  '" + query + "'\n\n")
             due_cards = self._ankiconnect(action="findCards", query=query)
             print(f"Found {len(due_cards)} learning cards...")
-        elif task == "index":
+        elif self.task == "index":
             print("Getting all cards from deck...")
             query = f"deck:{self.deckname} -is:suspended"
             inf(" >  '" + query + "'\n\n")
