@@ -3,6 +3,7 @@
 # for example with items "TACH": "tachycardia":
 # 'John has TACH' becomes 'John has TACH (tachycardia)'
 acronym_dict = {
+        r"regex:IL(\d+)": "interleukin \\1",
         "AI": "artificial intelligence",
         "ML": "machine learning",
         "CNN": "convolutionnal neural network",
@@ -19,6 +20,5 @@ acronym_dict = {
         "REM": "rapid eye movement sleep",
         "HPV": "human papilloma virus",
         "BRCA": "breast cancer gene",
-        "regex:IL(\d+)": "interleukin \\1",
 
 }
