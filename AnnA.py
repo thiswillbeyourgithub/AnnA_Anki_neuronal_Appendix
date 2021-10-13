@@ -1033,6 +1033,7 @@ using PCA...")
         assert len(queue) != 0
         print("Done.\n")
         self.opti_rev_order = queue
+        self.df = df
         return True
 
     def display_opti_rev_order(self, display_limit=50):
