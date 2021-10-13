@@ -862,6 +862,7 @@ using PCA...")
             sign = -1
         w1 = self.scoring_weights[0]
         w2 = self.scoring_weights[1]*sign
+        w2p = w2*sign  # keep a positive version handy
 
         # alter the value from rated cards as they will not be useful
         df.loc[rated, "due"] = np.median(df.loc[due, "due"].values)
@@ -981,14 +982,14 @@ using PCA...")
             while len(queue) < queue_size_goal:
                 if use_index_of_score:
                     queue.append(indTODO[
-                            (df.loc[indTODO, "ref"].values.argsort() + np.mean([
+                            (df.loc[indTODO, "ref"].values.argsort()*w1 + np.mean([
                                 np.max(
                                     df_dist.loc[indQUEUE[-self.stride:], indTODO].values,
                                     axis=0),
                                 np.mean(
                                     df_dist.loc[indQUEUE[-self.stride:], indTODO].values,
                                     axis=0)
-                                ], axis=0).argsort()
+                                ], axis=0).argsort()*w2p
                              ).argmax()])
                     indQUEUE.append(indTODO.pop(indTODO.index(queue[-1])))
 
