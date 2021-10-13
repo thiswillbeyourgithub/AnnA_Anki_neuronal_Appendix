@@ -549,10 +549,7 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
                 text = s(a, b, text)
         if self.acronym_list is not None:
             for compiled, word in self.acronym_dict.items():
-                bef = str(text)
                 text = s(compiled, lambda x: x.group(0) + f" ({word})", text)
-                if text != bef:
-                    print(f"{bef}  =>  {text}")
 
         text = text.replace(" : ", ": ")
         text = " ".join(text.split())  # multiple spaces
