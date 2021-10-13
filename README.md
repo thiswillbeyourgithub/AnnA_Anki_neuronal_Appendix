@@ -129,6 +129,7 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * load the tokenizer so that it bypasses warning messages used for NLP
 * auto export figure as html instead of openning it
 * find a way to remove already created filtered decks
+* current bottleneck: adding cluster tags to anki, so you should alter how anki-connect works
 * show to user the most disimilar cards as well as the most similar
 * sBERT: implement a correction vector, for example "+radiography" would give a bonus to cards alignes with this word and "-radiography" would do the opposite. To help you optimize review sessions.
 * investigate wether lapsed cards have to be counted differently
