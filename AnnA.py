@@ -130,7 +130,7 @@ class AnnA:
                  # can be "create_filtered", "bury", "index"
 
                  # vectorization:
-                 vectorizer = "TFIDF"  # can be "TFIDF" or "sBERT"
+                 vectorizer = "TFIDF",  # can be "TFIDF" or "sBERT"
                  sBERT_dim=None,
                  TFIDF_dim=1000,
                  TFIDF_stopw_lang=["english", "french"],
