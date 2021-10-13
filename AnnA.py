@@ -1241,7 +1241,6 @@ as opti_rev_order!")
         df["saved_clust"] = df[cluster_col]
         for i, clust_nb in enumerate(cluster_list):
             df.loc[ df[cluster_col] == clust_nb, cluster_col] = i
-        print(sum(df["saved_clust"] - df[cluster_col]))
 
         if tokenize_tags:
             df["tokenized"] = df.apply(
