@@ -968,7 +968,7 @@ using PCA...")
         inf(f"mean: {df['ref'].describe()}\n")
         inf(f"max: {pd.DataFrame(data=df_dist.values.flatten(), columns=['distance matrix']).describe()}\n\n")
 
-        use_index_of_score = True  # wether to use scores or the argsort of
+        use_index_of_score = False  # wether to use scores or the argsort of
         # the scores the issue was that the two scores (reference and distance)
         # were really not distributed the same
         with tqdm(desc="Computing optimal review order",
@@ -988,8 +988,8 @@ using PCA...")
                                 np.mean(
                                     df_dist.loc[indQUEUE[-self.stride:], indTODO].values,
                                     axis=0)
-                                ], axis=0).argsort()*w2p
-                             ).argmax()])
+                                ], axis=0).argsort()*w2
+                             ).argmin()])
                     indQUEUE.append(indTODO.pop(indTODO.index(queue[-1])))
 
                 else:
