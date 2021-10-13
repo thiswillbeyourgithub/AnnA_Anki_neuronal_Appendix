@@ -967,6 +967,9 @@ using PCA...")
         inf(f"mean: {df['ref'].describe()}\n")
         inf(f"max: {pd.DataFrame(data=df_dist.values.flatten(), columns=['distance matrix']).describe()}\n\n")
 
+        use_index_of_score = True  # wether to use scores or the argsort of the scores
+        # the issue was that the two scores (reference and distance) were 
+        # really not distributed the same
         with tqdm(desc="Computing optimal review order",
                   unit=" card",
                   initial=len(rated),
@@ -975,17 +978,31 @@ using PCA...")
             indTODO = df.drop(index=rated+queue).index.tolist()
             indQUEUE = (rated+queue)
             while len(queue) < queue_size_goal:
-                queue.append(indTODO[
-                        (df.loc[indTODO, "ref"].values.argsort() + np.mean([
-                            np.max(
-                                df_dist.loc[indQUEUE[-self.stride:], indTODO].values,
-                                axis=0),
-                            np.mean(
-                                df_dist.loc[indQUEUE[-self.stride:], indTODO].values,
-                                axis=0)
-                            ], axis=0).argsort()
-                         ).argmax()])
-                indQUEUE.append(indTODO.pop(indTODO.index(queue[-1])))
+                if use_index_of_score:
+                    queue.append(indTODO[
+                            (df.loc[indTODO, "ref"].values.argsort() + np.mean([
+                                np.max(
+                                    df_dist.loc[indQUEUE[-self.stride:], indTODO].values,
+                                    axis=0),
+                                np.mean(
+                                    df_dist.loc[indQUEUE[-self.stride:], indTODO].values,
+                                    axis=0)
+                                ], axis=0).argsort()
+                             ).argmax()])
+                    indQUEUE.append(indTODO.pop(indTODO.index(queue[-1])))
+
+                else:
+                    queue.append(indTODO[
+                            (df.loc[indTODO, "ref"].values + np.mean([
+                                np.max(
+                                    df_dist.loc[indQUEUE[-self.stride:], indTODO].values,
+                                    axis=0),
+                                np.mean(
+                                    df_dist.loc[indQUEUE[-self.stride:], indTODO].values,
+                                    axis=0)
+                                ], axis=0)
+                             ).argmin()])
+                    indQUEUE.append(indTODO.pop(indTODO.index(queue[-1])))
 
                 # I had some trouble with implementing this loop
                 # so I am keeping legacy code as fallback:
