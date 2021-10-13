@@ -194,7 +194,12 @@ class AnnA:
             else:
                 imp = importlib.import_module(
                         acronym_list.replace(".py", ""))
-                self.acronym_dict = imp.acronym_dict
+                acronym_dict = imp.acronym_dict
+                compiled_dic = {}
+                for ac in acronym_dict.keys():
+                    compiled = re.compile(r"\b"+ac+r"\b", flags=re.IGNORECASE)
+                    compiled_dic[compiled] = acronym_dict[ac]
+                self.acronym_dict = compiled_dic
         if self.field_mappings is not None:
             file = Path(self.field_mappings)
             try:
@@ -1557,7 +1562,7 @@ be used.")
 found...")
             pprint(relevant)
         else:
-            acro_list = sorted(self.acronym_dict.keys())
+            acro_list = sorted([str(x) for x in list(self.acronym_dict.keys())])
 #            print("\nList of acronyms that were already replaced:")
 #            print(acro_list)
 #            acro_list = [x.lower() for x in acro_list]
