@@ -18,7 +18,7 @@ a = AnnA(deckname="Some_Deck",
         rated_last_X_days=3,
         reference_order="relative_overdueness",
         clustering_enable=True,
-        task_filtered_deck=True,
+        task="create_filtered",
         log_level=0,
         )
 interscreen()
@@ -27,7 +27,7 @@ b = AnnA(deckname="Some_OtherDeck::subdeck#1",
         rated_last_X_days=3,
         reference_order="lowest_interval",
         clustering_enable=True,
-        task_filtered_deck=True
+        task="create_filtered",
         show_banner=False,
         )
 interscreen()
@@ -36,7 +36,7 @@ c = AnnA(deckname="Some_OtherDeck::subdeck#2",
         rated_last_X_days=3,
         reference_order="lowest_interval",
         clustering_enable=True,
-        task_filtered_deck=True,
+        task="bury",
         check_database=True
         show_banner=False,
         )

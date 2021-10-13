@@ -55,7 +55,7 @@ def coloured_log(string, mode):
         log.error(col_red + string + col_rst)
 
 
-def asynchronous_importer(TFIDF_enable, task_index_deck):
+def asynchronous_importer(TFIDF_enable, task):
     """
     used to asynchronously import large modules, this way between
     importing AnnA and creating the instance of the class, the language model
@@ -74,7 +74,7 @@ def asynchronous_importer(TFIDF_enable, task_index_deck):
     import numpy as np
     from sklearn.feature_extraction.text import TfidfVectorizer
     from sklearn.feature_extraction.text import CountVectorizer
-    if TFIDF_enable is False or task_index_deck is True:
+    if TFIDF_enable is False or task == "index":
         global sBERT
         from sentence_transformers import SentenceTransformer
         sBERT = SentenceTransformer('distiluse-base-multilingual-cased-v1')
@@ -124,10 +124,8 @@ class AnnA:
                  compute_opti_rev_order=True,
                  check_database=False,
 
-                 # tasks:
-                 task_filtered_deck=True,
-                 task_bury_learning=False,
-                 task_index_deck=False,
+                 task = "create_filtered",
+                 # can be "create_filtered", "bury", "index"
 
                  # vectorization:
                  sBERT_dim=None,
@@ -157,7 +155,7 @@ class AnnA:
 
         # start importing large modules
         import_thread = threading.Thread(target=asynchronous_importer,
-                args=(TFIDF_enable, task_index_deck))
+                args=(TFIDF_enable, task))
         import_thread.start()
 
         # loading args
@@ -178,6 +176,7 @@ class AnnA:
         self.TFIDF_enable  = TFIDF_enable
         self.TFIDF_dim = TFIDF_dim
         self.TFIDF_stopw_lang = TFIDF_stopw_lang
+        self.task = task
 
         assert stride > 0
         assert reference_order in ["lowest_interval", "relative_overdueness"]
@@ -204,18 +203,18 @@ values. {e}")
 
         # actual execution
         self.deckname = self._check_deck(deckname, import_thread)
-        if task_index_deck is True:
+        if task == "index":
             print(f"Task : cache vectors of deck: {self.deckname}")
             self.TFIDF_enable = False
             self.rated_last_X_days = None
-            self._create_and_fill_df(task_index_deck=task_index_deck)
+            self._create_and_fill_df(task=task)
             self.df = self._reset_index_dtype(self.df)
             self._format_card()
             self.show_acronyms()
             self._compute_sBERT_vec(import_thread=import_thread)
             if clustering_enable is True:
                 self.compute_clusters(minibatchk_kwargs={"verbose": 0})
-        elif task_bury_learning is True:
+        elif task == "bury":
             # bypasses most of the code to bury learning cards
             # directly in the deck without creating filtered decks
             print("Task : bury some learning cards.")
@@ -233,7 +232,7 @@ values. {e}")
             self._compute_sBERT_vec(import_thread=import_thread)
             self._compute_distance_matrix()
             self._compute_opti_rev_order()
-            self.task_filtered_deck(just_bury=True)
+            self.task_filtered_deck(task=task)
         else:
             self._create_and_fill_df()
             self.df = self._reset_index_dtype(self.df)
@@ -245,7 +244,7 @@ values. {e}")
             self._compute_distance_matrix()
             if compute_opti_rev_order is True:
                 self._compute_opti_rev_order()
-                if task_filtered_deck is True:
+                if task == "create_filtered":
                     self.task_filtered_deck()
 
         # pickle itself
@@ -396,25 +395,25 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
         print(f"Selected deck: {deckname}")
         return deckname
 
-    def _create_and_fill_df(self, just_learning=False, task_index_deck=False):
+    def _create_and_fill_df(self, task=None):
         """
         create a pandas DataFrame, fill it with the information gathered from
         anki connect like card content, intervals, etc
         """
 
-        if just_learning is False and task_index_deck is False:
+        if task not in ["bury", "index"]:
             print("Getting due card list...")
             query = f"deck:{self.deckname} is:due is:review -is:learn \
 -is:suspended -is:buried -is:new -rated:1"
             inf(" >  '" + query + "'\n\n")
             due_cards = self._ankiconnect(action="findCards", query=query)
-        elif just_learning is True:
+        elif task == "bury":
             print("Getting is:learn card list...")
             query = f"deck:{self.deckname} is:learn -is:suspended is:due -rated:1"
             inf(" >  '" + query + "'\n\n")
             due_cards = self._ankiconnect(action="findCards", query=query)
             print(f"Found {len(due_cards)} learning cards...")
-        elif task_index_deck is True:
+        elif task == "index":
             print("Getting all cards from deck...")
             query = f"deck:{self.deckname} -is:suspended"
             inf(" >  '" + query + "'\n\n")
@@ -1009,7 +1008,7 @@ using PCA...")
 
     def task_filtered_deck(self,
                      deck_template=None,
-                     just_bury=False):
+                     task=None):
         """
         create a filtered deck containing the cards to review in optimal order
 
@@ -1027,7 +1026,7 @@ using PCA...")
         * if just_bury is True, then no filtered deck will be created and
             AnnA will just bury the cards that are too similar
         """
-        if just_bury is True:
+        if task == "bury":
             to_keep = self.opti_rev_order
             to_bury = [x for x in self.due_cards if x not in to_keep]
             assert len(to_bury) < len(self.due_cards)

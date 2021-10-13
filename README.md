@@ -100,9 +100,7 @@ AnnA was made with usability in mind. With the right arguments, you can have to 
  * `compute_opti_rev_order` if `False`, won't compute optimal review order and will set `to_anki` to False. Default to `True`.
  * `check_database` at the end of execution, ask anki to check the database or not. Default is `False`.
 
- * `task_filtered_deck` automatically create the filtered deck or not. Default is `True`.
- * `task_bury_learning` bury some cards of your learning queue if they are too similar. This will bypass a lot other arguments. Default is `False`.
- * `task_index_deck` index all the cards in a deck into sBERT cache. This should be rather long. Obviously this will bypass most arguments. Default is `False`.
+ * `task` can be "create_filtered", "bury", or "index". Respectively to create a filtered deck with the cards, or bury only the similar cards, or to add all the sBERT vectors in the cache file (to speed up later runs). Default is "`create_filtered`".
 
  * `sBERT_dim` number of dimensions to keep after doing a PCA reduction. This can speed up the computation somewhat, but with reduced precision. Default is `None` (i.e. disabled by default), setting it to `300` will retain usually more than 95% of the variance. The original number of dimension is 512, but that might depend on the "sBERT" model if you decide to change it.
  * `TFIDF_enable` use tfidf instead of sBERT. This will bypass the sBERT cache file and won't work with the `search_for_notes` function. Default is `True`.
