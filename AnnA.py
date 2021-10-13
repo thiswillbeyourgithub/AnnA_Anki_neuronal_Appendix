@@ -967,9 +967,9 @@ using PCA...")
         inf(f"mean: {df['ref'].describe()}\n")
         inf(f"max: {pd.DataFrame(data=df_dist.values.flatten(), columns=['distance matrix']).describe()}\n\n")
 
-        use_index_of_score = True  # wether to use scores or the argsort of the scores
-        # the issue was that the two scores (reference and distance) were 
-        # really not distributed the same
+        use_index_of_score = True  # wether to use scores or the argsort of
+        # the scores the issue was that the two scores (reference and distance)
+        # were really not distributed the same
         with tqdm(desc="Computing optimal review order",
                   unit=" card",
                   initial=len(rated),
