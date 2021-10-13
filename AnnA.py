@@ -121,7 +121,7 @@ class AnnA:
                  acronym_list="acronym_list.py",
 
                  # steps:
-                 clustering_enable=True,
+                 clustering_enable=False,
                  clustering_nb_clust="auto",
                  compute_opti_rev_order=True,
                  check_database=False,
