@@ -63,6 +63,7 @@ Tired of having to deal with anki flashcards that are too similar when grinding 
 * **What are the supported languages using sBERT?** The default model is called `distiluse-base-multilingual-cased-v1` and supports "15 languages: Arabic, Chinese, Dutch, English, French, German, Italian, Korean, Polish, Portuguese, Russian, Spanish, Turkish.". There is a v2 that supports more languages with less accurate results. Information about the models can be found [here](https://www.sbert.net/docs/pretrained_models.html).
 
 * **What is the field_mapping.py file?** It's a file with a unique python dictionary used by AnnA to figure out which field of which card to keep. Using it is optional. By default, each notetype will see only it's first field kept. But if you use this file you can keep multiple fields.
+* **What is "XXX - AnnA Optideck"?** The default name for the filtered deck created by AnnA. It contains the reviews in the best order for you.
 * **Why does the progress bar of "Computing optimal review order" doesn't always start at 0?** It's just cosmetic. At each step of the loop, the next card to review is computed by comparing it against the previously added cards and the cards rated in the last few days. This means that each turn is slower than the last. So the progress bar begins with the number of cards rated in the past to indicate that. It took great care to optimize the loop so it should not really be an issue.
 
 ## Getting started
