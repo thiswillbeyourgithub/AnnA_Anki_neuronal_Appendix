@@ -184,6 +184,7 @@ class AnnA:
 
         assert stride > 0
         assert reference_order in ["lowest_interval", "relative_overdueness"]
+        assert task in ["create_filtered", "index", "bury"]
 
         if self.acronym_list is not None:
             file = Path(acronym_list)
