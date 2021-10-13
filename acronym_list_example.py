@@ -19,5 +19,6 @@ acronym_dict = {
         "REM": "rapid eye movement sleep",
         "HPV": "human papilloma virus",
         "BRCA": "breast cancer gene",
+        "regex:IL(\d+)": "interleukin \\1",
 
 }
