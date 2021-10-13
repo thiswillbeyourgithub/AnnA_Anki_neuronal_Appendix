@@ -508,10 +508,9 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
         if self.acronym_list is True:
             global acronym_dict
             for ac, word in self.acronym_dict.items():
-                if ac[0:6] != "regex:":
-                    text = s(rf"{ac}", f"{ac} ({word})", text, flags=re.IGNORECASE)
-                else:
-                    text = s(ac[6:], lambda x: x.group(0) + " ({word})", text)
+                bef = text
+                text = s(rf"\b{ac}\b", f"{ac} ({word})", text, flags=re.IGNORECASE)
+                if text != bef:
                     breakpoint()
         text = s(r'[a-zA-Z0-9-]+\....', " ", text)  # media file name
         text = s("<blockquote(.*?)</blockquote>",
