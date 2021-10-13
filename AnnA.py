@@ -957,14 +957,14 @@ using PCA...")
             indQUEUE = (rated+queue)
             while len(queue) < queue_size_goal:
                 queue.append(indTODO[
-                        (df.loc[indTODO, "ref"].values + np.mean([
+                        (df.loc[indTODO, "ref"].values.argsort() + np.mean([
                             np.max(
                                 df_dist.loc[indQUEUE[-self.stride:], indTODO].values,
                                 axis=0),
                             np.mean(
                                 df_dist.loc[indQUEUE[-self.stride:], indTODO].values,
                                 axis=0)
-                            ], axis=0)
+                            ], axis=0).argsort()
                          ).argmin()])
                 indQUEUE.append(indTODO.pop(indTODO.index(queue[-1])))
 
