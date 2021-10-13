@@ -862,7 +862,6 @@ using PCA...")
             sign = -1
         w1 = self.score_adjustment_factor[0]
         w2 = self.score_adjustment_factor[1]*sign
-        w2p = w2*sign  # keep a positive version handy
 
         # alter the value from rated cards as they will not be useful
         df.loc[rated, "due"] = np.median(df.loc[due, "due"].values)
