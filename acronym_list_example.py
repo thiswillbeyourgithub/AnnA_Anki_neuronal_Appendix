@@ -8,7 +8,7 @@ acronym_dict = {
         "CNN": "convolutionnal neural network",
         "NN": "neural network",
         "NLP": "natural language processing",
-        "LSTM": "Long Short Term Memory"
+        "LSTM": "Long Short Term Memory",
         "LT": "lymphocyte T",
         "LB": "lymphocyte B",
         "NK": "lymphocyte T natural killer",
