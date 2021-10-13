@@ -55,7 +55,7 @@ def coloured_log(string, mode):
         log.error(col_red + string + col_rst)
 
 
-def asynchronous_importer(TFIDF_enable, task):
+def asynchronous_importer(vectorizer, task):
     """
     used to asynchronously import large modules, this way between
     importing AnnA and creating the instance of the class, the language model
@@ -74,7 +74,7 @@ def asynchronous_importer(TFIDF_enable, task):
     import numpy as np
     from sklearn.feature_extraction.text import TfidfVectorizer
     from sklearn.feature_extraction.text import CountVectorizer
-    if TFIDF_enable is False or task == "index":
+    if vectorizer != "TFIDF" or task == "index":
         global sBERT
         from sentence_transformers import SentenceTransformer
         sBERT = SentenceTransformer('distiluse-base-multilingual-cased-v1')
@@ -130,8 +130,8 @@ class AnnA:
                  # can be "create_filtered", "bury", "index"
 
                  # vectorization:
+                 vectorizer = "TFIDF"  # can be "TFIDF" or "sBERT"
                  sBERT_dim=None,
-                 TFIDF_enable=True,
                  TFIDF_dim=1000,
                  TFIDF_stopw_lang=["english", "french"],
 
@@ -157,7 +157,7 @@ class AnnA:
 
         # start importing large modules
         import_thread = threading.Thread(target=asynchronous_importer,
-                args=(TFIDF_enable, task))
+                args=(vectorizer, task))
         import_thread.start()
 
         # loading args
@@ -177,7 +177,7 @@ class AnnA:
         self.field_mappings = field_mappings
         self.acronym_list = acronym_list
         self.debug_force_score_formula = debug_force_score_formula
-        self.TFIDF_enable  = TFIDF_enable
+        self.vectorizer = vectorizer
         self.TFIDF_dim = TFIDF_dim
         self.TFIDF_stopw_lang = TFIDF_stopw_lang
         self.task = task
@@ -185,6 +185,7 @@ class AnnA:
         assert stride > 0
         assert reference_order in ["lowest_interval", "relative_overdueness"]
         assert task in ["create_filtered", "index", "bury"]
+        assert vectorizer in ["TFIDF", "sBERT"]
 
         if self.acronym_list is not None:
             file = Path(acronym_list)
@@ -210,7 +211,7 @@ values. {e}")
         self.deckname = self._check_deck(deckname, import_thread)
         if task == "index":
             print(f"Task : cache vectors of deck: {self.deckname}")
-            self.TFIDF_enable = False
+            self.vectorizer = "sBERT"
             self.rated_last_X_days = 0
             self._create_and_fill_df(task=task)
             self.df = self._reset_index_dtype(self.df)
@@ -667,7 +668,7 @@ adjust formating issues:")
         if df is None:
             df = self.df
 
-        if self.TFIDF_enable is not True:
+        if self.vectorizer == "sBERT":
             if use_sBERT_cache is True:
                 print("\nLooking for cached sBERT pickle file...", end="")
                 sBERT_file = Path("./sBERT_cache.pickle")
@@ -1450,7 +1451,7 @@ plotting...")
 
             anki_or_print = "print"
             user_col = "VEC"
-        elif self.TFIDF_enable is True:
+        elif self.vectorizer == "TFIDF":
             err("Cannot search for note using TFIDF vectors, only sBERT can \
 be used.")
             return False

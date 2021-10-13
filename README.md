@@ -104,8 +104,8 @@ AnnA was made with usability in mind. With the right arguments, you can have to 
 
  * `task` can be "create_filtered", "bury", or "index". Respectively to create a filtered deck with the cards, or bury only the similar cards, or to add all the sBERT vectors in the cache file (to speed up later runs). Default is "`create_filtered`".
 
+ * `vectorizer` can be either "TFIDF" or "sBERT". Default is "TFIDF".
  * `sBERT_dim` number of dimensions to keep after doing a PCA reduction. This can speed up the computation somewhat, but with reduced precision. Default is `None` (i.e. disabled by default), setting it to `300` will retain usually more than 95% of the variance. The original number of dimension is 512, but that might depend on the "sBERT" model if you decide to change it.
- * `TFIDF_enable` use tfidf instead of sBERT. This will bypass the sBERT cache file and won't work with the `search_for_notes` function. Default is `True`.
  * `TFIDF_dim` the number of dimension to keep using [SVD](https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.TruncatedSVD.html). Default is `1000`, you cannot disable dimension reduction for TF_IDF because that would result in a sparse matrix.
  * `TFIDF_stopw_lang` a list of languages used to construct a list of stop words (i.e. words that will be ignored). Default is `["english", "french"]`.
 
