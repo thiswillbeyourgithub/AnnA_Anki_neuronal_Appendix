@@ -113,7 +113,7 @@ class AnnA:
                  highjack_due_query=None,
                  highjack_rated_query=None,
                  stride=2500,
-                 scoring_weights=(1, 1),
+                 score_adjustment_factor=(1, 1),
                  log_level=0,
                  replace_greek=True,
                  keep_ocr=True,
@@ -172,7 +172,7 @@ class AnnA:
         self.highjack_rated_query = highjack_rated_query
         self.stride = stride
         self.prefer_similar_card = prefer_similar_card
-        self.scoring_weights = scoring_weights
+        self.score_adjustment_factor = score_adjustment_factor
         self.reference_order = reference_order
         self.field_mappings = field_mappings
         self.acronym_list = acronym_list
@@ -860,8 +860,8 @@ using PCA...")
             sign = 1
         else:
             sign = -1
-        w1 = self.scoring_weights[0]
-        w2 = self.scoring_weights[1]*sign
+        w1 = self.score_adjustment_factor[0]
+        w2 = self.score_adjustment_factor[1]*sign
         w2p = w2*sign  # keep a positive version handy
 
         # alter the value from rated cards as they will not be useful
