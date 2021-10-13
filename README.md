@@ -69,8 +69,8 @@ Tired of having to deal with anki flashcards that are too similar when grinding 
 * First, **read this page in its entirety, this is a complicated piece of software and you don't want to use it irresponsibly on your cards. The [usage section](#Usage-and-arguments) is especially useful.**
 * Make sure the addon [anki-connect](https://github.com/FooSoft/anki-connect) is installed (**see notes above**)
 * Clone this repository: `git clone https://github.com/thiswillbeyourgithub/AnnA_Anki_neuronal_Appendix`
-* Edit `field_mapping.py` and `acronym_list_example.py` to your liking
 * Use python to install the necessary packages : `pip install -r requirements.py`
+* Edit `field_mapping.py` and `acronym_list_example.py` to your liking
 * Edit the file `autorun_example.py` to suit your needs
 * Open AnnA in a python console, for example: `ipython3 -c 'exec(open("autorun_example.py").read())'`
 
