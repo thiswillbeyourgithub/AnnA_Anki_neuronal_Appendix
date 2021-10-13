@@ -123,11 +123,11 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * `show_acronyms` shows the acronym present in your deck that were not extended. Useful if you want to adjust your acronym list.
 
 ## TODO
+* actually use task as one argument instead of several tasks + let the user supply the todo query and the ref query instead of having due and rated cards
 * improve tokenizer settings for td_idf
 * adjust both scoring to their 75% percentile before multiplying by the weights
 * add a vectorize argument that could be "sBERT" or "TF_IDF"
 * investigate applying max pooling over BERT vectors of words of cards instead of TF_IDF, might be even better!
-* combine tasks into a single argument
 * load the tokenizer so that it bypasses warning messages used for NLP
 * auto export figure as html instead of openning it
 * add ability to extend queries
