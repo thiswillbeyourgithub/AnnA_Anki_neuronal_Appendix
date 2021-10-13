@@ -984,7 +984,7 @@ using PCA...")
                                 df_dist.loc[indQUEUE[-self.stride:], indTODO].values,
                                 axis=0)
                             ], axis=0).argsort()
-                         ).argmin()])
+                         ).argmax()])
                 indQUEUE.append(indTODO.pop(indTODO.index(queue[-1])))
 
                 # I had some trouble with implementing this loop
