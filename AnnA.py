@@ -1167,7 +1167,7 @@ as opti_rev_order!")
     def compute_clusters(self,
                          method="minibatch-kmeans",
                          input_col="VEC",
-                         output_col="clusters",
+                         cluster_col="clusters",
                          n_topics=5,
                          minibatchk_kwargs=None,
                          kmeans_kwargs=None,
@@ -1230,16 +1230,18 @@ as opti_rev_order!")
             columns=["V"+str(x)
                      for x in range(len(df.loc[df.index[0], input_col]))],
             data=[x[0:] for x in df[input_col]])
-        df[output_col] = clust.fit_predict(df_temp)
+        df[cluster_col] = clust.fit_predict(df_temp)
 
 
-        cluster_list = sorted(list(set(list(df[output_col]))))
+        cluster_list = sorted(list(set(list(df[cluster_col]))))
         cluster_nb = len(cluster_list)
         print(f"Getting cluster topics for {cluster_nb} clusters...")
 
         # reordering cluster number, as they are sometimes offset
+        df["saved_clust"] = df[cluster_col]
         for i, clust_nb in enumerate(cluster_list):
-            df.loc[ df[output_col] == clust_nb, "output_col"] = i
+            df.loc[ df[cluster_col] == str(clust_nb), cluster_col] = i
+        print(sum(df["saved_clust"] - df[cluster_col]))
 
         if tokenize_tags:
             df["tokenized"] = df.apply(
