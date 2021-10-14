@@ -420,20 +420,20 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
             print(f"Found {len(due_cards)} cards...")
         elif self.task == "create_filtered":
             print("Getting due card list...")
-            query = f"deck:{self.deckname} is:due is:review -is:learn \
+            query = f"\"deck:{self.deckname}\" is:due is:review -is:learn \
 -is:suspended -is:buried -is:new -rated:1"
             inf(" >  '" + query + "'\n\n")
             due_cards = self._ankiconnect(action="findCards", query=query)
             print(f"Found {len(due_cards)} due cards...")
         elif self.task == "bury":
             print("Getting is:learn card list...")
-            query = f"deck:{self.deckname} is:learn -is:suspended is:due -rated:1"
+            query = f"\"deck:{self.deckname}\" is:learn -is:suspended is:due -rated:1"
             inf(" >  '" + query + "'\n\n")
             due_cards = self._ankiconnect(action="findCards", query=query)
             print(f"Found {len(due_cards)} learning cards...")
         elif self.task == "index":
             print("Getting all cards from deck...")
-            query = f"deck:{self.deckname} -is:suspended"
+            query = f"\"deck:{self.deckname}\" -is:suspended"
             inf(" >  '" + query + "'\n\n")
             due_cards = self._ankiconnect(action="findCards", query=query)
             print(f"Found {len(due_cards)} cards...")
@@ -448,7 +448,7 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
         elif self.rated_last_X_days != 0:
             print(f"Getting cards that where rated in the last \
 {self.rated_last_X_days} days  ...")
-            query = f"deck:{self.deckname} rated:{self.rated_last_X_days} \
+            query = f"\"deck:{self.deckname}\" rated:{self.rated_last_X_days} \
 -is:suspended"
             inf(" >  '" + query + "'\n\n")
             r_cards = self._ankiconnect(action="findCards",
