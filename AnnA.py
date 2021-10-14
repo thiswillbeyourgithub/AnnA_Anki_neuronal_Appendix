@@ -1363,6 +1363,7 @@ as opti_rev_order!")
                           umap_kwargs=None,
                           plotly_kwargs=None,
                           pca_kwargs=None,
+                          save_as_html=True,
                           ):
         """
         open a browser tab with a 2D plot showing your cards and their relations
@@ -1430,7 +1431,11 @@ plotting...")
         fig = px.scatter(**plotly_kwargs_deploy)
         if disable_legend:
             fig = fig.update_layout(showlegend=False)
-        fig.show()
+        if save_as_html:
+            fig.write_html(f"plotly_graph_{self.deckname}.html")
+            print(f"Saved plot as 'plotly_graph_{self.deckname}.html'")
+        else:
+            fig.show()
         return True
 
     @classmethod
