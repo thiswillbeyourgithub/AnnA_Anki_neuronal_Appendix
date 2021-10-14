@@ -964,9 +964,9 @@ using PCA...")
                 df["ref"] = 0
                 df_dist.loc[:, :] = np.ones_like(df_dist.values)
 
-        inf("\nReference score stats:")
-        inf(f"mean: {df['ref'].describe()}\n")
-        inf(f"max: {pd.DataFrame(data=df_dist.values.flatten(), columns=['distance matrix']).describe()}\n\n")
+#        inf("\nReference score stats:")
+#        inf(f"mean: {df['ref'].describe()}\n")
+#        inf(f"max: {pd.DataFrame(data=df_dist.values.flatten(), columns=['distance matrix']).describe()}\n\n")
 
         use_index_of_score = False  # wether to use scores or the argsort of
         # the scores the issue was that the two scores (reference and distance)
