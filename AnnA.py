@@ -1560,17 +1560,16 @@ be used.")
 found...")
             pprint(relevant)
         else:
-            acro_list = sorted([str(x) for x in list(self.acronym_dict.keys())])
-#            print("\nList of acronyms that were already replaced:")
-#            print(acro_list)
-#            acro_list = [x.lower() for x in acro_list]
+            acro_list = [str(x) for x in list(self.acronym_dict.keys())]
 
+            out = relevant
+            for compiled in acro_list:
+                for acr in out:
+                    if re.match(compiled, acr) is not None:
+                        out.remove(acr)
             print("List of some acronyms still found:")
             if exclude_OCR_text:
                 print("(Excluding OCR text)")
-            out = {acr for acr in filter(lambda x: x.lower() not in acro_list,
-                                         relevant)
-                   }
             pprint(sorted(out))
         print("")
         return True
