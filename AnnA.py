@@ -1438,8 +1438,8 @@ plotting...")
         if save_as_html:
             fig.write_html(f"plotly_graph_{self.deckname}.html")
             print(f"Saved plot as 'plotly_graph_{self.deckname}.html'")
-        else:
-            fig.show()
+        print("Opening graph in browser...")
+        fig.show()
         return True
 
     @classmethod
