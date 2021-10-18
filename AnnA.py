@@ -95,7 +95,7 @@ def asynchronous_importer(vectorizer, task):
     from sklearn.preprocessing import StandardScaler
     from scipy import interpolate
     if print_when_ends:
-        inf("Finished importing modules.\n\n")
+        err("Finished importing modules.\n\n")
 
 
 class AnnA:
@@ -151,8 +151,8 @@ class AnnA:
 
 
         if show_banner:
-            print(pyfiglet.figlet_format("AnnA"))
-            print("(Anki neuronal Appendix)\n\n")
+            err(pyfiglet.figlet_format("AnnA"))
+            err("(Anki neuronal Appendix)\n\n")
 
 
         # start importing large modules
@@ -215,7 +215,7 @@ values. {e}")
         # actual execution
         self.deckname = self._check_deck(deckname, import_thread)
         if task == "index":
-            print(f"Task : cache vectors of deck: {self.deckname}")
+            war(f"Task : cache vectors of deck: {self.deckname}")
             self.vectorizer = "sBERT"
             self.rated_last_X_days = 0
             self._create_and_fill_df()
@@ -228,7 +228,7 @@ values. {e}")
         elif task == "bury":
             # bypasses most of the code to bury learning cards
             # directly in the deck without creating filtered decks
-            print("Task : bury some learning cards.")
+            war("Task : bury some learning cards.")
             inf(f"Burying similar learning cards from deck {self.deckname}..\
 .")
             inf("Forcing 'reference_order' to 'lowest_interval'.")
@@ -259,7 +259,7 @@ values. {e}")
                     self.task_filtered_deck()
 
         # pickle itself
-        print("\nSaving instance as 'last_run.pickle'...")
+        war("\nSaving instance as 'last_run.pickle'...")
         if Path("last_run.pickle").exists():
             Path("last_run.pickle").unlink()
         with open("last_run.pickle", "wb") as f:
@@ -275,7 +275,7 @@ execute the code using:\n'import pickle ; a = pickle.load(open(\"last_run.pickle
             inf("Re-optimizing Anki database")
             self._ankiconnect(action="guiCheckDatabase")
 
-        print(f"Done with {self.deckname}")
+        war(f"Done with {self.deckname}")
 
     def _reset_index_dtype(self, df):
         """
@@ -403,7 +403,7 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
             while deckname not in decklist:
                 deckname = prompt("Enter the name of the deck:\n>",
                                   completer=auto_complete)
-        print(f"Selected deck: {deckname}")
+        war(f"Selected deck: {deckname}")
         return deckname
 
     def _create_and_fill_df(self):
@@ -413,40 +413,40 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
         """
 
         if self.highjack_due_query is not None:
-            print("Highjacking due card list:")
+            err("Highjacking due card list:")
             query = self.highjack_due_query
-            inf(" >  '" + query + "'\n\n")
+            err(" >  '" + query + "'\n\n")
             due_cards = self._ankiconnect(action="findCards", query=query)
-            print(f"Found {len(due_cards)} cards...")
+            war(f"Found {len(due_cards)} cards...")
         elif self.task == "create_filtered":
-            print("Getting due card list...")
+            war("Getting due card list...")
             query = f"\"deck:{self.deckname}\" is:due is:review -is:learn \
 -is:suspended -is:buried -is:new -rated:1"
             inf(" >  '" + query + "'\n\n")
             due_cards = self._ankiconnect(action="findCards", query=query)
-            print(f"Found {len(due_cards)} due cards...")
+            war(f"Found {len(due_cards)} due cards...")
         elif self.task == "bury":
-            print("Getting is:learn card list...")
+            inf("Getting is:learn card list...")
             query = f"\"deck:{self.deckname}\" is:learn -is:suspended is:due -rated:1"
             inf(" >  '" + query + "'\n\n")
             due_cards = self._ankiconnect(action="findCards", query=query)
-            print(f"Found {len(due_cards)} learning cards...")
+            war(f"Found {len(due_cards)} learning cards...")
         elif self.task == "index":
-            print("Getting all cards from deck...")
+            inf("Getting all cards from deck...")
             query = f"\"deck:{self.deckname}\" -is:suspended"
             inf(" >  '" + query + "'\n\n")
             due_cards = self._ankiconnect(action="findCards", query=query)
-            print(f"Found {len(due_cards)} cards...")
+            war(f"Found {len(due_cards)} cards...")
 
         rated_cards = []
         if self.highjack_rated_query is not None:
-            print("Highjacking rated card list:")
+            err("Highjacking rated card list:")
             query = self.highjack_rated_query
-            inf(" >  '" + query + "'\n\n")
+            err(" >  '" + query + "'\n\n")
             rated_cards = self._ankiconnect(action="findCards", query=query)
-            print(f"Found {len(rated_cards)} cards...")
+            err(f"Found {len(rated_cards)} cards...")
         elif self.rated_last_X_days != 0:
-            print(f"Getting cards that where rated in the last \
+            war(f"Getting cards that where rated in the last \
 {self.rated_last_X_days} days  ...")
             query = f"\"deck:{self.deckname}\" rated:{self.rated_last_X_days} \
 -is:suspended"
@@ -454,13 +454,13 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
             r_cards = self._ankiconnect(action="findCards",
                                         query=query)
         else:
-            print("Will not look for cards rated in past days.")
+            war("Will not look for cards rated in past days.")
             rated_cards = []
         if rated_cards != []:
             temp = [x for x in r_cards if x not in due_cards]
             diff = len(rated_cards) - len(temp)
             if diff != 0:
-                print(f"Removed overlap between rated cards and due cards: \
+                war(f"Removed overlap between rated cards and due cards: \
 {diff} cards removed.")
         self.due_cards = due_cards
         self.rated_cards = rated_cards
@@ -701,7 +701,7 @@ adjust formating issues:")
                         else:
                             id_to_recompute.append(i)
 
-                print(f"Loaded {loaded_sBERT} vectors from cache, will compute \
+                war(f"Loaded {loaded_sBERT} vectors from cache, will compute \
 {len(id_to_recompute)} others...")
                 if import_thread is not None:
                     import_thread.join()
@@ -927,17 +927,17 @@ using PCA...")
         df_dist = df_dist*w2
 
         assert len([x for x in rated if df.loc[x, "status"] != "rated"]) == 0
-        print(f"\nCards rated in the past relevant days: {len(rated)}")
+        err(f"\nCards rated in the past relevant days: {len(rated)}")
 
         if isinstance(desired_deck_size, float):
             if desired_deck_size < 1.0:
                 desired_deck_size = str(desired_deck_size*100) + "%"
         if isinstance(desired_deck_size, str):
             if desired_deck_size in ["all", "100%"]:
-                print("Taking the whole deck.")
+                err("Taking the whole deck.")
                 desired_deck_size = len(df.index) - len(rated)
             elif desired_deck_size.endswith("%"):
-                print(f"Taking {desired_deck_size} of the deck.")
+                err(f"Taking {desired_deck_size} of the deck.")
                 desired_deck_size = 0.01*int(desired_deck_size[:-1])*(
                             len(df.index)-len(rated)
                             )
@@ -1031,7 +1031,7 @@ using PCA...")
 
                 pbar.update(1)
         assert len(queue) != 0
-        print("Done.\n")
+        war("Done.\n")
         self.opti_rev_order = queue
         self.df = df
         return True
@@ -1069,7 +1069,7 @@ using PCA...")
             to_keep = self.opti_rev_order
             to_bury = [x for x in self.due_cards if x not in to_keep]
             assert len(to_bury) < len(self.due_cards)
-            print(f"Burying {len(to_bury)} cards out of {len(self.due_cards)}")
+            err(f"Burying {len(to_bury)} cards out of {len(self.due_cards)}")
             self._ankiconnect(action="bury",
                               cards=to_bury)
             print("Done.")
@@ -1083,7 +1083,7 @@ using PCA...")
         self.filtered_deck_name = filtered_deck_name
 
         while filtered_deck_name in self._ankiconnect(action="deckNames"):
-            print(f"\nFound existing filtered deck: {filtered_deck_name} \
+            err(f"\nFound existing filtered deck: {filtered_deck_name} \
 You have to delete it manually, the cards will be returned to their original \
 deck.")
             input("Done? >")
@@ -1133,7 +1133,7 @@ deck.")
                 [t.join() for t in threads]
             return True
 
-        print(f"Creating deck containing the cards to review: \
+        inf(f"Creating deck containing the cards to review: \
 {filtered_deck_name}")
         query = "cid:" + ','.join([str(x) for x in self.opti_rev_order])
         self._ankiconnect(action="createFilteredDeck",
@@ -1188,7 +1188,7 @@ as opti_rev_order!")
         df = self.df
         if self.clustering_nb_clust is None or self.clustering_nb_clust == "auto":
             self.clustering_nb_clust = len(df.index)//20
-            print(f"No number of clusters supplied, will try with \
+            err(f"No number of clusters supplied, will try with \
 {self.clustering_nb_clust}.")
         kmeans_kwargs_deploy = {"n_clusters": self.clustering_nb_clust}
         dbscan_kwargs_deploy = {"eps": 0.75,
@@ -1473,7 +1473,7 @@ plotting...")
                 err("sBERT cache file not found.")
                 return False
 
-            print("Loading sBERT model")
+            err("Loading sBERT model")
             from sentence_transformers import SentenceTransformer
             sBERT = SentenceTransformer('distiluse-base-multilingual-cased-v1')
             from sklearn.metrics import pairwise_distances
