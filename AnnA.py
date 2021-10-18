@@ -121,7 +121,7 @@ class AnnA:
                  acronym_list="acronym_list.py",
 
                  # steps:
-                 clustering_enable=False,
+                 clustering_enable=True,
                  clustering_nb_clust="auto",
                  compute_opti_rev_order=True,
                  check_database=False,
@@ -1239,7 +1239,6 @@ as opti_rev_order!")
         print(f"Getting cluster topics for {cluster_nb} clusters...")
 
         # reordering cluster number, as they are sometimes offset
-        df["saved_clust"] = df[cluster_col]
         for i, clust_nb in enumerate(cluster_list):
             df.loc[ df[cluster_col] == clust_nb, cluster_col] = i
 
@@ -1251,7 +1250,7 @@ as opti_rev_order!")
         else:
             df["tokenized"] = df["text"]
 
-        df_by_cluster = df.groupby(["clusters"],
+        df_by_cluster = df.groupby([cluster_col],
                                    as_index=False).agg({'tokenized': ' '.join})
         count = CountVectorizer().fit_transform(df_by_cluster.tokenized)
         ctfidf = CTFIDFVectorizer().fit_transform(count,
@@ -1274,7 +1273,7 @@ as opti_rev_order!")
             df["cluster_topic"] = ""
             for i in df.index:
                 clst_tpc = " ".join([x for x in w_by_class[
-                                                      str(df.loc[i, "clusters"])]])
+                                                      str(df.loc[i, cluster_col])]])
                 df.loc[i, "cluster_topic"] = clst_tpc
 
             self.w_by_class = w_by_class
@@ -1287,6 +1286,7 @@ as opti_rev_order!")
                 full_note_list = list(set(df["note"].tolist()))
                 all_tags =  df["tags"].tolist()
                 present_tags = []
+                self._ankiconnect(action="addTags", batchmode="open")
                 for t in all_tags:
                     if " " in t:
                         present_tags.extend(t.split(" "))
@@ -1303,7 +1303,8 @@ as opti_rev_order!")
                         for tag in tags:
                             self._ankiconnect(action="removeTags",
                                               notes=full_note_list,
-                                              tags=str(tag))
+                                              tags=str(tag),
+                                              batchmode="ongoing")
                             pbar_r.update(1)
                     pbar_r = tqdm(desc="Removing old cluster tags...",
                               unit="cluster",
@@ -1326,7 +1327,8 @@ as opti_rev_order!")
                         note_list = list(set(df[df["clusters"] == i]["note"].tolist()))
                         self._ankiconnect(action="addTags",
                                           notes=note_list,
-                                          tags=newTag)
+                                          tags=newTag,
+                                          batchmode="ongoing")
                         pbar_a.update(1)
                     return True
                 pbar_a = tqdm(total=len(cluster_list),
@@ -1345,8 +1347,10 @@ as opti_rev_order!")
                 if len(to_remove) != 0:
                     pbar_r.close()
 
+                self._ankiconnect(action="addTags", batchmode="close")
                 self._ankiconnect(action="clearUnusedTags")
         except IndexError as e:
+            self._ankiconnect(action="addTags", batchmode="close")
             err(f"Index Error when finding cluster topic! {e}")
         return True
 
