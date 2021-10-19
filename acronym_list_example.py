@@ -3,7 +3,7 @@
 # for example with items "TACH": "tachycardia":
 # 'John has TACH' becomes 'John has TACH (tachycardia)'
 acronym_dict = {
-        r"IL(\d+)": "interleukin \\1",
+        r"IL(\d+)": r"interleukin \1",
         "AI": "artificial intelligence",
         "ML": "machine learning",
         "CNN": "convolutionnal neural network",
