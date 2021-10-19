@@ -1611,16 +1611,12 @@ be used.")
         full_text = " ".join(self.df["text"].tolist())
         if exclude_OCR_text:
             full_text = re.sub("> Caption: '.*?' <", " ", full_text)
-        matched = set(re.findall("[A-Z]{3,}", full_text))
-        acro_count = {}
-        for acr in matched:
-            acro_count.update({acr: full_text.count(acr)})
-        sorted_by_count = sorted([x
-                                  for x in matched],
-                                 key=lambda x: acro_count[x], reverse=True)
-        relevant = random.choices(sorted_by_count[0:50],
-                                  k=min(len(
-                                      sorted_by_count), 10))
+        matched = list(set(re.findall("[A-Z]{3,}", full_text)))
+        sorted_by_count = sorted([x for x in matched],
+                                 key=lambda x: full_text.count(x),
+                                 reverse=True)
+        relevant = list(set(random.choices(sorted_by_count[0:50],
+                                           k=min(len(sorted_by_count), 10))))
 
         if self.acronym_list is None:
             red("\nYou did not supply an acronym list, printing all acronym \
@@ -1629,15 +1625,14 @@ found...")
         else:
             acro_list = [str(x) for x in list(self.acronym_dict.keys())]
 
-            out = relevant
             for compiled in acro_list:
-                for acr in out:
+                for acr in relevant:
                     if re.match(compiled, acr) is not None:
-                        out.remove(acr)
+                        relevant.remove(acr)
             print("List of some acronyms still found:")
             if exclude_OCR_text:
                 print("(Excluding OCR text)")
-            pprint(sorted(out))
+            pprint(sorted(relevant))
         print("")
         return True
 
