@@ -420,7 +420,7 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
             while deckname not in decklist:
                 deckname = prompt("Enter the name of the deck:\n>",
                                   completer=auto_complete)
-        yel(f"Selected deck: {deckname}")
+        yel(f"Selected deck: {deckname}\n")
         return deckname
 
     def _create_and_fill_df(self):
@@ -465,7 +465,7 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
             red(f"Found {len(rated_cards)} cards...")
         elif self.rated_last_X_days != 0:
             yel(f"Getting cards that where rated in the last \
-{self.rated_last_X_days} days  ...")
+{self.rated_last_X_days} days...")
             query = f"\"deck:{self.deckname}\" rated:{self.rated_last_X_days} \
 -is:suspended -is:buried"
             whi(" >  '" + query + "'\n\n")
@@ -493,12 +493,12 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
         list_cardInfo = []
 
         n = len(combined_card_list)
-        print(f"\nAsking Anki for information about {n} cards...")
+        yel(f"\nAsking Anki for information about {n} cards...")
         start = time.time()
         list_cardInfo.extend(
                 self._get_cards_info_from_card_id(
                     card_id=combined_card_list))
-        whi(f"Extracted information in {int(time.time()-start)} seconds.\n\n")
+        whi(f"Got all infos in {int(time.time()-start)} seconds.\n\n")
 
         for i, card in enumerate(list_cardInfo):
             # removing large fields:
@@ -885,13 +885,10 @@ TFIDF"))
         rated = self.rated_cards
         due = self.due_cards
         queue = []
-        if self.prefer_similar_card:
-            sign = 1
-        else:
-            sign = -1
         w1 = self.score_adjustment_factor[0]
-        w2 = self.score_adjustment_factor[1]*sign
-
+        w2 = self.score_adjustment_factor[1]
+        if self.prefer_similar_card is True:
+            w2 *= -1
         # alter the value from rated cards as they will not be useful
         df.loc[rated, "due"] = np.median(df.loc[due, "due"].values)
         df.loc[rated, "interval"] = np.median(df.loc[due, "interval"].values)
