@@ -35,6 +35,13 @@ out_hdlr.setLevel(logging.INFO)
 log.addHandler(out_hdlr)
 log.setLevel(logging.ERROR)
 
+# https://github.com/huggingface/transformers/issues/3050#issuecomment-682167272
+# To control logging level for various modules used in the application:
+prefix_re = re.compile(fr'^(?:{ "|".join({transformers}) })')
+for name in logging.root.manager.loggerDict:
+    if re.match(prefix_re, name):
+        logging.getLogger(name).setLevel(logging.ERROR)
+
 
 def coloured_log(color_asked):
     col_red = "\033[91m"
