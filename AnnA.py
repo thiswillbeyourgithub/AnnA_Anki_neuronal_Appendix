@@ -565,6 +565,8 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
                 text += "."
         text = text.replace(" :.", ".")
         text = text.replace(":.", ".")
+        if self.vectorizer == "TFIDF":
+            text += " " + " ".join(re.findall('src="(.*?)">', orig))
         return text
 
     def _format_card(self):
