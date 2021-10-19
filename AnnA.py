@@ -990,13 +990,15 @@ TFIDF"))
                 df["ref"] = 0
                 df_dist.loc[:, :] = np.ones_like(df_dist.values)
 
-#        inf("\nReference score stats:")
-#        inf(f"mean: {df['ref'].describe()}\n")
-#        inf(f"max: {pd.DataFrame(data=df_dist.values.flatten(), columns=['distance matrix']).describe()}\n\n")
         if use_index_of_score is False:
             df["ref"] = df["ref"]*w1
             df_dist = df_dist*w2
 
+        whi("\nScore stats:")
+        whi(f"Reference: {df['ref'].describe()}\n")
+        val = pd.DataFrame(data=df_dist.values.flatten(),
+                           columns=['distance matrix']).describe()
+        whi(f"Distance: {val}\n\n")
 
         with tqdm(desc="Computing optimal review order",
                   unit=" card",
