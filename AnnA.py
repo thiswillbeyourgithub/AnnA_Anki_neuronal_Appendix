@@ -1243,14 +1243,15 @@ as opti_rev_order!")
             data=[x[0:] for x in df[input_col]])
         df[cluster_col] = clust.fit_predict(df_temp)
 
-
         cluster_list = sorted(list(set(list(df[cluster_col]))))
         cluster_nb = len(cluster_list)
         print(f"Getting cluster topics for {cluster_nb} clusters...")
 
         # reordering cluster number, as they are sometimes offset
         for i, clust_nb in enumerate(cluster_list):
-            df.loc[ df[cluster_col] == clust_nb, cluster_col] = i
+            df.loc[df[cluster_col] == clust_nb, cluster_col] = i
+        cluster_list = sorted(list(set(list(df[cluster_col]))))
+        cluster_nb = len(cluster_list)
 
         if tokenize_tags:
             df["tokenized"] = df.apply(
@@ -1361,12 +1362,11 @@ as opti_rev_order!")
                 pbar_a.close()
                 if len(to_remove) != 0:
                     pbar_r.close()
-
-                self._ankiconnect(action="addTags", batchmode="close")
-                self._ankiconnect(action="clearUnusedTags")
         except IndexError as e:
+            red(f"Index Error when finding cluster topic! {e}")
+        finally:
             self._ankiconnect(action="addTags", batchmode="close")
-            err(f"Index Error when finding cluster topic! {e}")
+            self._ankiconnect(action="clearUnusedTags")
         return True
 
     def plot_latent_space(self,
