@@ -35,12 +35,16 @@ out_hdlr.setLevel(logging.INFO)
 log.addHandler(out_hdlr)
 log.setLevel(logging.ERROR)
 
-# https://github.com/huggingface/transformers/issues/3050#issuecomment-682167272
-# To control logging level for various modules used in the application:
-prefix_re = re.compile(fr'^(?:{ "|".join({transformers}) })')
-for name in logging.root.manager.loggerDict:
-    if re.match(prefix_re, name):
-        logging.getLogger(name).setLevel(logging.ERROR)
+
+def set_global_logging_level(level=logging.ERROR, prefices=[""]):
+    """
+    https://github.com/huggingface/transformers/issues/3050#issuecomment-682167272
+    To control logging level for various modules used in the application:
+    """
+    prefix_re = re.compile(fr'^(?:{ "|".join(prefices) })')
+    for name in logging.root.manager.loggerDict:
+        if re.match(prefix_re, name):
+            logging.getLogger(name).setLevel(level)
 
 
 def coloured_log(color_asked):
@@ -107,6 +111,9 @@ def asynchronous_importer(vectorizer, task):
     from scipy import interpolate
     if print_when_ends:
         red("Finished importing modules.\n\n")
+    set_global_logging_level(logging.ERROR,
+                             ["transformers", "nlp", "torch",
+                              "tensorflow", "sklearn", "nltk"])
 
 
 class AnnA:
