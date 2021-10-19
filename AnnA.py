@@ -133,7 +133,7 @@ class AnnA:
                  highjack_due_query=None,
                  highjack_rated_query=None,
                  stride=2500,
-                 score_adjustment_factor=(1, 1),
+                 score_adjustment_factor=(1, 5),
                  log_level=2,
                  replace_greek=True,
                  keep_ocr=True,
@@ -873,6 +873,9 @@ TFIDF"))
             < -500
         * I clipped the distance value below 0.3 as they were messing with the
             scaling afterwards
+        * Index score: combining two scores was hard (they had really different
+            distribution, so I added this flag to tell wether to use the scores
+            or the argsort of the scores as score
 
         CAREFUL: this docstring might not be up to date as I am constantly
             trying to improve the code
@@ -889,6 +892,7 @@ TFIDF"))
         w2 = self.score_adjustment_factor[1]
         if self.prefer_similar_card is True:
             w2 *= -1
+        use_index_of_score = True
         # alter the value from rated cards as they will not be useful
         df.loc[rated, "due"] = np.median(df.loc[due, "due"].values)
         df.loc[rated, "interval"] = np.median(df.loc[due, "interval"].values)
@@ -948,10 +952,6 @@ TFIDF"))
         print("Centering and scaling distance matrix...")
         df_dist.loc[:, :] = StandardScaler().fit_transform(df_dist)
 
-        # adjusting with weights
-        df["ref"] = df["ref"]*w1
-        df_dist = df_dist*w2
-
         assert len([x for x in rated if df.loc[x, "status"] != "rated"]) == 0
         red(f"\nCards rated in the past relevant days: {len(rated)}")
 
@@ -993,10 +993,11 @@ TFIDF"))
 #        inf("\nReference score stats:")
 #        inf(f"mean: {df['ref'].describe()}\n")
 #        inf(f"max: {pd.DataFrame(data=df_dist.values.flatten(), columns=['distance matrix']).describe()}\n\n")
+        if use_index_of_score is False:
+            df["ref"] = df["ref"]*w1
+            df_dist = df_dist*w2
 
-        use_index_of_score = False  # wether to use scores or the argsort of
-        # the scores the issue was that the two scores (reference and distance)
-        # were really not distributed the same
+
         with tqdm(desc="Computing optimal review order",
                   unit=" card",
                   initial=len(rated),
@@ -1007,17 +1008,16 @@ TFIDF"))
             while len(queue) < queue_size_goal:
                 if use_index_of_score:
                     queue.append(indTODO[
-                            (df.loc[indTODO, "ref"].values.argsort()*w1 + np.mean([
-                                np.max(
+                            (df.loc[indTODO, "ref"].values.argsort()*w1 - np.mean([
+                                np.min(
                                     df_dist.loc[indQUEUE[-self.stride:], indTODO].values,
                                     axis=0),
                                 np.mean(
                                     df_dist.loc[indQUEUE[-self.stride:], indTODO].values,
                                     axis=0)
-                                ], axis=0).argsort()*w2
-                             ).argmin()])
+                                ], axis=0).argsort()*w2).argmin()
+                            ])
                     indQUEUE.append(indTODO.pop(indTODO.index(queue[-1])))
-
                 else:
                     queue.append(indTODO[
                             (df.loc[indTODO, "ref"].values + np.mean([
