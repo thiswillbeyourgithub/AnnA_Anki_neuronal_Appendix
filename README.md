@@ -127,7 +127,6 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * improve tokenizer settings for td_idf
 * investigate applying max pooling over BERT vectors of words of cards instead of TF_IDF, might be even better!
 * find a way to remove already created filtered decks
-* show to user the most disimilar cards as well as the most similar
 * sBERT: implement a correction vector, for example "+radiography" would give a bonus to cards alignes with this word and "-radiography" would do the opposite. To help you optimize review sessions.
 * investigate wether lapsed cards have to be counted differently
 * investigate if it's possible to OCR the subpart of an image occlusion

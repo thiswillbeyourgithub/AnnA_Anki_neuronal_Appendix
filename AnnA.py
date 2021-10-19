@@ -847,6 +847,26 @@ TFIDF"))
         self.df_dist = pd.DataFrame(columns=df.index,
                                     index=df.index,
                                     data=df_dist)
+
+        # showing to user which cards are similar and different,
+        # for troubleshooting
+        max_dist = np.where(self.df_dist.values == np.max(self.df_dist.values))[0]
+        mins = np.where( self.df_dist.values == np.min(self.df_dist.values))
+        mins = [x for x in zip(mins[0], mins[1]) if x[0] != x[1]]
+        pd.set_option('display.max_colwidth', 80)
+        red("Printing the most semantically different cards:")
+        yel(df.loc[df.index[max_dist[0]]].text)
+        yel(df.loc[df.index[max_dist[1]]].text)
+        for x, y in mins:
+            text_1 = df.loc[df.index[mins[x][0]]].text
+            text_2 = df.loc[df.index[mins[y][1]]].text
+            if text_1 != text_2:
+                red("Printing the most semantically similar cards:")
+                yel(text_1)
+                yel(text_2)
+                break
+        pd.reset_option('display.max_colwidth')
+        print("\n\n\n")
         return True
 
     def _compute_opti_rev_order(self):
