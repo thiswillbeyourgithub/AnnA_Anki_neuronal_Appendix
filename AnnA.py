@@ -75,7 +75,7 @@ def asynchronous_importer(vectorizer, task):
     importing AnnA and creating the instance of the class, the language model
     have some more time to load
     """
-    global np, KMeans, DBSCAN, tokenizer, \
+    global np, KMeans, DBSCAN, tokenizer, ps, \
         AgglomerativeClustering, transformers, normalize, TfidfVectorizer,\
         CountVectorizer, TruncatedSVD, StandardScaler, \
         pairwise_distances, PCA, px, umap, np, tokenizer_bert, \
@@ -95,6 +95,8 @@ def asynchronous_importer(vectorizer, task):
     else:
         global stopwords
         from nltk.corpus import stopwords
+        from nltk.stem import PorterStemmer
+        ps = PorterStemmer()
 
     from transformers import BertTokenizerFast
     tokenizer = BertTokenizerFast.from_pretrained(
@@ -152,6 +154,7 @@ class AnnA:
                  sBERT_dim=None,
                  TFIDF_dim=1000,
                  TFIDF_stopw_lang=["english", "french"],
+                 TFIDF_stemmer_enable=True,
 
                  # misc:
                  debug_card_limit=None,
@@ -196,6 +199,7 @@ class AnnA:
         self.vectorizer = vectorizer
         self.TFIDF_dim = TFIDF_dim
         self.TFIDF_stopw_lang = TFIDF_stopw_lang
+        self.TFIDF_stemmer_enable = TFIDF_stemmer_enable
         self.task = task
 
         assert stride > 0
@@ -577,6 +581,8 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
         text = text.replace(" :.", ".")
         text = text.replace(":.", ".")
         if self.vectorizer == "TFIDF":
+            if self.TFIDF_stemmer_enable is True:
+                text = " ".join([ps.stem(x) for x in text.split()])
             text += " " + " ".join(re.findall('src="(.*?)">', orig))
         return text
 
