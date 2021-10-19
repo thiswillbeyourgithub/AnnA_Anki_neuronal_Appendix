@@ -86,7 +86,8 @@ def asynchronous_importer(vectorizer, task):
         from nltk.corpus import stopwords
 
     from transformers import BertTokenizerFast
-    tokenizer = BertTokenizerFast.from_pretrained("bert-base-multilingual-uncased")
+    tokenizer = BertTokenizerFast.from_pretrained(
+            "bert-base-multilingual-uncased")
     from sklearn.metrics import pairwise_distances
     from sklearn.decomposition import PCA
     from sklearn.cluster import KMeans, DBSCAN, AgglomerativeClustering
@@ -129,11 +130,11 @@ class AnnA:
                  compute_opti_rev_order=True,
                  check_database=False,
 
-                 task = "create_filtered",
+                 task="create_filtered",
                  # can be "create_filtered", "bury", "index"
 
                  # vectorization:
-                 vectorizer = "TFIDF",  # can be "TFIDF" or "sBERT"
+                 vectorizer="TFIDF",  # can be "TFIDF" or "sBERT"
                  sBERT_dim=None,
                  TFIDF_dim=1000,
                  TFIDF_stopw_lang=["english", "french"],
@@ -152,14 +153,13 @@ class AnnA:
         else:
             log.setLevel(logging.INFO)
 
-
         if show_banner:
             red(pyfiglet.figlet_format("AnnA"))
             red("(Anki neuronal Appendix)\n\n")
 
         # start importing large modules
         import_thread = threading.Thread(target=asynchronous_importer,
-                args=(vectorizer, task))
+                                         args=(vectorizer, task))
         import_thread.start()
 
         # loading args
@@ -631,17 +631,17 @@ Edit the variable 'field_dic' to use {card_model}")
                   smoothing=0,
                   unit=" card") as pbar:
             for nb in range(0, n, batchsize):
-                    sub_card_list = df.index[nb: nb+batchsize]
-                    thread = threading.Thread(target=_threaded_field_filter,
-                                              args=(df,
-                                                    sub_card_list,
-                                                    lock,
-                                                    pbar),
-                                              daemon=False)
-                    thread.start()
-                    threads.append(thread)
-                    while sum([t.is_alive() for t in threads]) >= 15:
-                        time.sleep(0.5)
+                sub_card_list = df.index[nb: nb+batchsize]
+                thread = threading.Thread(target=_threaded_field_filter,
+                                          args=(df,
+                                                sub_card_list,
+                                                lock,
+                                                pbar),
+                                          daemon=False)
+                thread.start()
+                threads.append(thread)
+                while sum([t.is_alive() for t in threads]) >= 15:
+                    time.sleep(0.5)
             [t.join() for t in threads]
 
         df = self.df.copy()
@@ -660,7 +660,10 @@ adjust formating issues:")
         self.df = df.sort_index()
         return True
 
-    def _compute_sBERT_vec(self, df=None, use_sBERT_cache=True, import_thread=None):
+    def _compute_sBERT_vec(self,
+                           df=None,
+                           use_sBERT_cache=True,
+                           import_thread=None):
         """
         Assigne sBERT vectors to each card
         df["VEC_FULL"], contains the vectors
@@ -712,16 +715,18 @@ adjust formating issues:")
                 if len(id_to_recompute) != 0:
                     sentence_list = [df.loc[x, "text"]
                                      for x in df.index if x in id_to_recompute]
-                    sentence_embeddings = sBERT.encode(sentence_list,
-                                                       normalize_embeddings=True,
-                                                       show_progress_bar=True)
+                    sentence_embeddings = sBERT.encode(
+                            sentence_list,
+                            normalize_embeddings=True,
+                            show_progress_bar=True)
 
                     for i, ind in enumerate(tqdm(id_to_recompute)):
                         df.at[ind, "VEC"] = sentence_embeddings[i]
 
                 # stores newly computed sBERT vectors in a file:
                 df_cache = self._reset_index_dtype(df_cache)
-                for i in [x for x in id_to_recompute if x not in df_cache.index]:
+                for i in [x for x in id_to_recompute
+                          if x not in df_cache.index]:
                     df_cache.loc[i, "VEC"] = df.loc[i, "VEC"].astype("object")
                     df_cache.loc[i, "mod"] = df.loc[i, "mod"].astype("object")
                     df_cache.loc[i, "text"] = df.loc[i, "text"]
@@ -771,13 +776,15 @@ using PCA...")
 
             vectorizer = TfidfVectorizer(strip_accents="unicode",
                                          lowercase=True,
-                                         tokenizer=lambda x: tokenizer.tokenize(x),
+                                         tokenizer=lambda x:
+                                             tokenizer.tokenize(x),
                                          stop_words=stops,
                                          ngram_range=(1, 10),
                                          max_features=10_000,
                                          norm="l2")
             t_vec = vectorizer.fit_transform(tqdm(df["text"],
-                                             desc="Vectorizing text using TFIDF"))
+                                             desc="Vectorizing text using \
+TFIDF"))
             df["VEC_FULL"] = ""
             df["VEC"] = ""
             if self.TFIDF_dim is None:
@@ -787,8 +794,8 @@ using PCA...")
                 self.t_red = None
             else:
                 print(f"Reducing dimensions to {self.TFIDF_dim}")
-                svd = TruncatedSVD(n_components = min(self.TFIDF_dim,
-                                                      t_vec.shape[1]))
+                svd = TruncatedSVD(n_components=min(self.TFIDF_dim,
+                                                    t_vec.shape[1]))
                 t_red = svd.fit_transform(t_vec)
                 whi(f"Explained variance ratio after SVD on Tf_idf: \
 {round(sum(svd.explained_variance_ratio_)*100,1)}%")
@@ -1049,8 +1056,8 @@ using PCA...")
         return True
 
     def task_filtered_deck(self,
-                     deck_template=None,
-                     task=None):
+                           deck_template=None,
+                           task=None):
         """
         create a filtered deck containing the cards to review in optimal order
 
@@ -1189,7 +1196,8 @@ as opti_rev_order!")
         * To find the topic of each cluster, ctf-idf is used
         """
         df = self.df
-        if self.clustering_nb_clust is None or self.clustering_nb_clust == "auto":
+        if self.clustering_nb_clust is None or \
+                self.clustering_nb_clust == "auto":
             self.clustering_nb_clust = len(df.index)//20
             red(f"No number of clusters supplied, will try with \
 {self.clustering_nb_clust}.")
@@ -1275,8 +1283,9 @@ as opti_rev_order!")
                                            df_by_cluster.clusters)}
             df["cluster_topic"] = ""
             for i in df.index:
-                clst_tpc = " ".join([x for x in w_by_class[
-                                                      str(df.loc[i, cluster_col])]])
+                clst_tpc = " ".join([x
+                                     for x in w_by_class[str(
+                                         df.loc[i, cluster_col])]])
                 df.loc[i, "cluster_topic"] = clst_tpc
 
             self.w_by_class = w_by_class
@@ -1287,7 +1296,7 @@ as opti_rev_order!")
                 # other one adds the new one
                 threads = []
                 full_note_list = list(set(df["note"].tolist()))
-                all_tags =  df["tags"].tolist()
+                all_tags = df["tags"].tolist()
                 present_tags = []
                 self._ankiconnect(action="addTags", batchmode="open")
                 for t in all_tags:
@@ -1310,9 +1319,9 @@ as opti_rev_order!")
                                               batchmode="ongoing")
                             pbar_r.update(1)
                     pbar_r = tqdm(desc="Removing old cluster tags...",
-                              unit="cluster",
-                              position=1,
-                              total=len(to_remove))
+                                  unit="cluster",
+                                  position=1,
+                                  total=len(to_remove))
                     thread = threading.Thread(target=_threaded_remove_tags,
                                               args=(to_remove, pbar_r),
                                               daemon=False)
@@ -1323,11 +1332,15 @@ as opti_rev_order!")
 
                 def _threaded_add_cluster_tags(list_i, pbar_a):
                     for i in list_i:
-                        cur_time = "_".join(time.asctime().split()[0:4]).replace(
+                        cur_time = "_".join(
+                                time.asctime().split()[0:4]).replace(
                                 ":", "h")[0:-3]
-                        newTag = f"AnnA::cluster_topic::{cur_time}::cluster_#{str(i)}"
-                        newTag += f"::{df[df['clusters']==i]['cluster_topic'].iloc[0]}"
-                        note_list = list(set(df[df["clusters"] == i]["note"].tolist()))
+                        nb = df[df['clusters'] == i]['cluster_topic'].iloc[0]
+                        newTag = "AnnA::cluster_topic::"
+                        newTag += f"{cur_time}::cluster_#{str(i)}"
+                        newTag += f"::{nb}"
+                        note_list = list(set(
+                            df[df["clusters"] == i]["note"].tolist()))
                         self._ankiconnect(action="addTags",
                                           notes=note_list,
                                           tags=newTag,
@@ -1335,9 +1348,9 @@ as opti_rev_order!")
                         pbar_a.update(1)
                     return True
                 pbar_a = tqdm(total=len(cluster_list),
-                          desc="Adding new cluster tags",
-                          position=0,
-                          unit="cluster")
+                              desc="Adding new cluster tags",
+                              position=0,
+                              unit="cluster")
                 thread = threading.Thread(
                                     target=_threaded_add_cluster_tags,
                                     daemon=False,
@@ -1373,7 +1386,8 @@ as opti_rev_order!")
                           save_as_html=True,
                           ):
         """
-        open a browser tab with a 2D plot showing your cards and their relations
+        open a browser tab with a 2D plot showing your cards and their
+        relations
         """
         df = self.df.copy()
         pca_kwargs_deploy = {"n_components": 2, "random_state": 42}
@@ -1563,9 +1577,12 @@ be used.")
         acro_count = {}
         for acr in matched:
             acro_count.update({acr: full_text.count(acr)})
-        sorted_by_count = sorted([x for x in matched], key= lambda x: acro_count[x], reverse=True)
+        sorted_by_count = sorted([x
+                                  for x in matched],
+                                 key=lambda x: acro_count[x], reverse=True)
         relevant = random.choices(sorted_by_count[0:50],
-                k=min(len(sorted_by_count), 10))
+                                  k=min(len(
+                                      sorted_by_count), 10))
 
         if self.acronym_list is None:
             red("\nYou did not supply an acronym list, printing all acronym \
