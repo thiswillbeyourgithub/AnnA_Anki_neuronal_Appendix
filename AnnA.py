@@ -235,9 +235,6 @@ values. {e}")
 .")
             whi("Forcing 'reference_order' to 'lowest_interval'.")
             self.reference_order = "lowest_interval"
-            inf("Forcing rated_last_X_days to 0.")
-            self.rated_last_X_days = 0
-
             self._create_and_fill_df()
             self.df = self._reset_index_dtype(self.df)
             self._format_card()
