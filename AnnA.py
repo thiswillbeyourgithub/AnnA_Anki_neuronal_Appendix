@@ -781,7 +781,7 @@ using PCA...")
                                          tokenizer=lambda x:
                                              tokenizer.tokenize(x),
                                          stop_words=stops,
-                                         ngram_range=(1, 10),
+                                         ngram_range=(1, 5),
                                          max_features=10_000,
                                          norm="l2")
             t_vec = vectorizer.fit_transform(tqdm(df["text"],
