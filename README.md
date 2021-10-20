@@ -124,19 +124,20 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * `show_acronyms` shows the acronym present in your deck that were not extended. Useful if you want to adjust your acronym list.
 
 ## TODO
-* add task "bury_reviews"
-* improve tokenizer settings for td_idf
-* investigate applying max pooling over BERT vectors of words of cards instead of TF_IDF, might be even better!
+* set better tokenizer settings for td_idf
+* add task "bury_reviews" and rename "bury" to "bury_learning"
 * find a way to remove already created filtered decks
-* sBERT: implement a correction vector, for example "+radiography" would give a bonus to cards alignes with this word and "-radiography" would do the opposite. To help you optimize review sessions.
-* investigate wether lapsed cards have to be counted differently
-* investigate if it's possible to OCR the subpart of an image occlusion
+
+* turn into anki as an addon
+
+* investigate applying max pooling over BERT vectors of words of cards instead of TF_IDF, might be even better!
+* implement a correction vector. i.e.  "+radiography" would give a bonus to cards alignes with this word and "-radiography" would do the opposite. To help you optimize review sessions.
+
 * look into sentence mining methods from sbert, that might contain useful ideas
 * take a look at topic modelling techniques that might be cleaner to invoke than the current ctf-idf implementation
 * warn LW
 * re read this article for inspiration : http://mccormickml.com/2021/05/27/question-answering-system-tf-idf/
 * automatically create a phylogeny of cards based on a distance matrix and see if it's an appropriate mind map, plotly is suitable for this kind of tree
-* turn into anki as an addon
 * investigate crazy ideas list
 
 ## Credits and links that were helpful
