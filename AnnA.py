@@ -977,7 +977,8 @@ TFIDF"))
         df_dist.loc[:, :] = StandardScaler().fit_transform(df_dist)
 
         assert len([x for x in rated if df.loc[x, "status"] != "rated"]) == 0
-        red(f"\nCards rated in the past relevant days: {len(rated)}")
+        red(f"\nCards identified as rated in the past relevant days:\
+{len(rated)}")
 
         if isinstance(desired_deck_size, float):
             if desired_deck_size < 1.0:
