@@ -148,7 +148,8 @@ class AnnA:
                  check_database=False,
 
                  task="create_filtered",
-                 # can be "create_filtered", "bury", "index"
+                 # can be "create_filtered",
+                 # "bury_excess_review_cards", "bury_excess_learning_cards", "index"
 
                  # vectorization:
                  vectorizer="TFIDF",  # can be "TFIDF" or "sBERT"
@@ -205,7 +206,7 @@ class AnnA:
 
         assert stride > 0
         assert reference_order in ["lowest_interval", "relative_overdueness"]
-        assert task in ["create_filtered", "index", "bury"]
+        assert task in ["create_filtered", "index", "bury_excess_learning_cards", "bury_excess_review_cards"]
         assert vectorizer in ["TFIDF", "sBERT"]
 
         if self.acronym_list is not None:
@@ -246,11 +247,16 @@ values. {e}")
             self._compute_sBERT_vec(import_thread=import_thread)
             if clustering_enable:
                 self.compute_clusters(minibatchk_kwargs={"verbose": 0})
-        elif task == "bury":
+        elif task in ["bury_excess_learning_cards", "bury_excess_review_cards"]:
             # bypasses most of the code to bury learning cards
             # directly in the deck without creating filtered decks
-            yel("Task : bury some learning cards.")
-            whi(f"Burying similar learning cards from deck {self.deckname}..\
+            if task == "bury_excess_learning_cards":
+                yel("Task : bury some learning cards.")
+                whi(f"Burying similar learning cards from deck {self.deckname}..\
+.")
+            if task == "bury_excess_review_cards":
+                yel("Task : bury some reviews.")
+                whi(f"Burying similar reviews from deck {self.deckname}..\
 .")
             whi("Forcing 'reference_order' to 'lowest_interval'.")
             self.reference_order = "lowest_interval"
@@ -436,6 +442,7 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
             red(" >  '" + query + "'\n\n")
             due_cards = self._ankiconnect(action="findCards", query=query)
             yel(f"Found {len(due_cards)} cards...")
+
         elif self.task == "create_filtered":
             yel("Getting due card list...")
             query = f"\"deck:{self.deckname}\" is:due is:review -is:learn \
@@ -443,13 +450,23 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
             whi(" >  '" + query + "'\n\n")
             due_cards = self._ankiconnect(action="findCards", query=query)
             yel(f"Found {len(due_cards)} due cards...")
-        elif self.task == "bury":
+
+        elif self.task == "bury_excess_review_cards":
+            whi("Getting due card list...")
+            query = f"\"deck:{self.deckname}\" is:due is:review -is:learn \
+-is:suspended -is:buried -is:new -rated:1"
+            whi(" >  '" + query + "'\n\n")
+            due_cards = self._ankiconnect(action="findCards", query=query)
+            yel(f"Found {len(due_cards)} reviews...")
+
+        elif self.task == "bury_excess_learning_cards":
             whi("Getting is:learn card list...")
             query = f"\"deck:{self.deckname}\" is:learn -is:suspended is:due \
 -rated:1"
             whi(" >  '" + query + "'\n\n")
             due_cards = self._ankiconnect(action="findCards", query=query)
             yel(f"Found {len(due_cards)} learning cards...")
+
         elif self.task == "index":
             whi("Getting all cards from deck...")
             query = f"\"deck:{self.deckname}\" -is:suspended"
@@ -1115,14 +1132,16 @@ TFIDF"))
             does indeed contain the right number of cards and the right cards
         * -100 000 seems to be the starting value for due order in filtered
             decks
-        * if just_bury is True, then no filtered deck will be created and
-            AnnA will just bury the cards that are too similar
+        * if task is set to bury_excess_learning_cards ot bury_excess_review_cards, then no filtered
+            deck will be created and AnnA will just bury the cards that are
+            too similar
         """
-        if task == "bury":
+        if task in ["bury_excess_learning_cards", "bury_excess_review_cards"]:
             to_keep = self.opti_rev_order
             to_bury = [x for x in self.due_cards if x not in to_keep]
             assert len(to_bury) < len(self.due_cards)
-            red(f"Burying {len(to_bury)} cards out of {len(self.due_cards)}")
+            red(f"Burying {len(to_bury)} cards out of {len(self.due_cards)}.")
+            red("This will not affect the due order.")
             self._ankiconnect(action="bury",
                               cards=to_bury)
             print("Done.")

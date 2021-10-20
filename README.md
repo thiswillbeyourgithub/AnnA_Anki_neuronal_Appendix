@@ -63,6 +63,7 @@ Tired of having to deal with anki flashcards that are too similar when grinding 
 
 * **What is the field_mapping.py file?** It's a file with a unique python dictionary used by AnnA to figure out which field of which card to keep. Using it is optional. By default, each notetype will see only it's first field kept. But if you use this file you can keep multiple fields.
 * **What is "XXX - AnnA Optideck"?** The default name for the filtered deck created by AnnA. It contains the reviews in the best order for you.
+* **Why are there only reviews and no learning cards in the filtered decks?** When task is set to `create_filtered`, AnnA will fetch only review cards and not deal with learning cards. This is because I'm afraid of some weird behavior that would arise if I change the due order of learning cards. Whereas I can change it just find using review cards.
 * **Why does the progress bar of "Computing optimal review order" doesn't always start at 0?** It's just cosmetic. At each step of the loop, the next card to review is computed by comparing it against the previously added cards and the cards rated in the last few days. This means that each turn is slower than the last. So the progress bar begins with the number of cards rated in the past to indicate that. It took great care to optimize the loop so it should not really be an issue.
 
 ## Getting started
@@ -102,7 +103,7 @@ AnnA was made with usability in mind. With the right arguments, you can have to 
  * `compute_opti_rev_order` if `False`, won't compute optimal review order and will set `to_anki` to False. Default to `True`.
  * `check_database` at the end of execution, ask anki to check the database or not. Default is `False`.
 
- * `task` can be "create_filtered", "bury", or "index". Respectively to create a filtered deck with the cards, or bury only the similar cards, or to add all the sBERT vectors in the cache file (to speed up later runs). Default is "`create_filtered`".
+ * `task` can be "create_filtered", "bury_excess_learning_cards", "bury_excess_review_cards" or "index". Respectively to create a filtered deck with the cards, or bury only the similar learning cards (among other learning cards), or bury only the similar cards in review (among other review cards), or to add all the sBERT vectors in the cache file (to speed up later runs). Default is "`create_filtered`".
 
  * `vectorizer` can be either "TFIDF" or "sBERT". Default is "TFIDF".
  * `sBERT_dim` number of dimensions to keep after doing a PCA reduction. This can speed up the computation somewhat, but with reduced precision. Default is `None` (i.e. disabled by default), setting it to `300` will retain usually more than 95% of the variance. The original number of dimension is 512, but that might depend on the "sBERT" model if you decide to change it.
@@ -125,7 +126,6 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 
 ## TODO
 * set better tokenizer settings for td_idf
-* add task "bury_reviews" and rename "bury" to "bury_learning"
 * find a way to remove already created filtered decks
 
 * turn into anki as an addon
