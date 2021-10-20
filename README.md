@@ -22,7 +22,7 @@ Tired of having to deal with anki flashcards that are too similar when grinding 
 2. This project relies on [AnkiConnect](https://github.com/FooSoft/anki-connect). I made some contributions to it to add a few features but they have not all been reviewed yet. I am afraid you have to either wait for AnkiConnect to approve of the changes or replace your AnkiConnect folder with [my own](https://github.com/thiswillbeyourgithub/anki-connect). In the mean time some arguments will probably cause issues.
 3. I am still changing the code base almost every day, if you tried AnnA and were disappointed, maybe try it another time later. Major improvements are regularly made.
 4. This project is still very early and I don't recommend you start using it if you're not skilled enough to do damage control. I have lost a lot of my tags several times (recovered them all afterwards) and some issue can still happen. Use at your own risks :)
-5. I implemented two vectorization methods, either [sBERT](http://sbert.net/) or [subword TF_IDF](https://en.wikipedia.org/wiki/Tf%E2%80%93idf). I am thinking that TF_IDF might be better overall now.
+5. I implemented two vectorization methods, either [sBERT](http://sbert.net/) or [subword TF_IDF](https://en.wikipedia.org/wiki/Tf%E2%80%93idf). I recommend the latter, as sBERT is pretty unreliable in the end. Note that semantic searching is only possible using sBERT.
 
 ## Other features
 * Search for cards in your collection using semantic queries (i.e. typing something with a close `meaning` to a card will find it even if no words are in common).
@@ -124,6 +124,7 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * `show_acronyms` shows the acronym present in your deck that were not extended. Useful if you want to adjust your acronym list.
 
 ## TODO
+* add task "bury_reviews"
 * improve tokenizer settings for td_idf
 * investigate applying max pooling over BERT vectors of words of cards instead of TF_IDF, might be even better!
 * find a way to remove already created filtered decks
