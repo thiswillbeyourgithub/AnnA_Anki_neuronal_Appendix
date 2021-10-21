@@ -593,7 +593,7 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
         text = text.replace("/", " / ")
         text = s(r"\w{1,5}>", " ", text)  # missed html tags
         text = s("&gt;|&lt;|<|>", "", text)
-        text = s("[.?!] ([a-zA-Z])", lambda x: x.group(0).upper(), text)
+        text = s(r"[.?!]\s+?([a-zA-Z])", lambda x: x.group(0).upper(), text)
         # adds capital letter after punctuation
         if self.replace_greek:
             for a, b in greek_alphabet_mapping.items():
@@ -620,7 +620,7 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
         if self.vectorizer == "TFIDF":
             if self.TFIDF_stemmer_enable is True:
                 text = " ".join([ps.stem(x) for x in text.split()])
-            text += " " + " ".join(re.findall('src="(.*?)">', orig))
+            text += " " + " ".join(re.findall('src="(.*?\..{2,3})" ', orig))
         return text
 
     def _format_card(self):
@@ -832,17 +832,14 @@ using PCA...")
 
             vectorizer = TfidfVectorizer(strip_accents="unicode",
                                          lowercase=True,
-                                         tokenizer=lambda x:
-                                             tokenizer.tokenize(x),
+                                         tokenizer=tknzer,
                                          stop_words=stops,
-                                         ngram_range=(1, 5),
+                                         ngram_range=(1, 7),
                                          max_features=10_000,
                                          norm="l2")
             t_vec = vectorizer.fit_transform(tqdm(df["text"],
                                              desc="Vectorizing text using \
 TFIDF"))
-            df["VEC_FULL"] = ""
-            df["VEC"] = ""
             if self.TFIDF_dim is None:
                 df["VEC_FULL"] = [x for x in t_vec]
                 df["VEC"] = [x for x in t_vec]
