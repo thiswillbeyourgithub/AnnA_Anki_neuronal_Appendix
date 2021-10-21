@@ -546,6 +546,18 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
                                         ).set_index("cardId").sort_index()
         return True
 
+    def _smart_acronym_replacer(self, string, compiled, new_w):
+        """
+        acronym replacement using regex needs this function to replace
+            match groups. For example: replacing 'IL(\\d+)' by "Interleukin 2"
+        """
+        if len(string.groups()):
+            for i in range(len(string.groups())):
+                if string.group(i+1) is not None:
+                    new_w = new_w.replace('\\' + str(i+1), string.group(i+1))
+        out = string.group(0) + f" ({new_w})"
+        return out
+
     def _format_text(self, text):
         """
         take text and output processed and formatted text
@@ -587,8 +599,12 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
             for a, b in greek_alphabet_mapping.items():
                 text = s(a, b, text)
         if self.acronym_list is not None:
-            for compiled, word in self.acronym_dict.items():
-                text = s(compiled, lambda x: x.group(0) + f" ({word})", text)
+            for compiled, new_word in self.acronym_dict.items():
+                text = s(compiled,
+                         lambda string: self._smart_acronym_replacer(string,
+                                                            compiled,
+                                                            new_word),
+                         text)
 
         text = text.replace(" : ", ": ")
         text = " ".join(text.split())  # multiple spaces
