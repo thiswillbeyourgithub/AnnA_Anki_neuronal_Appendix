@@ -1068,20 +1068,23 @@ TFIDF"))
             while len(queue) < queue_size_goal:
                 if use_index_of_score:
                     queue.append(indTODO[
-                            (df.loc[indTODO, "ref"].values.argsort()*w1 - np.mean([
-                                np.min(
-                                    df_dist.loc[indQUEUE[-self.stride:], indTODO].values,
-                                    axis=0),
-                                np.mean(
-                                    df_dist.loc[indQUEUE[-self.stride:], indTODO].values,
-                                    axis=0)
-                                ], axis=0).argsort()*w2).argmin()
-                            ])
+                            (w1*df.loc[indTODO, "ref"].values.argsort() -\
+                             w2*(
+                             np.min(
+                                 df_dist.loc[indQUEUE[-self.stride:], indTODO].values,
+                                 axis=0).argsort() +\
+                             np.max(
+                                 df_dist.loc[indQUEUE[-self.stride:], indTODO].values,
+                                 axis=0).argsort() +\
+                             np.mean(
+                                 df_dist.loc[indQUEUE[-self.stride:], indTODO].values,
+                                 axis=0).argsort()
+                             )).argmin()])
                     indQUEUE.append(indTODO.pop(indTODO.index(queue[-1])))
                 else:
                     queue.append(indTODO[
                             (df.loc[indTODO, "ref"].values + np.mean([
-                                np.max(
+                                np.min(
                                     df_dist.loc[indQUEUE[-self.stride:], indTODO].values,
                                     axis=0),
                                 np.mean(
