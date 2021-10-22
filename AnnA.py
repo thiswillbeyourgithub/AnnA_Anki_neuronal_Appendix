@@ -262,12 +262,12 @@ values. {e}")
                 yel("Task : bury some learning cards.")
                 whi(f"Burying similar learning cards from deck {self.deckname}..\
 .")
+                red("Forcing 'reference_order' to 'relative_overdueness'.")
+                self.reference_order = "relative_overdueness"
             if task == "bury_excess_review_cards":
                 yel("Task : bury some reviews.")
                 whi(f"Burying similar reviews from deck {self.deckname}..\
 .")
-            whi("Forcing 'reference_order' to 'lowest_interval'.")
-            self.reference_order = "lowest_interval"
             self._create_and_fill_df()
             self.df = self._reset_index_dtype(self.df)
             self._format_card()
