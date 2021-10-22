@@ -949,6 +949,8 @@ TFIDF"))
         * this score reflects the order in which they should be reviewed
         * the intuition is that anki doesn't know before hand if some cards
             are semantically close and can have you review them the same day
+
+        # TODO: this a changed a lot:
         * The score is computed according to the formula:
            score = ref - min of (similarity to each card of the big_queue)
            (big_queue here referes to the recently rated cards concatenated
