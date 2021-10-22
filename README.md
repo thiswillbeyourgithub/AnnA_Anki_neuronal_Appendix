@@ -109,7 +109,7 @@ AnnA was made with usability in mind. With the right arguments, you can have to 
  * `sBERT_dim` number of dimensions to keep after doing a PCA reduction. This can speed up the computation somewhat, but with reduced precision. Default is `None` (i.e. disabled by default), setting it to `300` will retain usually more than 95% of the variance. The original number of dimension is 512, but that might depend on the "sBERT" model if you decide to change it.
  * `TFIDF_dim` the number of dimension to keep using [SVD](https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.TruncatedSVD.html). Default is `1000`, you cannot disable dimension reduction for TF_IDF because that would result in a sparse matrix.
  * `TFIDF_stopw_lang` a list of languages used to construct a list of stop words (i.e. words that will be ignored). Default is `["english", "french"]`.
- * `TFIDF_stemmer_enable` default to `True`. Wether to enable stemming of words. Currently the PorterStemmer is used, and was made for English but can still be useful. Keep in mind that this is the longest step when formatting text.
+ * `TFIDF_stemmer_enable` default to `True`. Wether to enable stemming of words. Currently the PorterStemmer is used, and was made for English but can still be useful for some other languages. Keep in mind that this is the longest step when formatting text.
 
  * `debug_card_limit` limit the number of due cards to take into account. It is used for debugging as it allows to run the script quickly. Default is `None`.
  * `debug_force_score_formula` can be used to force seeing similar or different cards etc, to test the algorithm. Default is `None`. Possible values are `only_different` and `only_similar`
