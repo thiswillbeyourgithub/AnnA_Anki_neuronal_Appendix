@@ -1297,7 +1297,8 @@ as opti_rev_order!")
                          agglo_kwargs=None,
                          dbscan_kwargs=None,
                          add_as_tags=True,
-                         tokenize_tags=True):
+                         stem_tags=True,
+                         tokenize_topics=False):
         """
         finds cluster of cards and their respective topics
         * this is not mandatory to create the filtered deck but it's rather
@@ -1366,22 +1367,28 @@ as opti_rev_order!")
         cluster_list = sorted(list(set(list(df[cluster_col]))))
         cluster_nb = len(cluster_list)
 
-        if tokenize_tags:
+        if tokenize_topics:
             df["tokenized"] = df.apply(
                     lambda row: " ".join(
                         tokenizer.tokenize(row["text"])),
                     axis=1)
+            topics_col = "tokenized"
         else:
-            df["tokenized"] = df["text"]
+            topics_col = "text"
+        if stem_tags:
+            df["stemmed"] = df.apply(
+                    lambda row: " ".join([ps.stem(x) for x in row["text"].split()]),
+                    axis=1)
+            topics_col = "stemmed"
 
         df_by_cluster = df.groupby([cluster_col],
-                                   as_index=False).agg({'tokenized': ' '.join})
-        count = CountVectorizer().fit_transform(df_by_cluster.tokenized)
+                                   as_index=False).agg({topics_col: ' '.join})
+        count = CountVectorizer().fit_transform(df_by_cluster[topics_col])
         ctfidf = CTFIDFVectorizer().fit_transform(count,
                                                   n_samples=len(
                                                       df_by_cluster.index))
-        count_vectorizer = CountVectorizer().fit(df_by_cluster.tokenized)
-        count = count_vectorizer.transform(df_by_cluster.tokenized)
+        count_vectorizer = CountVectorizer().fit(df_by_cluster[topics_col])
+        count = count_vectorizer.transform(df_by_cluster[topics_col])
         words = count_vectorizer.get_feature_names()
         ctfidf = CTFIDFVectorizer().fit_transform(count,
                                                   n_samples=len(
