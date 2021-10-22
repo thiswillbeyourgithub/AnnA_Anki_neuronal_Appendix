@@ -727,7 +727,7 @@ adjust formating issues:")
         pd.set_option('display.max_colwidth', 80)
         sub_index = random.choices(df.index.tolist(), k=5)
         for i in sub_index:
-            print(f"{i}: {df.loc[i, 'text']}\n")
+            print(f" *  {i}: {df.loc[i, 'text']}")
         pd.reset_option('display.max_colwidth')
         print("\n")
         self.df = df.sort_index()
