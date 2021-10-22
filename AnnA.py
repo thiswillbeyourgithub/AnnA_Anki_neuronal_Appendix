@@ -28,16 +28,18 @@ os.environ["TOKENIZERS_PARALLELISM"] = "true"
 signal.signal(signal.SIGINT, (lambda signal, frame: pdb.set_trace()))
 
 # adds logger
+logging.basicConfig(filename="logs.txt", filemode='a',
+        format=f"{time.asctime()}: %(message)s")
 log = logging.getLogger()
-out_hdlr = logging.StreamHandler(sys.stdout)
-out_hdlr.setFormatter(logging.Formatter('%(message)s'))
-out_hdlr.setLevel(logging.INFO)
-try:
-    log.handlers.pop()  # remove duplicated loggers
-except:
-    pass
-log.addHandler(out_hdlr)
-log.setLevel(logging.ERROR)
+#out_hdlr = logging.StreamHandler(sys.stdout)
+#out_hdlr.setFormatter(logging.Formatter('%(message)s'))
+#out_hdlr.setLevel(logging.INFO)
+#try:
+#    log.handlers.pop()  # remove duplicated loggers
+#except:
+#    pass
+#log.addHandler(out_hdlr)
+log.setLevel(logging.INFO)
 
 
 def set_global_logging_level(level=logging.ERROR, prefices=[""]):
@@ -58,13 +60,16 @@ def coloured_log(color_asked):
 
     if color_asked == "white":
         def printer(string):
-            log.info(col_rst + string + col_rst)
+            log.info(string)
+            tqdm.write(col_rst + string + col_rst)
     elif color_asked == "yellow":
         def printer(string):
-            log.warn(col_yel + string + col_rst)
+            log.warn(string)
+            tqdm.write(col_yel + string + col_rst)
     elif color_asked == "red":
         def printer(string):
-            log.error(col_red + string + col_rst)
+            log.error(string)
+            tqdm.write(col_red + string + col_rst)
     return printer
 
 
