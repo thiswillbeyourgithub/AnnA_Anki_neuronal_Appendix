@@ -1693,18 +1693,23 @@ be used.")
         if exclude_OCR_text:
             full_text = re.sub("> Caption: '.*?' <", " ", full_text)
         matched = list(set(re.findall("[A-Z]{3,}", full_text)))
+        if len(matched) == 0:
+            return True
         sorted_by_count = sorted([x for x in matched],
                                  key=lambda x: full_text.count(x),
                                  reverse=True)
         relevant = list(set(random.choices(sorted_by_count[0:50],
                                            k=min(len(sorted_by_count), 10))))
+        if not len(matched):
+            print("No acronym found in those cards.")
+            return True
 
         if self.acronym_list is None:
             red("\nYou did not supply an acronym list, printing all acronym \
 found...")
             pprint(relevant)
         else:
-            acro_list = [str(x) for x in list(self.acronym_dict.keys())]
+            acro_list = list(self.acronym_dict.keys())
 
             for compiled in acro_list:
                 for acr in relevant:
