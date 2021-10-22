@@ -1114,12 +1114,12 @@ TFIDF"))
                 if use_index_of_score:
                     # NOT YET USABLE:
                     queue.append(indTODO[
-                            (0*w1*df.loc[indTODO, "ref"].values.argsort() +\
+                            (w1*df.loc[indTODO, "ref"].values.argsort() +\
                              w2*(
                              np.min(
                                  df_dist.loc[indQUEUE[-self.stride:], indTODO].values,
                                  axis=0).argsort() +\
-                             0*np.mean(
+                             np.mean(
                                  df_dist.loc[indQUEUE[-self.stride:], indTODO].values,
                                  axis=0).argsort()
                              )).argmin()])
@@ -1127,10 +1127,10 @@ TFIDF"))
                 else:
                     queue.append(indTODO[
                             (-df.loc[indTODO, "ref"].values +\
-                                0.7*np.min(
+                                0.9*np.min(
                                     df_dist.loc[indQUEUE[-self.stride:], indTODO].values,
                                     axis=0) +\
-                                0.3*np.mean(
+                                0.1*np.mean(
                                     df_dist.loc[indQUEUE[-self.stride:], indTODO].values,
                                     axis=0)
                              ).argmax()])
