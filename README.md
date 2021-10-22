@@ -135,7 +135,6 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * turn into anki as an addon
 
 * investigate applying max pooling over BERT vectors of words of cards instead of TF_IDF, might be even better!
-* implement a correction vector. i.e.  "+radiography" would give a bonus to cards alignes with this word and "-radiography" would do the opposite. To help you optimize review sessions.
 
 * look into sentence mining methods from sbert, that might contain useful ideas
 * take a look at topic modelling techniques that might be cleaner to invoke than the current ctf-idf implementation
