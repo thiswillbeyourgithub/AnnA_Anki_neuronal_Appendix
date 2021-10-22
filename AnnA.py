@@ -534,6 +534,10 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
             list_cardInfo[i].pop("answer")
             list_cardInfo[i].pop("css")
             list_cardInfo[i].pop("fields_no_html")
+            list_cardInfo[i]["fields"] = dict(
+                    (k.lower(), v)
+                    for k, v in list_cardInfo[i]["fields"].items()
+                    )
             list_cardInfo[i]["tags"] = " ".join(list_cardInfo[i]["tags"])
             if card["cardId"] in due_cards:
                 list_cardInfo[i]["status"] = "due"
@@ -637,13 +641,12 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
         which can be found at the top of the file. If not relevant field are
         found then only the first field is kept.
         """
-        def _threaded_field_filter(df, index_list, lock, pbar):
+        def _threaded_field_filter(df, index_list, lock, pbar, already_warned):
             """
             threaded implementaation to speed up execution
             """
             for index in index_list:
                 card_model = df.loc[index, "modelName"]
-                take_first_field = False
                 fields_to_keep = []
 
                 # determines which is the corresponding model described
@@ -655,42 +658,52 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
                         cnt += 1
                         target_model = user_model
                 if cnt == 0:
-                    take_first_field = True
+                    if card_model not in already_warned:
+                        red(f"No matching notetype found for \
+{card_model} in field_mappings.py. Default to using first field.")
+                        with lock:
+                            already_warned.append(card_model)
+                    fields_to_keep = "take_first_field"
                 elif cnt == 1:
                     fields_to_keep = field_dic[target_model]
                 elif cnt > 1:
-                    tqdm.write(f"Several corresponding model found!\
-Edit the variable 'field_dic' to use {card_model}")
-                    take_first_field = True
+                    red(f"Several corresponding notetypes found for \
+{card_model}. Check the content of field_mappings.py.")
+                    fields_to_keep = field_dic[target_model]
 
                 # concatenates the corresponding fields into one string:
-                if take_first_field:  # if no corresponding model
-                    # was found in field_dic
+                if fields_to_keep == "take_first_field":
                     field_list = list(df.loc[index, "fields"])
                     for f in field_list:
-                        order = df.loc[index, "fields"][f]["order"]
+                        order = df.loc[index, "fields"][f.lower()]["order"]
                         if order == 0:
                             break
                     fields_to_keep = [f]
 
                 comb_text = ""
                 for f in fields_to_keep:
-                    to_add = df.loc[index, "fields"][f]["value"].strip()
-                    if to_add != "":
-                        comb_text = comb_text + to_add + ": "
-                final_text = comb_text.strip().replace(": :", "")
+                    try:
+                        next_field = df.loc[index, "fields"][f.lower()]["value"].strip()
+                        if next_field != "":
+                            comb_text = comb_text + next_field + ": "
+                    except KeyError as e:
+                        red(f"Error when looking for field {f.lower()} in card \
+{df.loc[index, 'modelName']}: {e}")
+                if comb_text[-2:] == ": ":
+                    comb_text = comb_text[:-2]
 
                 with lock:
-                    self.df.at[index, "comb_text"] = final_text
-                    pbar.update(1)
+                    self.df.at[index, "comb_text"] = comb_text
+                pbar.update(1)
 
         df = self.df.copy()
         n = len(df.index)
         batchsize = n//5+1
         lock = threading.Lock()
         threads = []
+        already_warned = []
         with tqdm(total=n,
-                  desc="Keeping only relevant fields",
+                  desc="Combining relevant fields",
                   smoothing=0,
                   unit=" card") as pbar:
             for nb in range(0, n, batchsize):
@@ -699,7 +712,8 @@ Edit the variable 'field_dic' to use {card_model}")
                                           args=(df,
                                                 sub_card_list,
                                                 lock,
-                                                pbar),
+                                                pbar,
+                                                already_warned),
                                           daemon=False)
                 thread.start()
                 threads.append(thread)
