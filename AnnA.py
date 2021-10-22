@@ -911,16 +911,22 @@ TFIDF"))
 
         # showing to user which cards are similar and different,
         # for troubleshooting
-        max_dist = np.where(self.df_dist.values == np.max(self.df_dist.values))[0]
-        mins = np.where( self.df_dist.values == np.min(self.df_dist.values))
-        mins = [x for x in zip(mins[0], mins[1]) if x[0] != x[1]]
-        pd.set_option('display.max_colwidth', 80)
         red("Printing the most semantically different cards:")
-        yel("* " + df.loc[df.index[max_dist[0]]].text)
-        yel("* " + df.loc[df.index[max_dist[1]]].text)
-        if len(mins) != 0:
+        pd.set_option('display.max_colwidth', 80)
+        maxs = np.where(self.df_dist.values == np.max(self.df_dist.values))
+        maxs = [x for x in zip(maxs[0], maxs[1])]
+        yel("* " + df.loc[df.index[maxs[0][0]]].text)
+        yel("* " + df.loc[df.index[maxs[0][1]]].text)
+
+        min_val = self.df_dist.values[self.df_dist.values != 0].min()
+        printed = False
+        cnt = 0
+        while printed is False:
+            cnt += 1
+            mins = np.where(self.df_dist.values <= cnt*min_val)
+            mins = [x for x in zip(mins[0], mins[1]) if x[0] != x[1]]
             random.shuffle(mins)
-            for x in range(len(mins[0])):
+            for x in range(len(mins)):
                 pair = mins[x]
                 text_1 = df.loc[df.index[pair[0]]].text
                 text_2 = df.loc[df.index[pair[1]]].text
@@ -928,6 +934,7 @@ TFIDF"))
                     red("Printing the most semantically similar cards:")
                     yel("* " + text_1)
                     yel("* " + text_2)
+                    printed = True
                     break
         pd.reset_option('display.max_colwidth')
         print("\n\n\n")
