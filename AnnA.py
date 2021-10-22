@@ -717,8 +717,6 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
                                           daemon=False)
                 thread.start()
                 threads.append(thread)
-                while sum([t.is_alive() for t in threads]) >= 15:
-                    time.sleep(0.5)
             [t.join() for t in threads]
 
         df = self.df.copy()
