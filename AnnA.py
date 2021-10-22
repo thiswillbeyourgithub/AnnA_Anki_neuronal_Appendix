@@ -273,6 +273,8 @@ values. {e}")
             self._format_card()
             self.show_acronyms()
             self._compute_sBERT_vec(import_thread=import_thread)
+            if clustering_enable:
+                self.compute_clusters(minibatchk_kwargs={"verbose": 0})
             self._compute_distance_matrix()
             self._compute_opti_rev_order()
             self.task_filtered_deck(task=task)
