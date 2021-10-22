@@ -919,12 +919,17 @@ TFIDF"))
         yel("* " + df.loc[df.index[maxs[0][1]]].text)
         print("")
 
-        min_val = self.df_dist.values[self.df_dist.values != 0].min()
+        lowest_values = [0]
+        for i in range(99):
+            lowest_values.append(
+                    self.df_dist.values[self.df_dist.values > max(
+                        lowest_values)].min())
+        lowest_values.remove(0)
         printed = False
-        cnt = 0
-        while printed is False:
-            cnt += 1
-            mins = np.where(self.df_dist.values <= cnt*min_val)
+        for low in lowest_values:
+            if printed is True:
+                break
+            mins = np.where(self.df_dist.values == low)
             mins = [x for x in zip(mins[0], mins[1]) if x[0] != x[1]]
             random.shuffle(mins)
             for x in range(len(mins)):
@@ -937,6 +942,9 @@ TFIDF"))
                     yel("* " + text_2)
                     printed = True
                     break
+        if printed is False:
+            red("Couldn't find lowest values to print!")
+        print("")
         pd.reset_option('display.max_colwidth')
         print("\n\n\n")
         return True
