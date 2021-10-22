@@ -834,13 +834,14 @@ using PCA...")
             if import_thread is not None:
                 import_thread.join()
                 time.sleep(0.5)
+
             print("Creating stop words list...")
             try:
                 stops = []
                 for lang in self.TFIDF_stopw_lang:
-                    [stops.extend(
-                        tokenizer.tokenize(x)
-                        ) for x in stopwords.words(lang)]
+                    stops += stopwords.words(lang)
+                if self.TFIDF_stemmer_enable:
+                    stops += [ps.stem(x) for x in stops]
                 stops = list(set(stops))
             except Exception as e:
                 red(f"Error when extracting stop words: {e}")
