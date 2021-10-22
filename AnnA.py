@@ -857,7 +857,7 @@ using PCA...")
                 def tknzer(x):
                     return x
 
-            vectorizer = TfidfVectorizer(strip_accents="unicode",
+            vectorizer = TfidfVectorizer(strip_accents="ascii",
                                          lowercase=True,
                                          tokenizer=tknzer,
                                          stop_words=stops,
