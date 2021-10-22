@@ -720,10 +720,8 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
             [t.join() for t in threads]
 
         df = self.df.copy()
-        df["text"] = [self._format_text(x)
-                      for x in tqdm(
-                      df["comb_text"],
-                      desc="Formating text", smoothing=0, unit=" card")]
+        tqdm.pandas(desc="Formating text", smoothing=0, unit=" card")
+        df["text"] = df["comb_text"].progress_apply(lambda x: self._format_text(x))
         print("\n\nPrinting 5 random samples of your formated text, to help \
 adjust formating issues:")
         pd.set_option('display.max_colwidth', 80)
