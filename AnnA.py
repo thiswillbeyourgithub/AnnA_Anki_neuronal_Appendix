@@ -495,7 +495,7 @@ threads of size {batchsize})")
             query = f"\"deck:{self.deckname}\" rated:{self.rated_last_X_days} \
 -is:suspended -is:buried"
             whi(" >  '" + query)
-            r_cards = self._ankiconnect(action="findCards",
+            rated_cards = self._ankiconnect(action="findCards",
                                         query=query)
             whi(f"Found {len(rated_cards)} cards...\n")
         else:
@@ -504,11 +504,12 @@ threads of size {batchsize})")
 
 
         if rated_cards != []:
-            temp = [x for x in r_cards if x not in due_cards]
+            temp = [x for x in rated_cards if x not in due_cards]
             diff = len(rated_cards) - len(temp)
             if diff != 0:
                 red(f"Removed overlap between rated cards and due cards: \
 {diff} cards removed. Keeping {len(temp)} cards.\n")
+                rated_cards = temp
         self.due_cards = due_cards
         self.rated_cards = rated_cards
 
