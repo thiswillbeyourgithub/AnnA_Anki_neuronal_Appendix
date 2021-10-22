@@ -247,7 +247,7 @@ values. {e}")
         # actual execution
         self.deckname = self._check_deck(deckname, import_thread)
         if task == "index":
-            yel(f"Task : cache vectors of deck: {self.deckname}")
+            yel(f"Task : cache vectors of deck: {self.deckname}\n")
             self.vectorizer = "sBERT"
             self.rated_last_X_days = 0
             self._create_and_fill_df()
@@ -261,15 +261,11 @@ values. {e}")
             # bypasses most of the code to bury learning cards
             # directly in the deck without creating filtered decks
             if task == "bury_excess_learning_cards":
-                yel("Task : bury some learning cards.")
-                whi(f"Burying similar learning cards from deck {self.deckname}..\
-.")
-                red("Forcing 'reference_order' to 'relative_overdueness'.")
+                yel("Task : bury some learning cards")
+                red("Forcing 'reference_order' to 'relative_overdueness'.\n")
                 self.reference_order = "relative_overdueness"
             if task == "bury_excess_review_cards":
-                yel("Task : bury some reviews.")
-                whi(f"Burying similar reviews from deck {self.deckname}..\
-.")
+                yel("Task : bury some reviews\n")
             self._create_and_fill_df()
             self.df = self._reset_index_dtype(self.df)
             self._format_card()
@@ -374,8 +370,8 @@ execute the code using:\n'import pickle ; a = pickle.load(open(\"last_run.pickle
                 r_list = []
                 target_thread_n = 5
                 batchsize = len(card_id)//target_thread_n+3
-                whi(f"Large number of cards to retrieve: creating 10 \
-threads of size {batchsize} (total: {len(card_id)} cards)...")
+                whi(f"(Large number of cards to retrieve: creating 10 \
+threads of size {batchsize})")
 
                 def retrieve_cards(card_list, lock, cnt, r_list):
                     "for multithreaded card retrieval"
@@ -451,65 +447,68 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
         if self.highjack_due_query is not None:
             red("Highjacking due card list:")
             query = self.highjack_due_query
-            red(" >  '" + query + "'\n\n")
+            red(" >  '" + query)
             due_cards = self._ankiconnect(action="findCards", query=query)
-            yel(f"Found {len(due_cards)} cards...")
+            whi(f"Found {len(due_cards)} cards...\n")
 
         elif self.task == "create_filtered":
             yel("Getting due card list...")
             query = f"\"deck:{self.deckname}\" is:due is:review -is:learn \
 -is:suspended -is:buried -is:new -rated:1"
-            whi(" >  '" + query + "'\n\n")
+            whi(" >  '" + query)
             due_cards = self._ankiconnect(action="findCards", query=query)
-            yel(f"Found {len(due_cards)} due cards...")
+            whi(f"Found {len(due_cards)} due cards...\n")
 
         elif self.task == "bury_excess_review_cards":
-            whi("Getting due card list...")
+            yel("Getting due card list...")
             query = f"\"deck:{self.deckname}\" is:due is:review -is:learn \
 -is:suspended -is:buried -is:new -rated:1"
-            whi(" >  '" + query + "'\n\n")
+            whi(" >  '" + query)
             due_cards = self._ankiconnect(action="findCards", query=query)
-            yel(f"Found {len(due_cards)} reviews...")
+            whi(f"Found {len(due_cards)} reviews...\n")
 
         elif self.task == "bury_excess_learning_cards":
-            whi("Getting is:learn card list...")
+            yel("Getting is:learn card list...")
             query = f"\"deck:{self.deckname}\" is:learn -is:suspended is:due \
 -rated:1"
-            whi(" >  '" + query + "'\n\n")
+            whi(" >  '" + query)
             due_cards = self._ankiconnect(action="findCards", query=query)
-            yel(f"Found {len(due_cards)} learning cards...")
+            whi(f"Found {len(due_cards)} learning cards...\n")
 
         elif self.task == "index":
-            whi("Getting all cards from deck...")
+            yel("Getting all cards from deck...")
             query = f"\"deck:{self.deckname}\" -is:suspended"
-            whi(" >  '" + query + "'\n\n")
+            whi(" >  '" + query)
             due_cards = self._ankiconnect(action="findCards", query=query)
-            yel(f"Found {len(due_cards)} cards...")
+            whi(f"Found {len(due_cards)} cards...\n")
 
         rated_cards = []
         if self.highjack_rated_query is not None:
             red("Highjacking rated card list:")
             query = self.highjack_rated_query
-            red(" >  '" + query + "'\n\n")
+            red(" >  '" + query)
             rated_cards = self._ankiconnect(action="findCards", query=query)
-            red(f"Found {len(rated_cards)} cards...")
+            red(f"Found {len(rated_cards)} cards...\n")
         elif self.rated_last_X_days != 0:
             yel(f"Getting cards that where rated in the last \
 {self.rated_last_X_days} days...")
             query = f"\"deck:{self.deckname}\" rated:{self.rated_last_X_days} \
 -is:suspended -is:buried"
-            whi(" >  '" + query + "'\n\n")
+            whi(" >  '" + query)
             r_cards = self._ankiconnect(action="findCards",
                                         query=query)
+            whi(f"Found {len(rated_cards)} cards...\n")
         else:
             yel("Will not look for cards rated in past days.")
             rated_cards = []
+
+
         if rated_cards != []:
             temp = [x for x in r_cards if x not in due_cards]
             diff = len(rated_cards) - len(temp)
             if diff != 0:
-                yel(f"Removed overlap between rated cards and due cards: \
-{diff} cards removed.")
+                red(f"Removed overlap between rated cards and due cards: \
+{diff} cards removed. Keeping {len(temp)} cards.\n")
         self.due_cards = due_cards
         self.rated_cards = rated_cards
 
@@ -917,6 +916,7 @@ TFIDF"))
         maxs = [x for x in zip(maxs[0], maxs[1])]
         yel("* " + df.loc[df.index[maxs[0][0]]].text)
         yel("* " + df.loc[df.index[maxs[0][1]]].text)
+        print("")
 
         min_val = self.df_dist.values[self.df_dist.values != 0].min()
         printed = False
@@ -1046,7 +1046,7 @@ TFIDF"))
         df_dist.loc[:, :] = StandardScaler().fit_transform(df_dist)
 
         assert len([x for x in rated if df.loc[x, "status"] != "rated"]) == 0
-        red(f"\nCards identified as rated in the past relevant days:\
+        red(f"\nCards identified as rated in the past relevant days: \
 {len(rated)}")
 
         if isinstance(desired_deck_size, float):
