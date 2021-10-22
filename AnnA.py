@@ -985,7 +985,7 @@ TFIDF"))
         w2 = self.score_adjustment_factor[1]
         if self.prefer_similar_card is True:
             w2 *= -1
-        use_index_of_score = True
+        use_index_of_score = False
         # alter the value from rated cards as they will not be useful
         df.loc[rated, "due"] = np.median(df.loc[due, "due"].values)
         df.loc[rated, "interval"] = np.median(df.loc[due, "interval"].values)
