@@ -165,6 +165,7 @@ class AnnA:
                  TFIDF_dim=1000,
                  TFIDF_stopw_lang=["english", "french"],
                  TFIDF_stemmer_enable=True,
+                 TFIDF_tokenize=True,
 
                  # misc:
                  debug_card_limit=None,
@@ -210,6 +211,7 @@ class AnnA:
         self.TFIDF_dim = TFIDF_dim
         self.TFIDF_stopw_lang = TFIDF_stopw_lang
         self.TFIDF_stemmer_enable = TFIDF_stemmer_enable
+        self.TFIDF_tokenize = TFIDF_tokenize
         self.task = task
 
         assert stride > 0
@@ -847,6 +849,13 @@ using PCA...")
                 red(f"Error when extracting stop words: {e}")
                 red("Setting stop words list to None.")
                 stops = None
+
+            if self.TFIDF_tokenize:
+                def tknzer(x):
+                    return tokenizer.tokenize(x)
+            else:
+                def tknzer(x):
+                    return x
 
             vectorizer = TfidfVectorizer(strip_accents="unicode",
                                          lowercase=True,
