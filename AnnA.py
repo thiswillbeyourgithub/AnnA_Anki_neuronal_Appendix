@@ -1322,7 +1322,7 @@ as opti_rev_order!")
         df = self.df
         if self.clustering_nb_clust is None or \
                 self.clustering_nb_clust == "auto":
-            self.clustering_nb_clust = len(df.index)//20
+            self.clustering_nb_clust = len(df.index)//50
             red(f"No number of clusters supplied, will try with \
 {self.clustering_nb_clust}.")
         kmeans_kwargs_deploy = {"n_clusters": self.clustering_nb_clust}
