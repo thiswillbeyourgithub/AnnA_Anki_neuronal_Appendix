@@ -126,7 +126,7 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 
 ## TODO
 * check if logfile works fine
-* don't forget to stem stopwords if needed
+* implement ability use order of card creation as reference order
 * at the end of the run: show the user the distance distribution, before and after AnnA
 * make sure to never end up with sibling cards in the same task
 * set better tokenizer settings for tf_idf
