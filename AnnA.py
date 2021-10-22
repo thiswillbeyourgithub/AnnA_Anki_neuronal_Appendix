@@ -1101,31 +1101,28 @@ TFIDF"))
             indQUEUE = (rated+queue)
             while len(queue) < queue_size_goal:
                 if use_index_of_score:
+                    # NOT YET USABLE:
                     queue.append(indTODO[
-                            (w1*df.loc[indTODO, "ref"].values.argsort() -\
+                            (0*w1*df.loc[indTODO, "ref"].values.argsort() +\
                              w2*(
                              np.min(
                                  df_dist.loc[indQUEUE[-self.stride:], indTODO].values,
                                  axis=0).argsort() +\
-                             np.max(
-                                 df_dist.loc[indQUEUE[-self.stride:], indTODO].values,
-                                 axis=0).argsort() +\
-                             np.mean(
+                             0*np.mean(
                                  df_dist.loc[indQUEUE[-self.stride:], indTODO].values,
                                  axis=0).argsort()
                              )).argmin()])
                     indQUEUE.append(indTODO.pop(indTODO.index(queue[-1])))
                 else:
                     queue.append(indTODO[
-                            (df.loc[indTODO, "ref"].values + np.mean([
-                                np.min(
+                            (-df.loc[indTODO, "ref"].values +\
+                                0.7*np.min(
                                     df_dist.loc[indQUEUE[-self.stride:], indTODO].values,
-                                    axis=0),
-                                np.mean(
+                                    axis=0) +\
+                                0.3*np.mean(
                                     df_dist.loc[indQUEUE[-self.stride:], indTODO].values,
                                     axis=0)
-                                ], axis=0)
-                             ).argmin()])
+                             ).argmax()])
                     indQUEUE.append(indTODO.pop(indTODO.index(queue[-1])))
 
                 # I had some trouble with implementing this loop
