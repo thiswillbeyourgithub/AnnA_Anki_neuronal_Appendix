@@ -137,6 +137,8 @@ class AnnA:
                  # main settings
                  deckname=None,
                  reference_order="lowest_interval",
+                 # can be "lowest_interval", "relative overdueness",
+                 # "order_added"
                  desired_deck_size="80%",
                  rated_last_X_days=4,
                  highjack_due_query=None,
@@ -215,7 +217,8 @@ class AnnA:
         self.task = task
 
         assert stride > 0
-        assert reference_order in ["lowest_interval", "relative_overdueness"]
+        assert reference_order in ["lowest_interval", "relative_overdueness",
+                "order_added"]
         assert task in ["create_filtered", "index", "bury_excess_learning_cards", "bury_excess_review_cards"]
         assert vectorizer in ["TFIDF", "sBERT"]
 
@@ -263,8 +266,9 @@ values. {e}")
             # directly in the deck without creating filtered decks
             if task == "bury_excess_learning_cards":
                 yel("Task : bury some learning cards")
-                red("Forcing 'reference_order' to 'relative_overdueness'.\n")
-                self.reference_order = "relative_overdueness"
+                if self.reference_order == "relative_overdueness":
+                    red("Reference order cannot be 'relative_overdueness' for this task.")
+                    raise SystemExit()
             if task == "bury_excess_review_cards":
                 yel("Task : bury some reviews\n")
             self._create_and_fill_df()
@@ -1000,16 +1004,16 @@ TFIDF"))
         df.loc[rated, "due"] = np.median(df.loc[due, "due"].values)
         df.loc[rated, "interval"] = np.median(df.loc[due, "interval"].values)
 
-        # preparing interval column
-        ivl = df['interval'].to_numpy().reshape(-1, 1)
-        df["interval_cs"] = StandardScaler().fit_transform(ivl)
-
-        # lowest interval is still centered and scaled
         if reference_order == "lowest_interval":
+            ivl = df['interval'].to_numpy().reshape(-1, 1)
+            df["interval_cs"] = StandardScaler().fit_transform(ivl)
             df["ref"] = df["interval_cs"]
 
-        # computes relative_overdueness
-        if reference_order == "relative_overdueness":
+        elif reference_order == "order_added":
+            order_added = df.index.to_numpy().reshape(-1, 1)
+            df["ref"] = StandardScaler().fit_transform(order_added)
+
+        elif reference_order == "relative_overdueness":
             print("Computing relative overdueness...")
             # getting due date
             for i in df.index:
