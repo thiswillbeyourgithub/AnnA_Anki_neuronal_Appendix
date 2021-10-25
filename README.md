@@ -125,12 +125,15 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * `show_acronyms` shows the acronym present in your deck that were not extended. Useful if you want to adjust your acronym list.
 
 ## TODO
+* add to FAQ a link to routine.txt
+* failsafe when not enough cards
 * check if logfile works fine
-* implement ability use order of card creation as reference order
 * at the end of the run: show the user the distance distribution, before and after AnnA
-* make sure to never end up with sibling cards in the same task
+* remove siblings just after computing optimal order
 * set better tokenizer settings for tf_idf
+* remove all mention of sBERT, implement search for tf_idf with updated vectors
 * implement index scoring
+* recheck that docstrings are up to date
 
 * turn into anki as an addon
 
