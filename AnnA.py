@@ -246,6 +246,7 @@ values. {e}")
 
         # actual execution
         self.deckname = self._check_deck(deckname, import_thread)
+        yel(f"Selected deck: {self.deckname}\n")
         if task == "index":
             yel(f"Task : cache vectors of deck: {self.deckname}\n")
             self.vectorizer = "sBERT"
@@ -277,6 +278,7 @@ values. {e}")
             self._compute_opti_rev_order()
             self.task_filtered_deck(task=task)
         else:
+            yel("Task : created filtered deck containing review cards")
             self._create_and_fill_df()
             self.df = self._reset_index_dtype(self.df)
             self._format_card()
@@ -435,7 +437,6 @@ threads of size {batchsize})")
             while deckname not in decklist:
                 deckname = prompt("Enter the name of the deck:\n>",
                                   completer=auto_complete)
-        yel(f"Selected deck: {deckname}\n")
         return deckname
 
     def _create_and_fill_df(self):
