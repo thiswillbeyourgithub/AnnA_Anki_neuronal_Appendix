@@ -152,21 +152,22 @@ class AnnA:
                  acronym_list="acronym_list.py",
 
                  # steps:
-                 clustering_enable=True,
+                 clustering_enable=False,
                  clustering_nb_clust="auto",
                  compute_opti_rev_order=True,
-                 check_database=False,
-
                  task="create_filtered",
                  # can be "create_filtered",
-                 # "bury_excess_review_cards", "bury_excess_learning_cards", "index"
+                 # "bury_excess_review_cards",
+                 # "bury_excess_learning_cards",
+                 # "index"
+                 check_database=False,
 
                  # vectorization:
                  vectorizer="TFIDF",  # can be "TFIDF" or "sBERT"
                  sBERT_dim=None,
                  TFIDF_dim=1000,
                  TFIDF_stopw_lang=["english", "french"],
-                 TFIDF_stemmer_enable=True,
+                 TFIDF_stem=True,
                  TFIDF_tokenize=True,
 
                  # misc:
@@ -212,7 +213,7 @@ class AnnA:
         self.vectorizer = vectorizer
         self.TFIDF_dim = TFIDF_dim
         self.TFIDF_stopw_lang = TFIDF_stopw_lang
-        self.TFIDF_stemmer_enable = TFIDF_stemmer_enable
+        self.TFIDF_stem = TFIDF_stem
         self.TFIDF_tokenize = TFIDF_tokenize
         self.task = task
 
@@ -636,7 +637,7 @@ threads of size {batchsize})")
         text = text.replace(" :.", ".")
         text = text.replace(":.", ".")
         if self.vectorizer == "TFIDF":
-            if self.TFIDF_stemmer_enable is True:
+            if self.TFIDF_stem is True:
                 text = " ".join([ps.stem(x) for x in text.split()])
             text += " " + " ".join(re.findall('src="(.*?\..{2,3})" ', orig))
         return text
@@ -847,7 +848,7 @@ using PCA...")
                 stops = []
                 for lang in self.TFIDF_stopw_lang:
                     stops += stopwords.words(lang)
-                if self.TFIDF_stemmer_enable:
+                if self.TFIDF_stem:
                     stops += [ps.stem(x) for x in stops]
                 stops = list(set(stops))
             except Exception as e:
