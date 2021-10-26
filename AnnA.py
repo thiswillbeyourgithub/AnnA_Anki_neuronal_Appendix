@@ -1059,6 +1059,7 @@ TFIDF"))
 
         # centering and scaling df_dist after clipping
         print("Centering and scaling distance matrix...")
+        self.df_dist_unscaled = df_dist.copy()
         df_dist.loc[:, :] = StandardScaler().fit_transform(df_dist)
 
         assert len([x for x in rated if df.loc[x, "status"] != "rated"]) == 0
