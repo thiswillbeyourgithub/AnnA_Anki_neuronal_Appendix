@@ -133,7 +133,6 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * set better tokenizer settings for tf_idf
 * implement index scoring
 * recheck that docstrings are up to date
-* investigate using sentence-transformers glove embeddings, might be better than tfidf
 
 * turn into anki as an addon
 
