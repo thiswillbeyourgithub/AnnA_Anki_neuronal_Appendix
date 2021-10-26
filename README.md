@@ -128,7 +128,6 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * add to FAQ a link to routine.txt
 * failsafe when not enough cards
 * check if logfile works fine
-* at the end of the run: show the user the distance distribution, before and after AnnA
 * remove siblings just after computing optimal order
 * set better tokenizer settings for tf_idf
 * remove all mention of sBERT, implement search for tf_idf with updated vectors

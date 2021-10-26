@@ -1172,6 +1172,20 @@ TFIDF"))
 
                 pbar.update(1)
         assert len(queue) != 0
+
+        from numpy import sqrt, mean, square
+        red("Quadratic mean of the distance among the new queue:")
+        yel(sqrt(mean(square(self.df_dist.loc[queue, queue].values))))
+
+        red("Quadratic mean of the distance among the cards that didn't \
+make it into the queue:")
+        dueNQ = [x for x in self.due_cards if x not in queue]
+        yel(sqrt(mean(square(self.df_dist.loc[dueNQ, dueNQ].values))))
+
+        red("Quadratic mean of the distance if you had not used AnnA:")
+        woAnnA = df.sort_values("ref").iloc[0:len(queue)].index.tolist()
+        yel(sqrt(mean(square(self.df_dist.loc[woAnnA, woAnnA].values))))
+
         yel("Done.\n")
         self.opti_rev_order = queue
         self.df = df
