@@ -1106,10 +1106,12 @@ TFIDF"))
             df_dist = df_dist*w2
 
         whi("\nScore stats:")
+        pd.set_option('display.float_format', lambda x: '%.5f' % x)
         whi(f"Reference: {(df['ref']*w1).describe()}\n")
         val = pd.DataFrame(data=df_dist.values.flatten(),
                            columns=['distance matrix']).describe()
         whi(f"Distance: {val}\n\n")
+        pd.reset_option('display.float_format')
 
         with tqdm(desc="Computing optimal review order",
                   unit=" card",
