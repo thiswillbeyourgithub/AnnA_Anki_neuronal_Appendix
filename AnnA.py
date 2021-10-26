@@ -904,12 +904,12 @@ TFIDF"))
         """
         df = self.df
 
+        print("\nComputing distance matrix on all available cores...")
         df_temp = pd.DataFrame(
             columns=["V"+str(x+1)
                      for x in range(len(df.loc[df.index[0], input_col]))],
             data=[x[0:] for x in df[input_col]])
 
-        print("\nComputing distance matrix on all available cores...")
         df_dist = pairwise_distances(df_temp, n_jobs=-1, metric=method)
 #        print("Interpolating matrix between 0 and 1...")
 #        df_dist = np.interp(df_dist, (df_dist.min(), df_dist.max()), (0, 1))
