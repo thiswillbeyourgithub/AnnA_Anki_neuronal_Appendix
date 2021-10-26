@@ -128,15 +128,14 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * add to FAQ a link to routine.txt
 * failsafe when not enough cards
 * check if logfile works fine
-* remove siblings just after computing optimal order
+* check when printing distribution change if ref has to be max or min for anki
+* remove due siblings by putting -50 dist at each relevant location
 * set better tokenizer settings for tf_idf
-* remove all mention of sBERT, implement search for tf_idf with updated vectors
 * implement index scoring
 * recheck that docstrings are up to date
+* investigate using sentence-transformers glove embeddings, might be better than tfidf
 
 * turn into anki as an addon
-
-* investigate applying max pooling over BERT vectors of words of cards instead of TF_IDF, might be even better!
 
 * look into sentence mining methods from sbert, that might contain useful ideas
 * take a look at topic modelling techniques that might be cleaner to invoke than the current ctf-idf implementation
