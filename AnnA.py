@@ -60,14 +60,17 @@ def coloured_log(color_asked):
 
     if color_asked == "white":
         def printer(string):
+            string = str(string)
             log.info(string)
             tqdm.write(col_rst + string + col_rst)
     elif color_asked == "yellow":
         def printer(string):
+            string = str(string)
             log.warn(string)
             tqdm.write(col_yel + string + col_rst)
     elif color_asked == "red":
         def printer(string):
+            string = str(string)
             log.error(string)
             tqdm.write(col_red + string + col_rst)
     return printer
