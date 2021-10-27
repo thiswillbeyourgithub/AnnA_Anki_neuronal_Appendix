@@ -1157,30 +1157,6 @@ lowest value.")
                              ).argmax()])
                     indQUEUE.append(indTODO.pop(indTODO.index(queue[-1])))
 
-                # I had some trouble with implementing this loop
-                # so I am keeping legacy code as fallback:
-                # canonical and check version give the same results
-                # canonical version:
-#                queue.append(indTODO[
-#                        (df.loc[indTODO, "ref"].values + np.min(
-#                            df_dist.loc[indQUEUE[-self.stride:], indTODO].values,
-#                            axis=0)
-#                         ).argmin()])
-
-                # check version:
-#                queue2 = [x for x in queue[:-1]]
-#                df_temp = pd.DataFrame(columns=rated, index=df.index)
-#                for q in (rated+queue2)[-self.stride:]:
-#                    df_temp[q] = df_dist.values[df.index.get_loc(q)]
-#                df["score"] = df["ref"].values + np.min(df_temp, axis=1)
-#                chosen_one2 = df.drop(index=(rated+queue2))["score"].idxmin()
-#                queue2.append(chosen_one2)
-#                df_temp[chosen_one2] = df_dist.values[df.index.get_loc(chosen_one2)]
-#                if queue[-1] != queue2[-1]:
-#                    tqdm.write(f">   NO")
-#                else:
-#                    tqdm.write("YES")
-
                 pbar.update(1)
         assert len(queue) != 0
 
