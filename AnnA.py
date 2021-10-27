@@ -238,12 +238,19 @@ class AnnA:
                     compiled_dic[compiled] = acronym_dict[ac]
                 self.acronym_dict = compiled_dic
         if self.field_mappings is not None:
-            file = Path(self.field_mappings)
+            f = Path(self.field_mappings)
             try:
-                assert file.exists()
+                assert f.exists()
                 imp = importlib.import_module(
                         self.field_mappings.replace(".py", ""))
                 self.field_dic = imp.field_dic
+                if self.vectorizer == "sBERT":
+                    # sBERT should not be used with repeting fields
+                    temp = {}
+                    for a, b in self.field_dic:
+                        temp[a] = sorted(set(self.field_dic[a]),
+                                         key=self.field_dic[a].index)
+                    self.field_dic = temp
             except Exception as e:
                 red(f"Error with field mapping file, will use default \
 values. {e}")
