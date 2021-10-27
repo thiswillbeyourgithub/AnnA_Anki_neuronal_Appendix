@@ -1327,7 +1327,7 @@ as opti_rev_order!")
                          agglo_kwargs=None,
                          dbscan_kwargs=None,
                          add_as_tags=True,
-                         stem_tags=True,
+                         stem_topics=True,
                          tokenize_topics=False):
         """
         finds cluster of cards and their respective topics
@@ -1405,7 +1405,7 @@ as opti_rev_order!")
             topics_col = "tokenized"
         else:
             topics_col = "text"
-        if stem_tags:
+        elif stem_topics:
             df["stemmed"] = df.apply(
                     lambda row: " ".join([ps.stem(x) for x in row["text"].split()]),
                     axis=1)
