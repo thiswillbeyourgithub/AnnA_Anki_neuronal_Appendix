@@ -170,7 +170,7 @@ class AnnA:
                  sBERT_dim=None,
                  TFIDF_dim=250,
                  TFIDF_stopw_lang=["english", "french"],
-                 TFIDF_stem=True,
+                 TFIDF_stem=False,
                  TFIDF_tokenize=True,
 
                  # misc:
@@ -218,6 +218,7 @@ class AnnA:
         self.TFIDF_tokenize = TFIDF_tokenize
         self.task = task
 
+        assert TFIDF_stem + TFIDF_tokenize in [0, 1]
         assert stride > 0
         assert reference_order in ["lowest_interval", "relative_overdueness",
                 "order_added"]
