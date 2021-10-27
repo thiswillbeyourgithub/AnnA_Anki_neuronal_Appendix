@@ -175,7 +175,6 @@ class AnnA:
 
                  # misc:
                  debug_card_limit=None,
-                 debug_force_score_formula=None,
                  prefer_similar_card=False,
                  ):
         if log_level == 0:
@@ -212,7 +211,6 @@ class AnnA:
         self.reference_order = reference_order
         self.field_mappings = field_mappings
         self.acronym_list = acronym_list
-        self.debug_force_score_formula = debug_force_score_formula
         self.vectorizer = vectorizer
         self.TFIDF_dim = TFIDF_dim
         self.TFIDF_stopw_lang = TFIDF_stopw_lang
@@ -1094,12 +1092,6 @@ TFIDF"))
                     ).index
             queue.extend(random.choices(pool, k=1))
 
-        if self.debug_force_score_formula is not None:
-            if self.debug_force_score_formula == "only_different":
-                df["ref"] = 0
-            if self.debug_force_score_formula == "only_similar":
-                df["ref"] = 0
-                df_dist.loc[:, :] = np.ones_like(df_dist.values)
 
         if use_index_of_score is False:
             df["ref"] = df["ref"]*w1
