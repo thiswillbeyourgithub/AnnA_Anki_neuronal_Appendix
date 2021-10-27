@@ -168,7 +168,7 @@ class AnnA:
                  # vectorization:
                  vectorizer="TFIDF",  # can be "TFIDF" or "sBERT"
                  sBERT_dim=None,
-                 TFIDF_dim=1000,
+                 TFIDF_dim=250,
                  TFIDF_stopw_lang=["english", "french"],
                  TFIDF_stem=True,
                  TFIDF_tokenize=True,
@@ -875,8 +875,8 @@ using PCA...")
                                          lowercase=True,
                                          tokenizer=tknzer,
                                          stop_words=stops,
-                                         ngram_range=(1, 7),
-                                         max_features=10_000,
+                                         ngram_range=(1, 5),
+                                         max_features=1000,
                                          norm="l2")
             t_vec = vectorizer.fit_transform(tqdm(df["text"],
                                              desc="Vectorizing text using \
