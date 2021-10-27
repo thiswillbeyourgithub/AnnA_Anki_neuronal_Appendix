@@ -1078,13 +1078,6 @@ TFIDF"))
                             )
         desired_deck_size = int(desired_deck_size)
 
-        if desired_deck_size > int(len(df.index)-len(rated)):
-            red(f"You wanted to create a deck with \
-{desired_deck_size} in it but the deck only contains \
-{len(df.index)-len(rated)} cards. Taking the lowest value.")
-        queue_size_goal = min(desired_deck_size,
-                              len(df.index)-len(rated))
-
         if len(rated) < 1:  # can't start with an empty queue
             # so picking 1 urgent cards
             pool = df.loc[df["status"] == "due", "ref"].nsmallest(
@@ -1092,6 +1085,34 @@ TFIDF"))
                     ).index
             queue.extend(random.choices(pool, k=1))
 
+        indTODO = df.drop(index=rated+queue).index.tolist()
+        indQUEUE = (rated+queue)
+
+        # remove siblings of indTODO:
+        noteCard = {}
+        for card, note in {df.loc[x].name: df.loc[x, "note"]
+                           for x in indTODO}.items():
+            if note not in noteCard.keys():
+                noteCard[note] = [card]
+            else:
+                if float(df.loc[noteCard[note], "ref"]
+                         ) > float(df.loc[card, "ref"]):
+                    noteCard[note] = card
+
+        previous_len = len(indTODO)
+        [indTODO.remove(x) for x in indTODO if x not in noteCard.values()]
+        cur_len = len(indTODO)
+        if previous_len - cur_len == 0:
+            yel("No siblings found.")
+        else:
+            red(f"Removed {previous_len-cur_len} siblings cards out of \
+{previous_len}.")
+
+        if desired_deck_size > cur_len:
+            red(f"You wanted to create a deck with \
+{desired_deck_size} in it but only {cur_len} cards remain, taking the \
+lowest value.")
+        queue_size_goal = min(desired_deck_size, cur_len)
 
         if use_index_of_score is False:
             df["ref"] = df["ref"]*w1
@@ -1110,8 +1131,6 @@ TFIDF"))
                   initial=len(rated),
                   smoothing=0,
                   total=queue_size_goal+len(rated)) as pbar:
-            indTODO = df.drop(index=rated+queue).index.tolist()
-            indQUEUE = (rated+queue)
             while len(queue) < queue_size_goal:
                 if use_index_of_score:
                     # NOT YET USABLE:
