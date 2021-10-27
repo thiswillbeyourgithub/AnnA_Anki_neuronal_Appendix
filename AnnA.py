@@ -1327,8 +1327,7 @@ as opti_rev_order!")
                          agglo_kwargs=None,
                          dbscan_kwargs=None,
                          add_as_tags=True,
-                         stem_topics=True,
-                         tokenize_topics=False):
+                         stem_topics=True):
         """
         finds cluster of cards and their respective topics
         * this is not mandatory to create the filtered deck but it's rather
@@ -1397,19 +1396,13 @@ as opti_rev_order!")
         cluster_list = sorted(list(set(list(df[cluster_col]))))
         cluster_nb = len(cluster_list)
 
-        if tokenize_topics:
-            df["tokenized"] = df.apply(
-                    lambda row: " ".join(
-                        tokenizer.tokenize(row["text"])),
-                    axis=1)
-            topics_col = "tokenized"
-        else:
-            topics_col = "text"
-        elif stem_topics:
+        if stem_topics:
             df["stemmed"] = df.apply(
                     lambda row: " ".join([ps.stem(x) for x in row["text"].split()]),
                     axis=1)
             topics_col = "stemmed"
+        else:
+            topics_col = "text"
 
         df_by_cluster = df.groupby([cluster_col],
                                    as_index=False).agg({topics_col: ' '.join})
