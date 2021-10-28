@@ -15,6 +15,7 @@ import re
 import importlib
 from prompt_toolkit import prompt
 from prompt_toolkit.completion import WordCompleter
+import Levenshtein as lev
 from pathlib import Path
 import threading
 from sklearn.feature_extraction.text import TfidfTransformer
@@ -654,13 +655,13 @@ threads of size {batchsize})")
     def _format_card(self):
         """
         filter the fields of each card and keep only the relevant fields
-        a "relevant field" is one that is mentionned in the variable field_dic
+        a "relevant field" is one that is mentioned in the variable field_dic
         which can be found at the top of the file. If not relevant field are
         found then only the first field is kept.
         """
-        def _threaded_field_filter(df, index_list, lock, pbar, already_warned):
+        def _threaded_field_filter(df, index_list, lock, pbar):
             """
-            threaded implementaation to speed up execution
+            threaded implementation to speed up execution
             """
             for index in index_list:
                 card_model = df.loc[index, "modelName"]
@@ -668,34 +669,37 @@ threads of size {batchsize})")
 
                 # determines which is the corresponding model described
                 # in field_dic
-                cnt = 0
                 field_dic = self.field_dic
+                target_model = []
                 for user_model in field_dic.keys():
                     if user_model.lower() in card_model.lower():
-                        cnt += 1
-                        target_model = user_model
-                if cnt == 0:
-                    if card_model not in already_warned:
-                        red(f"No matching notetype found for \
-{card_model} in field_mappings.py. Default to using first field.")
-                        with lock:
-                            already_warned.append(card_model)
-                    fields_to_keep = "take_first_field"
-                elif cnt == 1:
-                    fields_to_keep = field_dic[target_model]
-                elif cnt > 1:
-                    red(f"Several corresponding notetypes found for \
-{card_model}. Check the content of field_mappings.py.")
-                    fields_to_keep = field_dic[target_model]
+                        target_model.append(user_model)
+                if len(target_model) == 0:
+                    fields_to_keep = "take_first_fields"
+                elif len(target_model) == 1:
+                    fields_to_keep = field_dic[target_model[0]]
+                elif len(target_model) > 1:
+                    target_model = sorted(target_model,
+                                          key=lambda x: lev.ratio(
+                                              x.lower(), user_model.lower()))
+                    fields_to_keep = field_dic[target_model[0]]
+                    with lock:
+                        to_notify.append(f"Several notetypes match \
+{card_model}. Chose to notetype {target_model[0]}")
 
                 # concatenates the corresponding fields into one string:
-                if fields_to_keep == "take_first_field":
+                if fields_to_keep == "take_first_fields":
+                    fields_to_keep = ["", ""]
                     field_list = list(df.loc[index, "fields"])
                     for f in field_list:
                         order = df.loc[index, "fields"][f.lower()]["order"]
                         if order == 0:
-                            break
-                    fields_to_keep = [f]
+                            fields_to_keep[0] = f
+                        if order == 1:
+                            fields_to_keep[1] = f
+                    with lock:
+                        to_notify.append(f"No matching notetype found for \
+{card_model}. Chose first 2 fields: {", ".join(fields_to_keep)}")
 
                 comb_text = ""
                 for f in fields_to_keep:
@@ -704,8 +708,9 @@ threads of size {batchsize})")
                         if next_field != "":
                             comb_text = comb_text + next_field + ": "
                     except KeyError as e:
-                        red(f"Error when looking for field {f.lower()} in card \
-{df.loc[index, 'modelName']}: {e}")
+                        with lock:
+                            to_notify.append(f"Error when looking for field {e} in card \
+{df.loc[index, 'modelName']} identified as notetype {target_model}")
                 if comb_text[-2:] == ": ":
                     comb_text = comb_text[:-2]
 
@@ -718,7 +723,7 @@ threads of size {batchsize})")
         batchsize = n//5+1
         lock = threading.Lock()
         threads = []
-        already_warned = []
+        to_notify = []
         with tqdm(total=n,
                   desc="Combining relevant fields",
                   smoothing=0,
@@ -729,13 +734,15 @@ threads of size {batchsize})")
                                           args=(df,
                                                 sub_card_list,
                                                 lock,
-                                                pbar,
-                                                already_warned),
+                                                pbar),
                                           daemon=False)
                 thread.start()
                 threads.append(thread)
             [t.join() for t in threads]
 
+        for notification in list(set(to_notify)):
+            red(notification)
+            
         df = self.df.copy()
         tqdm.pandas(desc="Formating text", smoothing=0, unit=" card")
         df["text"] = df["comb_text"].progress_apply(lambda x: self._format_text(x))

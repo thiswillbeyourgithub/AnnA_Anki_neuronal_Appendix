@@ -3,6 +3,7 @@ pdb
 prompt_toolkit == 3.0.14
 pyfiglet == 0.8.post1
 tqdm
+python-Levenshtein==0.12.2
 
 # gui:
 PyQt5 == 5.15.4

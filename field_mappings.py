@@ -14,9 +14,9 @@ field_dic = {
                            "Header", "Header", "Header", "Header", "Header",
                            "Image"],
              "basic": ["Front", "Back", "Hint"],
+             "basic (and reversed card)": ["Front", "Back"],
              "spanish cards": ["Spanish", "English"],
              "morse": ["Front", "mnemonic"],
              "fallacy_bias": ["Name & Picture", "Summary", "Description"],
-             "basic (and reverse cards) (wo": ["Font", "Back"],
              }
 
