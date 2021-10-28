@@ -172,6 +172,7 @@ class AnnA:
                  # misc:
                  debug_card_limit=None,
                  prefer_similar_card=False,
+                 save_instance_as_pickle=False,
                  ):
         if log_level == 0:
             log.setLevel(logging.ERROR)
@@ -213,6 +214,7 @@ class AnnA:
         self.TFIDF_stem = TFIDF_stem
         self.TFIDF_tokenize = TFIDF_tokenize
         self.task = task
+        self.save_instance_as_pickle = save_instance_as_pickle
 
         assert TFIDF_stem + TFIDF_tokenize in [0, 1]
         assert stride > 0
@@ -303,17 +305,18 @@ values. {e}")
                     self.task_filtered_deck()
 
         # pickle itself
-        yel("\nSaving instance as 'last_run.pickle'...")
-        if Path("last_run.pickle").exists():
-            Path("last_run.pickle").unlink()
-        with open("last_run.pickle", "wb") as f:
-            try:
-                pickle.dump(self, f)
-                whi("Done! You can now restore this instance of AnnA without having to \
+        if save_instance_as_pickle:
+            yel("\nSaving instance as 'last_run.pickle'...")
+            if Path("./last_run.pickle").exists():
+                Path("./last_run.pickle").unlink()
+            with open("last_run.pickle", "wb") as f:
+                try:
+                    pickle.dump(self, f)
+                    whi("Done! You can now restore this instance of AnnA without having to \
 execute the code using:\n'import pickle ; a = pickle.load(open(\"last_run.pickle\
 \", \"rb\"))'")
-            except TypeError as e:
-                red(f"Error when saving instance as pickle file: {e}")
+                except TypeError as e:
+                    red(f"Error when saving instance as pickle file: {e}")
 
         if check_database:
             whi("Re-optimizing Anki database")
