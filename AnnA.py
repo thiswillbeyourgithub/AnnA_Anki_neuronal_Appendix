@@ -1108,7 +1108,7 @@ TFIDF"))
         for card, note in {df.loc[x].name: df.loc[x, "note"]
                            for x in indTODO}.items():
             if note not in noteCard.keys():
-                noteCard[note] = [card]
+                noteCard[note] = card
             else:
                 if float(df.loc[noteCard[note], "ref"]
                          ) > float(df.loc[card, "ref"]):
