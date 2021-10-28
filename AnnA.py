@@ -1093,7 +1093,7 @@ TFIDF"))
                             )
         desired_deck_size = int(desired_deck_size)
 
-        if len(rated) < 1:  # can't start with an empty queue
+        if len(rated+queue) < 1:  # can't start with an empty queue
             # so picking 1 urgent cards
             pool = df.loc[df["status"] == "due", "ref"].nsmallest(
                     n=min(50, len(self.due_cards))
@@ -1113,7 +1113,6 @@ TFIDF"))
                 if float(df.loc[noteCard[note], "ref"]
                          ) > float(df.loc[card, "ref"]):
                     noteCard[note] = card
-
         previous_len = len(indTODO)
         [indTODO.remove(x) for x in indTODO if x not in noteCard.values()]
         cur_len = len(indTODO)
