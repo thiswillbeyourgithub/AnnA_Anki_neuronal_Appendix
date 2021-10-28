@@ -699,7 +699,7 @@ threads of size {batchsize})")
                             fields_to_keep[1] = f
                     with lock:
                         to_notify.append(f"No matching notetype found for \
-{card_model}. Chose first 2 fields: {", ".join(fields_to_keep)}")
+{card_model}. Chose first 2 fields: {', '.join(fields_to_keep)}")
 
                 comb_text = ""
                 for f in fields_to_keep:
