@@ -28,18 +28,13 @@ os.environ["TOKENIZERS_PARALLELISM"] = "true"
 # makes the script interuptible, resume it using c+enter
 signal.signal(signal.SIGINT, (lambda signal, frame: pdb.set_trace()))
 
-# adds logger
+# adds logger, restrict it to 5000 lines
+Path("logs.txt").write_text(
+        "\n".join(
+            Path("logs.txt").read_text().split("\n")[-5000:]))
 logging.basicConfig(filename="logs.txt", filemode='a',
         format=f"{time.asctime()}: %(message)s")
 log = logging.getLogger()
-#out_hdlr = logging.StreamHandler(sys.stdout)
-#out_hdlr.setFormatter(logging.Formatter('%(message)s'))
-#out_hdlr.setLevel(logging.INFO)
-#try:
-#    log.handlers.pop()  # remove duplicated loggers
-#except:
-#    pass
-#log.addHandler(out_hdlr)
 log.setLevel(logging.INFO)
 
 
