@@ -219,8 +219,10 @@ class AnnA:
         assert TFIDF_stem + TFIDF_tokenize in [0, 1]
         assert stride > 0
         assert reference_order in ["lowest_interval", "relative_overdueness",
-                "order_added"]
-        assert task in ["create_filtered", "index", "bury_excess_learning_cards", "bury_excess_review_cards"]
+                                   "order_added"]
+        assert task in ["create_filtered", "index",
+                        "bury_excess_learning_cards",
+                        "bury_excess_review_cards"]
         assert vectorizer in ["TFIDF", "sBERT"]
 
         if self.acronym_list is not None:
