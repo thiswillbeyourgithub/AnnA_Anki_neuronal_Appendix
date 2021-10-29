@@ -22,21 +22,21 @@ Tired of having to deal with anki flashcards that are too similar when grinding 
 2. This project relies on [AnkiConnect](https://github.com/FooSoft/anki-connect). I made some contributions to it to add a few features but they have not all been reviewed yet. I am afraid you have to either wait for AnkiConnect to approve of the changes or replace your AnkiConnect folder with [my own](https://github.com/thiswillbeyourgithub/anki-connect). In the mean time some arguments will probably cause issues.
 3. I am still changing the code base almost every day, if you tried AnnA and were disappointed, maybe try it another time later. Major improvements are regularly made.
 4. This project is still very early and I don't recommend you start using it if you're not skilled enough to do damage control. I have lost a lot of my tags several times (recovered them all afterwards) and some issue can still happen. Use at your own risks :)
-5. I implemented two vectorization methods, either [sBERT](http://sbert.net/) or [subword TF_IDF](https://en.wikipedia.org/wiki/Tf%E2%80%93idf). I am thinking that TF_IDF might be better overall now.
+5. I implemented two vectorization methods, either [sBERT](http://sbert.net/) or [subword TF_IDF](https://en.wikipedia.org/wiki/Tf%E2%80%93idf). I recommend the latter, as sBERT is unreliable for this task. Note that semantic searching is only possible using sBERT.
+6. If you want to know how I'm using this, take a look at [authors_routine.md](./authors_routine.md)
 
 ## Other features
-* Search for cards in your collection using semantic queries (i.e. typing something with a close `meaning` to a card will find it even if no words are in common).
+* Keeps the OCR data of pictures in your cards, if you analyzed them beforehand using [AnkiOCR](https://github.com/cfculhane/AnkiOCR/).
 * Group your cards by semantic cluster using various algorithms (k-means, minibatch k-means, DBSCAN, agglomerative clustering). The topic of each cluster can then be added as tag to your cards. Here's an example on my med school cards:
     <img title="Cluster tags" src="screenshots/cluster_tags.png" width="600" height="300"/>
 * Create a plot showing clusters of semantic meanings from your anki collection. As you can see on this picture (click to see it in big):
     <img title="Colored by tags" src="screenshots/by_tags.png" width="250" height="250"/> <img title="Colored by clusters" src="screenshots/by_clusters.png" width="250" height="250"/>
-* Keeps the OCR data of pictures in your cards, if you analyzed them beforehand using [AnkiOCR](https://github.com/cfculhane/AnkiOCR/).
-* Code is PEP compliant, dynamically typed, all the functions have a detailed docstrings. Contributions are welcome, opening issues is encouraged and appreciated.
+* Code is PEP8 compliant, dynamically typed, all the functions have a detailed docstrings. Contributions are welcome, opening issues is encouraged and appreciated.
+* Search for cards in your collection using semantic queries (i.e. typing something with a close `meaning` to a card will find it even if no words are in common). I don't expect this to be really useful, I just don't really need to remove it.
 
 ## FAQ
 * **How does it work? (Layman version)** Two possible ways. Either subword [TF_IDF](https://en.wikipedia.org/wiki/Tf%E2%80%93idf), or [sBERT](http://sbert.net/). TF_IDF is a way to count words in a document (anki cards in this case) and understand which are more important. "subword" here means that I used BERT tokenization (i.e. splitting "hypernatremia" into "hyper na tremia" which can be linked to cards dealing with "Na Cl" for example). sBERT is [AI magic](https://en.wikipedia.org/wiki/BERT_(language_model)) that says that `Alcohol withdrawal can be deadly.` and `Stopping alcohol intake too fast can be fatal.` have a similarity of `0.7453`, even though the phrasing is quite different. AnnA uses this to make sure you won't review cards on the same day that are too similar. This is very useful when you have to many cards to review in a day. Use the file `compare.py` to compare strings of text and test the idea. Another example is `retinoblastoma` which is more **similar** to `retin cancer` than to `retin disease` than to `retin` than to `eye`. I intially tried to combine both approach into a common scoring but it proved unreliable. So I decided to keep it simple and provide both options.
 * **And in more details?** The goal is to review the most useful cards, kinda like [pareto distribution](https://en.wikipedia.org/wiki/Pareto_distribution) (i.e. review less cards, but review the right one and you should be able to keep afloat in med school). The code is mainly composed of a python class called AnnA. When you create an instance, you have to supply the name of the deck you want to filter from. It will then automatically fetch the cards from your collection, then either use TF_IDF or assign [sentence-BERT](https://www.sbert.net/) vectors to each, compute the distance matrix of the cards and create a filtered deck containing the cards in the optimal order. You can then call other methods if you want. Note that rated cards of the last X days of the same deck will be used as reference to avoid having cards that are too similar to yesterday's reviews. If you want to know more, either open an issue or read the docstrings in the code.
-* ~~**When you run it yourself, which arguments do you use?** Personally, for studying I go with `a = AnnA(desired_deck_size="80%", rated_last_X_days=2, to_anki=True)`, and when I have really too much review I'll usually lower the %. For searching cards I'll go with `a = AnnA(deckname="*", compute_opti_rev_order=False)`.~~
 
 * **Will this change anything to my anki collection?** It should not modify anything, if you delete the filtered deck, everything will be back to normal. That being said, the project is young and errors might still be present.
 * **Does it work if I have learning steps over multiple days?** Yes, that's my use case. AnnA, depending on the chosen task, either only deals with review queue and ignores learning cards and new cards, or only buries the part of your learning cards that are too similar (ignoring due cards). You can use both one after the other every morning like I do. If you have learning cards in your filtered deck it's because you lapsed those cards yesterday.
@@ -44,6 +44,7 @@ Tired of having to deal with anki flashcards that are too similar when grinding 
 * **Can I use this if I don't know python?** Yes! Installing the thing might not be easy but it's absolutely doable. And you don't need to know python to *run* AnnA. I tried my best to make it accessible and help is welcome.
 * **What do you call "optimal review order"?** The order that minimizes the chance of reviewing similar cards in a day. You see, Anki has no knowledge of the content of cards and only cares about their interval and ease. Its built-in system of "siblings" is useful but I think we can do better. AnnA was made to create filtered decks sorted by "relative_overdueness" (or other) BUT in a way that keeps *semantic* siblings far from each other.
 * **When should I use this?** It seems good for dealing with the huge backlog you get in medical school, or just everyday to reduce the workload. If you have 2 000 reviews to do, but can only do 500 in a day: AnnA is making sure that you will get the most out of those 500. I don't expect the plotting and clustering features to be really used but I had to code them to make sure AnnA was working fine so I might as well leave it :)
+* **How do you use this?** I described my routine in a separate file called `authors_routine.md`.
 
 * **What are the power requirements to run this?** I wanted to make it as efficient as possible but am still improving the code. Computing the distance matrix can be long if you do this on very large amount of cards but this step is done in parallel on all cores so should not be the bottleneck. Let me know if some steps are unusually slow and I will try to optimize it. With one argument you can use SVD or PCA to do a dimension reduction on your cards, making the rest of the script faster, at the cost of precision. If you want to use AnnA on a very slow device, TF_IDF is probably faster. Computing sBERT vectors is usually long but I cache all the computed values so that should not be a problem.
 * **Why is creating the queue taking longer and longer?** Each card is added to the queue after having been compared to the rated cards of the last few days and the current queue. As the queue grows, more computation have to be done. If this is an issue, consider creating decks that are as big as you think you can review in a day. With recent improvements in the code the speed should really not be an issue.
@@ -62,7 +63,9 @@ Tired of having to deal with anki flashcards that are too similar when grinding 
 * **What are the supported languages using TF_IDF?** TF_IDF is language agnostic provided you use unicode, but the language model used to split the words was trained on the 102 largest wikipedia corpus.
 * **What are the supported languages using sBERT?** The default model is called `distiluse-base-multilingual-cased-v1` and supports "15 languages: Arabic, Chinese, Dutch, English, French, German, Italian, Korean, Polish, Portuguese, Russian, Spanish, Turkish.". There is a v2 that supports more languages with less accurate results. Information about the models can be found [here](https://www.sbert.net/docs/pretrained_models.html).
 
-* **What is the field_mapping.py file?** It's a file with a unique python dictionary used by AnnA to figure out which field of which card to keep. Using it is optional. By default, each notetype will see only it's first field kept. But if you use this file you can keep multiple fields.
+* **What is the field_mapping.py file?** It's a file with a unique python dictionary used by AnnA to figure out which field of which card to keep. Using it is optional. By default, each notetype will see only it's first field kept. But if you use this file you can keep multiple fields. Due to how TF_IDF works, you can add a field multiple times to give it more importance relative to other fields.
+* **What is "XXX - AnnA Optideck"?** The default name for the filtered deck created by AnnA. It contains the reviews in the best order for you.
+* **Why are there only reviews and no learning cards in the filtered decks?** When task is set to `create_filtered`, AnnA will fetch only review cards and not deal with learning cards. This is because I'm afraid of some weird behavior that would arise if I change the due order of learning cards. Whereas I can change it just find using review cards.
 * **Why does the progress bar of "Computing optimal review order" doesn't always start at 0?** It's just cosmetic. At each step of the loop, the next card to review is computed by comparing it against the previously added cards and the cards rated in the last few days. This means that each turn is slower than the last. So the progress bar begins with the number of cards rated in the past to indicate that. It took great care to optimize the loop so it should not really be an issue.
 
 ## Getting started
@@ -70,9 +73,10 @@ Tired of having to deal with anki flashcards that are too similar when grinding 
 * Make sure the addon [anki-connect](https://github.com/FooSoft/anki-connect) is installed (**see notes above**)
 * Clone this repository: `git clone https://github.com/thiswillbeyourgithub/AnnA_Anki_neuronal_Appendix`
 * Use python to install the necessary packages : `pip install -r requirements.py`
-* Edit `field_mapping.py` and `acronym_list_example.py` to your liking
-* Edit the file `autorun_example.py` to suit your needs
-* Open AnnA in a python console, for example: `ipython3 -c 'exec(open("autorun_example.py").read())'`
+* Edit `field_mapping.py` and `example_files/acronym_list.py` to your liking
+* Edit the file `example_files/autorun.py` to suit your needs
+* Move the new example_files to the main folder
+* Open AnnA in a python console, for example: `ipython3 -c 'exec(open("autorun.py").read())'`
 
     *if using sBERT: wait a while, the first time you run it on a deck is long because sBERT has to compute all the embeddings*
 
@@ -86,13 +90,15 @@ AnnA was made with usability in mind. With the right arguments, you can have to 
  * `deckname` the deck containing the cards you want to review. If you don't supply this value or make a mistake, AnnA will ask you to type in the deckname, with autocompletion enabled (use `<TAB>`). Default is `None`.
  * `reference_order` either "relative_overdueness" or "lowest_interval". It is the reference used to sort the card before adjusting them using the similarity scores. Default is `"relative_overdueness"`. Keep in mind that my relative_overdueness is a reimplementation of the default overdueness of anki and is not absolutely exactly the same but should be a very close approximation. If you find edge cases, please open an issue.
  * `desired_deck_size` indicates the size of the filtered deck to create. Can be the number of cards (500), a proportion of due cards ("80%" or 0.80) or the word "all". Default is `"80%"`.
- * `rated_last_X_days` indicates the number of passed days to take into account. If you rated 500 cards yesterday, then you don't want your today cards to be too close to what you viewed yesterday, so AnnA will find the 500 cards you reviewed yesterday, and all the cards you rated before that, up to the number of days in rated_last_X_days value. Default is `4` (meaning rated today + rated yesterday).
+ * `rated_last_X_days` indicates the number of passed days to take into account. If you rated 500 cards yesterday, then you don't want your today cards to be too close to what you viewed yesterday, so AnnA will find the 500 cards you reviewed yesterday, and all the cards you rated before that, up to the number of days in rated_last_X_days value. Default is `4` (meaning rated today + rated yesterday). A value of 0 will disable fetching ref cards..
+* `highjack_due_query` bypasses the query used to fetch due cards in anki. Default is `None`.
+* `highjack_rated_query` bypasses the query used to fetch rated cards in anki. Default is `None`.
  * `stride` if you have X due cards, want to create a filtered deck containing all of them and have reviewed Y cards yesterday, the stride value will make computing the optimal review order only compares a maximum of `STRIDE` cards at any given time. This eases calculation. Default is `2500`.
- * `scoring_weights` a tuple used to adjust the value of the reference order compared to how similar the cards are. Default is `(1, 1)`. For example: (1, 1.5) means that the algorithm will spread the similar cards farther apart.
- * `log_level` can be any number between 0 and 2. Default is `0` to only print errors. 1 means print also useful information and 2 means print everything.
+ * `score_adjustment_factor` a tuple used to adjust the value of the reference order compared to how similar the cards are. Default is `(1, 5)`. For example: (1, 1.3) means that the algorithm will spread the similar cards farther apart.
+ * `log_level` can be any number between 0 and 2. Default is `2` to only print errors. 1 means print also useful information and >=2 means print everything. Messages are color coded so it might be better to leave it at 3 and just focus on colors.
  * `replace_greek` if True, all greek letters will be replaced with a spelled version. For example `\u03C3` becomes `sigma`. Default is `True`.
  * `keep_ocr` if True, the OCR text extracted using [the great AnkiOCR addon](https://github.com/cfculhane/AnkiOCR/) will be included in the card. Default is `True`.
- * `field_mappin` path of file that indicates which field to keep from which note type and in which order. Default value is `field_mappings.py`. If empty, only takes into account the main (=first) field.
+ * `field_mapping` path of file that indicates which field to keep from which note type and in which order. Default value is `field_mappings.py`. If empty, only takes into account the first 2 fields.
  * `acronym_list` a python dictionary containing acronyms to extend. For example `CRC` can be extended to `CRC (colorectal cancer)`. (The parenthesis are automatically added.) Default is `"acronym_list.py"`. Keep in mind that lowercase acronym will also be matched.
 
  * `clustering_enable` whether to enable clustering or not. Default is `True`.
@@ -100,18 +106,17 @@ AnnA was made with usability in mind. With the right arguments, you can have to 
  * `compute_opti_rev_order` if `False`, won't compute optimal review order and will set `to_anki` to False. Default to `True`.
  * `check_database` at the end of execution, ask anki to check the database or not. Default is `False`.
 
- * `task_filtered_deck` automatically create the filtered deck or not. Default is `True`.
- * `task_bury_learning` bury some cards of your learning queue if they are too similar. This will bypass a lot other arguments. Default is `False`.
- * `task_index_deck` index all the cards in a deck into sBERT cache. This should be rather long. Obviously this will bypass most arguments. Default is `False`.
+ * `task` can be "create_filtered", "bury_excess_learning_cards", "bury_excess_review_cards" or "index". Respectively to create a filtered deck with the cards, or bury only the similar learning cards (among other learning cards), or bury only the similar cards in review (among other review cards), or to add all the sBERT vectors in the cache file (to speed up later runs). Default is "`create_filtered`".
 
+ * `vectorizer` can be either "TFIDF" or "sBERT". Default is "TFIDF".
  * `sBERT_dim` number of dimensions to keep after doing a PCA reduction. This can speed up the computation somewhat, but with reduced precision. Default is `None` (i.e. disabled by default), setting it to `300` will retain usually more than 95% of the variance. The original number of dimension is 512, but that might depend on the "sBERT" model if you decide to change it.
- * `TFIDF_enable` use tfidf instead of sBERT. This will bypass the sBERT cache file and won't work with the `search_for_notes` function. Default is `True`.
  * `TFIDF_dim` the number of dimension to keep using [SVD](https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.TruncatedSVD.html). Default is `1000`, you cannot disable dimension reduction for TF_IDF because that would result in a sparse matrix.
  * `TFIDF_stopw_lang` a list of languages used to construct a list of stop words (i.e. words that will be ignored). Default is `["english", "french"]`.
+ * `TFIDF_stem` default to `True`. Wether to enable stemming of words. Currently the PorterStemmer is used, and was made for English but can still be useful for some other languages. Keep in mind that this is the longest step when formatting text.
 
  * `debug_card_limit` limit the number of due cards to take into account. It is used for debugging as it allows to run the script quickly. Default is `None`.
- * `debug_force_score_formula` can be used to force seeing similar or different cards etc, to test the algorithm. Default is `None`. Possible values are `only_different` and `only_similar`
  * `prefer_similar_card` I don't know who would use that. It reverses the optimal review order and allows to create a filtered deck grouping your cards that are semantically closest to each other. You can use it to convince yourself that the optimal review order is indeed working. Default is `False`.
+ * `save_instance_as_pickle` Saving the instance in a pickle file called "last_run.pickle". Default to `False`.
 
 AnnA has a number of other built-in methods you can run after instantiating the class. They are especially useful if "to_anki" is set to `False`. Note that methods beginning with a "_" are not supposed to be called by the user and are reserved for backend use. Here's a list of useful methods:
 
@@ -140,5 +145,3 @@ AnnA has a number of other built-in methods you can run after instantiating the 
     * a possibility would be to do a dimension reduction to 5 dimensions. Use the 2 first to get the spatial location were the cluster would be assigned. Then the cards would be spread across the room but the 3 remaining vectors could be used to derive something about the room like wall whiteness, floor whiteness and the tempo of a music playing in the background.
     * we could ensure that the clusters would always stay in the same room even after adding many cards or even across users by querying a large language model for the vectors associated to the main descriptors of the cluster.
 * **Source Walking** : it would be interesting to do the anki reviews in VR where the floor would be your source (pdf, epub, ppt, whatever). The cards would be spread over the document, approximately located above the actual source sentence. Hence leveraging the power of mental palace while doing your reviews. Accessing the big picture AND the small picture.
-
-

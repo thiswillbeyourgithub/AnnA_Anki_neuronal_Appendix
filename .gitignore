@@ -6,3 +6,4 @@ AMIMA_jupyter.py
 *.pickle
 acronym_list.py
 autorun.py
+logs.txt

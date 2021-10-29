@@ -15,6 +15,7 @@ import re
 import importlib
 from prompt_toolkit import prompt
 from prompt_toolkit.completion import WordCompleter
+import Levenshtein as lev
 from pathlib import Path
 import threading
 from sklearn.feature_extraction.text import TfidfTransformer
@@ -27,46 +28,87 @@ os.environ["TOKENIZERS_PARALLELISM"] = "true"
 # makes the script interuptible, resume it using c+enter
 signal.signal(signal.SIGINT, (lambda signal, frame: pdb.set_trace()))
 
-# adds logger
+# adds logger, restrict it to 5000 lines
+Path("logs.txt").write_text(
+        "\n".join(
+            Path("logs.txt").read_text().split("\n")[-5000:]))
+logging.basicConfig(filename="logs.txt", filemode='a',
+        format=f"{time.asctime()}: %(message)s")
 log = logging.getLogger()
-out_hdlr = logging.StreamHandler(sys.stdout)
-out_hdlr.setFormatter(logging.Formatter('%(message)s'))
-out_hdlr.setLevel(logging.INFO)
-log.addHandler(out_hdlr)
-log.setLevel(logging.ERROR)
-inf = log.info
-war = log.warn
-err = log.error
+log.setLevel(logging.INFO)
 
-def asynchronous_importer(TFIDF_enable, task_index_deck):
+
+def set_global_logging_level(level=logging.ERROR, prefices=[""]):
+    """
+    https://github.com/huggingface/transformers/issues/3050#issuecomment-682167272
+    To control logging level for various modules used in the application:
+    """
+    prefix_re = re.compile(fr'^(?:{ "|".join(prefices) })')
+    for name in logging.root.manager.loggerDict:
+        if re.match(prefix_re, name):
+            logging.getLogger(name).setLevel(level)
+
+
+def coloured_log(color_asked):
+    col_red = "\033[91m"
+    col_yel = "\033[93m"
+    col_rst = "\033[0m"
+
+    if color_asked == "white":
+        def printer(string):
+            string = str(string)
+            log.info(string)
+            tqdm.write(col_rst + string + col_rst)
+    elif color_asked == "yellow":
+        def printer(string):
+            string = str(string)
+            log.warn(string)
+            tqdm.write(col_yel + string + col_rst)
+    elif color_asked == "red":
+        def printer(string):
+            string = str(string)
+            log.error(string)
+            tqdm.write(col_red + string + col_rst)
+    return printer
+
+
+whi = coloured_log("white")
+yel = coloured_log("yellow")
+red = coloured_log("red")
+
+
+def asynchronous_importer(vectorizer, task):
     """
     used to asynchronously import large modules, this way between
     importing AnnA and creating the instance of the class, the language model
     have some more time to load
     """
-    global np, KMeans, DBSCAN, tokenizer, \
+    global np, KMeans, DBSCAN, tokenizer, ps, \
         AgglomerativeClustering, transformers, normalize, TfidfVectorizer,\
         CountVectorizer, TruncatedSVD, StandardScaler, \
         pairwise_distances, PCA, px, umap, np, tokenizer_bert, \
         MiniBatchKMeans, interpolate
     if "numpy" not in sys.modules:
-        inf("Began importing modules...\n")
+        whi("Began importing modules...\n")
         print_when_ends = True
     else:
         print_when_ends = False
     import numpy as np
     from sklearn.feature_extraction.text import TfidfVectorizer
     from sklearn.feature_extraction.text import CountVectorizer
-    if TFIDF_enable is False or task_index_deck is True:
+    if vectorizer != "TFIDF" or task == "index":
         global sBERT
         from sentence_transformers import SentenceTransformer
         sBERT = SentenceTransformer('distiluse-base-multilingual-cased-v1')
     else:
         global stopwords
         from nltk.corpus import stopwords
+        from nltk.stem import PorterStemmer
+        ps = PorterStemmer()
 
     from transformers import BertTokenizerFast
-    tokenizer = BertTokenizerFast.from_pretrained("bert-base-multilingual-uncased")
+    tokenizer = BertTokenizerFast.from_pretrained(
+            "bert-base-multilingual-uncased")
     from sklearn.metrics import pairwise_distances
     from sklearn.decomposition import PCA
     from sklearn.cluster import KMeans, DBSCAN, AgglomerativeClustering
@@ -78,7 +120,10 @@ def asynchronous_importer(TFIDF_enable, task_index_deck):
     from sklearn.preprocessing import StandardScaler
     from scipy import interpolate
     if print_when_ends:
-        inf("Finished importing modules.\n\n")
+        red("Finished importing modules.\n\n")
+    set_global_logging_level(logging.ERROR,
+                             ["transformers", "nlp", "torch",
+                              "tensorflow", "sklearn", "nltk"])
 
 
 class AnnA:
@@ -91,37 +136,43 @@ class AnnA:
                  # main settings
                  deckname=None,
                  reference_order="lowest_interval",
+                 # can be "lowest_interval", "relative overdueness",
+                 # "order_added"
                  desired_deck_size="80%",
                  rated_last_X_days=4,
+                 highjack_due_query=None,
+                 highjack_rated_query=None,
                  stride=2500,
-                 scoring_weights=(1, 1),
-                 log_level=0,
+                 score_adjustment_factor=(1, 5),
+                 log_level=2,
                  replace_greek=True,
                  keep_ocr=True,
                  field_mappings="field_mappings.py",
                  acronym_list="acronym_list.py",
 
                  # steps:
-                 clustering_enable=True,
+                 clustering_enable=False,
                  clustering_nb_clust="auto",
                  compute_opti_rev_order=True,
+                 task="create_filtered",
+                 # can be "create_filtered",
+                 # "bury_excess_review_cards",
+                 # "bury_excess_learning_cards",
+                 # "index"
                  check_database=False,
 
-                 # tasks:
-                 task_filtered_deck=True,
-                 task_bury_learning=False,
-                 task_index_deck=False,
-
                  # vectorization:
+                 vectorizer="TFIDF",  # can be "TFIDF" or "sBERT"
                  sBERT_dim=None,
-                 TFIDF_enable=True,
-                 TFIDF_dim=1000,
+                 TFIDF_dim=250,
                  TFIDF_stopw_lang=["english", "french"],
+                 TFIDF_stem=False,
+                 TFIDF_tokenize=True,
 
                  # misc:
                  debug_card_limit=None,
-                 debug_force_score_formula=None,
                  prefer_similar_card=False,
+                 save_instance_as_pickle=False,
                  ):
         if log_level == 0:
             log.setLevel(logging.ERROR)
@@ -132,15 +183,13 @@ class AnnA:
         else:
             log.setLevel(logging.INFO)
 
-
-        if show_banner is True:
-            print(pyfiglet.figlet_format("AnnA"))
-            print("(Anki neuronal Appendix)\n\n")
-
+        if show_banner:
+            red(pyfiglet.figlet_format("AnnA"))
+            red("(Anki neuronal Appendix)\n\n")
 
         # start importing large modules
         import_thread = threading.Thread(target=asynchronous_importer,
-                args=(TFIDF_enable, task_index_deck))
+                                         args=(vectorizer, task))
         import_thread.start()
 
         # loading args
@@ -151,19 +200,30 @@ class AnnA:
         self.debug_card_limit = debug_card_limit
         self.clustering_nb_clust = clustering_nb_clust
         self.sBERT_dim = sBERT_dim
+        self.highjack_due_query = highjack_due_query
+        self.highjack_rated_query = highjack_rated_query
         self.stride = stride
         self.prefer_similar_card = prefer_similar_card
-        self.scoring_weights = scoring_weights
+        self.score_adjustment_factor = score_adjustment_factor
         self.reference_order = reference_order
         self.field_mappings = field_mappings
         self.acronym_list = acronym_list
-        self.debug_force_score_formula = debug_force_score_formula
-        self.TFIDF_enable  = TFIDF_enable
+        self.vectorizer = vectorizer
         self.TFIDF_dim = TFIDF_dim
         self.TFIDF_stopw_lang = TFIDF_stopw_lang
+        self.TFIDF_stem = TFIDF_stem
+        self.TFIDF_tokenize = TFIDF_tokenize
+        self.task = task
+        self.save_instance_as_pickle = save_instance_as_pickle
 
+        assert TFIDF_stem + TFIDF_tokenize in [0, 1]
         assert stride > 0
-        assert reference_order in ["lowest_interval", "relative_overdueness"]
+        assert reference_order in ["lowest_interval", "relative_overdueness",
+                                   "order_added"]
+        assert task in ["create_filtered", "index",
+                        "bury_excess_learning_cards",
+                        "bury_excess_review_cards"]
+        assert vectorizer in ["TFIDF", "sBERT"]
 
         if self.acronym_list is not None:
             file = Path(acronym_list)
@@ -172,83 +232,105 @@ class AnnA:
             else:
                 imp = importlib.import_module(
                         acronym_list.replace(".py", ""))
-                self.acronym_dict = imp.acronym_dict
+                acronym_dict = imp.acronym_dict
+                compiled_dic = {}
+                for ac in acronym_dict.keys():
+                    compiled = re.compile(r"\b"+ac+r"\b", flags=re.IGNORECASE)
+                    compiled_dic[compiled] = acronym_dict[ac]
+                self.acronym_dict = compiled_dic
         if self.field_mappings is not None:
-            file = Path(self.field_mappings)
+            f = Path(self.field_mappings)
             try:
-                assert file.exists()
+                assert f.exists()
                 imp = importlib.import_module(
                         self.field_mappings.replace(".py", ""))
                 self.field_dic = imp.field_dic
+                if self.vectorizer == "sBERT":
+                    # sBERT should not be used with repeting fields
+                    temp = {}
+                    for a, b in self.field_dic:
+                        temp[a] = sorted(set(self.field_dic[a]),
+                                         key=self.field_dic[a].index)
+                    self.field_dic = temp
             except Exception as e:
-                err(f"Error with field mapping file, will use default \
+                red(f"Error with field mapping file, will use default \
 values. {e}")
                 self.field_dic = {"dummyvalue": "dummyvalue"}
 
         # actual execution
         self.deckname = self._check_deck(deckname, import_thread)
-        if task_index_deck is True:
-            print(f"Task : cache vectors of deck: {self.deckname}")
-            self.TFIDF_enable = False
-            self.rated_last_X_days = None
-            self._create_and_fill_df(task_index_deck=task_index_deck)
+        yel(f"Selected deck: {self.deckname}\n")
+        if task == "index":
+            yel(f"Task : cache vectors of deck: {self.deckname}\n")
+            self.vectorizer = "sBERT"
+            self.rated_last_X_days = 0
+            self._create_and_fill_df()
+            if self.not_enough_cards is True:
+                return
             self.df = self._reset_index_dtype(self.df)
             self._format_card()
             self.show_acronyms()
             self._compute_sBERT_vec(import_thread=import_thread)
-            if clustering_enable is True:
+            if clustering_enable:
                 self.compute_clusters(minibatchk_kwargs={"verbose": 0})
-        elif task_bury_learning is True:
+        elif task in ["bury_excess_learning_cards", "bury_excess_review_cards"]:
             # bypasses most of the code to bury learning cards
             # directly in the deck without creating filtered decks
-            print("Task : bury some learning cards.")
-            inf(f"Burying similar learning cards from deck {self.deckname}..\
-.")
-            inf("Forcing 'reference_order' to 'lowest_interval'.")
-            self.reference_order = "lowest_interval"
-            inf("Forcing rated_last_X_days to None.")
-            self.rated_last_X_days = None
-
-            self._create_and_fill_df(just_learning=True)
-            self.df = self._reset_index_dtype(self.df)
-            self._format_card()
-            self.show_acronyms()
-            self._compute_sBERT_vec(import_thread=import_thread)
-            self._compute_distance_matrix()
-            self._compute_opti_rev_order()
-            self.task_filtered_deck(just_bury=True)
-        else:
+            if task == "bury_excess_learning_cards":
+                yel("Task : bury some learning cards")
+                if self.reference_order == "relative_overdueness":
+                    red("Reference order cannot be 'relative_overdueness' for this task.")
+                    raise SystemExit()
+            if task == "bury_excess_review_cards":
+                yel("Task : bury some reviews\n")
             self._create_and_fill_df()
+            if self.not_enough_cards is True:
+                return
             self.df = self._reset_index_dtype(self.df)
             self._format_card()
             self.show_acronyms()
             self._compute_sBERT_vec(import_thread=import_thread)
-            if clustering_enable is True:
+            if clustering_enable:
                 self.compute_clusters(minibatchk_kwargs={"verbose": 0})
             self._compute_distance_matrix()
-            if compute_opti_rev_order is True:
+            self._compute_opti_rev_order()
+            self.task_filtered_deck(task=task)
+        else:
+            yel("Task : created filtered deck containing review cards")
+            self._create_and_fill_df()
+            if self.not_enough_cards is True:
+                return
+            self.df = self._reset_index_dtype(self.df)
+            self._format_card()
+            self.show_acronyms()
+            self._compute_sBERT_vec(import_thread=import_thread)
+            if clustering_enable:
+                self.compute_clusters(minibatchk_kwargs={"verbose": 0})
+            self._compute_distance_matrix()
+            if compute_opti_rev_order:
                 self._compute_opti_rev_order()
-                if task_filtered_deck is True:
+                if task == "create_filtered":
                     self.task_filtered_deck()
 
         # pickle itself
-        print("\nSaving instance as 'last_run.pickle'...")
-        if Path("last_run.pickle").exists():
-            Path("last_run.pickle").unlink()
-        with open("last_run.pickle", "wb") as f:
-            try:
-                pickle.dump(self, f)
-                inf("Done! You can now restore this instance of AnnA without having to \
+        if save_instance_as_pickle:
+            yel("\nSaving instance as 'last_run.pickle'...")
+            if Path("./last_run.pickle").exists():
+                Path("./last_run.pickle").unlink()
+            with open("last_run.pickle", "wb") as f:
+                try:
+                    pickle.dump(self, f)
+                    whi("Done! You can now restore this instance of AnnA without having to \
 execute the code using:\n'import pickle ; a = pickle.load(open(\"last_run.pickle\
 \", \"rb\"))'")
-            except TypeError as e:
-                err(f"Error when saving instance as pickle file: {e}")
+                except TypeError as e:
+                    red(f"Error when saving instance as pickle file: {e}")
 
-        if check_database is True:
-            inf("Re-optimizing Anki database")
+        if check_database:
+            whi("Re-optimizing Anki database")
             self._ankiconnect(action="guiCheckDatabase")
 
-        print(f"Done with {self.deckname}")
+        yel(f"Done with {self.deckname}")
 
     def _reset_index_dtype(self, df):
         """
@@ -311,8 +393,8 @@ execute the code using:\n'import pickle ; a = pickle.load(open(\"last_run.pickle
                 r_list = []
                 target_thread_n = 5
                 batchsize = len(card_id)//target_thread_n+3
-                inf(f"Large number of cards to retrieve: creating 10 \
-threads of size {batchsize} (total: {len(card_id)} cards)...")
+                whi(f"(Large number of cards to retrieve: creating 10 \
+threads of size {batchsize})")
 
                 def retrieve_cards(card_list, lock, cnt, r_list):
                     "for multithreaded card retrieval"
@@ -363,7 +445,7 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
         decklist = self._ankiconnect(action="deckNames") + ["*"]
         if deckname is not None:
             if deckname not in decklist:
-                err("Couldn't find this deck.")
+                red("Couldn't find this deck.")
                 deckname = None
         if deckname is None:
             auto_complete = WordCompleter(decklist,
@@ -376,51 +458,80 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
             while deckname not in decklist:
                 deckname = prompt("Enter the name of the deck:\n>",
                                   completer=auto_complete)
-        print(f"Selected deck: {deckname}")
         return deckname
 
-    def _create_and_fill_df(self, just_learning=False, task_index_deck=False):
+    def _create_and_fill_df(self):
         """
         create a pandas DataFrame, fill it with the information gathered from
         anki connect like card content, intervals, etc
         """
 
-        if just_learning is False and task_index_deck is False:
-            print("Getting due card list...")
-            query = f"deck:{self.deckname} is:due is:review -is:learn \
+        if self.highjack_due_query is not None:
+            red("Highjacking due card list:")
+            query = self.highjack_due_query
+            red(" >  '" + query)
+            due_cards = self._ankiconnect(action="findCards", query=query)
+            whi(f"Found {len(due_cards)} cards...\n")
+
+        elif self.task == "create_filtered":
+            yel("Getting due card list...")
+            query = f"\"deck:{self.deckname}\" is:due is:review -is:learn \
 -is:suspended -is:buried -is:new -rated:1"
-            inf(" >  '" + query + "'\n\n")
+            whi(" >  '" + query)
             due_cards = self._ankiconnect(action="findCards", query=query)
-        elif just_learning is True:
-            print("Getting is:learn card list...")
-            query = f"deck:{self.deckname} is:learn -is:suspended is:due -rated:1"
-            inf(" >  '" + query + "'\n\n")
-            due_cards = self._ankiconnect(action="findCards", query=query)
-            print(f"Found {len(due_cards)} learning cards...")
-        elif task_index_deck is True:
-            print("Getting all cards from deck...")
-            query = f"deck:{self.deckname}"
-            inf(" >  '" + query + "'\n\n")
-            due_cards = self._ankiconnect(action="findCards", query=query)
-            print(f"Found {len(due_cards)} cards...")
+            whi(f"Found {len(due_cards)} due cards...\n")
 
-        n_rated_days = self.rated_last_X_days
-        if n_rated_days is not None:
-            if int(n_rated_days) != 0:
-                print(f"Getting cards that where rated in the last \
-{n_rated_days} days  ...")
-                query = f"deck:{self.deckname} rated:{n_rated_days} \
--is:suspended"
-                inf(" >  '" + query + "'\n\n")
-                r_cards = self._ankiconnect(action="findCards", query=query)
+        elif self.task == "bury_excess_review_cards":
+            yel("Getting due card list...")
+            query = f"\"deck:{self.deckname}\" is:due is:review -is:learn \
+-is:suspended -is:buried -is:new -rated:1"
+            whi(" >  '" + query)
+            due_cards = self._ankiconnect(action="findCards", query=query)
+            whi(f"Found {len(due_cards)} reviews...\n")
 
-                # removes overlap if found
-                rated_cards = [x for x in r_cards if x not in due_cards]
-                print(f"Rated cards contained {len(rated_cards)} relevant cards \
-(out of {len(r_cards)}).")
+        elif self.task == "bury_excess_learning_cards":
+            yel("Getting is:learn card list...")
+            query = f"\"deck:{self.deckname}\" is:learn -is:suspended is:due \
+-rated:1"
+            whi(" >  '" + query)
+            due_cards = self._ankiconnect(action="findCards", query=query)
+            whi(f"Found {len(due_cards)} learning cards...\n")
+
+        elif self.task == "index":
+            yel("Getting all cards from deck...")
+            query = f"\"deck:{self.deckname}\" -is:suspended"
+            whi(" >  '" + query)
+            due_cards = self._ankiconnect(action="findCards", query=query)
+            whi(f"Found {len(due_cards)} cards...\n")
+
+        rated_cards = []
+        if self.highjack_rated_query is not None:
+            red("Highjacking rated card list:")
+            query = self.highjack_rated_query
+            red(" >  '" + query)
+            rated_cards = self._ankiconnect(action="findCards", query=query)
+            red(f"Found {len(rated_cards)} cards...\n")
+        elif self.rated_last_X_days != 0:
+            yel(f"Getting cards that where rated in the last \
+{self.rated_last_X_days} days...")
+            query = f"\"deck:{self.deckname}\" rated:{self.rated_last_X_days} \
+-is:suspended -is:buried"
+            whi(" >  '" + query)
+            rated_cards = self._ankiconnect(action="findCards",
+                                        query=query)
+            whi(f"Found {len(rated_cards)} cards...\n")
         else:
-            print("Will not look for cards rated in past days.")
+            yel("Will not look for cards rated in past days.")
             rated_cards = []
+
+
+        if rated_cards != []:
+            temp = [x for x in rated_cards if x not in due_cards]
+            diff = len(rated_cards) - len(temp)
+            if diff != 0:
+                red(f"Removed overlap between rated cards and due cards: \
+{diff} cards removed. Keeping {len(temp)} cards.\n")
+                rated_cards = temp
         self.due_cards = due_cards
         self.rated_cards = rated_cards
 
@@ -428,18 +539,21 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
         combined_card_list = list(rated_cards + due_cards)[:limit]
 
         if len(combined_card_list) < 20:
-            err("You don't have enough cards!\nExiting.")
-            raise SystemExit()
+            red("You don't have enough cards!\nStopping.")
+            self.not_enough_cards = True
+            return
+        else:
+            self.not_enough_cards = False
 
         list_cardInfo = []
 
         n = len(combined_card_list)
-        print(f"\nAsking Anki for information about {n} cards...")
+        yel(f"\nAsking Anki for information about {n} cards...")
         start = time.time()
         list_cardInfo.extend(
                 self._get_cards_info_from_card_id(
                     card_id=combined_card_list))
-        inf(f"Extracted information in {int(time.time()-start)} seconds.\n\n")
+        whi(f"Got all infos in {int(time.time()-start)} seconds.\n\n")
 
         for i, card in enumerate(list_cardInfo):
             # removing large fields:
@@ -447,6 +561,10 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
             list_cardInfo[i].pop("answer")
             list_cardInfo[i].pop("css")
             list_cardInfo[i].pop("fields_no_html")
+            list_cardInfo[i]["fields"] = dict(
+                    (k.lower(), v)
+                    for k, v in list_cardInfo[i]["fields"].items()
+                    )
             list_cardInfo[i]["tags"] = " ".join(list_cardInfo[i]["tags"])
             if card["cardId"] in due_cards:
                 list_cardInfo[i]["status"] = "due"
@@ -454,10 +572,10 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
                 list_cardInfo[i]["status"] = "rated"
             else:
                 list_cardInfo[i]["status"] = "ERROR"
-                err(f"Error processing card with ID {card['cardId']}")
+                red(f"Error processing card with ID {card['cardId']}")
 
         if len(list_cardInfo) != len(list(set(combined_card_list))):
-            err("Error: duplicate cards in DataFrame!\nExiting.")
+            red("Error: duplicate cards in DataFrame!\nExiting.")
             pdb.set_trace()
 
         self.df = pd.DataFrame().append(list_cardInfo,
@@ -465,6 +583,18 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
                                         sort=True
                                         ).set_index("cardId").sort_index()
         return True
+
+    def _smart_acronym_replacer(self, string, compiled, new_w):
+        """
+        acronym replacement using regex needs this function to replace
+            match groups. For example: replacing 'IL(\\d+)' by "Interleukin 2"
+        """
+        if len(string.groups()):
+            for i in range(len(string.groups())):
+                if string.group(i+1) is not None:
+                    new_w = new_w.replace('\\' + str(i+1), string.group(i+1))
+        out = string.group(0) + f" ({new_w})"
+        return out
 
     def _format_text(self, text):
         """
@@ -481,18 +611,10 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
         text = s("\n+", " ", text)
         text = text.replace("+", " ")  # sbert does not work well with that
         text = text.replace("-", " ")
-        if self.keep_ocr is True:
+        if self.keep_ocr:
             # keep image title (usually OCR)
             text = s("title=(\".*?\")", "> Caption: '\\1' <", text)
             text = text.replace('Caption: \'""\'', "")
-        if self.replace_greek is True:
-            for a, b in greek_alphabet_mapping.items():
-                text = s(a, b, text)
-        if self.acronym_list is True:
-            global acronym_dict
-            for a, b in self.acronym_dict.items():
-                text = s(rf"{a}", f"{a} ({b})", text, flags=re.IGNORECASE)
-                # \b matches beginning and end of a word
         text = s(r'[a-zA-Z0-9-]+\....', " ", text)  # media file name
         text = s("<blockquote(.*?)</blockquote>",
                  lambda x: x.group(0).replace("<br>", " ; "), text)
@@ -504,18 +626,23 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
         text = s('\u001F|&nbsp;', " ", text)
         text = s(r"{{c\d+?::", "", text)
         text = s("{{c|{{|}}|::", " ", text)
-        text = s(r"\b(\d+)e\b", "\\1 euros", text)
-        text = s(r"\b(\d+)j\b", "\\1 jours", text)
-        text = s(r"\b(\d+)h\b", "\\1 heures", text)
-        text = s(r"\b(\d+)m\b", "\\1 minutes", text)
-        text = s(r"\b(\d+)s\b", "\\1 secondes", text)
         text = s(r"\[\d*\]", "", text)  # wiki citation
         text = text.replace("&amp;", "&")
         text = text.replace("/", " / ")
         text = s(r"\w{1,5}>", " ", text)  # missed html tags
         text = s("&gt;|&lt;|<|>", "", text)
-        text = s("[.?!] ([a-zA-Z])", lambda x: x.group(0).upper(), text)
+        text = s(r"[.?!]\s+?([a-zA-Z])", lambda x: x.group(0).upper(), text)
         # adds capital letter after punctuation
+        if self.replace_greek:
+            for a, b in greek_alphabet_mapping.items():
+                text = s(a, b, text)
+        if self.acronym_list is not None:
+            for compiled, new_word in self.acronym_dict.items():
+                text = s(compiled,
+                         lambda string: self._smart_acronym_replacer(string,
+                                                            compiled,
+                                                            new_word),
+                         text)
 
         text = text.replace(" : ", ": ")
         text = " ".join(text.split())  # multiple spaces
@@ -528,102 +655,121 @@ threads of size {batchsize} (total: {len(card_id)} cards)...")
                 text += "."
         text = text.replace(" :.", ".")
         text = text.replace(":.", ".")
+        if self.vectorizer == "TFIDF":
+            if self.TFIDF_stem is True:
+                text = " ".join([ps.stem(x) for x in text.split()])
+            text += " " + " ".join(re.findall('src="(.*?\..{2,3})" ', orig))
         return text
 
     def _format_card(self):
         """
         filter the fields of each card and keep only the relevant fields
-        a "relevant field" is one that is mentionned in the variable field_dic
+        a "relevant field" is one that is mentioned in the variable field_dic
         which can be found at the top of the file. If not relevant field are
         found then only the first field is kept.
         """
         def _threaded_field_filter(df, index_list, lock, pbar):
             """
-            threaded implementaation to speed up execution
+            threaded implementation to speed up execution
             """
             for index in index_list:
                 card_model = df.loc[index, "modelName"]
-                take_first_field = False
                 fields_to_keep = []
 
                 # determines which is the corresponding model described
                 # in field_dic
-                cnt = 0
                 field_dic = self.field_dic
+                target_model = []
                 for user_model in field_dic.keys():
                     if user_model.lower() in card_model.lower():
-                        cnt += 1
-                        target_model = user_model
-                if cnt == 0:
-                    take_first_field = True
-                elif cnt == 1:
-                    fields_to_keep = field_dic[target_model]
-                elif cnt > 1:
-                    tqdm.write(f"Several corresponding model found!\
-Edit the variable 'field_dic' to use {card_model}")
-                    take_first_field = True
+                        target_model.append(user_model)
+                if len(target_model) == 0:
+                    fields_to_keep = "take_first_fields"
+                elif len(target_model) == 1:
+                    fields_to_keep = field_dic[target_model[0]]
+                elif len(target_model) > 1:
+                    target_model = sorted(target_model,
+                                          key=lambda x: lev.ratio(
+                                              x.lower(), user_model.lower()))
+                    fields_to_keep = field_dic[target_model[0]]
+                    with lock:
+                        to_notify.append(f"Several notetypes match \
+{card_model}. Chose to notetype {target_model[0]}")
 
                 # concatenates the corresponding fields into one string:
-                if take_first_field is True:  # if no corresponding model
-                    # was found in field_dic
+                if fields_to_keep == "take_first_fields":
+                    fields_to_keep = ["", ""]
                     field_list = list(df.loc[index, "fields"])
                     for f in field_list:
-                        order = df.loc[index, "fields"][f]["order"]
+                        order = df.loc[index, "fields"][f.lower()]["order"]
                         if order == 0:
-                            break
-                    fields_to_keep = [f]
+                            fields_to_keep[0] = f
+                        if order == 1:
+                            fields_to_keep[1] = f
+                    with lock:
+                        to_notify.append(f"No matching notetype found for \
+{card_model}. Chose first 2 fields: {', '.join(fields_to_keep)}")
 
                 comb_text = ""
                 for f in fields_to_keep:
-                    to_add = df.loc[index, "fields"][f]["value"].strip()
-                    if to_add != "":
-                        comb_text = comb_text + to_add + ": "
-                final_text = comb_text.strip().replace(": :", "")
+                    try:
+                        next_field = df.loc[index, "fields"][f.lower()]["value"].strip()
+                        if next_field != "":
+                            comb_text = comb_text + next_field + ": "
+                    except KeyError as e:
+                        with lock:
+                            to_notify.append(f"Error when looking for field {e} in card \
+{df.loc[index, 'modelName']} identified as notetype {target_model}")
+                if comb_text[-2:] == ": ":
+                    comb_text = comb_text[:-2]
 
                 with lock:
-                    self.df.at[index, "comb_text"] = final_text
-                    pbar.update(1)
+                    self.df.at[index, "comb_text"] = comb_text
+                pbar.update(1)
 
         df = self.df.copy()
         n = len(df.index)
         batchsize = n//5+1
         lock = threading.Lock()
         threads = []
+        to_notify = []
         with tqdm(total=n,
-                  desc="Keeping only relevant fields",
+                  desc="Combining relevant fields",
                   smoothing=0,
                   unit=" card") as pbar:
             for nb in range(0, n, batchsize):
-                    sub_card_list = df.index[nb: nb+batchsize]
-                    thread = threading.Thread(target=_threaded_field_filter,
-                                              args=(df,
-                                                    sub_card_list,
-                                                    lock,
-                                                    pbar),
-                                              daemon=False)
-                    thread.start()
-                    threads.append(thread)
-                    while sum([t.is_alive() for t in threads]) >= 15:
-                        time.sleep(0.5)
+                sub_card_list = df.index[nb: nb+batchsize]
+                thread = threading.Thread(target=_threaded_field_filter,
+                                          args=(df,
+                                                sub_card_list,
+                                                lock,
+                                                pbar),
+                                          daemon=False)
+                thread.start()
+                threads.append(thread)
             [t.join() for t in threads]
 
+        for notification in list(set(to_notify)):
+            red(notification)
+            
         df = self.df.copy()
-        df["text"] = [self._format_text(x)
-                      for x in tqdm(
-                      df["comb_text"],
-                      desc="Formating text", smoothing=0, unit=" card")]
+        tqdm.pandas(desc="Formating text", smoothing=0, unit=" card")
+        df["text"] = df["comb_text"].progress_apply(lambda x: self._format_text(x))
         print("\n\nPrinting 5 random samples of your formated text, to help \
 adjust formating issues:")
         pd.set_option('display.max_colwidth', 80)
         sub_index = random.choices(df.index.tolist(), k=5)
         for i in sub_index:
-            print(f"{i}: {df.loc[i, 'text']}\n")
+            print(f" *  {i}: {df.loc[i, 'text']}")
         pd.reset_option('display.max_colwidth')
         print("\n")
         self.df = df.sort_index()
         return True
 
-    def _compute_sBERT_vec(self, df=None, use_sBERT_cache=True, import_thread=None):
+    def _compute_sBERT_vec(self,
+                           df=None,
+                           use_sBERT_cache=True,
+                           import_thread=None):
         """
         Assigne sBERT vectors to each card
         df["VEC_FULL"], contains the vectors
@@ -635,8 +781,8 @@ adjust formating issues:")
         if df is None:
             df = self.df
 
-        if self.TFIDF_enable is not True:
-            if use_sBERT_cache is True:
+        if self.vectorizer == "sBERT":
+            if use_sBERT_cache:
                 print("\nLooking for cached sBERT pickle file...", end="")
                 sBERT_file = Path("./sBERT_cache.pickle")
                 df["VEC"] = 0*len(df.index)
@@ -646,7 +792,7 @@ adjust formating issues:")
 
                 # reloads sBERT vectors and only recomputes the new one:
                 if not sBERT_file.exists():
-                    inf(" sBERT cache not found, will create it.")
+                    whi(" sBERT cache not found, will create it.")
                     df_cache = pd.DataFrame(
                             columns=["cardId", "mod", "text", "VEC"]
                             ).set_index("cardId")
@@ -667,7 +813,7 @@ adjust formating issues:")
                         else:
                             id_to_recompute.append(i)
 
-                print(f"Loaded {loaded_sBERT} vectors from cache, will compute \
+                yel(f"Loaded {loaded_sBERT} vectors from cache, will compute \
 {len(id_to_recompute)} others...")
                 if import_thread is not None:
                     import_thread.join()
@@ -675,16 +821,18 @@ adjust formating issues:")
                 if len(id_to_recompute) != 0:
                     sentence_list = [df.loc[x, "text"]
                                      for x in df.index if x in id_to_recompute]
-                    sentence_embeddings = sBERT.encode(sentence_list,
-                                                       normalize_embeddings=True,
-                                                       show_progress_bar=True)
+                    sentence_embeddings = sBERT.encode(
+                            sentence_list,
+                            normalize_embeddings=True,
+                            show_progress_bar=True)
 
                     for i, ind in enumerate(tqdm(id_to_recompute)):
                         df.at[ind, "VEC"] = sentence_embeddings[i]
 
                 # stores newly computed sBERT vectors in a file:
                 df_cache = self._reset_index_dtype(df_cache)
-                for i in [x for x in id_to_recompute if x not in df_cache.index]:
+                for i in [x for x in id_to_recompute
+                          if x not in df_cache.index]:
                     df_cache.loc[i, "VEC"] = df.loc[i, "VEC"].astype("object")
                     df_cache.loc[i, "mod"] = df.loc[i, "mod"].astype("object")
                     df_cache.loc[i, "text"] = df.loc[i, "text"]
@@ -711,7 +859,7 @@ using PCA...")
                              for x in range(len(df.loc[df.index[0], "VEC"]))],
                     data=[x[0:] for x in df["VEC"]])
                 out = pca_sBERT.fit_transform(df_temp)
-                inf(f"Explained variance ratio after PCA on sBERT: \
+                whi(f"Explained variance ratio after PCA on sBERT: \
 {round(sum(pca_sBERT.explained_variance_ratio_)*100,1)}%")
                 df["VEC"] = [x for x in out]
 
@@ -719,30 +867,37 @@ using PCA...")
             if import_thread is not None:
                 import_thread.join()
                 time.sleep(0.5)
+
             print("Creating stop words list...")
             try:
                 stops = []
                 for lang in self.TFIDF_stopw_lang:
-                    [stops.extend(
-                        tokenizer.tokenize(x)
-                        ) for x in stopwords.words(lang)]
+                    stops += stopwords.words(lang)
+                if self.TFIDF_stem:
+                    stops += [ps.stem(x) for x in stops]
                 stops = list(set(stops))
             except Exception as e:
-                err(f"Error when extracting stop words: {e}")
-                err("Setting stop words list to None.")
+                red(f"Error when extracting stop words: {e}")
+                red("Setting stop words list to None.")
                 stops = None
 
-            vectorizer = TfidfVectorizer(strip_accents="unicode",
+            if self.TFIDF_tokenize:
+                def tknzer(x):
+                    return tokenizer.tokenize(x)
+            else:
+                def tknzer(x):
+                    return x
+
+            vectorizer = TfidfVectorizer(strip_accents="ascii",
                                          lowercase=True,
-                                         tokenizer=lambda x: tokenizer.tokenize(x),
+                                         tokenizer=tknzer,
                                          stop_words=stops,
-                                         ngram_range=(1, 10),
-                                         max_features=10_000,
+                                         ngram_range=(1, 5),
+                                         max_features=1000,
                                          norm="l2")
             t_vec = vectorizer.fit_transform(tqdm(df["text"],
-                                             desc="Vectorizing text using TFIDF"))
-            df["VEC_FULL"] = ""
-            df["VEC"] = ""
+                                             desc="Vectorizing text using \
+TFIDF"))
             if self.TFIDF_dim is None:
                 df["VEC_FULL"] = [x for x in t_vec]
                 df["VEC"] = [x for x in t_vec]
@@ -750,10 +905,10 @@ using PCA...")
                 self.t_red = None
             else:
                 print(f"Reducing dimensions to {self.TFIDF_dim}")
-                svd = TruncatedSVD(n_components = min(self.TFIDF_dim,
-                                                      t_vec.shape[1]))
+                svd = TruncatedSVD(n_components=min(self.TFIDF_dim,
+                                                    t_vec.shape[1]))
                 t_red = svd.fit_transform(t_vec)
-                inf(f"Explained variance ratio after SVD on Tf_idf: \
+                whi(f"Explained variance ratio after SVD on Tf_idf: \
 {round(sum(svd.explained_variance_ratio_)*100,1)}%")
                 df["VEC_FULL"] = [x for x in t_vec]
                 df["VEC"] = [x for x in t_red]
@@ -771,12 +926,12 @@ using PCA...")
         """
         df = self.df
 
+        print("\nComputing distance matrix on all available cores...")
         df_temp = pd.DataFrame(
             columns=["V"+str(x+1)
                      for x in range(len(df.loc[df.index[0], input_col]))],
             data=[x[0:] for x in df[input_col]])
 
-        print("\nComputing distance matrix on all available cores...")
         df_dist = pairwise_distances(df_temp, n_jobs=-1, metric=method)
 #        print("Interpolating matrix between 0 and 1...")
 #        df_dist = np.interp(df_dist, (df_dist.min(), df_dist.max()), (0, 1))
@@ -784,6 +939,43 @@ using PCA...")
         self.df_dist = pd.DataFrame(columns=df.index,
                                     index=df.index,
                                     data=df_dist)
+
+        # showing to user which cards are similar and different,
+        # for troubleshooting
+        red("Printing the most semantically different cards:")
+        pd.set_option('display.max_colwidth', 80)
+        maxs = np.where(self.df_dist.values == np.max(self.df_dist.values))
+        maxs = [x for x in zip(maxs[0], maxs[1])]
+        yel("* " + df.loc[df.index[maxs[0][0]]].text)
+        yel("* " + df.loc[df.index[maxs[0][1]]].text)
+        print("")
+
+        printed = False
+        lowest_values = [0]
+        for i in range(9999):
+            if printed is True:
+                break
+            lowest_values.append(self.df_dist.values[self.df_dist.values > max(
+                        lowest_values)].min())
+            low = lowest_values[-1]
+            mins = np.where(self.df_dist.values == low)
+            mins = [x for x in zip(mins[0], mins[1]) if x[0] != x[1]]
+            random.shuffle(mins)
+            for x in range(len(mins)):
+                pair = mins[x]
+                text_1 = df.loc[df.index[pair[0]]].text
+                text_2 = df.loc[df.index[pair[1]]].text
+                if text_1 != text_2:
+                    red("Printing among most semantically similar cards:")
+                    yel("* " + text_1)
+                    yel("* " + text_2)
+                    printed = True
+                    break
+        if printed is False:
+            red("Couldn't find lowest values to print!")
+        print("")
+        pd.reset_option('display.max_colwidth')
+        print("\n\n\n")
         return True
 
     def _compute_opti_rev_order(self):
@@ -795,6 +987,8 @@ using PCA...")
         * this score reflects the order in which they should be reviewed
         * the intuition is that anki doesn't know before hand if some cards
             are semantically close and can have you review them the same day
+
+        # TODO: this a changed a lot:
         * The score is computed according to the formula:
            score = ref - min of (similarity to each card of the big_queue)
            (big_queue here referes to the recently rated cards concatenated
@@ -810,6 +1004,9 @@ using PCA...")
             < -500
         * I clipped the distance value below 0.3 as they were messing with the
             scaling afterwards
+        * Index score: combining two scores was hard (they had really different
+            distribution, so I added this flag to tell wether to use the scores
+            or the argsort of the scores as score
 
         CAREFUL: this docstring might not be up to date as I am constantly
             trying to improve the code
@@ -822,27 +1019,25 @@ using PCA...")
         rated = self.rated_cards
         due = self.due_cards
         queue = []
+        w1 = self.score_adjustment_factor[0]
+        w2 = self.score_adjustment_factor[1]
         if self.prefer_similar_card is True:
-            sign = 1
-        else:
-            sign = -1
-        w1 = self.scoring_weights[0]
-        w2 = self.scoring_weights[1]*sign
-
+            w2 *= -1
+        use_index_of_score = False
         # alter the value from rated cards as they will not be useful
         df.loc[rated, "due"] = np.median(df.loc[due, "due"].values)
         df.loc[rated, "interval"] = np.median(df.loc[due, "interval"].values)
 
-        # preparing interval column
-        ivl = df['interval'].to_numpy().reshape(-1, 1)
-        df["interval_cs"] = StandardScaler().fit_transform(ivl)
-
-        # lowest interval is still centered and scaled
         if reference_order == "lowest_interval":
+            ivl = df['interval'].to_numpy().reshape(-1, 1)
+            df["interval_cs"] = StandardScaler().fit_transform(ivl)
             df["ref"] = df["interval_cs"]
 
-        # computes relative_overdueness
-        if reference_order == "relative_overdueness":
+        elif reference_order == "order_added":
+            order_added = df.index.to_numpy().reshape(-1, 1)
+            df["ref"] = StandardScaler().fit_transform(order_added)
+
+        elif reference_order == "relative_overdueness":
             print("Computing relative overdueness...")
             # getting due date
             for i in df.index:
@@ -882,106 +1077,137 @@ using PCA...")
 
             # center and scale
             ro_cs = StandardScaler().fit_transform(ro_intp.T)
-            df["ref"] = ro_cs
+            ro_cs_clipped = np.clip(ro_cs, -2, 2)  # clip beyond 2sigma
+            df["ref"] = ro_cs_clipped
 
         # centering and scaling df_dist after clipping
         print("Centering and scaling distance matrix...")
+        self.df_dist_unscaled = df_dist.copy()
         df_dist.loc[:, :] = StandardScaler().fit_transform(df_dist)
 
-        # adjusting with weights
-        df["ref"] = df["ref"]*w1
-        df_dist = df_dist*w2
-
         assert len([x for x in rated if df.loc[x, "status"] != "rated"]) == 0
-        print(f"\nCards rated in the past relevant days: {len(rated)}")
+        red(f"\nCards identified as rated in the past {self.rated_last_X_days} days: \
+{len(rated)}")
 
         if isinstance(desired_deck_size, float):
             if desired_deck_size < 1.0:
                 desired_deck_size = str(desired_deck_size*100) + "%"
         if isinstance(desired_deck_size, str):
             if desired_deck_size in ["all", "100%"]:
-                print("Taking the whole deck.")
+                red("Taking the whole deck.")
                 desired_deck_size = len(df.index) - len(rated)
             elif desired_deck_size.endswith("%"):
-                print(f"Taking {desired_deck_size} of the deck.")
+                red(f"Taking {desired_deck_size} of the deck.")
                 desired_deck_size = 0.01*int(desired_deck_size[:-1])*(
                             len(df.index)-len(rated)
                             )
         desired_deck_size = int(desired_deck_size)
 
-        if desired_deck_size > int(len(df.index)-len(rated)):
-            err(f"You wanted to create a deck with \
-{desired_deck_size} in it but the deck only contains \
-{len(df.index)-len(rated)} cards. Taking the lowest value.")
-        queue_size_goal = min(desired_deck_size,
-                              len(df.index)-len(rated))
-
-        if len(rated) < 1:  # can't start with an empty queue
+        if len(rated+queue) < 1:  # can't start with an empty queue
             # so picking 1 urgent cards
             pool = df.loc[df["status"] == "due", "ref"].nsmallest(
                     n=min(50, len(self.due_cards))
                     ).index
             queue.extend(random.choices(pool, k=1))
 
-        if self.debug_force_score_formula is not None:
-            if self.debug_force_score_formula == "only_different":
-                df["ref"] = 0
-            if self.debug_force_score_formula == "only_similar":
-                df["ref"] = 0
-                df_dist.loc[:, :] = np.ones_like(df_dist.values)
+        indTODO = df.drop(index=rated+queue).index.tolist()
+        indQUEUE = (rated+queue)
 
-        inf("\nReference score stats:")
-        inf(f"mean: {df['ref'].describe()}\n")
-        inf(f"max: {pd.DataFrame(data=df_dist.values.flatten(), columns=['distance matrix']).describe()}\n\n")
+        # remove siblings of indTODO:
+        noteCard = {}
+        for card, note in {df.loc[x].name: df.loc[x, "note"]
+                           for x in indTODO}.items():
+            if note not in noteCard.keys():
+                noteCard[note] = card
+            else:
+                if float(df.loc[noteCard[note], "ref"]
+                         ) > float(df.loc[card, "ref"]):
+                    noteCard[note] = card
+        previous_len = len(indTODO)
+        [indTODO.remove(x) for x in indTODO if x not in noteCard.values()]
+        cur_len = len(indTODO)
+        if previous_len - cur_len == 0:
+            yel("No siblings found.")
+        else:
+            red(f"Removed {previous_len-cur_len} siblings cards out of \
+{previous_len}.")
+
+        if desired_deck_size > cur_len:
+            red(f"You wanted to create a deck with \
+{desired_deck_size} in it but only {cur_len} cards remain, taking the \
+lowest value.")
+        queue_size_goal = min(desired_deck_size, cur_len)
+
+        if use_index_of_score is False:
+            df["ref"] = df["ref"]*w1
+            df_dist = df_dist*w2
+
+        whi("\nScore stats:")
+        pd.set_option('display.float_format', lambda x: '%.5f' % x)
+        whi(f"Reference: {(df['ref']*w1).describe()}\n")
+        val = pd.DataFrame(data=df_dist.values.flatten(),
+                           columns=['distance matrix']).describe()
+        whi(f"Distance: {val}\n\n")
+        pd.reset_option('display.float_format')
 
         with tqdm(desc="Computing optimal review order",
                   unit=" card",
                   initial=len(rated),
                   smoothing=0,
                   total=queue_size_goal+len(rated)) as pbar:
-            indTODO = df.drop(index=rated+queue).index.tolist()
-            indQUEUE = (rated+queue)
             while len(queue) < queue_size_goal:
-                queue.append(indTODO[
-                        (df.loc[indTODO, "ref"].values + np.mean([
-                            np.max(
-                                df_dist.loc[indQUEUE[-self.stride:], indTODO].values,
-                                axis=0),
-                            np.mean(
-                                df_dist.loc[indQUEUE[-self.stride:], indTODO].values,
-                                axis=0)
-                            ], axis=0)
-                         ).argmin()])
-                indQUEUE.append(indTODO.pop(indTODO.index(queue[-1])))
-
-                # I had some trouble with implementing this loop
-                # so I am keeping legacy code as fallback:
-                # canonical and check version give the same results
-                # canonical version:
-#                queue.append(indTODO[
-#                        (df.loc[indTODO, "ref"].values + np.min(
-#                            df_dist.loc[indQUEUE[-self.stride:], indTODO].values,
-#                            axis=0)
-#                         ).argmin()])
-
-                # check version:
-#                queue2 = [x for x in queue[:-1]]
-#                df_temp = pd.DataFrame(columns=rated, index=df.index)
-#                for q in (rated+queue2)[-self.stride:]:
-#                    df_temp[q] = df_dist.values[df.index.get_loc(q)]
-#                df["score"] = df["ref"].values + np.min(df_temp, axis=1)
-#                chosen_one2 = df.drop(index=(rated+queue2))["score"].idxmin()
-#                queue2.append(chosen_one2)
-#                df_temp[chosen_one2] = df_dist.values[df.index.get_loc(chosen_one2)]
-#                if queue[-1] != queue2[-1]:
-#                    tqdm.write(f">   NO")
-#                else:
-#                    tqdm.write("YES")
+                if use_index_of_score:
+                    # NOT YET USABLE:
+                    queue.append(indTODO[
+                            (w1*df.loc[indTODO, "ref"].values.argsort() +\
+                             w2*(
+                             np.min(
+                                 df_dist.loc[indQUEUE[-self.stride:], indTODO].values,
+                                 axis=0).argsort() +\
+                             np.mean(
+                                 df_dist.loc[indQUEUE[-self.stride:], indTODO].values,
+                                 axis=0).argsort()
+                             )).argmin()])
+                    indQUEUE.append(indTODO.pop(indTODO.index(queue[-1])))
+                else:
+                    queue.append(indTODO[
+                            (-df.loc[indTODO, "ref"].values +\
+                                0.9*np.min(
+                                    df_dist.loc[indQUEUE[-self.stride:], indTODO].values,
+                                    axis=0) +\
+                                0.1*np.mean(
+                                    df_dist.loc[indQUEUE[-self.stride:], indTODO].values,
+                                    axis=0)
+                             ).argmax()])
+                    indQUEUE.append(indTODO.pop(indTODO.index(queue[-1])))
 
                 pbar.update(1)
         assert len(queue) != 0
-        print("Done.\n")
+
+        try:
+            red("Quadratic mean of the distance among the optimized queue:")
+            yel(np.sqrt(np.mean(np.square(
+                self.df_dist_unscaled.loc[queue, queue].values.flatten()))))
+
+            red("Quadratic mean of the distance among the cards that didn't \
+    make it into the queue:")
+            dueNQ = [x for x in self.due_cards if x not in queue]
+            yel(np.sqrt(np.mean(np.square(
+                self.df_dist_unscaled.loc[dueNQ, dueNQ].values.flatten()))))
+
+            red("Quadratic mean of the distance if you had not used AnnA:")
+            woAnnA = [x
+                      for x in df.sort_values(
+                          "ref", reverse=True).iloc[0:len(queue)].index.tolist()
+                      if x in dueNQ]
+            yel(np.sqrt(np.mean(np.square(
+                self.df_dist_unscaled.loc[woAnnA, woAnnA].values.flatten()))))
+        except Exception as e:
+            err(f"\nException: {e}")
+
+        yel("Done.\n")
         self.opti_rev_order = queue
+        self.df = df
         return True
 
     def display_opti_rev_order(self, display_limit=50):
@@ -994,8 +1220,8 @@ using PCA...")
         return True
 
     def task_filtered_deck(self,
-                     deck_template=None,
-                     just_bury=False):
+                           deck_template=None,
+                           task=None):
         """
         create a filtered deck containing the cards to review in optimal order
 
@@ -1010,78 +1236,80 @@ using PCA...")
             does indeed contain the right number of cards and the right cards
         * -100 000 seems to be the starting value for due order in filtered
             decks
-        * if just_bury is True, then no filtered deck will be created and
-            AnnA will just bury the cards that are too similar
+        * if task is set to bury_excess_learning_cards ot bury_excess_review_cards, then no filtered
+            deck will be created and AnnA will just bury the cards that are
+            too similar
         """
-        if just_bury is True:
+        if task in ["bury_excess_learning_cards", "bury_excess_review_cards"]:
             to_keep = self.opti_rev_order
             to_bury = [x for x in self.due_cards if x not in to_keep]
             assert len(to_bury) < len(self.due_cards)
-            print(f"Burying {len(to_bury)} cards out of {len(self.due_cards)}")
+            red(f"Burying {len(to_bury)} cards out of {len(self.due_cards)}.")
+            red("This will not affect the due order.")
             self._ankiconnect(action="bury",
                               cards=to_bury)
             print("Done.")
             return True
-
-        if deck_template is not None:
-            filtered_deck_name = str(deck_template + f" - {self.deckname}")
-            filtered_deck_name = filtered_deck_name.replace("::", "_")
         else:
-            filtered_deck_name = f"{self.deckname} - AnnA Optimum Reviews"
-        self.filtered_deck_name = filtered_deck_name
+            if deck_template is not None:
+                filtered_deck_name = str(deck_template + f" - {self.deckname}")
+                filtered_deck_name = filtered_deck_name.replace("::", "_")
+            else:
+                filtered_deck_name = f"{self.deckname} - AnnA Optideck"
+            self.filtered_deck_name = filtered_deck_name
 
-        while filtered_deck_name in self._ankiconnect(action="deckNames"):
-            print(f"\nFound existing filtered deck: {filtered_deck_name} \
+            while filtered_deck_name in self._ankiconnect(action="deckNames"):
+                red(f"\nFound existing filtered deck: {filtered_deck_name} \
 You have to delete it manually, the cards will be returned to their original \
 deck.")
-            input("Done? >")
+                input("Done? >")
 
-        def _threaded_value_setter(card_list, tqdm_desc, keys, newValues):
-            """
-            create threads to edit card values quickly
-            """
-            def do_action(card_list,
-                          sub_card_list,
-                          keys,
-                          newValues,
-                          lock,
-                          pbar):
-                for c in sub_card_list:
-                    if keys == ["due"]:
-                        newValues = [-100000 + card_list.index(c)]
-                    self._ankiconnect(action="setSpecificValueOfCard",
-                                      card=int(c),
-                                      keys=keys,
-                                      newValues=newValues)
-                    pbar.update(1)
+            def _threaded_value_setter(card_list, tqdm_desc, keys, newValues):
+                """
+                create threads to edit card values quickly
+                """
+                def do_action(card_list,
+                              sub_card_list,
+                              keys,
+                              newValues,
+                              lock,
+                              pbar):
+                    for c in sub_card_list:
+                        if keys == ["due"]:
+                            newValues = [-100000 + card_list.index(c)]
+                        self._ankiconnect(action="setSpecificValueOfCard",
+                                          card=int(c),
+                                          keys=keys,
+                                          newValues=newValues)
+                        pbar.update(1)
+                    return True
+
+                with tqdm(desc=tqdm_desc,
+                          unit=" card",
+                          total=len(card_list),
+                          dynamic_ncols=True,
+                          smoothing=0) as pbar:
+                    lock = threading.Lock()
+                    threads = []
+                    batchsize = len(card_list)//3+1
+                    for nb in range(0, len(card_list), batchsize):
+                        sub_card_list = card_list[nb: nb+batchsize]
+                        thread = threading.Thread(target=do_action,
+                                                  args=(card_list,
+                                                        sub_card_list,
+                                                        keys,
+                                                        newValues,
+                                                        lock,
+                                                        pbar),
+                                                  daemon=False)
+                        thread.start()
+                        threads.append(thread)
+                        while sum([t.is_alive() for t in threads]) >= 5:
+                            time.sleep(0.5)
+                    [t.join() for t in threads]
                 return True
 
-            with tqdm(desc=tqdm_desc,
-                      unit=" card",
-                      total=len(card_list),
-                      dynamic_ncols=True,
-                      smoothing=0) as pbar:
-                lock = threading.Lock()
-                threads = []
-                batchsize = len(card_list)//3+1
-                for nb in range(0, len(card_list), batchsize):
-                    sub_card_list = card_list[nb: nb+batchsize]
-                    thread = threading.Thread(target=do_action,
-                                              args=(card_list,
-                                                    sub_card_list,
-                                                    keys,
-                                                    newValues,
-                                                    lock,
-                                                    pbar),
-                                              daemon=False)
-                    thread.start()
-                    threads.append(thread)
-                    while sum([t.is_alive() for t in threads]) >= 5:
-                        time.sleep(0.5)
-                [t.join() for t in threads]
-            return True
-
-        print(f"Creating deck containing the cards to review: \
+        whi(f"Creating deck containing the cards to review: \
 {filtered_deck_name}")
         query = "cid:" + ','.join([str(x) for x in self.opti_rev_order])
         self._ankiconnect(action="createFilteredDeck",
@@ -1099,10 +1327,10 @@ deck.")
         diff = [x for x in self.opti_rev_order + cur_in_deck
                 if x not in self.opti_rev_order or x not in cur_in_deck]
         if len(diff) != 0:
-            err("Inconsistency! The deck does not contain the same cards \
+            red("Inconsistency! The deck does not contain the same cards \
 as opti_rev_order!")
             pprint(diff)
-            err(f"\nNumber of inconsistent cards: {len(diff)}")
+            red(f"\nNumber of inconsistent cards: {len(diff)}")
         else:
             print(" Done.")
 
@@ -1116,14 +1344,14 @@ as opti_rev_order!")
     def compute_clusters(self,
                          method="minibatch-kmeans",
                          input_col="VEC",
-                         output_col="clusters",
+                         cluster_col="clusters",
                          n_topics=5,
                          minibatchk_kwargs=None,
                          kmeans_kwargs=None,
                          agglo_kwargs=None,
                          dbscan_kwargs=None,
                          add_as_tags=True,
-                         tokenize_tags=True):
+                         stem_topics=True):
         """
         finds cluster of cards and their respective topics
         * this is not mandatory to create the filtered deck but it's rather
@@ -1134,9 +1362,10 @@ as opti_rev_order!")
         * To find the topic of each cluster, ctf-idf is used
         """
         df = self.df
-        if self.clustering_nb_clust is None or self.clustering_nb_clust == "auto":
-            self.clustering_nb_clust = len(df.index)//20
-            print(f"No number of clusters supplied, will try with \
+        if self.clustering_nb_clust is None or \
+                self.clustering_nb_clust == "auto":
+            self.clustering_nb_clust = len(df.index)//50
+            red(f"No number of clusters supplied, will try with \
 {self.clustering_nb_clust}.")
         kmeans_kwargs_deploy = {"n_clusters": self.clustering_nb_clust}
         dbscan_kwargs_deploy = {"eps": 0.75,
@@ -1179,33 +1408,34 @@ as opti_rev_order!")
             columns=["V"+str(x)
                      for x in range(len(df.loc[df.index[0], input_col]))],
             data=[x[0:] for x in df[input_col]])
-        df[output_col] = clust.fit_predict(df_temp)
+        df[cluster_col] = clust.fit_predict(df_temp)
 
-
-        cluster_list = sorted(list(set(list(df[output_col]))))
+        cluster_list = sorted(list(set(list(df[cluster_col]))))
         cluster_nb = len(cluster_list)
         print(f"Getting cluster topics for {cluster_nb} clusters...")
 
         # reordering cluster number, as they are sometimes offset
         for i, clust_nb in enumerate(cluster_list):
-            df.loc[ df[output_col] == clust_nb, "output_col"] = i
+            df.loc[df[cluster_col] == clust_nb, cluster_col] = i
+        cluster_list = sorted(list(set(list(df[cluster_col]))))
+        cluster_nb = len(cluster_list)
 
-        if tokenize_tags is True:
-            df["tokenized"] = df.apply(
-                    lambda row: " ".join(
-                        tokenizer.tokenize(row["text"])),
+        if stem_topics:
+            df["stemmed"] = df.apply(
+                    lambda row: " ".join([ps.stem(x) for x in row["text"].split()]),
                     axis=1)
+            topics_col = "stemmed"
         else:
-            df["tokenized"] = df["text"]
+            topics_col = "text"
 
-        df_by_cluster = df.groupby(["clusters"],
-                                   as_index=False).agg({'tokenized': ' '.join})
-        count = CountVectorizer().fit_transform(df_by_cluster.tokenized)
+        df_by_cluster = df.groupby([cluster_col],
+                                   as_index=False).agg({topics_col: ' '.join})
+        count = CountVectorizer().fit_transform(df_by_cluster[topics_col])
         ctfidf = CTFIDFVectorizer().fit_transform(count,
                                                   n_samples=len(
                                                       df_by_cluster.index))
-        count_vectorizer = CountVectorizer().fit(df_by_cluster.tokenized)
-        count = count_vectorizer.transform(df_by_cluster.tokenized)
+        count_vectorizer = CountVectorizer().fit(df_by_cluster[topics_col])
+        count = count_vectorizer.transform(df_by_cluster[topics_col])
         words = count_vectorizer.get_feature_names()
         ctfidf = CTFIDFVectorizer().fit_transform(count,
                                                   n_samples=len(
@@ -1220,20 +1450,22 @@ as opti_rev_order!")
                                            df_by_cluster.clusters)}
             df["cluster_topic"] = ""
             for i in df.index:
-                clst_tpc = " ".join([x for x in w_by_class[
-                                                      str(df.loc[i, "clusters"])]])
+                clst_tpc = " ".join([x
+                                     for x in w_by_class[str(
+                                         df.loc[i, cluster_col])]])
                 df.loc[i, "cluster_topic"] = clst_tpc
 
             self.w_by_class = w_by_class
             self.df = df.sort_index()
 
-            if add_as_tags is True:
+            if add_as_tags:
                 # creates two threads, the first one removes old tags and the
                 # other one adds the new one
                 threads = []
                 full_note_list = list(set(df["note"].tolist()))
-                all_tags =  df["tags"].tolist()
+                all_tags = df["tags"].tolist()
                 present_tags = []
+                self._ankiconnect(action="addTags", batchmode="open")
                 for t in all_tags:
                     if " " in t:
                         present_tags.extend(t.split(" "))
@@ -1250,12 +1482,13 @@ as opti_rev_order!")
                         for tag in tags:
                             self._ankiconnect(action="removeTags",
                                               notes=full_note_list,
-                                              tags=str(tag))
+                                              tags=str(tag),
+                                              batchmode="ongoing")
                             pbar_r.update(1)
                     pbar_r = tqdm(desc="Removing old cluster tags...",
-                              unit="cluster",
-                              position=1,
-                              total=len(to_remove))
+                                  unit="cluster",
+                                  position=1,
+                                  total=len(to_remove))
                     thread = threading.Thread(target=_threaded_remove_tags,
                                               args=(to_remove, pbar_r),
                                               daemon=False)
@@ -1266,20 +1499,25 @@ as opti_rev_order!")
 
                 def _threaded_add_cluster_tags(list_i, pbar_a):
                     for i in list_i:
-                        cur_time = "_".join(time.asctime().split()[0:4]).replace(
+                        cur_time = "_".join(
+                                time.asctime().split()[0:4]).replace(
                                 ":", "h")[0:-3]
-                        newTag = f"AnnA::cluster_topic::{cur_time}::cluster_#{str(i)}"
-                        newTag += f"::{df[df['clusters']==i]['cluster_topic'].iloc[0]}"
-                        note_list = list(set(df[df["clusters"] == i]["note"].tolist()))
+                        nb = df[df['clusters'] == i]['cluster_topic'].iloc[0]
+                        newTag = "AnnA::cluster_topic::"
+                        newTag += f"{cur_time}::cluster_#{str(i)}"
+                        newTag += f"::{nb}"
+                        note_list = list(set(
+                            df[df["clusters"] == i]["note"].tolist()))
                         self._ankiconnect(action="addTags",
                                           notes=note_list,
-                                          tags=newTag)
+                                          tags=newTag,
+                                          batchmode="ongoing")
                         pbar_a.update(1)
                     return True
                 pbar_a = tqdm(total=len(cluster_list),
-                          desc="Adding new cluster tags",
-                          position=0,
-                          unit="cluster")
+                              desc="Adding new cluster tags",
+                              position=0,
+                              unit="cluster")
                 thread = threading.Thread(
                                     target=_threaded_add_cluster_tags,
                                     daemon=False,
@@ -1291,10 +1529,11 @@ as opti_rev_order!")
                 pbar_a.close()
                 if len(to_remove) != 0:
                     pbar_r.close()
-
-                self._ankiconnect(action="clearUnusedTags")
         except IndexError as e:
-            err(f"Index Error when finding cluster topic! {e}")
+            red(f"Index Error when finding cluster topic! {e}")
+        finally:
+            self._ankiconnect(action="addTags", batchmode="close")
+            self._ankiconnect(action="clearUnusedTags")
         return True
 
     def plot_latent_space(self,
@@ -1310,9 +1549,11 @@ as opti_rev_order!")
                           umap_kwargs=None,
                           plotly_kwargs=None,
                           pca_kwargs=None,
+                          save_as_html=True,
                           ):
         """
-        open a browser tab with a 2D plot showing your cards and their relations
+        open a browser tab with a 2D plot showing your cards and their
+        relations
         """
         df = self.df.copy()
         pca_kwargs_deploy = {"n_components": 2, "random_state": 42}
@@ -1375,8 +1616,12 @@ plotting...")
         if "cluster_topic" not in df.columns:
             df["cluster_topic"] = 0
         fig = px.scatter(**plotly_kwargs_deploy)
-        if disable_legend is True:
+        if disable_legend:
             fig = fig.update_layout(showlegend=False)
+        if save_as_html:
+            fig.write_html(f"plotly_graph_{self.deckname}.html")
+            print(f"Saved plot as 'plotly_graph_{self.deckname}.html'")
+        print("Opening graph in browser...")
         fig.show()
         return True
 
@@ -1403,29 +1648,29 @@ plotting...")
             (they would have to be recomputed each time)
         """
         pd.set_option('display.max_colwidth', None)
-        if offline is True:
+        if offline:
             sBERT_file = Path("./sBERT_cache.pickle")
             if sBERT_file.exists():
                 df = pd.read_pickle(sBERT_file)
             else:
-                err("sBERT cache file not found.")
+                red("sBERT cache file not found.")
                 return False
 
-            print("Loading sBERT model")
+            red("Loading sBERT model")
             from sentence_transformers import SentenceTransformer
             sBERT = SentenceTransformer('distiluse-base-multilingual-cased-v1')
             from sklearn.metrics import pairwise_distances
 
             anki_or_print = "print"
-            user_col="VEC"
-        elif self.TFIDF_enable is True:
-            err("Cannot search for note using TFIDF vectors, only sBERT can \
+            user_col = "VEC"
+        elif self.vectorizer == "TFIDF":
+            red("Cannot search for note using TFIDF vectors, only sBERT can \
 be used.")
             return False
         else:
             df = self.df.copy()
 
-        if do_format_input is True:
+        if do_format_input:
             user_input = self._format_text(user_input)
         embed = sBERT.encode(user_input, normalize_embeddings=True)
         print("")
@@ -1438,7 +1683,7 @@ be used.")
                                                  metric=dist))
             df["distance"] = df["distance"].astype("float")
         except ValueError as e:
-            err(f"Error {e}: did you select column 'VEC' instead of \
+            red(f"Error {e}: did you select column 'VEC' instead of \
 'VEC_FULL'?")
             return False
         index = df.index
@@ -1481,7 +1726,7 @@ be used.")
         cur_time = "_".join(time.asctime().split()[0:4]).replace(
                 ":", "h")[0:-3]
         name = f"{out_name}_{self.deckname}_{cur_time}.pickle"
-        df.to_pickle("./DataFrame_backups/" + name)
+        df.to_pickle("./.DataFrame_backups/" + name)
         print(f"Dataframe exported to {name}.")
         return True
 
@@ -1492,33 +1737,35 @@ be used.")
         * acronyms found in OCR caption are removed by default
         """
         full_text = " ".join(self.df["text"].tolist())
-        if exclude_OCR_text is True:
+        if exclude_OCR_text:
             full_text = re.sub("> Caption: '.*?' <", " ", full_text)
-        matched = set(re.findall("[A-Z]{3,}", full_text))
-        acro_count = {}
-        for acr in matched:
-            acro_count.update({acr: full_text.count(acr)})
-        sorted_by_count = sorted([x for x in matched], key= lambda x: acro_count[x], reverse=True)
-        relevant = random.choices(sorted_by_count[0:50],
-                k=min(len(sorted_by_count), 10))
+        matched = list(set(re.findall("[A-Z]{3,}", full_text)))
+        if len(matched) == 0:
+            return True
+        sorted_by_count = sorted([x for x in matched],
+                                 key=lambda x: full_text.count(x),
+                                 reverse=True)
+        relevant = list(set(random.choices(sorted_by_count[0:50],
+                                           k=min(len(sorted_by_count), 10))))
+        if not len(matched):
+            print("No acronym found in those cards.")
+            return True
 
         if self.acronym_list is None:
-            err("\nYou did not supply an acronym list, printing all acronym \
+            red("\nYou did not supply an acronym list, printing all acronym \
 found...")
             pprint(relevant)
         else:
-            acro_list = sorted(self.acronym_dict.keys())
-#            print("\nList of acronyms that were already replaced:")
-#            print(acro_list)
-#            acro_list = [x.lower() for x in acro_list]
+            acro_list = list(self.acronym_dict.keys())
 
+            for compiled in acro_list:
+                for acr in relevant:
+                    if re.match(compiled, acr) is not None:
+                        relevant.remove(acr)
             print("List of some acronyms still found:")
-            if exclude_OCR_text is True:
+            if exclude_OCR_text:
                 print("(Excluding OCR text)")
-            out = {acr for acr in filter(lambda x: x.lower() not in acro_list,
-                                         relevant)
-                   }
-            pprint(sorted(out))
+            pprint(sorted(relevant))
         print("")
         return True
 

@@ -1,11 +1,23 @@
+#misc:
+pdb
+prompt_toolkit == 3.0.14
+pyfiglet == 0.8.post1
+tqdm
+python-Levenshtein==0.12.2
+
+# gui:
+PyQt5 == 5.15.4
+
+# machine learning:
 nltk == 3.5
 numpy == 1.19.4
 pandas == 1.2.3
+scipy
+transformers == 4.11.3
+sklearn
+# if not using TF_IDF as a vectorizer, which is the default:
+#sentence_transformers == 2.1.0
+
+# for plots
 plotly == 4.14.3
-prompt_toolkit == 3.0.14
-pyfiglet == 0.8.post1
-scipy == 1.6.0
-sentence_transformers == 2.0.0
-sklearn == 0.0
-tqdm == 4.55.1
 umap == 0.1.1
