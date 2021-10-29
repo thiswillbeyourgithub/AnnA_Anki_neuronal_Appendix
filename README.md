@@ -127,7 +127,6 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 
 ## TODO
 * add to FAQ a link to routine.txt
-* failsafe when not enough cards
 * check when printing distribution change if ref has to be max or min for anki
 * set better tokenizer settings for tf_idf
 * implement index scoring

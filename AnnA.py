@@ -265,6 +265,8 @@ values. {e}")
             self.vectorizer = "sBERT"
             self.rated_last_X_days = 0
             self._create_and_fill_df()
+            if self.not_enough_cards is True:
+                return
             self.df = self._reset_index_dtype(self.df)
             self._format_card()
             self.show_acronyms()
@@ -282,6 +284,8 @@ values. {e}")
             if task == "bury_excess_review_cards":
                 yel("Task : bury some reviews\n")
             self._create_and_fill_df()
+            if self.not_enough_cards is True:
+                return
             self.df = self._reset_index_dtype(self.df)
             self._format_card()
             self.show_acronyms()
@@ -294,6 +298,8 @@ values. {e}")
         else:
             yel("Task : created filtered deck containing review cards")
             self._create_and_fill_df()
+            if self.not_enough_cards is True:
+                return
             self.df = self._reset_index_dtype(self.df)
             self._format_card()
             self.show_acronyms()
@@ -533,8 +539,11 @@ threads of size {batchsize})")
         combined_card_list = list(rated_cards + due_cards)[:limit]
 
         if len(combined_card_list) < 20:
-            red("You don't have enough cards!\nExiting.")
-            raise SystemExit()
+            red("You don't have enough cards!\nStopping.")
+            self.not_enough_cards = True
+            return
+        else:
+            self.not_enough_cards = False
 
         list_cardInfo = []
 
