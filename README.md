@@ -133,7 +133,7 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * implement index scoring
 * recheck that docstrings are up to date
 
-* turn into anki as an addon
+* turn into an anki addon
 
 * look into sentence mining methods from sbert, that might contain useful ideas
 * take a look at topic modelling techniques that might be cleaner to invoke than the current ctf-idf implementation
