@@ -1068,7 +1068,8 @@ TFIDF"))
 
             # center and scale
             ro_cs = StandardScaler().fit_transform(ro_intp.T)
-            df["ref"] = ro_cs
+            ro_cs_clipped = np.clip(ro_cs, -2, 2)  # clip beyond 2sigma
+            df["ref"] = ro_cs_clipped
 
         # centering and scaling df_dist after clipping
         print("Centering and scaling distance matrix...")
