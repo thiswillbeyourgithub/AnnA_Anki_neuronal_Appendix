@@ -23,6 +23,7 @@ Tired of having to deal with anki flashcards that are too similar when grinding 
 3. I am still changing the code base almost every day, if you tried AnnA and were disappointed, maybe try it another time later. Major improvements are regularly made.
 4. This project is still very early and I don't recommend you start using it if you're not skilled enough to do damage control. I have lost a lot of my tags several times (recovered them all afterwards) and some issue can still happen. Use at your own risks :)
 5. I implemented two vectorization methods, either [sBERT](http://sbert.net/) or [subword TF_IDF](https://en.wikipedia.org/wiki/Tf%E2%80%93idf). I recommend the latter, as sBERT is unreliable for this task. Note that semantic searching is only possible using sBERT.
+6. If you want to know how I'm using this, take a look at [authors_routine.md](./authors_routine.md)
 
 ## Other features
 * Keeps the OCR data of pictures in your cards, if you analyzed them beforehand using [AnkiOCR](https://github.com/cfculhane/AnkiOCR/).
@@ -43,6 +44,7 @@ Tired of having to deal with anki flashcards that are too similar when grinding 
 * **Can I use this if I don't know python?** Yes! Installing the thing might not be easy but it's absolutely doable. And you don't need to know python to *run* AnnA. I tried my best to make it accessible and help is welcome.
 * **What do you call "optimal review order"?** The order that minimizes the chance of reviewing similar cards in a day. You see, Anki has no knowledge of the content of cards and only cares about their interval and ease. Its built-in system of "siblings" is useful but I think we can do better. AnnA was made to create filtered decks sorted by "relative_overdueness" (or other) BUT in a way that keeps *semantic* siblings far from each other.
 * **When should I use this?** It seems good for dealing with the huge backlog you get in medical school, or just everyday to reduce the workload. If you have 2 000 reviews to do, but can only do 500 in a day: AnnA is making sure that you will get the most out of those 500. I don't expect the plotting and clustering features to be really used but I had to code them to make sure AnnA was working fine so I might as well leave it :)
+* **How do you use this?** I described my routine in a separate file called `authors_routine.md`.
 
 * **What are the power requirements to run this?** I wanted to make it as efficient as possible but am still improving the code. Computing the distance matrix can be long if you do this on very large amount of cards but this step is done in parallel on all cores so should not be the bottleneck. Let me know if some steps are unusually slow and I will try to optimize it. With one argument you can use SVD or PCA to do a dimension reduction on your cards, making the rest of the script faster, at the cost of precision. If you want to use AnnA on a very slow device, TF_IDF is probably faster. Computing sBERT vectors is usually long but I cache all the computed values so that should not be a problem.
 * **Why is creating the queue taking longer and longer?** Each card is added to the queue after having been compared to the rated cards of the last few days and the current queue. As the queue grows, more computation have to be done. If this is an issue, consider creating decks that are as big as you think you can review in a day. With recent improvements in the code the speed should really not be an issue.
@@ -126,7 +128,6 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * `show_acronyms` shows the acronym present in your deck that were not extended. Useful if you want to adjust your acronym list.
 
 ## TODO
-* add to FAQ a link to routine.txt
 * check when printing distribution change if ref has to be max or min for anki
 * set better tokenizer settings for tf_idf
 * implement index scoring
