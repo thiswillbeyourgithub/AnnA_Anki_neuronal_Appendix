@@ -1175,18 +1175,26 @@ lowest value.")
                 pbar.update(1)
         assert len(queue) != 0
 
-        from numpy import sqrt, mean, square
-        red("Quadratic mean of the distance among the new queue:")
-        yel(sqrt(mean(square(self.df_dist.loc[queue, queue].values))))
+        try:
+            red("Quadratic mean of the distance among the optimized queue:")
+            yel(np.sqrt(np.mean(np.square(
+                self.df_dist_unscaled.loc[queue, queue].values.flatten()))))
 
-        red("Quadratic mean of the distance among the cards that didn't \
-make it into the queue:")
-        dueNQ = [x for x in self.due_cards if x not in queue]
-        yel(sqrt(mean(square(self.df_dist.loc[dueNQ, dueNQ].values))))
+            red("Quadratic mean of the distance among the cards that didn't \
+    make it into the queue:")
+            dueNQ = [x for x in self.due_cards if x not in queue]
+            yel(np.sqrt(np.mean(np.square(
+                self.df_dist_unscaled.loc[dueNQ, dueNQ].values.flatten()))))
 
-        red("Quadratic mean of the distance if you had not used AnnA:")
-        woAnnA = df.sort_values("ref").iloc[0:len(queue)].index.tolist()
-        yel(sqrt(mean(square(self.df_dist.loc[woAnnA, woAnnA].values))))
+            red("Quadratic mean of the distance if you had not used AnnA:")
+            woAnnA = [x
+                      for x in df.sort_values(
+                          "ref", reverse=True).iloc[0:len(queue)].index.tolist()
+                      if x in dueNQ]
+            yel(np.sqrt(np.mean(np.square(
+                self.df_dist_unscaled.loc[woAnnA, woAnnA].values.flatten()))))
+        except Exception as e:
+            err(f"\nException: {e}")
 
         yel("Done.\n")
         self.opti_rev_order = queue
