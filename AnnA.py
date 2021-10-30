@@ -171,10 +171,11 @@ class AnnA:
                  check_database=False,
 
                  # vectorization:
-                 vectorizer="TFIDF",  # can be "TFIDF" or "sBERT" or "fasttext"
+                 vectorizer="fasttext",  # can be "TFIDF" or "sBERT" or "fasttext"
                  sBERT_dim=None,
                  fasttext_lang="fr",
-                 TFIDF_dim=250,
+                 fasttext_dim=10,
+                 TFIDF_dim=10,
                  TFIDF_stopw_lang=["english", "french"],
                  TFIDF_stem=False,
                  TFIDF_tokenize=True,
@@ -220,6 +221,7 @@ class AnnA:
         self.vectorizer = vectorizer
         self.sBERT_dim = sBERT_dim
         self.fasttext_lang = fasttext_lang
+        self.fasttext_dim = fasttext_dim
         self.TFIDF_dim = TFIDF_dim
         self.TFIDF_stopw_lang = TFIDF_stopw_lang
         self.TFIDF_stem = TFIDF_stem
@@ -889,10 +891,20 @@ using PCA...")
                 get_vec = memoize(ft.get_word_vector)
                 return np.max([get_vec(x) for x in string.split(" ")], axis=0)
 
-            tqdm.pandas(desc="Vectorizing using fasttext", smoothing=0, unit=" card")
-            df["VEC"] = df["VEC_FULL"] = df["text"].progress_apply(lambda x: vec(x))
-            #df["VEC_FULL"] = df["text"].progress_apply(lambda x: ft.get_sentence_vector(x))
-            df["VEC"] = df["VEC_FULL"]
+            tqdm.pandas(desc="Vectorizing using fasttext", smoothing=0, unit="card")
+            df["VEC_FULL"] = df["text"].progress_apply(lambda x: vec(x))
+            print(f"Reducing dimensions to {self.fasttext_dim} using UMAP")
+            umap_kwargs = {"n_jobs": -1,
+                           "verbose": 1,
+                           "n_components": self.fasttext_dim,
+                           "metric": "cosine",
+                           "init": 'spectral',
+                           "random_state": 42,
+                           "transform_seed": 42,
+                           "n_neighbors": 5,
+                           "min_dist": 0.5}
+            U = umap.UMAP(**umap_kwargs)
+            df["VEC"] = U.fit_transform(df["VEC_FULL"].values)
 
         elif self.vectorizer == "TFIDF":
             if import_thread is not None:
