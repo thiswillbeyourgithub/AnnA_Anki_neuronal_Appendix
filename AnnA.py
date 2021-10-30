@@ -199,7 +199,6 @@ class AnnA:
         self.rated_last_X_days = rated_last_X_days
         self.debug_card_limit = debug_card_limit
         self.clustering_nb_clust = clustering_nb_clust
-        self.sBERT_dim = sBERT_dim
         self.highjack_due_query = highjack_due_query
         self.highjack_rated_query = highjack_rated_query
         self.stride = stride
@@ -209,6 +208,7 @@ class AnnA:
         self.field_mappings = field_mappings
         self.acronym_list = acronym_list
         self.vectorizer = vectorizer
+        self.sBERT_dim = sBERT_dim
         self.TFIDF_dim = TFIDF_dim
         self.TFIDF_stopw_lang = TFIDF_stopw_lang
         self.TFIDF_stem = TFIDF_stem
