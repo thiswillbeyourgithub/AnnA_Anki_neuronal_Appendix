@@ -171,11 +171,11 @@ class AnnA:
                  check_database=False,
 
                  # vectorization:
-                 vectorizer="fasttext",  # can be "TFIDF" or "sBERT" or "fasttext"
+                 vectorizer="TFIDF",  # can be "TFIDF" or "sBERT" or "fasttext"
                  sBERT_dim=None,
                  fasttext_lang="fr",
-                 fasttext_dim=10,
-                 TFIDF_dim=10,
+                 fasttext_dim=50,
+                 TFIDF_dim=250,
                  TFIDF_stopw_lang=["english", "french"],
                  TFIDF_stem=False,
                  TFIDF_tokenize=True,
@@ -891,8 +891,7 @@ using PCA...")
                 get_vec = memoize(ft.get_word_vector)
                 return np.max([get_vec(x) for x in string.split(" ")], axis=0)
 
-            tqdm.pandas(desc="Vectorizing using fasttext", smoothing=0, unit="card")
-            df["VEC_FULL"] = df["text"].progress_apply(lambda x: vec(x))
+            ft_vec = [vec(x) for x in tqdm(df["text"], desc="Vectorizing using fasttext")]
             print(f"Reducing dimensions to {self.fasttext_dim} using UMAP")
             umap_kwargs = {"n_jobs": -1,
                            "verbose": 1,
@@ -903,8 +902,10 @@ using PCA...")
                            "transform_seed": 42,
                            "n_neighbors": 5,
                            "min_dist": 0.5}
-            U = umap.UMAP(**umap_kwargs)
-            df["VEC"] = U.fit_transform(df["VEC_FULL"].values)
+            ft_vec_red = umap.UMAP(**umap_kwargs).fit_transform(ft_vec)
+
+            df["VEC_FULL"] = [x for x in ft_vec]
+            df["VEC"] = [x for x in ft_vec_red]
 
         elif self.vectorizer == "TFIDF":
             if import_thread is not None:
@@ -952,24 +953,27 @@ TFIDF"))
                 self.t_vec = [x for x in t_vec]
                 self.t_red = None
             else:
-                print(f"Reducing dimensions to {self.TFIDF_dim} using UMAP")
-                umap_kwargs = {"n_jobs": -1,
-                               "verbose": 1,
-                               "n_components": self.TFIDF_dim,
-                               "metric": "cosine",
-                               "init": 'spectral',
-                               "random_state": 42,
-                               "transform_seed": 42,
-                               "n_neighbors": 5,
-                               "min_dist": 0.5}
+                print(f"Reducing dimensions to {self.TFIDF_dim} using SVD")
+                svd = TruncatedSVD(n_components=min(self.TFID F_dim,
+                                                    t_vec.sha pe[1]))
+                t_red = svd.fit_transform(t_vec)
+                whi(f"Explained variance ratio after SVD on T f_idf: \
+{round(sum(svd.explained_variance_ratio_)*100,1)}%")
 
-                U = umap.UMAP(**umap_kwargs)
-                t_red = U.fit_transform(t_vec)
-#                svd = TruncatedSVD(n_components=min(self.TFIDF_dim,
-#                                                    t_vec.shape[1]))
-#                t_red = svd.fit_transform(t_vec)
-#                whi(f"Explained variance ratio after SVD on Tf_idf: \
-#{round(sum(svd.explained_variance_ratio_)*100,1)}%")
+#                print(f"Reducing dimensions to {self.TFIDF_dim} using UMAP")
+#                umap_kwargs = {"n_jobs": -1,
+#                               "verbose": 1,
+#                               "n_components": self.TFIDF_dim,
+#                               "metric": "cosine",
+#                               "init": 'spectral',
+#                               "random_state": 42,
+#                               "transform_seed": 42,
+#                               "n_neighbors": 5,
+#                               "min_dist": 0.2}
+#
+#                U = umap.UMAP(**umap_kwargs)
+#                t_red = U.fit_transform(t_vec)
+
                 df["VEC_FULL"] = [x for x in t_vec]
                 df["VEC"] = [x for x in t_red]
                 self.t_vec = [x for x in t_vec]
