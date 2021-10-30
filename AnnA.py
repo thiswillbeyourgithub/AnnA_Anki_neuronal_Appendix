@@ -77,7 +77,7 @@ yel = coloured_log("yellow")
 red = coloured_log("red")
 
 
-def asynchronous_importer(vectorizer, task):
+def asynchronous_importer(vectorizer, task, fasttext_lang):
     """
     used to asynchronously import large modules, this way between
     importing AnnA and creating the instance of the class, the language model
@@ -87,7 +87,7 @@ def asynchronous_importer(vectorizer, task):
         AgglomerativeClustering, transformers, normalize, TfidfVectorizer,\
         CountVectorizer, TruncatedSVD, StandardScaler, \
         pairwise_distances, PCA, px, umap, np, tokenizer_bert, \
-        MiniBatchKMeans, interpolate
+        MiniBatchKMeans, interpolate, ft, fasttext
     if "numpy" not in sys.modules:
         whi("Began importing modules...\n")
         print_when_ends = True
@@ -96,15 +96,24 @@ def asynchronous_importer(vectorizer, task):
     import numpy as np
     from sklearn.feature_extraction.text import TfidfVectorizer
     from sklearn.feature_extraction.text import CountVectorizer
-    if vectorizer != "TFIDF" or task == "index":
+    if vectorizer == "sBERT" or task == "index":
         global sBERT
         from sentence_transformers import SentenceTransformer
         sBERT = SentenceTransformer('distiluse-base-multilingual-cased-v1')
-    else:
+    elif vectorizer == "TFIDF":
         global stopwords
         from nltk.corpus import stopwords
         from nltk.stem import PorterStemmer
         ps = PorterStemmer()
+    elif vectorizer == "fasttext":
+        import fasttext
+        import fasttext.util
+        try:
+            fasttext.util.download_model(fasttext_lang, if_exists='ignore')
+            ft = fasttext.load_model(f"cc.{fasttext_lang[0:2]}.300.bin")
+        except Exception as e:
+            red(f"Couldn't load fasttext model: {e}")
+            raise SystemExit()
 
     from transformers import BertTokenizerFast
     tokenizer = BertTokenizerFast.from_pretrained(
@@ -162,8 +171,9 @@ class AnnA:
                  check_database=False,
 
                  # vectorization:
-                 vectorizer="TFIDF",  # can be "TFIDF" or "sBERT"
+                 vectorizer="TFIDF",  # can be "TFIDF" or "sBERT" or "fasttext"
                  sBERT_dim=None,
+                 fasttext_lang="fr",
                  TFIDF_dim=250,
                  TFIDF_stopw_lang=["english", "french"],
                  TFIDF_stem=False,
@@ -189,7 +199,7 @@ class AnnA:
 
         # start importing large modules
         import_thread = threading.Thread(target=asynchronous_importer,
-                                         args=(vectorizer, task))
+                                         args=(vectorizer, task, fasttext_lang))
         import_thread.start()
 
         # loading args
@@ -209,6 +219,7 @@ class AnnA:
         self.acronym_list = acronym_list
         self.vectorizer = vectorizer
         self.sBERT_dim = sBERT_dim
+        self.fasttext_lang = fasttext_lang
         self.TFIDF_dim = TFIDF_dim
         self.TFIDF_stopw_lang = TFIDF_stopw_lang
         self.TFIDF_stem = TFIDF_stem
@@ -223,7 +234,7 @@ class AnnA:
         assert task in ["create_filtered", "index",
                         "bury_excess_learning_cards",
                         "bury_excess_review_cards"]
-        assert vectorizer in ["TFIDF", "sBERT"]
+        assert vectorizer in ["TFIDF", "sBERT", "fasttext"]
 
         if self.acronym_list is not None:
             file = Path(acronym_list)
@@ -245,8 +256,8 @@ class AnnA:
                 imp = importlib.import_module(
                         self.field_mappings.replace(".py", ""))
                 self.field_dic = imp.field_dic
-                if self.vectorizer == "sBERT":
-                    # sBERT should not be used with repeting fields
+                if self.vectorizer in ["sBERT", "fasttext"]:
+                    # LM should not be used with repeting fields
                     temp = {}
                     for a, b in self.field_dic:
                         temp[a] = sorted(set(self.field_dic[a]),
@@ -270,7 +281,7 @@ values. {e}")
             self.df = self._reset_index_dtype(self.df)
             self._format_card()
             self.show_acronyms()
-            self._compute_sBERT_vec(import_thread=import_thread)
+            self._compute_card_vectors(import_thread=import_thread)
             if clustering_enable:
                 self.compute_clusters(minibatchk_kwargs={"verbose": 0})
         elif task in ["bury_excess_learning_cards", "bury_excess_review_cards"]:
@@ -289,7 +300,7 @@ values. {e}")
             self.df = self._reset_index_dtype(self.df)
             self._format_card()
             self.show_acronyms()
-            self._compute_sBERT_vec(import_thread=import_thread)
+            self._compute_card_vectors(import_thread=import_thread)
             if clustering_enable:
                 self.compute_clusters(minibatchk_kwargs={"verbose": 0})
             self._compute_distance_matrix()
@@ -303,7 +314,7 @@ values. {e}")
             self.df = self._reset_index_dtype(self.df)
             self._format_card()
             self.show_acronyms()
-            self._compute_sBERT_vec(import_thread=import_thread)
+            self._compute_card_vectors(import_thread=import_thread)
             if clustering_enable:
                 self.compute_clusters(minibatchk_kwargs={"verbose": 0})
             self._compute_distance_matrix()
@@ -766,7 +777,7 @@ adjust formating issues:")
         self.df = df.sort_index()
         return True
 
-    def _compute_sBERT_vec(self,
+    def _compute_card_vectors(self,
                            df=None,
                            use_sBERT_cache=True,
                            import_thread=None):
@@ -863,7 +874,28 @@ using PCA...")
 {round(sum(pca_sBERT.explained_variance_ratio_)*100,1)}%")
                 df["VEC"] = [x for x in out]
 
-        else:  # use TFIDF instead of sBERT
+        elif self.vectorizer == "fasttext":
+            if import_thread is not None:
+                import_thread.join()
+                time.sleep(0.5)
+
+            def memoize(f):
+                memo = {}
+                def helper(x):
+                    if x not in memo:            
+                        memo[x] = f(x)
+                    return memo[x]
+                return helper
+            def vec(string):
+                get_vec = memoize(ft.get_word_vector)
+                return np.max([get_vec(x) for x in string.split(" ")], axis=0)
+
+            tqdm.pandas(desc="Vectorizing using fasttext", smoothing=0, unit=" card")
+            df["VEC"] = df["VEC_FULL"] = df["text"].progress_apply(lambda x: vec(x))
+            #df["VEC_FULL"] = df["text"].progress_apply(lambda x: ft.get_sentence_vector(x))
+            df["VEC"] = df["VEC_FULL"]
+
+        elif self.vectorizer == "TFIDF":
             if import_thread is not None:
                 import_thread.join()
                 time.sleep(0.5)

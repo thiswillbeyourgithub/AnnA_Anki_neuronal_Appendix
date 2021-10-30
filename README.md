@@ -131,7 +131,7 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * fix the nan scoring of woanna
 * check when printing distribution change if ref has to be max or min for anki
 * set better tokenizer settings for tf_idf
-* implement glove embeddings, with maxpooling, with memoized fuzzy finder of closest word (sorting the vocab makes it faster)
+* if fasttext is good, talk about it in the settings
 * implement index scoring
 * recheck that docstrings are up to date
 
