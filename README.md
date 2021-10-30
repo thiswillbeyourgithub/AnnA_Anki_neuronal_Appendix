@@ -131,9 +131,12 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * fix the nan scoring of woanna
 * check when printing distribution change if ref has to be max or min for anki
 * set better tokenizer settings for tf_idf
-* if fasttext is good, talk about it in the settings
-* implement index scoring
+* remove sbert, it's inferior to fasttext
+* remove search for notes, as it makes AnnA quite complicated for no added benefit
+* talk about fasttext in the settings + add args + explain what is a vectorizer
+* replace all df_temp by a on-memory numpy array
 * recheck that docstrings are up to date
+* implement index scoring
 
 * turn into an anki addon
 
