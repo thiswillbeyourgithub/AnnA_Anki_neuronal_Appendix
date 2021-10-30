@@ -873,7 +873,11 @@ using PCA...")
                 stops = []
                 for lang in self.TFIDF_stopw_lang:
                     stops += stopwords.words(lang)
-                if self.TFIDF_stem:
+                if self.TFIDF_tokenize:
+                    temp = []
+                    [temp.extend(tknzer(x)) for x in stops]
+                    stops.extend(temp)
+                elif self.TFIDF_stem:
                     stops += [ps.stem(x) for x in stops]
                 stops = list(set(stops))
             except Exception as e:
