@@ -953,26 +953,26 @@ TFIDF"))
                 self.t_vec = [x for x in t_vec]
                 self.t_red = None
             else:
-                print(f"Reducing dimensions to {self.TFIDF_dim} using SVD")
-                svd = TruncatedSVD(n_components=min(self.TFID F_dim,
-                                                    t_vec.sha pe[1]))
-                t_red = svd.fit_transform(t_vec)
-                whi(f"Explained variance ratio after SVD on T f_idf: \
-{round(sum(svd.explained_variance_ratio_)*100,1)}%")
+#                print(f"Reducing dimensions to {self.TFIDF_dim} using SVD")
+#                svd = TruncatedSVD(n_components=min(self.TFID F_dim,
+#                                                    t_vec.sha pe[1]))
+#                t_red = svd.fit_transform(t_vec)
+#                whi(f"Explained variance ratio after SVD on T f_idf: \
+#{round(sum(svd.explained_variance_ratio_)*100,1)}%")
 
-#                print(f"Reducing dimensions to {self.TFIDF_dim} using UMAP")
-#                umap_kwargs = {"n_jobs": -1,
-#                               "verbose": 1,
-#                               "n_components": self.TFIDF_dim,
-#                               "metric": "cosine",
-#                               "init": 'spectral',
-#                               "random_state": 42,
-#                               "transform_seed": 42,
-#                               "n_neighbors": 5,
-#                               "min_dist": 0.2}
-#
-#                U = umap.UMAP(**umap_kwargs)
-#                t_red = U.fit_transform(t_vec)
+                print(f"Reducing dimensions to {self.TFIDF_dim} using UMAP")
+                umap_kwargs = {"n_jobs": -1,
+                               "verbose": 1,
+                               "n_components": self.TFIDF_dim,
+                               "metric": "cosine",
+                               "init": 'spectral',
+                               "random_state": 42,
+                               "transform_seed": 42,
+                               "n_neighbors": 5,
+                               "min_dist": 0.2}
+
+                U = umap.UMAP(**umap_kwargs)
+                t_red = U.fit_transform(t_vec)
 
                 df["VEC_FULL"] = [x for x in t_vec]
                 df["VEC"] = [x for x in t_red]
