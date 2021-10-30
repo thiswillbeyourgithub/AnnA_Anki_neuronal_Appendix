@@ -869,17 +869,6 @@ using PCA...")
                 time.sleep(0.5)
 
             print("Creating stop words list...")
-            try:
-                stops = []
-                for lang in self.TFIDF_stopw_lang:
-                    stops += stopwords.words(lang)
-                if self.TFIDF_stem:
-                    stops += [ps.stem(x) for x in stops]
-                stops = list(set(stops))
-            except Exception as e:
-                red(f"Error when extracting stop words: {e}")
-                red("Setting stop words list to None.")
-                stops = None
 
             if self.TFIDF_tokenize:
                 def tknzer(x):
@@ -888,12 +877,26 @@ using PCA...")
                 def tknzer(x):
                     return x
 
+            try:
+                stops = []
+                for lang in self.TFIDF_stopw_lang:
+                    stops += stopwords.words(lang)
+                if self.TFIDF_tokenize:
+                    stops += [tknzer(x) for x in stops]
+                if self.TFIDF_stem:
+                    stops += [ps.stem(x) for x in stops]
+                stops = list(set(stops))
+            except Exception as e:
+                red(f"Error when extracting stop words: {e}")
+                red("Setting stop words list to None.")
+                stops = None
+
             vectorizer = TfidfVectorizer(strip_accents="ascii",
                                          lowercase=True,
                                          tokenizer=tknzer,
                                          stop_words=stops,
-                                         ngram_range=(1, 5),
-                                         max_features=1000,
+                                         ngram_range=(1, 6),
+                                         max_features=10_000,
                                          norm="l2")
             t_vec = vectorizer.fit_transform(tqdm(df["text"],
                                              desc="Vectorizing text using \
@@ -904,12 +907,24 @@ TFIDF"))
                 self.t_vec = [x for x in t_vec]
                 self.t_red = None
             else:
-                print(f"Reducing dimensions to {self.TFIDF_dim}")
-                svd = TruncatedSVD(n_components=min(self.TFIDF_dim,
-                                                    t_vec.shape[1]))
-                t_red = svd.fit_transform(t_vec)
-                whi(f"Explained variance ratio after SVD on Tf_idf: \
-{round(sum(svd.explained_variance_ratio_)*100,1)}%")
+                print(f"Reducing dimensions to {self.TFIDF_dim} using UMAP")
+                umap_kwargs = {"n_jobs": -1,
+                               "verbose": 1,
+                               "n_components": self.TFIDF_dim,
+                               "metric": "cosine",
+                               "init": 'spectral',
+                               "random_state": 42,
+                               "transform_seed": 42,
+                               "n_neighbors": 5,
+                               "min_dist": 0.5}
+
+                U = umap.UMAP(**umap_kwargs)
+                t_red = U.fit_transform(t_vec)
+#                svd = TruncatedSVD(n_components=min(self.TFIDF_dim,
+#                                                    t_vec.shape[1]))
+#                t_red = svd.fit_transform(t_vec)
+#                whi(f"Explained variance ratio after SVD on Tf_idf: \
+#{round(sum(svd.explained_variance_ratio_)*100,1)}%")
                 df["VEC_FULL"] = [x for x in t_vec]
                 df["VEC"] = [x for x in t_red]
                 self.t_vec = [x for x in t_vec]
@@ -1190,7 +1205,7 @@ lowest value.")
                 self.df_dist_unscaled.loc[queue, queue].values.flatten()))))
 
             red("Quadratic mean of the distance among the cards that didn't \
-    make it into the queue:")
+make it into the queue:")
             dueNQ = [x for x in self.due_cards if x not in queue]
             yel(np.sqrt(np.mean(np.square(
                 self.df_dist_unscaled.loc[dueNQ, dueNQ].values.flatten()))))
