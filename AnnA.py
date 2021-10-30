@@ -77,7 +77,7 @@ yel = coloured_log("yellow")
 red = coloured_log("red")
 
 
-def asynchronous_importer(vectorizer, task, fasttext_lang):
+def asynchronous_importer(vectorizer, task, fastText_lang):
     """
     used to asynchronously import large modules, this way between
     importing AnnA and creating the instance of the class, the language model
@@ -87,7 +87,8 @@ def asynchronous_importer(vectorizer, task, fasttext_lang):
         AgglomerativeClustering, transformers, normalize, TfidfVectorizer,\
         CountVectorizer, TruncatedSVD, StandardScaler, \
         pairwise_distances, PCA, px, umap, np, tokenizer_bert, \
-        MiniBatchKMeans, interpolate, ft, fasttext
+        MiniBatchKMeans, interpolate
+
     if "numpy" not in sys.modules:
         whi("Began importing modules...\n")
         print_when_ends = True
@@ -96,28 +97,24 @@ def asynchronous_importer(vectorizer, task, fasttext_lang):
     import numpy as np
     from sklearn.feature_extraction.text import TfidfVectorizer
     from sklearn.feature_extraction.text import CountVectorizer
-    if vectorizer == "sBERT" or task == "index":
-        global sBERT
-        from sentence_transformers import SentenceTransformer
-        sBERT = SentenceTransformer('distiluse-base-multilingual-cased-v1')
+    if vectorizer == "fastText" or task == "index":
+        global fastText, ft
+        import fastText
+        import fastText.util
+        try:
+            fastText.util.download_model(fastText_lang, if_exists='ignore')
+            ft = fastText.load_model(f"cc.{fastText_lang[0:2]}.300.bin")
+        except Exception as e:
+            red(f"Couldn't load fastText model: {e}")
+            raise SystemExit()
     elif vectorizer == "TFIDF":
         global stopwords
         from nltk.corpus import stopwords
         from nltk.stem import PorterStemmer
         ps = PorterStemmer()
-    elif vectorizer == "fasttext":
-        import fasttext
-        import fasttext.util
-        try:
-            fasttext.util.download_model(fasttext_lang, if_exists='ignore')
-            ft = fasttext.load_model(f"cc.{fasttext_lang[0:2]}.300.bin")
-        except Exception as e:
-            red(f"Couldn't load fasttext model: {e}")
-            raise SystemExit()
 
     from transformers import BertTokenizerFast
-    tokenizer = BertTokenizerFast.from_pretrained(
-            "bert-base-multilingual-uncased")
+    tokenizer = BertTokenizerFast.from_pretrained("bert-base-multilingual-uncased")
     from sklearn.metrics import pairwise_distances
     from sklearn.decomposition import PCA
     from sklearn.cluster import KMeans, DBSCAN, AgglomerativeClustering
@@ -171,10 +168,9 @@ class AnnA:
                  check_database=False,
 
                  # vectorization:
-                 vectorizer="TFIDF",  # can be "TFIDF" or "sBERT" or "fasttext"
-                 sBERT_dim=None,
-                 fasttext_lang="fr",
-                 fasttext_dim=100,
+                 vectorizer="TFIDF",  # can be "TFIDF" or "fastText"
+                 fastText_dim=100,
+                 fastText_lang="fr",
                  TFIDF_dim=250,
                  TFIDF_stopw_lang=["english", "french"],
                  TFIDF_stem=False,
@@ -200,10 +196,12 @@ class AnnA:
 
         # start importing large modules
         import_thread = threading.Thread(target=asynchronous_importer,
-                                         args=(vectorizer, task, fasttext_lang))
+                                         args=(vectorizer, task, fastText_lang))
         import_thread.start()
 
         # loading args
+        if vectorizer == "fasttext":
+            vectorizer == "fastText"
         self.replace_greek = replace_greek
         self.keep_ocr = keep_ocr
         self.desired_deck_size = desired_deck_size
@@ -219,9 +217,8 @@ class AnnA:
         self.field_mappings = field_mappings
         self.acronym_list = acronym_list
         self.vectorizer = vectorizer
-        self.sBERT_dim = sBERT_dim
-        self.fasttext_lang = fasttext_lang
-        self.fasttext_dim = fasttext_dim
+        self.fastText_lang = fastText_lang
+        self.fastText_dim = fastText_dim
         self.TFIDF_dim = TFIDF_dim
         self.TFIDF_stopw_lang = TFIDF_stopw_lang
         self.TFIDF_stem = TFIDF_stem
@@ -236,7 +233,7 @@ class AnnA:
         assert task in ["create_filtered", "index",
                         "bury_excess_learning_cards",
                         "bury_excess_review_cards"]
-        assert vectorizer in ["TFIDF", "sBERT", "fasttext"]
+        assert vectorizer in ["TFIDF", "fastText"]
 
         if self.acronym_list is not None:
             file = Path(acronym_list)
@@ -258,7 +255,7 @@ class AnnA:
                 imp = importlib.import_module(
                         self.field_mappings.replace(".py", ""))
                 self.field_dic = imp.field_dic
-                if self.vectorizer in ["sBERT", "fasttext"]:
+                if self.vectorizer == "fastText":
                     # LM should not be used with repeting fields
                     temp = {}
                     for a, b in self.field_dic.items():
@@ -274,7 +271,7 @@ values. {e}")
         yel(f"Selected deck: {self.deckname}\n")
         if task == "index":
             yel(f"Task : cache vectors of deck: {self.deckname}\n")
-            self.vectorizer = "sBERT"
+            self.vectorizer = "fastText"
             self.rated_last_X_days = 0
             self._create_and_fill_df()
             if self.not_enough_cards is True:
@@ -620,9 +617,7 @@ threads of size {batchsize})")
         s = re.sub
 
         text = str(text)
-        text = s("\n+", " ", text)
-        text = text.replace("+", " ")  # sbert does not work well with that
-        text = text.replace("-", " ")
+        text = " ".join(text.split())
         if self.keep_ocr:
             # keep image title (usually OCR)
             text = s("title=(\".*?\")", "> Caption: '\\1' <", text)
@@ -780,38 +775,38 @@ adjust formating issues:")
 
     def _compute_card_vectors(self,
                            df=None,
-                           use_sBERT_cache=True,
+                           use_cache=True,
                            import_thread=None):
         """
-        Assigne sBERT vectors to each card
+        Assigne fastText vectors to each card
         df["VEC_FULL"], contains the vectors
         df["VEC"] contains either all the vectors or less if you
             enabled dimensionality reduction
         * given how long it is to compute the vectors I decided to store
-            all already computed sBERT to a pickled DataFrame at each run
+            all already computed vectors to a pickled DataFrame at each run
         """
         if df is None:
             df = self.df
 
-        if self.vectorizer == "sBERT":
-            if use_sBERT_cache:
-                print("\nLooking for cached sBERT pickle file...", end="")
-                sBERT_file = Path("./sBERT_cache.pickle")
+        if self.vectorizer == "fastText":
+            if use_cache:
+                print("\nLooking for cached fastText pickle file...", end="")
+                fastText_cachefile = Path("./cached_vectors.pickle")
                 df["VEC"] = 0*len(df.index)
                 df["VEC"] = df["VEC"].astype("object")
-                loaded_sBERT = 0
+                loaded_cache = 0
                 id_to_recompute = []
 
-                # reloads sBERT vectors and only recomputes the new one:
-                if not sBERT_file.exists():
-                    whi(" sBERT cache not found, will create it.")
+                # reloads cached vectors and only recomputes the new one:
+                if not fastText_cachefile.exists():
+                    whi(" cached vectors not found, will create it.")
                     df_cache = pd.DataFrame(
                             columns=["cardId", "mod", "text", "VEC"]
                             ).set_index("cardId")
                     id_to_recompute = df.index
                 else:
-                    print(" Found sBERT cache.")
-                    df_cache = pd.read_pickle(sBERT_file)
+                    print(" Found cached vectors.")
+                    df_cache = pd.read_pickle(fastText_cachefile)
                     df_cache["VEC"] = df_cache["VEC"].astype("object")
                     df_cache["mod"] = df_cache["mod"].astype("object")
                     df_cache["text"] = df_cache["text"]
@@ -821,27 +816,38 @@ adjust formating issues:")
                                 (str(df_cache.loc[i, "text"]) ==
                                     str(df.loc[i, "text"])):
                             df.at[i, "VEC"] = df_cache.loc[i, "VEC"]
-                            loaded_sBERT += 1
+                            loaded_cache += 1
                         else:
                             id_to_recompute.append(i)
 
-                yel(f"Loaded {loaded_sBERT} vectors from cache, will compute \
-{len(id_to_recompute)} others...")
                 if import_thread is not None:
                     import_thread.join()
                     time.sleep(0.5)
+
+
+                yel(f"Loaded {loaded_cache} vectors from cache, will compute \
+{len(id_to_recompute)} others...")
                 if len(id_to_recompute) != 0:
-                    sentence_list = [df.loc[x, "text"]
-                                     for x in df.index if x in id_to_recompute]
-                    sentence_embeddings = sBERT.encode(
-                            sentence_list,
-                            normalize_embeddings=True,
-                            show_progress_bar=True)
+                    def memoize(f):
+                        memo = {}
+                        def helper(x):
+                            if x not in memo:            
+                                memo[x] = f(x)
+                            return memo[x]
+                        return helper
+                    def vec(string):
+                        get_vec = memoize(ft.get_word_vector)
+                        return np.max([get_vec(x) for x in string.split(" ")], axis=0)
+
+                    ft_vec = [vec(x)
+                              for x in tqdm(df.loc[id_to_recompute,
+                                                   "text"],
+                                            desc="Vectorizing using fastText")]
 
                     for i, ind in enumerate(tqdm(id_to_recompute)):
-                        df.at[ind, "VEC"] = sentence_embeddings[i]
+                        df.at[ind, "VEC"] = ft_vec
 
-                # stores newly computed sBERT vectors in a file:
+                # stores newly computed vectors to cache file
                 df_cache = self._reset_index_dtype(df_cache)
                 for i in [x for x in id_to_recompute
                           if x not in df_cache.index]:
@@ -854,58 +860,28 @@ adjust formating issues:")
                     df_cache.loc[i, "text"] = df.loc[i, "text"]
                 df_cache = self._reset_index_dtype(df_cache)
                 try:
-                    Path("sBERT_cache.pickle_temp").unlink()
+                    Path("cached_vectors.pickle_temp").unlink()
                 except FileNotFoundError:
                     pass
-                df_cache.to_pickle("sBERT_cache.pickle_temp")
-                sBERT_file.unlink()
-                Path("sBERT_cache.pickle_temp").rename("sBERT_cache.pickle")
+                df_cache.to_pickle("cached_vectors.pickle_temp")
+                fastText_cachefile.unlink()
+                Path("cached_vectors.pickle_temp").rename("cached_vectors.pickle")
 
             df["VEC_FULL"] = df["VEC"]
-            if self.sBERT_dim is not None:
-                print(f"Reducing sBERT to {self.sBERT_dim} dimensions \
-using PCA...")
-                pca_sBERT = PCA(n_components=self.sBERT_dim, random_state=42)
-                df_temp = pd.DataFrame(
-                    columns=["V"+str(x+1)
-                             for x in range(len(df.loc[df.index[0], "VEC"]))],
-                    data=[x[0:] for x in df["VEC"]])
-                out = pca_sBERT.fit_transform(df_temp)
-                whi(f"Explained variance ratio after PCA on sBERT: \
-{round(sum(pca_sBERT.explained_variance_ratio_)*100,1)}%")
-                df["VEC"] = [x for x in out]
 
-        elif self.vectorizer == "fasttext":
-            if import_thread is not None:
-                import_thread.join()
-                time.sleep(0.5)
-
-            def memoize(f):
-                memo = {}
-                def helper(x):
-                    if x not in memo:            
-                        memo[x] = f(x)
-                    return memo[x]
-                return helper
-            def vec(string):
-                get_vec = memoize(ft.get_word_vector)
-                return np.max([get_vec(x) for x in string.split(" ")], axis=0)
-
-            ft_vec = [vec(x) for x in tqdm(df["text"], desc="Vectorizing using fasttext")]
-            print(f"Reducing dimensions to {self.fasttext_dim} using UMAP")
-            umap_kwargs = {"n_jobs": -1,
-                           "verbose": 1,
-                           "n_components": self.fasttext_dim,
-                           "metric": "cosine",
-                           "init": 'spectral',
-                           "random_state": 42,
-                           "transform_seed": 42,
-                           "n_neighbors": 5,
-                           "min_dist": 0.01}
-            ft_vec_red = umap.UMAP(**umap_kwargs).fit_transform(ft_vec)
-
-            df["VEC_FULL"] = [x for x in ft_vec]
-            df["VEC"] = [x for x in ft_vec_red]
+            if self.fastText_dim is not None:
+                print(f"Reducing dimensions to {self.fastText_dim} using UMAP")
+                umap_kwargs = {"n_jobs": -1,
+                               "verbose": 1,
+                               "n_components": self.fastText_dim,
+                               "metric": "cosine",
+                               "init": 'spectral',
+                               "random_state": 42,
+                               "transform_seed": 42,
+                               "n_neighbors": 5,
+                               "min_dist": 0.01}
+                ft_vec_red = umap.UMAP(**umap_kwargs).fit_transform(np.array(df["VEC_FULL"].values))
+                df["VEC"] = [x for x in ft_vec_red]
 
         elif self.vectorizer == "TFIDF":
             if import_thread is not None:
@@ -1698,45 +1674,57 @@ plotting...")
                          anki_or_print="anki",
                          dist="cosine",
                          reverse=False,
+                         fastText_lang="fr",
                          offline=False):
         """
         given a text input, find notes with highest cosine similarity
-        * note that you cannot use the pca version of the sBERT vectors
+        * note that you cannot use the pca version of the fastText vectors
             otherwise you'd have to re run the whole PCA, so it's quicker
             to just use the full vectors
         * note that if the results are displayed in the browser, the order
             cannot be maintained. So you will get the nlimit best match
             randomly displayed, then the nlimit+1 to 2*nlimit best match
             randomly displayed etc
-        * note that this obviously only works using sBERT vectors and not TFIDF
+        * note that this obviously only works using fastText vectors and not TFIDF
             (they would have to be recomputed each time)
         """
         pd.set_option('display.max_colwidth', None)
         if offline:
-            sBERT_file = Path("./sBERT_cache.pickle")
-            if sBERT_file.exists():
-                df = pd.read_pickle(sBERT_file)
+            fastText_cachefile = Path("./cached_vectors.pickle")
+            if fastText_cachefile.exists():
+                df = pd.read_pickle(fastText_cachefile)
             else:
-                red("sBERT cache file not found.")
+                red("cached vectors not found.")
                 return False
 
-            red("Loading sBERT model")
-            from sentence_transformers import SentenceTransformer
-            sBERT = SentenceTransformer('distiluse-base-multilingual-cased-v1')
+            red("Loading fastText model")
+            import fastText
+            import fastText.util
+            try:
+                fastText.util.download_model(fastText_lang, if_exists='ignore')
+                ft = fastText.load_model(f"cc.{fastText_lang[0:2]}.300.bin")
+            except Exception as e:
+                red(f"Couldn't load fastText model: {e}")
+                raise SystemExit()
+
             from sklearn.metrics import pairwise_distances
 
             anki_or_print = "print"
             user_col = "VEC"
+
         elif self.vectorizer == "TFIDF":
-            red("Cannot search for note using TFIDF vectors, only sBERT can \
+            red("Cannot search for note using TFIDF vectors, only fastText can \
 be used.")
             return False
+
         else:
             df = self.df.copy()
 
         if do_format_input:
             user_input = self._format_text(user_input)
-        embed = sBERT.encode(user_input, normalize_embeddings=True)
+
+        embed = np.max([ft.get_word_vector(x) for x in user_input.split(" ")], axis=0)
+
         print("")
         tqdm.pandas(desc="Searching")
         try:
