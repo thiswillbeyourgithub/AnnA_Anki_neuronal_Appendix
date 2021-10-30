@@ -248,9 +248,8 @@ class AnnA:
                 if self.vectorizer == "sBERT":
                     # sBERT should not be used with repeting fields
                     temp = {}
-                    for a, b in self.field_dic:
-                        temp[a] = sorted(set(self.field_dic[a]),
-                                         key=self.field_dic[a].index)
+                    for a, b in self.field_dic.items():
+                        temp[a] = sorted(set(b), key=b.index)
                     self.field_dic = temp
             except Exception as e:
                 red(f"Error with field mapping file, will use default \
