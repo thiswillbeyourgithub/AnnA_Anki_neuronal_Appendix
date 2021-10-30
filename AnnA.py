@@ -1198,7 +1198,7 @@ lowest value.")
             red("Quadratic mean of the distance if you had not used AnnA:")
             woAnnA = [x
                       for x in df.sort_values(
-                          "ref", reverse=True).iloc[0:len(queue)].index.tolist()
+                          "ref", ascending=True).iloc[0:len(queue)].index.tolist()
                       if x in dueNQ]
             yel(np.sqrt(np.mean(np.square(
                 self.df_dist_unscaled.loc[woAnnA, woAnnA].values.flatten()))))
