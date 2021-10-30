@@ -174,7 +174,7 @@ class AnnA:
                  vectorizer="TFIDF",  # can be "TFIDF" or "sBERT" or "fasttext"
                  sBERT_dim=None,
                  fasttext_lang="fr",
-                 fasttext_dim=50,
+                 fasttext_dim=100,
                  TFIDF_dim=250,
                  TFIDF_stopw_lang=["english", "french"],
                  TFIDF_stem=False,
@@ -901,7 +901,7 @@ using PCA...")
                            "random_state": 42,
                            "transform_seed": 42,
                            "n_neighbors": 5,
-                           "min_dist": 0.5}
+                           "min_dist": 0.01}
             ft_vec_red = umap.UMAP(**umap_kwargs).fit_transform(ft_vec)
 
             df["VEC_FULL"] = [x for x in ft_vec]
@@ -942,7 +942,7 @@ using PCA...")
                                          tokenizer=tknzer,
                                          stop_words=stops,
                                          ngram_range=(1, 6),
-                                         max_features=10_000,
+                                         max_features=1000,
                                          norm="l2")
             t_vec = vectorizer.fit_transform(tqdm(df["text"],
                                              desc="Vectorizing text using \
