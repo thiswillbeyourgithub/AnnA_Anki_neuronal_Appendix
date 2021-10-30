@@ -128,14 +128,12 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * `show_acronyms` shows the acronym present in your deck that were not extended. Useful if you want to adjust your acronym list.
 
 ## TODO
-* fix the nan scoring of woanna
-* check when printing distribution change if ref has to be max or min for anki
+* fix the nan scoring of woanna + check when printing distribution change if ref has to be max or min for anki
+* explain what is a vectorizer
 * set better tokenizer settings for tf_idf
-* remove sbert, it's inferior to fasttext
-* remove search for notes, as it makes AnnA quite complicated for no added benefit
-* talk about fasttext in the settings + add args + explain what is a vectorizer
+* replaces sbert everywhere by fasttext
 * replace all df_temp by a on-memory numpy array
-* recheck that docstrings are up to date
+* check that docstrings are up to date
 * implement index scoring
 
 * turn into an anki addon
