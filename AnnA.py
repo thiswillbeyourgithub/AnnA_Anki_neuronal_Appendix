@@ -19,6 +19,10 @@ import Levenshtein as lev
 from pathlib import Path
 import threading
 from sklearn.feature_extraction.text import TfidfTransformer
+from nltk.corpus import stopwords
+from transformers import BertTokenizerFast
+tokenizer = BertTokenizerFast.from_pretrained("bert-base-multilingual-\
+uncased")
 import scipy.sparse as sp
 import logging
 
@@ -84,11 +88,11 @@ def asynchronous_importer(vectorizer, task, fastText_lang):
     importing AnnA and creating the instance of the class, the language model
     have some more time to load
     """
-    global np, KMeans, DBSCAN, tokenizer, ps, \
+    global np, KMeans, DBSCAN, ps, \
         AgglomerativeClustering, transformers, normalize, TfidfVectorizer,\
         CountVectorizer, TruncatedSVD, StandardScaler, \
-        pairwise_distances, PCA, px, umap, np, tokenizer_bert, \
-        MiniBatchKMeans, interpolate, stopwords
+        pairwise_distances, PCA, px, umap, np, \
+        MiniBatchKMeans, interpolate
 
     if "numpy" not in sys.modules:
         whi("Began importing modules...\n")
@@ -108,12 +112,8 @@ def asynchronous_importer(vectorizer, task, fastText_lang):
         except Exception as e:
             red(f"Couldn't load fastText model: {e}")
             raise SystemExit()
-    from nltk.corpus import stopwords
     from nltk.stem import PorterStemmer
     ps = PorterStemmer()
-    from transformers import BertTokenizerFast
-    tokenizer = BertTokenizerFast.from_pretrained("bert-base-multilingual-\
-uncased")
     from sklearn.metrics import pairwise_distances
     from sklearn.decomposition import PCA
     from sklearn.cluster import KMeans, DBSCAN, AgglomerativeClustering
