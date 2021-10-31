@@ -112,7 +112,8 @@ def asynchronous_importer(vectorizer, task, fastText_lang):
     from nltk.stem import PorterStemmer
     ps = PorterStemmer()
     from transformers import BertTokenizerFast
-    tokenizer = BertTokenizerFast.from_pretrained("bert-base-multilingual-uncased")
+    tokenizer = BertTokenizerFast.from_pretrained("bert-base-multilingual-\
+uncased")
     from sklearn.metrics import pairwise_distances
     from sklearn.decomposition import PCA
     from sklearn.cluster import KMeans, DBSCAN, AgglomerativeClustering
@@ -1251,7 +1252,7 @@ make it into the queue:")
         except Exception as e:
             err(f"\nException: {e}")
 
-        yel("Done.\n")
+        yel("Done computing order.\n")
         self.opti_rev_order = queue
         self.df = df
         return True
