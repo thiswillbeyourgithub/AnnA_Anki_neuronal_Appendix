@@ -797,122 +797,74 @@ adjust formating issues:")
         return True
 
     def _compute_card_vectors(self,
-                           df=None,
-                           use_cache=True,
-                           import_thread=None):
+                              df=None,
+                              store_vectors=True,
+                              import_thread=None):
         """
         Assigne fastText vectors to each card
         df["VEC_FULL"], contains the vectors
         df["VEC"] contains either all the vectors or less if you
             enabled dimensionality reduction
-        * given how long it is to compute the vectors I decided to store
-            all already computed vectors to a pickled DataFrame at each run
         """
         if df is None:
             df = self.df
 
+        if import_thread is not None:
+            import_thread.join()
+            time.sleep(0.5)
+
         if self.vectorizer == "fastText":
-            if use_cache:
-                print("\nLooking for cached fastText pickle file...", end="")
-                fastText_cachefile = Path("./cached_vectors.pickle")
-                df["VEC"] = 0*len(df.index)
-                df["VEC"] = df["VEC"].astype("object")
-                loaded_cache = 0
-                id_to_recompute = []
 
-                # reloads cached vectors and only recomputes the new one:
-                if not fastText_cachefile.exists():
-                    whi(" cached vectors not found, will create it.")
-                    df_cache = pd.DataFrame(
-                            columns=["cardId", "mod", "text", "VEC"]
-                            ).set_index("cardId")
-                    id_to_recompute = df.index
-                else:
-                    print(" Found cached vectors.")
-                    df_cache = pd.read_pickle(fastText_cachefile)
-                    df_cache["VEC"] = df_cache["VEC"].astype("object")
-                    df_cache["mod"] = df_cache["mod"].astype("object")
-                    df_cache["text"] = df_cache["text"]
-                    df_cache = self._reset_index_dtype(df_cache)
-                    for i in df.index:
-                        if i in df_cache.index and \
-                                (str(df_cache.loc[i, "text"]) ==
-                                    str(df.loc[i, "text"])):
-                            df.at[i, "VEC"] = df_cache.loc[i, "VEC"]
-                            loaded_cache += 1
-                        else:
-                            id_to_recompute.append(i)
+            def memoize(f):
+                memo = {}
 
-                if import_thread is not None:
-                    import_thread.join()
-                    time.sleep(0.5)
+                def helper(x):
+                    if x not in memo:
+                        memo[x] = f(x)
+                    return memo[x]
+                return helper
 
+            def vec(string, pbar):
+                get_vec = memoize(ft.get_word_vector)
+                pbar.update(1)
+                return normalize(np.max([get_vec(x)
+                                         for x in string.split(" ")],
+                                        axis=0),
+                                 norm='l2')
 
-                yel(f"Loaded {loaded_cache} vectors from cache, will compute \
-{len(id_to_recompute)} others...")
-                if len(id_to_recompute) != 0:
-                    def memoize(f):
-                        memo = {}
-                        def helper(x):
-                            if x not in memo:            
-                                memo[x] = f(x)
-                            return memo[x]
-                        return helper
-                    def vec(string):
-                        get_vec = memoize(ft.get_word_vector)
-                        return np.max([get_vec(x) for x in string.split(" ")], axis=0)
-
-                    ft_vec = [vec(x)
-                              for x in tqdm(df.loc[id_to_recompute,
-                                                   "text"],
-                                            desc="Vectorizing using fastText")]
-
-                    for i, ind in enumerate(tqdm(id_to_recompute)):
-                        df.at[ind, "VEC"] = ft_vec
-
-                # stores newly computed vectors to cache file
-                df_cache = self._reset_index_dtype(df_cache)
-                for i in [x for x in id_to_recompute
-                          if x not in df_cache.index]:
-                    df_cache.loc[i, "VEC"] = df.loc[i, "VEC"].astype("object")
-                    df_cache.loc[i, "mod"] = df.loc[i, "mod"].astype("object")
-                    df_cache.loc[i, "text"] = df.loc[i, "text"]
-                for i in [x for x in id_to_recompute if x in df_cache.index]:
-                    df_cache.loc[i, "VEC"] = df.loc[i, "VEC"].astype("object")
-                    df_cache.loc[i, "mod"] = df.loc[i, "mod"].astype("object")
-                    df_cache.loc[i, "text"] = df.loc[i, "text"]
-                df_cache = self._reset_index_dtype(df_cache)
-                try:
-                    Path("cached_vectors.pickle_temp").unlink()
-                except FileNotFoundError:
-                    pass
-                df_cache.to_pickle("cached_vectors.pickle_temp")
-                fastText_cachefile.unlink()
-                Path("cached_vectors.pickle_temp").rename("cached_vectors.pickle")
-
-            df["VEC_FULL"] = df["VEC"]
+            pbar = tqdm(total=len(df.index), desc="Vectorizing using fastText")
+            ft_vec = [vec(df.loc[x, "text"], pbar) for x in df.index]
+            pbar.close()
 
             if self.fastText_dim is not None:
                 print(f"Reducing dimensions to {self.fastText_dim} using UMAP")
                 umap_kwargs = {"n_jobs": -1,
                                "verbose": 1,
-                               "n_components": self.fastText_dim,
+                               "n_components": min(self.fastText_dim, len(df.index) - 1),
                                "metric": "cosine",
                                "init": 'spectral',
                                "random_state": 42,
                                "transform_seed": 42,
                                "n_neighbors": 5,
                                "min_dist": 0.01}
-                ft_vec_red = umap.UMAP(**umap_kwargs).fit_transform(np.array(df["VEC_FULL"].values))
-                df["VEC"] = [x for x in ft_vec_red]
+                try:
+                    ft_vec_red = umap.UMAP(**umap_kwargs).fit_transform(ft_vec)
+                    df["VEC"] = [x for x in ft_vec_red]
+                except Exception as e:
+                    red(f"Error when computing UMAP reduction, using all vectors: {e}")
+                    df["VEC"] = [x for x in ft_vec]
+            df["VEC_FULL"] = ft_vec
+
+            if store_vectors:
+                whi("Storing computed vectors")
+                fastText_store = Path("./stored_vectors.pickle")
+                if not fastText_store.exists():
+                    df_store = pd.DataFrame(columns=["cardId", "mod", "text", "VEC"]).set_index("cardId")
+                for x in df.index:
+                    df_store.loc[x, :] = df.loc[x, ["mod", "text", "VEC_FULL"]]
+
 
         elif self.vectorizer == "TFIDF":
-            if import_thread is not None:
-                import_thread.join()
-                time.sleep(0.5)
-
-            print("Creating stop words list...")
-
             if self.TFIDF_tokenize:
                 def tknzer(x):
                     return tokenizer.tokenize(x)
@@ -936,26 +888,26 @@ TFIDF"))
                 self.t_vec = [x for x in t_vec]
                 self.t_red = None
             else:
-#                print(f"Reducing dimensions to {self.TFIDF_dim} using SVD")
-#                svd = TruncatedSVD(n_components=min(self.TFID F_dim,
-#                                                    t_vec.sha pe[1]))
-#                t_red = svd.fit_transform(t_vec)
-#                whi(f"Explained variance ratio after SVD on T f_idf: \
-#{round(sum(svd.explained_variance_ratio_)*100,1)}%")
+                print(f"Reducing dimensions to {self.TFIDF_dim} using SVD")
+                svd = TruncatedSVD(n_components=min(self.TFIDF_dim,
+                                                    t_vec.shape[1]))
+                t_red = svd.fit_transform(t_vec)
+                whi(f"Explained variance ratio after SVD on T f_idf: \
+{round(sum(svd.explained_variance_ratio_)*100,1)}%")
 
-                print(f"Reducing dimensions to {self.TFIDF_dim} using UMAP")
-                umap_kwargs = {"n_jobs": -1,
-                               "verbose": 1,
-                               "n_components": self.TFIDF_dim,
-                               "metric": "cosine",
-                               "init": 'spectral',
-                               "random_state": 42,
-                               "transform_seed": 42,
-                               "n_neighbors": 5,
-                               "min_dist": 0.2}
-
-                U = umap.UMAP(**umap_kwargs)
-                t_red = U.fit_transform(t_vec)
+#                print(f"Reducing dimensions to {self.TFIDF_dim} using UMAP")
+#                umap_kwargs = {"n_jobs": -1,
+#                               "verbose": 1,
+#                               "n_components": self.TFIDF_dim,
+#                               "metric": "cosine",
+#                               "init": 'spectral',
+#                               "random_state": 42,
+#                               "transform_seed": 42,
+#                               "n_neighbors": 5,
+#                               "min_dist": 0.2}
+#
+#                U = umap.UMAP(**umap_kwargs)
+#                t_red = U.fit_transform(t_vec)
 
                 df["VEC_FULL"] = [x for x in t_vec]
                 df["VEC"] = [x for x in t_red]
