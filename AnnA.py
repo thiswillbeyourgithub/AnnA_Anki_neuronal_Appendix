@@ -128,7 +128,8 @@ uncased")
         red("Finished importing modules.\n\n")
     set_global_logging_level(logging.ERROR,
                              ["transformers", "nlp", "torch",
-                              "tensorflow", "sklearn", "nltk"])
+                              "tensorflow", "sklearn", "nltk",
+                              "fasttext"])
 
 
 class AnnA:
