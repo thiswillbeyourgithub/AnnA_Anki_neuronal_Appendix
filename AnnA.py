@@ -698,7 +698,7 @@ threads of size {batchsize})")
         which can be found at the top of the file. If not relevant field are
         found then only the first field is kept.
         """
-        def _threaded_field_filter(df, index_list, lock, pbar):
+        def _threaded_field_filter(df, index_list, lock, pbar, stop_reg):
             """
             threaded implementation to speed up execution
             """
@@ -744,8 +744,8 @@ threads of size {batchsize})")
                 for f in fields_to_keep:
                     try:
                         next_field = df.loc[index, "fields"][f.lower()]["value"].strip()
-                        for w in self.stops:
-                            next_field = next_field.replace(w, " ")
+                        for compiled in stop_reg:
+                            next_field = re.sub(compiled, "", next_field)
                         if next_field != "":
                             comb_text = comb_text + next_field + ": "
                     except KeyError as e:
@@ -765,6 +765,7 @@ threads of size {batchsize})")
         lock = threading.Lock()
         threads = []
         to_notify = []
+        stop_reg = [re.compile(rf"\b{w}\b") for w in self.stops]
         with tqdm(total=n,
                   desc="Combining relevant fields",
                   smoothing=0,
