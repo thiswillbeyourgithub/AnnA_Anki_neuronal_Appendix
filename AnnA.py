@@ -88,7 +88,7 @@ def asynchronous_importer(vectorizer, task, fastText_lang):
         AgglomerativeClustering, transformers, normalize, TfidfVectorizer,\
         CountVectorizer, TruncatedSVD, StandardScaler, \
         pairwise_distances, PCA, px, umap, np, tokenizer_bert, \
-        MiniBatchKMeans, interpolate
+        MiniBatchKMeans, interpolate, stopwords
 
     if "numpy" not in sys.modules:
         whi("Began importing modules...\n")
@@ -108,12 +108,9 @@ def asynchronous_importer(vectorizer, task, fastText_lang):
         except Exception as e:
             red(f"Couldn't load fastText model: {e}")
             raise SystemExit()
-    elif vectorizer == "TFIDF":
-        global stopwords
-        from nltk.corpus import stopwords
-        from nltk.stem import PorterStemmer
-        ps = PorterStemmer()
-
+    from nltk.corpus import stopwords
+    from nltk.stem import PorterStemmer
+    ps = PorterStemmer()
     from transformers import BertTokenizerFast
     tokenizer = BertTokenizerFast.from_pretrained("bert-base-multilingual-uncased")
     from sklearn.metrics import pairwise_distances
@@ -269,6 +266,22 @@ class AnnA:
                 red(f"Error with field mapping file, will use default \
 values. {e}")
                 self.field_dic = {"dummyvalue": "dummyvalue"}
+
+        try:
+            stops = []
+            for lang in self.TFIDF_stopw_lang:
+                stops += stopwords.words(lang)
+            if self.TFIDF_tokenize:
+                temp = []
+                [temp.extend(tokenizer.tokenize(x)) for x in stops]
+                stops.extend(temp)
+            elif self.TFIDF_stem:
+                stops += [ps.stem(x) for x in stops]
+            self.stops = list(set(stops))
+        except Exception as e:
+            red(f"Error when extracting stop words: {e}")
+            red("Setting stop words list to None.")
+            self.stops = None
 
         # actual execution
         self.deckname = self._check_deck(deckname, import_thread)
@@ -728,6 +741,8 @@ threads of size {batchsize})")
                 for f in fields_to_keep:
                     try:
                         next_field = df.loc[index, "fields"][f.lower()]["value"].strip()
+                        for w in self.stops:
+                            next_field = next_field.replace(w, " ")
                         if next_field != "":
                             comb_text = comb_text + next_field + ": "
                     except KeyError as e:
@@ -904,26 +919,10 @@ adjust formating issues:")
                 def tknzer(x):
                     return x
 
-            try:
-                stops = []
-                for lang in self.TFIDF_stopw_lang:
-                    stops += stopwords.words(lang)
-                if self.TFIDF_tokenize:
-                    temp = []
-                    [temp.extend(tknzer(x)) for x in stops]
-                    stops.extend(temp)
-                elif self.TFIDF_stem:
-                    stops += [ps.stem(x) for x in stops]
-                stops = list(set(stops))
-            except Exception as e:
-                red(f"Error when extracting stop words: {e}")
-                red("Setting stop words list to None.")
-                stops = None
-
             vectorizer = TfidfVectorizer(strip_accents="ascii",
                                          lowercase=True,
                                          tokenizer=tknzer,
-                                         stop_words=stops,
+                                         stop_words=None,
                                          ngram_range=(1, 6),
                                          max_features=1000,
                                          norm="l2")
