@@ -30,10 +30,11 @@ signal.signal(signal.SIGINT, (lambda signal, frame: pdb.set_trace()))
 
 # adds logger, restrict it to 5000 lines
 Path("logs.txt").write_text(
-        "\n".join(
-            Path("logs.txt").read_text().split("\n")[-5000:]))
-logging.basicConfig(filename="logs.txt", filemode='a',
-        format=f"{time.asctime()}: %(message)s")
+    "\n".join(
+        Path("logs.txt").read_text().split("\n")[-5000:]))
+logging.basicConfig(filename="logs.txt",
+                    filemode='a',
+                    format=f"{time.asctime()}: %(message)s")
 log = logging.getLogger()
 log.setLevel(logging.INFO)
 
@@ -196,7 +197,9 @@ class AnnA:
 
         # start importing large modules
         import_thread = threading.Thread(target=asynchronous_importer,
-                                         args=(vectorizer, task, fastText_lang))
+                                         args=(vectorizer,
+                                               task,
+                                               fastText_lang))
         import_thread.start()
 
         # loading args
@@ -241,11 +244,12 @@ class AnnA:
                 raise Exception(f"Acronym file was not found: {acronym_list}")
             else:
                 imp = importlib.import_module(
-                        acronym_list.replace(".py", ""))
+                    acronym_list.replace(".py", ""))
                 acronym_dict = imp.acronym_dict
                 compiled_dic = {}
                 for ac in acronym_dict.keys():
-                    compiled = re.compile(r"\b"+ac+r"\b", flags=re.IGNORECASE)
+                    compiled = re.compile(r"\b" + ac + r"\b",
+                                          flags=re.IGNORECASE)
                     compiled_dic[compiled] = acronym_dict[ac]
                 self.acronym_dict = compiled_dic
         if self.field_mappings is not None:
@@ -253,7 +257,7 @@ class AnnA:
             try:
                 assert f.exists()
                 imp = importlib.import_module(
-                        self.field_mappings.replace(".py", ""))
+                    self.field_mappings.replace(".py", ""))
                 self.field_dic = imp.field_dic
                 if self.vectorizer == "fastText":
                     # LM should not be used with repeting fields
@@ -282,13 +286,16 @@ values. {e}")
             self._compute_card_vectors(import_thread=import_thread)
             if clustering_enable:
                 self.compute_clusters(minibatchk_kwargs={"verbose": 0})
-        elif task in ["bury_excess_learning_cards", "bury_excess_review_cards"]:
+
+        elif task in ["bury_excess_learning_cards",
+                      "bury_excess_review_cards"]:
             # bypasses most of the code to bury learning cards
             # directly in the deck without creating filtered decks
             if task == "bury_excess_learning_cards":
                 yel("Task : bury some learning cards")
                 if self.reference_order == "relative_overdueness":
-                    red("Reference order cannot be 'relative_overdueness' for this task.")
+                    red("Reference order cannot be 'relative_overdueness' \
+for this task.")
                     raise SystemExit()
             if task == "bury_excess_review_cards":
                 yel("Task : bury some reviews\n")
@@ -363,9 +370,9 @@ execute the code using:\n'import pickle ; a = pickle.load(open(\"last_run.pickle
                                  ).encode('utf-8')
         try:
             response = json.load(urllib.request.urlopen(
-                                    urllib.request.Request(
-                                        'http://localhost:8765',
-                                        requestJson)))
+                urllib.request.Request(
+                    'http://localhost:8765',
+                    requestJson)))
         except (ConnectionRefusedError, urllib.error.URLError) as e:
             raise Exception(f"{e}: is Anki open and ankiconnect enabled?")
 
@@ -401,7 +408,7 @@ execute the code using:\n'import pickle ; a = pickle.load(open(\"last_run.pickle
                 cnt = 0
                 r_list = []
                 target_thread_n = 5
-                batchsize = len(card_id)//target_thread_n+3
+                batchsize = len(card_id) // target_thread_n + 3
                 whi(f"(Large number of cards to retrieve: creating 10 \
 threads of size {batchsize})")
 
@@ -422,7 +429,7 @@ threads of size {batchsize})")
                           smoothing=0) as pbar:
                     for nb in range(0, len(card_id), batchsize):
                         cnt += 1
-                        temp_card_id = card_id[nb: nb+batchsize]
+                        temp_card_id = card_id[nb: nb + batchsize]
                         thread = threading.Thread(target=retrieve_cards,
                                                   args=(temp_card_id,
                                                         lock,
@@ -527,12 +534,11 @@ threads of size {batchsize})")
 -is:suspended -is:buried"
             whi(" >  '" + query)
             rated_cards = self._ankiconnect(action="findCards",
-                                        query=query)
+                                            query=query)
             whi(f"Found {len(rated_cards)} cards...\n")
         else:
             yel("Will not look for cards rated in past days.")
             rated_cards = []
-
 
         if rated_cards != []:
             temp = [x for x in rated_cards if x not in due_cards]
@@ -560,8 +566,8 @@ threads of size {batchsize})")
         yel(f"\nAsking Anki for information about {n} cards...")
         start = time.time()
         list_cardInfo.extend(
-                self._get_cards_info_from_card_id(
-                    card_id=combined_card_list))
+            self._get_cards_info_from_card_id(
+                card_id=combined_card_list))
         whi(f"Got all infos in {int(time.time()-start)} seconds.\n\n")
 
         for i, card in enumerate(list_cardInfo):
@@ -571,9 +577,8 @@ threads of size {batchsize})")
             list_cardInfo[i].pop("css")
             list_cardInfo[i].pop("fields_no_html")
             list_cardInfo[i]["fields"] = dict(
-                    (k.lower(), v)
-                    for k, v in list_cardInfo[i]["fields"].items()
-                    )
+                (k.lower(), v)
+                for k, v in list_cardInfo[i]["fields"].items())
             list_cardInfo[i]["tags"] = " ".join(list_cardInfo[i]["tags"])
             if card["cardId"] in due_cards:
                 list_cardInfo[i]["status"] = "due"
@@ -600,8 +605,9 @@ threads of size {batchsize})")
         """
         if len(string.groups()):
             for i in range(len(string.groups())):
-                if string.group(i+1) is not None:
-                    new_w = new_w.replace('\\' + str(i+1), string.group(i+1))
+                if string.group(i + 1) is not None:
+                    new_w = new_w.replace('\\' + str(i + 1),
+                                          string.group(i + 1))
         out = string.group(0) + f" ({new_w})"
         return out
 
@@ -646,9 +652,10 @@ threads of size {batchsize})")
         if self.acronym_list is not None:
             for compiled, new_word in self.acronym_dict.items():
                 text = s(compiled,
-                         lambda string: self._smart_acronym_replacer(string,
-                                                            compiled,
-                                                            new_word),
+                         lambda string:
+                         self._smart_acronym_replacer(string,
+                                                      compiled,
+                                                      new_word),
                          text)
 
         text = text.replace(" : ", ": ")
@@ -665,7 +672,7 @@ threads of size {batchsize})")
         if self.vectorizer == "TFIDF":
             if self.TFIDF_stem is True:
                 text = " ".join([ps.stem(x) for x in text.split()])
-            text += " " + " ".join(re.findall('src="(.*?\..{2,3})" ', orig))
+            text += " " + " ".join(re.findall(r'src="(.*?\..{2,3})" ', orig))
         return text
 
     def _format_card(self):
@@ -736,7 +743,7 @@ threads of size {batchsize})")
 
         df = self.df.copy()
         n = len(df.index)
-        batchsize = n//5+1
+        batchsize = n // 5 + 1
         lock = threading.Lock()
         threads = []
         to_notify = []
@@ -745,7 +752,7 @@ threads of size {batchsize})")
                   smoothing=0,
                   unit=" card") as pbar:
             for nb in range(0, n, batchsize):
-                sub_card_list = df.index[nb: nb+batchsize]
+                sub_card_list = df.index[nb: nb + batchsize]
                 thread = threading.Thread(target=_threaded_field_filter,
                                           args=(df,
                                                 sub_card_list,
@@ -758,7 +765,7 @@ threads of size {batchsize})")
 
         for notification in list(set(to_notify)):
             red(notification)
-            
+
         df = self.df.copy()
         tqdm.pandas(desc="Formating text", smoothing=0, unit=" card")
         df["text"] = df["comb_text"].progress_apply(lambda x: self._format_text(x))
