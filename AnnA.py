@@ -291,6 +291,7 @@ values. {e}")
         if task == "index":
             yel(f"Task : cache vectors of deck: {self.deckname}\n")
             self.vectorizer = "fastText"
+            self.fastText_dim = None
             self.rated_last_X_days = 0
             self._create_and_fill_df()
             if self.not_enough_cards is True:
