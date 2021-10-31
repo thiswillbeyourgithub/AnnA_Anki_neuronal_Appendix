@@ -100,10 +100,10 @@ def asynchronous_importer(vectorizer, task, fastText_lang):
     from sklearn.feature_extraction.text import CountVectorizer
     if vectorizer == "fastText" or task == "index":
         global fastText, ft
-        import fastText
-        import fastText.util
+        import fasttext as fastText
+        import fasttext.util
         try:
-            fastText.util.download_model(fastText_lang, if_exists='ignore')
+            fasttext.util.download_model(fastText_lang, if_exists='ignore')
             ft = fastText.load_model(f"cc.{fastText_lang[0:2]}.300.bin")
         except Exception as e:
             red(f"Couldn't load fastText model: {e}")
