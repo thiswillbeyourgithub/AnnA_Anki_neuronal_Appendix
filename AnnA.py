@@ -827,16 +827,16 @@ adjust formating issues:")
                     return memo[x]
                 return helper
 
+            get_vec = memoize(ft.get_word_vector)
             def vec(string, pbar):
-                get_vec = memoize(ft.get_word_vector)
                 pbar.update(1)
                 return normalize(np.max([get_vec(x)
                                          for x in string.split(" ")],
-                                        axis=0),
-                                 norm='l2')
+                                        axis=0).reshape(1, -1),
+                                 norm='l2').T
 
             pbar = tqdm(total=len(df.index), desc="Vectorizing using fastText")
-            ft_vec = [vec(df.loc[x, "text"], pbar) for x in df.index]
+            ft_vec = np.array([vec(str(df.loc[x, "text"]), pbar) for x in df.index])
             pbar.close()
 
             if self.fastText_dim is not None:
@@ -856,15 +856,22 @@ adjust formating issues:")
                 except Exception as e:
                     red(f"Error when computing UMAP reduction, using all vectors: {e}")
                     df["VEC"] = [x for x in ft_vec]
-            df["VEC_FULL"] = ft_vec
+            df["VEC_FULL"] = [x for x in ft_vec]
 
             if store_vectors:
                 whi("Storing computed vectors")
                 fastText_store = Path("./stored_vectors.pickle")
                 if not fastText_store.exists():
-                    df_store = pd.DataFrame(columns=["cardId", "mod", "text", "VEC"]).set_index("cardId")
-                for x in df.index:
-                    df_store.loc[x, :] = df.loc[x, ["mod", "text", "VEC_FULL"]]
+                    df_store = pd.DataFrame(columns=["cardId", "mod", "text", "VEC_FULL"]).set_index("cardId")
+                else:
+                    df_store = pd.read_pickle(fastText_store)
+                for i in tqdm(df.index):
+                    df_store.loc[i, :] = df.loc[i, ["mod", "text", "VEC_FULL"]]
+                df_store.to_pickle("stored_vectors.pickle_temp")
+                if fastText_store.exists():
+                    fastText_store.unlink()
+                Path("stored_vectors.pickle_temp").rename("stored_vectors.pickle")
+
 
 
         elif self.vectorizer == "TFIDF":
