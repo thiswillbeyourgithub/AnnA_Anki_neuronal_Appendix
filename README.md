@@ -123,9 +123,10 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 
 ## TODO
 * fix the nan scoring of woanna + check when printing distribution change if ref has to be max or min for anki
-* explain what is a vectorizer
-* set better tokenizer settings for tf_idf
+* test using fasttext get_sentence_vector
 * replace all df_temp by a on-memory numpy array
+* fix searching + open the browser and add tags, then ask to sort by tags
+* set better tokenizer settings for tf_idf
 * check that docstrings are up to date
 * implement index scoring
 
