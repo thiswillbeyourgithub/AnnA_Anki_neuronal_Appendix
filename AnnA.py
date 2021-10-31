@@ -258,7 +258,7 @@ class AnnA:
                 imp = importlib.import_module(
                     self.field_mappings.replace(".py", ""))
                 self.field_dic = imp.field_dic
-                if self.vectorizer == "fastText":
+                if self.vectorizer == "fastText" or self.task == "index":
                     # LM should not be used with repeting fields
                     temp = {}
                     for a, b in self.field_dic.items():
