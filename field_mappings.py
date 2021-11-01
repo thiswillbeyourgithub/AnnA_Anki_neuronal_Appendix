@@ -3,8 +3,6 @@
 # * for example : "occlusion": ["Header", "Image"] will match all templates that
 #     contain "occlusion" in their name
 # * note that matching for note type or field name is case insensitive
-# * if you use tfidf as vectorizer, you can add a field multiple times to
-#   give it more importance relative to other fields.
 
 field_dic = {
              "clozolkor": ["Header", "Header", "Body", "Body", "Body", "Hint", "More"],
