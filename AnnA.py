@@ -1,3 +1,4 @@
+import gc
 import sys
 import pickle
 import time
@@ -345,6 +346,7 @@ for this task.")
                     self.task_filtered_deck()
 
         # pickle itself
+        self._collect_memory()
         if save_instance_as_pickle:
             yel("\nSaving instance as 'last_run.pickle'...")
             if Path("./last_run.pickle").exists():
@@ -363,6 +365,9 @@ execute the code using:\n'import pickle ; a = pickle.load(open(\"last_run.pickle
             self._ankiconnect(action="guiCheckDatabase")
 
         yel(f"Done with {self.deckname}")
+
+    def _collect_memory(self):
+        gc.collect()
 
     def _reset_index_dtype(self, df):
         """
@@ -497,6 +502,7 @@ threads of size {batchsize})")
         create a pandas DataFrame, fill it with the information gathered from
         anki connect like card content, intervals, etc
         """
+        self._collect_memory()
 
         if self.highjack_due_query is not None:
             red("Highjacking due card list:")
@@ -698,6 +704,7 @@ threads of size {batchsize})")
         which can be found at the top of the file. If not relevant field are
         found then only the first field is kept.
         """
+        self._collect_memory()
         def _threaded_field_filter(df, index_list, lock, pbar, stop_reg):
             """
             threaded implementation to speed up execution
@@ -809,6 +816,7 @@ adjust formating issues:")
         df["VEC"] contains either all the vectors or less if you
             enabled dimensionality reduction
         """
+        self._collect_memory()
         if df is None:
             df = self.df
 
@@ -933,6 +941,7 @@ TFIDF"))
         * the distance matrix can be parallelised by scikit learn so I didn't
             bother saving and reusing the matrix
         """
+        self._collect_memory()
         df = self.df
 
         print("\nComputing distance matrix on all available cores...")
@@ -1020,6 +1029,7 @@ TFIDF"))
         CAREFUL: this docstring might not be up to date as I am constantly
             trying to improve the code
         """
+        self._collect_memory()
         # getting args
         reference_order = self.reference_order
         df = self.df.copy()
@@ -1224,6 +1234,7 @@ make it into the queue:")
         display the cards in the best optimal order. Useful to see if something
         went wrong before creating the filtered deck
         """
+        self._collect_memory()
         order = self.opti_rev_order[:display_limit]
         print(self.df.loc[order, "text"])
         return True
@@ -1249,6 +1260,7 @@ make it into the queue:")
             deck will be created and AnnA will just bury the cards that are
             too similar
         """
+        self._collect_memory()
         if task in ["bury_excess_learning_cards", "bury_excess_review_cards"]:
             to_keep = self.opti_rev_order
             to_bury = [x for x in self.due_cards if x not in to_keep]
@@ -1370,6 +1382,7 @@ as opti_rev_order!")
         * n_topics is the number of topics (=word) to get for each cluster
         * To find the topic of each cluster, ctf-idf is used
         """
+        self._collect_memory()
         df = self.df
         if self.clustering_nb_clust is None or \
                 self.clustering_nb_clust == "auto":
