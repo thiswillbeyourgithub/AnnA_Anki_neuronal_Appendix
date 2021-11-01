@@ -836,13 +836,19 @@ adjust formating issues:")
                     return memo[x]
                 return helper
 
+            alphanum = re.compile("\W")
             get_vec = memoize(ft.get_word_vector)
             def vec(string, pbar):
                 pbar.update(1)
-                return normalize(np.max([get_vec(x)
-                                         for x in string.split(" ")],
+                return normalize(np.sum([get_vec(x)
+                                         for x in re.sub(
+                                             alphanum,
+                                             "",
+                                             string).split(" ")],
                                         axis=0).reshape(1, -1),
-                                 norm='l2').T
+                                 norm='l1').T
+                # I used l1 normalization because l2 would give too
+                # much influence to repeated words
 
             pbar = tqdm(total=len(df.index), desc="Vectorizing using fastText")
             ft_vec = np.array([vec(str(df.loc[x, "text"]), pbar) for x in df.index])
