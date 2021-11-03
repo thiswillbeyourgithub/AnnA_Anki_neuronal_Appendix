@@ -765,26 +765,38 @@ threads of size {batchsize})")
 
                 with lock:
                     self.df.at[index, "comb_text"] = comb_text
-                pbar.update(1)
+                    pbar.update(1)
 
-        df = self.df.copy()
-        n = len(df.index)
-        batchsize = n // 5 + 1
+#        import multiprocessing as mp
+#        lock = mp.Lock()
+#        man = mp.Manager()
+#        ns = man.Namespace()
+#        ns.df = self.df
+#        ns.df["comb_text"] = ""
+#        pool = mp.Pool(processes=7)
+
+        n = len(self.df.index)
+        #batchsize = n // mp.cpu_count() + 1
+        batchsize = n // 4 + 1
         lock = threading.Lock()
+
         threads = []
         to_notify = []
         stop_reg = [re.compile(rf"\b{w}\b") for w in self.stops]
+
         with tqdm(total=n,
                   desc="Combining relevant fields",
                   smoothing=0,
                   unit=" card") as pbar:
+
             for nb in range(0, n, batchsize):
-                sub_card_list = df.index[nb: nb + batchsize]
+                sub_card_list = self.df.index[nb: nb + batchsize]
                 thread = threading.Thread(target=_threaded_field_filter,
-                                          args=(df,
+                                          args=(self.df,
                                                 sub_card_list,
                                                 lock,
-                                                pbar),
+                                                pbar,
+                                                stop_reg),
                                           daemon=False)
                 thread.start()
                 threads.append(thread)
@@ -793,18 +805,17 @@ threads of size {batchsize})")
         for notification in list(set(to_notify)):
             red(notification)
 
-        df = self.df.copy()
         tqdm.pandas(desc="Formating text", smoothing=0, unit=" card")
-        df["text"] = df["comb_text"].progress_apply(lambda x: self._format_text(x))
+        self.df["text"] = self.df["comb_text"].progress_apply(lambda x: self._format_text(x))
         print("\n\nPrinting 5 random samples of your formated text, to help \
 adjust formating issues:")
         pd.set_option('display.max_colwidth', 80)
-        sub_index = random.choices(df.index.tolist(), k=5)
+        sub_index = random.choices(self.df.index.tolist(), k=5)
         for i in sub_index:
-            print(f" *  {i}: {df.loc[i, 'text']}")
+            print(f" *  {i}: {self.df.loc[i, 'text']}")
         pd.reset_option('display.max_colwidth')
         print("\n")
-        self.df = df.sort_index()
+        self.df = self.df.sort_index()
         return True
 
     def _compute_card_vectors(self,
