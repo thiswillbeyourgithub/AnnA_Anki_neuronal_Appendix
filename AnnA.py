@@ -172,7 +172,7 @@ class AnnA:
                  vectorizer="TFIDF",  # can be "TFIDF" or "fastText"
                  fastText_dim=100,
                  fastText_lang="fr",
-                 TFIDF_dim=250,
+                 TFIDF_dim=100,
                  TFIDF_stopw_lang=["english", "french"],
                  TFIDF_stem=False,
                  TFIDF_tokenize=True,
@@ -576,7 +576,7 @@ threads of size {batchsize})")
         limit = self.debug_card_limit if self.debug_card_limit else None
         combined_card_list = list(rated_cards + due_cards)[:limit]
 
-        if len(combined_card_list) < 20:
+        if len(combined_card_list) < 40:
             red("You don't have enough cards!\nStopping.")
             self.not_enough_cards = True
             return
