@@ -5,7 +5,10 @@
 # * note that matching for note type or field name is case insensitive
 
 field_dic = {
-             "clozolkor": ["Header", "Header", "Body", "Body", "Body", "Hint", "More"],
+             "clozolkor": ["Header", "Header",
+                           "Body", "Body", "Body", "Body", "Body",
+                           "Hint",
+                           "More"],
              # shameless plug: clozolkor is my own template,
              # more info: https://github.com/thiswillbeyourgithub/Clozolkor
              "occlusion": ["Header", "Header", "Header", "Header", "Header",
