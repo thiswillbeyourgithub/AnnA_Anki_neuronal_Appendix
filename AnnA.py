@@ -844,24 +844,31 @@ adjust formating issues:")
 
         if self.vectorizer == "fastText":
 
+            alphanum = re.compile(r"\W")
+            apostrophes = re.compile("[a-zA-Z]\'")
+
+            def preprocessor(string):
+                return re.sub(alphanum,
+                              "",
+                              re.sub(apostrophes, "", string.lower())
+                              )
+
             def memoize(f):
                 memo = {}
 
                 def helper(x):
                     if x not in memo:
-                        memo[x] = f(x)
+                        memo[x] = f(preprocessor(x))
                     return memo[x]
                 return helper
 
-            alphanum = re.compile("\W")
             get_vec = memoize(ft.get_word_vector)
+
             def vec(string, pbar):
                 pbar.update(1)
                 return normalize(np.sum([get_vec(x)
-                                         for x in re.sub(
-                                             alphanum,
-                                             "",
-                                             string).split(" ")],
+                                         for x in string.split(" ")
+                                         if x != ""],
                                         axis=0).reshape(1, -1),
                                  norm='l1').T
                 # I used l1 normalization because l2 would give too
