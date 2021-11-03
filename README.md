@@ -139,6 +139,7 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 
 * turn into an anki addon
 
+* add ability to click on plots to open the browser : https://plotly.com/python/click-events/
 * look into sentence mining methods from sbert, that might contain useful ideas
 * take a look at topic modelling techniques that might be cleaner to invoke than the current ctf-idf implementation
 * warn LW
