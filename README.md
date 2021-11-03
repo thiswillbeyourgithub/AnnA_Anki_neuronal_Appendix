@@ -126,7 +126,6 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * remove search_note and the store, it will be a separate project that leverages ankipandas
 * print result score with pyfiglet at the end
 * remove accents when fasttext
-* compare file is not using fasttext, fix that and use it to text magno cellulaire
 * ankify how to use multiprocessing manager: https://izziswift.com/multiprocessing-in-python-sharing-large-object-e-g-pandas-dataframe-between-multiple-processes/
 
 * fix the nan scoring of woanna + check when printing distribution change if ref has to be max or min for anki
