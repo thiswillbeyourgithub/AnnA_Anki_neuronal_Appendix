@@ -966,7 +966,7 @@ TFIDF"))
         self.df = df
         return True
 
-    def _compute_distance_matrix(self, method="cosine", input_col="VEC"):
+    def _compute_distance_matrix(self, input_col="VEC"):
         """
         compute distance matrix between all the cards
         * the distance matrix can be parallelised by scikit learn so I didn't
@@ -981,7 +981,7 @@ TFIDF"))
                      for x in range(len(df.loc[df.index[0], input_col]))],
             data=[x[0:] for x in df[input_col]])
 
-        df_dist = pairwise_distances(df_temp, n_jobs=-1, metric=method)
+        df_dist = pairwise_distances(df_temp, n_jobs=-1, metric="cosine")
 #        print("Interpolating matrix between 0 and 1...")
 #        df_dist = np.interp(df_dist, (df_dist.min(), df_dist.max()), (0, 1))
 
@@ -1394,7 +1394,7 @@ as opti_rev_order!")
         return True
 
     def compute_clusters(self,
-                         method="minibatch-kmeans",
+                         algo="minibatch-kmeans",
                          input_col="VEC",
                          cluster_col="clusters",
                          n_topics=5,
@@ -1443,19 +1443,19 @@ as opti_rev_order!")
         if agglo_kwargs is not None:
             agglo_kwargs_deploy.update(agglo_kwargs)
 
-        if method.lower() in "minibatch-kmeans":
+        if algo.lower() in "minibatch-kmeans":
             clust = MiniBatchKMeans(**minibatchk_kwargs_deploy)
-            method = "minibatch-K-Means"
-        elif method.lower() in "kmeans":
+            algo = "minibatch-K-Means"
+        elif algo.lower() in "kmeans":
             clust = KMeans(**kmeans_kwargs_deploy)
-            method = "K-Means"
-        elif method.lower() in "DBSCAN":
+            algo = "K-Means"
+        elif algo.lower() in "DBSCAN":
             clust = DBSCAN(**dbscan_kwargs_deploy)
-            method = "DBSCAN"
-        elif method.lower() in "agglomerative":
+            algo = "DBSCAN"
+        elif algo.lower() in "agglomerative":
             clust = AgglomerativeClustering(**agglo_kwargs_deploy)
-            method = "Agglomerative Clustering"
-        print(f"Clustering using {method}...")
+            algo = "Agglomerative Clustering"
+        print(f"Clustering using {algo}...")
 
         df_temp = pd.DataFrame(
             columns=["V"+str(x)
@@ -1685,7 +1685,6 @@ plotting...")
                          user_col="VEC_FULL",
                          do_format_input=False,
                          anki_or_print="anki",
-                         dist="cosine",
                          reverse=False,
                          fastText_lang="fr",
                          offline=False):
@@ -1745,7 +1744,7 @@ be used.")
             df["distance"] = df[user_col].progress_apply(
                     lambda x: pairwise_distances(embed.reshape(1, -1),
                                                  x.reshape(1, -1),
-                                                 metric=dist))
+                                                 metric="cosine"))
             df["distance"] = df["distance"].astype("float")
         except ValueError as e:
             red(f"Error {e}: did you select column 'VEC' instead of \
