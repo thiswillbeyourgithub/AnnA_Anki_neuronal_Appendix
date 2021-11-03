@@ -802,6 +802,12 @@ threads of size {batchsize})")
                 threads.append(thread)
             [t.join() for t in threads]
 
+        m = sum(self.df.isna()["comb_text"])
+        if m != 0:
+            lis = ','.join([str(x) for x in self.df.index[self.df.isna()["comb_text"]].tolist()])
+            to_notify.append(f"Found {m} null values in comb_text: {lis}")
+            self.df["comb_text"] = self.df["comb_text"].fillna("error while processing, null content")
+
         for notification in list(set(to_notify)):
             red(notification)
 
