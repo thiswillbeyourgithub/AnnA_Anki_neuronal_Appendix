@@ -122,12 +122,20 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * `show_acronyms` shows the acronym present in your deck that were not extended. Useful if you want to adjust your acronym list.
 
 ## TODO
+* faq: mention "how can I know if it's working?"
+* remove search_note and the store, it will be a separate project that leverages ankipandas
+* print result score with pyfiglet at the end
+* remove accents when fasttext
+* compare file is not using fasttext, fix that and use it to text magno cellulaire
+* ankify how to use multiprocessing manager: https://izziswift.com/multiprocessing-in-python-sharing-large-object-e-g-pandas-dataframe-between-multiple-processes/
+
 * fix the nan scoring of woanna + check when printing distribution change if ref has to be max or min for anki
+* fix searching + open the browser and add tags, then ask to sort by tags
 * test using fasttext get_sentence_vector
 * replace all df_temp by a on-memory numpy array
-* fix searching + open the browser and add tags, then ask to sort by tags
 * set better tokenizer settings for tf_idf
 * check that docstrings are up to date
+* implement ability to set a correction vector (ex: favor cards closer to "neuroanatomy")
 * implement index scoring
 
 * turn into an anki addon
