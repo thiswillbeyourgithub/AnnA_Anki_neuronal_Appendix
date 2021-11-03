@@ -1225,7 +1225,7 @@ make it into the queue:")
             woAnnA = [x
                       for x in df.sort_values(
                           "ref", ascending=True).iloc[0:len(queue)].index.tolist()
-                      if x in dueNQ]
+                      ]
             yel(np.sqrt(np.mean(np.square(
                 self.df_dist_unscaled.loc[woAnnA, woAnnA].values.flatten()))))
         except Exception as e:
