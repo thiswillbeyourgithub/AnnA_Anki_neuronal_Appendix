@@ -1363,7 +1363,7 @@ deck.")
 
         whi(f"Creating deck containing the cards to review: \
 {filtered_deck_name}")
-        query = "cid:" + ','.join([str(x) for x in self.opti_rev_order])
+        query = "is:due -rated:1 cid:" + ','.join([str(x) for x in self.opti_rev_order])
         self._ankiconnect(action="createFilteredDeck",
                           newDeckName=filtered_deck_name,
                           searchQuery=query,
