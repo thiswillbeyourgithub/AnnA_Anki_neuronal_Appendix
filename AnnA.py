@@ -818,9 +818,10 @@ threads of size {batchsize})")
         print("\n\nPrinting 5 random samples of your formated text, to help \
 adjust formating issues:")
         pd.set_option('display.max_colwidth', 80)
+        max_length = 70
         sub_index = random.choices(self.df.index.tolist(), k=5)
         for i in sub_index:
-            print(f" *  {i}: {self.df.loc[i, 'text']}")
+            print(f" *  {i}: {str(self.df.loc[i, 'text'])[0:max_length]}")
         pd.reset_option('display.max_colwidth')
         print("\n")
         self.df = self.df.sort_index()
@@ -1003,10 +1004,11 @@ dimension reduction. Using SVD instead: {e}")
         # for troubleshooting
         red("Printing the most semantically different cards:")
         pd.set_option('display.max_colwidth', 80)
+        max_length = 70
         maxs = np.where(self.df_dist.values == np.max(self.df_dist.values))
         maxs = [x for x in zip(maxs[0], maxs[1])]
-        yel("* " + df.loc[df.index[maxs[0][0]]].text)
-        yel("* " + df.loc[df.index[maxs[0][1]]].text)
+        yel("* " + str(df.loc[df.index[maxs[0][0]]].text)[0:max_length])
+        yel("* " + str(df.loc[df.index[maxs[0][1]]].text)[0:max_length])
         print("")
 
         printed = False
@@ -1022,12 +1024,12 @@ dimension reduction. Using SVD instead: {e}")
             random.shuffle(mins)
             for x in range(len(mins)):
                 pair = mins[x]
-                text_1 = df.loc[df.index[pair[0]]].text
-                text_2 = df.loc[df.index[pair[1]]].text
+                text_1 = str(df.loc[df.index[pair[0]]].text)
+                text_2 = str(df.loc[df.index[pair[1]]].text)
                 if text_1 != text_2:
                     red("Printing among most semantically similar cards:")
-                    yel("* " + text_1)
-                    yel("* " + text_2)
+                    yel("* " + text_1[0:max_length])
+                    yel("* " + text_2[0:max_length])
                     printed = True
                     break
         if printed is False:
