@@ -250,8 +250,11 @@ class AnnA:
                 acronym_dict = imp.acronym_dict
                 compiled_dic = {}
                 for ac in acronym_dict.keys():
-                    compiled = re.compile(r"\b" + ac + r"\b",
-                                          flags=re.IGNORECASE)
+                    if ac.lower() == ac:
+                        compiled = re.compile(r"\b" + ac + r"\b",
+                                              flags=re.IGNORECASE)
+                    else:
+                        compiled = re.compile(r"\b" + ac + r"\b")
                     compiled_dic[compiled] = acronym_dict[ac]
                 self.acronym_dict = compiled_dic
         if self.field_mappings is not None:
