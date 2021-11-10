@@ -104,15 +104,16 @@ def asynchronous_importer(vectorizer, task, fastText_lang):
     from sklearn.feature_extraction.text import TfidfVectorizer
     from sklearn.feature_extraction.text import CountVectorizer
     if vectorizer == "fastText" or task == "index":
-        global fastText, ft
-        import fasttext as fastText
-        import fasttext.util
-        try:
-            fasttext.util.download_model(fastText_lang, if_exists='ignore')
-            ft = fastText.load_model(f"cc.{fastText_lang[0:2]}.300.bin")
-        except Exception as e:
-            red(f"Couldn't load fastText model: {e}")
-            raise SystemExit()
+        if "ft" not in globals():
+            global fastText, ft
+            import fasttext as fastText
+            import fasttext.util
+            try:
+                fasttext.util.download_model(fastText_lang, if_exists='ignore')
+                ft = fastText.load_model(f"cc.{fastText_lang[0:2]}.300.bin")
+            except Exception as e:
+                red(f"Couldn't load fastText model: {e}")
+                raise SystemExit()
     from nltk.stem import PorterStemmer
     ps = PorterStemmer()
     from sklearn.metrics import pairwise_distances
