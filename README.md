@@ -124,6 +124,8 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * `show_acronyms` shows the acronym present in your deck that were not extended. Useful if you want to adjust your acronym list.
 
 ## TODO
+* actually the slicing of the stats showing the usefulness of AnnA is broken, take a look at the algorithm to compute order
+* add tags to cards that are to do on a given run, that would help rebuilding on mobile
 * faq: mention "how can I know if it's working?"
 * remove search_note and the store, it will be a separate project that leverages ankipandas
 * print result score with pyfiglet at the end
@@ -138,6 +140,7 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * check that docstrings are up to date
 * implement ability to set a correction vector (ex: favor cards closer to "neuroanatomy")
 * implement index scoring
+* implement multilingual support thanks to these people: https://github.com/babylonhealth/fastText_multilingual
 
 * turn into an anki addon
 
