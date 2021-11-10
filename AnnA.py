@@ -759,9 +759,9 @@ threads of size {batchsize})")
                 comb_text = ""
                 for f in fields_to_keep:
                     try:
-                        next_field = df.loc[index, "fields"][f.lower()]["value"].strip()
-                        for compiled in stop_reg:
-                            next_field = re.sub(compiled, "", next_field)
+                        next_field = re.sub(stop_reg,
+                                            "",
+                                df.loc[index, "fields"][f.lower()]["value"].strip())
                         if next_field != "":
                             comb_text = comb_text + next_field + ": "
                     except KeyError as e:
@@ -790,7 +790,8 @@ threads of size {batchsize})")
 
         threads = []
         to_notify = []
-        stop_reg = [re.compile(rf"\b{w}\b") for w in self.stops]
+        # stopwords
+        stop_reg = re.compile("\b" + "\b|\b".join(self.stops) + "\b")
 
         with tqdm(total=n,
                   desc="Combining relevant fields",
