@@ -1251,21 +1251,23 @@ lowest value.")
             yel(np.sqrt(np.mean(np.square(
                 self.df_dist_unscaled.loc[queue, queue].values.flatten()))))
 
-            red("Quadratic mean of the distance among the cards that didn't \
-make it into the queue:")
             dueNQ = [x for x in self.due_cards if x not in queue]
-            yel(np.sqrt(np.mean(np.square(
-                self.df_dist_unscaled.loc[dueNQ, dueNQ].values.flatten()))))
+            if dueNQ:
+                red("Quadratic mean of the distance among the cards that didn't \
+make it into the queue:")
+                yel(np.sqrt(np.mean(np.square(
+                    self.df_dist_unscaled.loc[dueNQ, dueNQ].values.flatten()))))
 
             red("Quadratic mean of the distance if you had not used AnnA:")
             woAnnA = [x
                       for x in df.sort_values(
                           "ref", ascending=True).iloc[0:len(queue)].index.tolist()
+                      if x in self.due_cards
                       ]
             yel(np.sqrt(np.mean(np.square(
                 self.df_dist_unscaled.loc[woAnnA, woAnnA].values.flatten()))))
         except Exception as e:
-            err(f"\nException: {e}")
+            red(f"\nException: {e}")
 
         yel("Done computing order.\n")
         self.opti_rev_order = queue
