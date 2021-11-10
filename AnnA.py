@@ -92,7 +92,7 @@ def asynchronous_importer(vectorizer, task, fastText_lang):
     global np, KMeans, DBSCAN, ps, \
         AgglomerativeClustering, transformers, normalize, TfidfVectorizer,\
         CountVectorizer, TruncatedSVD, StandardScaler, \
-        pairwise_distances, PCA, px, umap, np, \
+        pairwise_distances, PCA, px, umap,\
         MiniBatchKMeans, interpolate
 
     if "numpy" not in sys.modules:
@@ -197,6 +197,9 @@ class AnnA:
             red(pyfiglet.figlet_format("AnnA"))
             red("(Anki neuronal Appendix)\n\n")
 
+        if vectorizer == "fasttext":
+            vectorizer = "fastText"
+
         # start importing large modules
         import_thread = threading.Thread(target=asynchronous_importer,
                                          args=(vectorizer,
@@ -205,13 +208,11 @@ class AnnA:
         import_thread.start()
 
         # loading args
-        if vectorizer == "fasttext":
-            vectorizer = "fastText"
         self.replace_greek = replace_greek
         self.keep_ocr = keep_ocr
         self.desired_deck_size = desired_deck_size
         self.rated_last_X_days = rated_last_X_days
-        self.due_threshold=due_threshold
+        self.due_threshold = due_threshold
         self.debug_card_limit = debug_card_limit
         self.clustering_nb_clust = clustering_nb_clust
         self.highjack_due_query = highjack_due_query
