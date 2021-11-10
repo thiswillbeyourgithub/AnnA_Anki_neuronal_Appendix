@@ -1032,7 +1032,11 @@ dimension reduction. Using SVD instead: {e}")
 
         printed = False
         lowest_values = [0]
+        start_time = time.time()
         for i in range(9999):
+            if time.time() - start_time >= 60:
+                red("Taking too long to show similar cards, skipping")
+                break
             if printed is True:
                 break
             lowest_values.append(self.df_dist.values[self.df_dist.values > max(
