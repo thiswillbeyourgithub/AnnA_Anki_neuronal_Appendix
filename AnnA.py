@@ -147,6 +147,7 @@ class AnnA:
                  # "order_added"
                  desired_deck_size="80%",
                  rated_last_X_days=4,
+                 due_threshold=50,
                  highjack_due_query=None,
                  highjack_rated_query=None,
                  stride=2500,
@@ -210,6 +211,7 @@ class AnnA:
         self.keep_ocr = keep_ocr
         self.desired_deck_size = desired_deck_size
         self.rated_last_X_days = rated_last_X_days
+        self.due_threshold=due_threshold
         self.debug_card_limit = debug_card_limit
         self.clustering_nb_clust = clustering_nb_clust
         self.highjack_due_query = highjack_due_query
@@ -581,8 +583,8 @@ threads of size {batchsize})")
         limit = self.debug_card_limit if self.debug_card_limit else None
         combined_card_list = list(rated_cards + due_cards)[:limit]
 
-        if len(combined_card_list) < 40:
-            red("You don't have enough cards!\nStopping.")
+        if len(combined_card_list) < self.due_threshold:
+            red("Number of due cards is less than threshold.\nStopping.")
             self.not_enough_cards = True
             return
         else:
