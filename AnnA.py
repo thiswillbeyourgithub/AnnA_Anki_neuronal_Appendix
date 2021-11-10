@@ -885,14 +885,17 @@ adjust formating issues:")
                 # much influence to repeated words
 
             pbar = tqdm(total=len(df.index), desc="Vectorizing using fastText")
-            ft_vec = np.array([vec(str(df.loc[x, "text"]), pbar) for x in df.index])
+            ft_vec = np.array(
+                [vec(str(df.loc[x, "text"]), pbar) for x in df.index],
+                dtype=object).reshape((len(df.index), 300))
             pbar.close()
 
             if self.fastText_dim is not None:
                 print(f"Reducing dimensions to {self.fastText_dim} using UMAP")
                 umap_kwargs = {"n_jobs": -1,
                                "verbose": 1,
-                               "n_components": min(self.fastText_dim, len(df.index) - 1),
+                               "n_components": min(self.fastText_dim,
+                                                   len(df.index) - 1),
                                "metric": "cosine",
                                "init": 'spectral',
                                "random_state": 42,
