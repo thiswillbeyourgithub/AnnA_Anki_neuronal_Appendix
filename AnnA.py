@@ -1257,10 +1257,7 @@ lowest value.")
                 else:
                     queue.append(indTODO[
                             (-df.loc[indTODO, "ref"].values +\
-                                0.9*np.min(
-                                    df_dist.loc[indQUEUE[-self.stride:], indTODO].values,
-                                    axis=0) +\
-                                0.1*np.mean(
+                                np.min(
                                     df_dist.loc[indQUEUE[-self.stride:], indTODO].values,
                                     axis=0)
                              ).argmax()])
