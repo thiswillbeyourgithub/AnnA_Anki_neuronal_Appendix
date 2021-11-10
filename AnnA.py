@@ -206,7 +206,7 @@ class AnnA:
 
         # loading args
         if vectorizer == "fasttext":
-            vectorizer == "fastText"
+            vectorizer = "fastText"
         self.replace_greek = replace_greek
         self.keep_ocr = keep_ocr
         self.desired_deck_size = desired_deck_size
