@@ -811,8 +811,10 @@ threads of size {batchsize})")
                 thread.start()
                 threads.append(thread)
             [t.join() for t in threads]
-            time.sleep(1)
 
+        # wait one second per thousand cards, to make sure
+        # the threads closed cleanly
+        time.sleep(len(self.df.index) // 1000)
         m = sum(self.df.isna()["comb_text"])
         if m != 0:
             lis = ','.join([str(x) for x in self.df.index[self.df.isna()["comb_text"]].tolist()])
