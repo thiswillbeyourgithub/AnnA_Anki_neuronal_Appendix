@@ -131,7 +131,7 @@ def asynchronous_importer(vectorizer, task, fastText_lang):
     set_global_logging_level(logging.ERROR,
                              ["transformers", "nlp", "torch",
                               "tensorflow", "sklearn", "nltk",
-                              "fasttext"])
+                              "fastText"])
 
 
 class AnnA:
