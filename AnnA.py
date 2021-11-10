@@ -809,6 +809,7 @@ threads of size {batchsize})")
                 thread.start()
                 threads.append(thread)
             [t.join() for t in threads]
+            time.sleep(1)
 
         m = sum(self.df.isna()["comb_text"])
         if m != 0:
