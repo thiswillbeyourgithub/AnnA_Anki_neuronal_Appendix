@@ -876,23 +876,27 @@ adjust formating issues:")
 
             get_vec = memoize(ft.get_word_vector)
 
-            def vec(string, pbar):
-                pbar.update(1)
+            def vec(string, pbar=None):
+                if pbar is not None:
+                    pbar.update(1)
                 return normalize(np.sum([get_vec(x)
                                          for x in string.split(" ")
                                          if x != ""],
                                         axis=0).reshape(1, -1),
-                                 norm='l1').T
+                                 norm='l1')
                 # I used l1 normalization because l2 would give too
                 # much influence to repeated words
 
             pbar = tqdm(total=len(df.index), desc="Vectorizing using fastText")
-            ft_vec = np.array(
-                [vec(str(df.loc[x, "text"]), pbar) for x in df.index],
-                dtype=object).reshape((len(df.index), 300))
+            ft_vec = np.empty(shape=(len(df.index), 300), dtype=float)
+            for i, x in enumerate(df.index):
+                ft_vec[i] = vec(str(df.loc[x, "text"]), pbar)
             pbar.close()
 
-            if self.fastText_dim is not None:
+            if self.fastText_dim is None:
+                    df["VEC"] = [x for x in ft_vec]
+                    df["VEC_FULL"] = [x for x in ft_vec]
+            else:
                 print(f"Reducing dimensions to {self.fastText_dim} using UMAP")
                 umap_kwargs = {"n_jobs": -1,
                                "verbose": 1,
@@ -910,7 +914,8 @@ adjust formating issues:")
                 except Exception as e:
                     red(f"Error when computing UMAP reduction, using all vectors: {e}")
                     df["VEC"] = [x for x in ft_vec]
-            df["VEC_FULL"] = [x for x in ft_vec]
+                finally:
+                    df["VEC_FULL"] = [x for x in ft_vec]
 
             if store_vectors:
                 whi("Storing computed vectors")
