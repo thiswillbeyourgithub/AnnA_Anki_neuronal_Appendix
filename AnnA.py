@@ -1849,6 +1849,12 @@ be used.")
             full_text = re.sub(" Caption: '.*?' ", " ", full_text,
                                flags=re.MULTILINE | re.DOTALL)
         matched = list(set(re.findall("[A-Z]{3,}", full_text)))
+
+        # if exists as lowercase : it's probably not an acronym and just
+        # used for emphasis
+        for m in matched:
+            if m.lower() in full_text:
+                matched.remove(m)
         if len(matched) == 0:
             return True
         sorted_by_count = sorted([x for x in matched],
