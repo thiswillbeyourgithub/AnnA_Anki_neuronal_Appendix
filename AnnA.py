@@ -803,7 +803,7 @@ threads of size {batchsize})")
                                                 sub_card_list,
                                                 lock,
                                                 pbar,
-                                                stop_reg),
+                                                stopw_compiled),
                                           daemon=False)
                 thread.start()
                 threads.append(thread)
