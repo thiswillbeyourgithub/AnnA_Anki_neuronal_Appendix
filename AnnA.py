@@ -781,7 +781,6 @@ threads of size {batchsize})")
                     self.df.at[index, "comb_text"] = comb_text
                     pbar.update(1)
 
-
         n = len(self.df.index)
         batchsize = n // 4 + 1
         lock = threading.Lock()
@@ -807,16 +806,26 @@ threads of size {batchsize})")
                                           daemon=False)
                 thread.start()
                 threads.append(thread)
+
             [t.join() for t in threads]
 
-        m = sum(self.df.isna()["comb_text"])
-        if m != 0:
-            lis = ','.join([str(x) for x in self.df.index[self.df.isna()["comb_text"]].tolist()])
-            to_notify.append(f"Found {m} null values in comb_text: {lis}")
-            if m > 5:
-                red("Investigate error.")
-                breakpoint()
-            self.df["comb_text"] = self.df["comb_text"].fillna("error while processing, null content")
+            cnt = 0
+            while sum(self.df.isna()["comb_text"]) != 0:
+                cnt += 1
+                na_list = [str(x) for x in self.df.index[self.df.isna()["comb_text"]].tolist()]
+                to_notify.append(f"Found {m} null values in comb_text: {','.join(na_list)}, retrying:")
+                thread = threading.Thread(target=_threaded_field_filter,
+                                          args=(self.df,
+                                                na_list,
+                                                lock,
+                                                pbar,
+                                                stopw_compiled),
+                                          daemon=False)
+                thread.start()
+                thread.join()
+                if cnt > 10:
+                    red(f"Error: restart anki then rerun AnnA.")
+                    raise SystemExit()
 
         for notification in list(set(to_notify)):
             red(notification)
