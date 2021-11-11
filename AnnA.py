@@ -891,9 +891,7 @@ adjust formating issues:")
                                          for x in string.split(" ")
                                          if x != ""],
                                         axis=0).reshape(1, -1),
-                                 norm='l1')
-                # I used l1 normalization because l2 would give too
-                # much influence to repeated words
+                                 norm='l2')
 
             pbar = tqdm(total=len(df.index), desc="Vectorizing using fastText")
             ft_vec = np.empty(shape=(len(df.index), 300), dtype=float)
