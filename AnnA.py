@@ -261,7 +261,7 @@ class AnnA:
                                               re.DOTALL)
                     else:
                         compiled = re.compile(r"\b" + ac + r"\b",
-                                              flags=RE.MULTILINE | re.DOTALL)
+                                              flags=re.MULTILINE | re.DOTALL)
                     compiled_dic[compiled] = acronym_dict[ac]
                 self.acronym_dict = compiled_dic
         if self.field_mappings is not None:
@@ -698,7 +698,7 @@ threads of size {batchsize})")
         if len(text) < 10:
             if "src=" in orig:
                 text = text + " " + " ".join(re.findall('src="(.*?)">', orig,
-                    flags=RE.MULTILINE | re.DOTALL))
+                    flags=re.MULTILINE | re.DOTALL))
         if len(text) > 2:
             text = text[0].upper() + text[1:]
             if text[-1] not in ["?", ".", "!"]:
