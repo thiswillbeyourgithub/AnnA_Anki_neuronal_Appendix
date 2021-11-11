@@ -825,6 +825,9 @@ threads of size {batchsize})")
         if m != 0:
             lis = ','.join([str(x) for x in self.df.index[self.df.isna()["comb_text"]].tolist()])
             to_notify.append(f"Found {m} null values in comb_text: {lis}")
+            if m > 5:
+                red("Investigate error.")
+                breakpoint()
             self.df["comb_text"] = self.df["comb_text"].fillna("error while processing, null content")
 
         for notification in list(set(to_notify)):
