@@ -146,7 +146,7 @@ class AnnA:
                  reference_order="lowest_interval",
                  # can be "lowest_interval", "relative overdueness",
                  # "order_added"
-                 desired_deck_size="80%",
+                 target_deck_size="80%",
                  rated_last_X_days=4,
                  due_threshold=50,
                  highjack_due_query=None,
@@ -211,7 +211,7 @@ class AnnA:
         # loading args
         self.replace_greek = replace_greek
         self.keep_ocr = keep_ocr
-        self.desired_deck_size = desired_deck_size
+        self.target_deck_size = target_deck_size
         self.rated_last_X_days = rated_last_X_days
         self.due_threshold = due_threshold
         self.debug_card_limit = debug_card_limit
@@ -1100,7 +1100,7 @@ dimension reduction. Using SVD instead: {e}")
         reference_order = self.reference_order
         df = self.df.copy()
         df_dist = self.df_dist
-        desired_deck_size = self.desired_deck_size
+        target_deck_size = self.target_deck_size
         rated = self.rated_cards
         due = self.due_cards
         queue = []
@@ -1174,19 +1174,19 @@ dimension reduction. Using SVD instead: {e}")
         red(f"\nCards identified as rated in the past {self.rated_last_X_days} days: \
 {len(rated)}")
 
-        if isinstance(desired_deck_size, float):
-            if desired_deck_size < 1.0:
-                desired_deck_size = str(desired_deck_size*100) + "%"
-        if isinstance(desired_deck_size, str):
-            if desired_deck_size in ["all", "100%"]:
+        if isinstance(target_deck_size, float):
+            if target_deck_size < 1.0:
+                target_deck_size = str(target_deck_size*100) + "%"
+        if isinstance(target_deck_size, str):
+            if target_deck_size in ["all", "100%"]:
                 red("Taking the whole deck.")
-                desired_deck_size = len(df.index) - len(rated)
-            elif desired_deck_size.endswith("%"):
-                red(f"Taking {desired_deck_size} of the deck.")
-                desired_deck_size = 0.01*int(desired_deck_size[:-1])*(
+                target_deck_size = len(df.index) - len(rated)
+            elif target_deck_size.endswith("%"):
+                red(f"Taking {target_deck_size} of the deck.")
+                target_deck_size = 0.01*int(target_deck_size[:-1])*(
                             len(df.index)-len(rated)
                             )
-        desired_deck_size = int(desired_deck_size)
+        target_deck_size = int(target_deck_size)
 
         if len(rated+queue) < 1:  # can't start with an empty queue
             # so picking 1 urgent cards
