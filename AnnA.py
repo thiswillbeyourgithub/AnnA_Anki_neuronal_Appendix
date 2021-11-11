@@ -720,7 +720,7 @@ threads of size {batchsize})")
         found then only the first field is kept.
         """
         self._collect_memory()
-        def _threaded_field_filter(df, index_list, lock, pbar, stop_reg):
+        def _threaded_field_filter(df, index_list, lock, pbar, stopw_compiled):
             """
             threaded implementation to speed up execution
             """
@@ -765,7 +765,7 @@ threads of size {batchsize})")
                 comb_text = ""
                 for f in fields_to_keep:
                     try:
-                        next_field = re.sub(stop_reg,
+                        next_field = re.sub(stopw_compiled,
                                             "",
                                 df.loc[index, "fields"][f.lower()]["value"].strip())
                         if next_field != "":
@@ -796,9 +796,8 @@ threads of size {batchsize})")
 
         threads = []
         to_notify = []
-        # stopwords
-        stop_reg = re.compile("\b" + "\b|\b".join(self.stops) + "\b",
-                flags=re.MULTILINE | re.IGNORECASE | re.DOTALL)
+        stopw_compiled = re.compile("\b" + "\b|\b".join(self.stops) + "\b",
+                                    flags=re.MULTILINE | re.IGNORECASE | re.DOTALL)
 
         with tqdm(total=n,
                   desc="Combining relevant fields",
