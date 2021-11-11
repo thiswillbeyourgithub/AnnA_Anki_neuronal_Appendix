@@ -864,7 +864,7 @@ adjust formating issues:")
 
         if self.vectorizer == "fastText":
 
-            alphanum = re.compile(r"\W")
+            alphanum = re.compile(r"[^ _\w]|\d|_")
             apostrophes = re.compile("[a-zA-Z]\'")
 
             def preprocessor(string):
