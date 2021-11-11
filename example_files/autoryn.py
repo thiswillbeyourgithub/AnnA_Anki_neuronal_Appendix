@@ -14,7 +14,7 @@ def interscreen():
 
 
 a = AnnA(deckname="Some_Deck",
-        desired_deck_size="100",
+        target_deck_size="100",
         rated_last_X_days=3,
         reference_order="relative_overdueness",
         clustering_enable=True,
@@ -22,7 +22,7 @@ a = AnnA(deckname="Some_Deck",
         )
 interscreen()
 b = AnnA(deckname="Some_OtherDeck::subdeck#1",
-        desired_deck_size="80%",
+        target_deck_size="80%",
         rated_last_X_days=3,
         reference_order="lowest_interval",
         clustering_enable=True,
@@ -30,7 +30,7 @@ b = AnnA(deckname="Some_OtherDeck::subdeck#1",
         )
 interscreen()
 c = AnnA(deckname="Some_OtherDeck::subdeck#2",
-        desired_deck_size="50",
+        target_deck_size="50",
         rated_last_X_days=3,
         reference_order="lowest_interval",
         clustering_enable=True,
