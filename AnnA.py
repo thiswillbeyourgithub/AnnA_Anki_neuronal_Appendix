@@ -868,6 +868,12 @@ adjust formating issues:")
             apostrophes = re.compile("[a-zA-Z]\'")
 
             def preprocessor(string):
+                """
+                prepare string of text to be vectorized by fastText
+                * makes lowercase
+                * removes every letter+apostrophe like " t'aime "
+                * removes all non letters
+                """
                 return re.sub(alphanum,
                               "",
                               re.sub(apostrophes, "", string.lower())
