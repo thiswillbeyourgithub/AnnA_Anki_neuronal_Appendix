@@ -1224,11 +1224,11 @@ dimension reduction. Using SVD instead: {e}")
             red(f"Removed {previous_len-cur_len} siblings cards out of \
 {previous_len}.")
 
-        if desired_deck_size > cur_len:
+        if target_deck_size > cur_len:
             red(f"You wanted to create a deck with \
-{desired_deck_size} in it but only {cur_len} cards remain, taking the \
+{target_deck_size} in it but only {cur_len} cards remain, taking the \
 lowest value.")
-        queue_size_goal = min(desired_deck_size, cur_len)
+        queue_size_goal = min(target_deck_size, cur_len)
 
         if use_index_of_score is False:
             df["ref"] = df["ref"]*w1
