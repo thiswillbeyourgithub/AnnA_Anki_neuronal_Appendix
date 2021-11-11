@@ -1846,7 +1846,8 @@ be used.")
         """
         full_text = " ".join(self.df["text"].tolist())
         if exclude_OCR_text:
-            full_text = re.sub("> Caption: '.*?' <", " ", full_text)
+            full_text = re.sub(" Caption: '.*?' ", " ", full_text,
+                               flags=re.MULTILINE | re.DOTALL)
         matched = list(set(re.findall("[A-Z]{3,}", full_text)))
         if len(matched) == 0:
             return True
