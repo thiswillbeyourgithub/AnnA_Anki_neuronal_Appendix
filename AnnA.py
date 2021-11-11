@@ -880,6 +880,7 @@ adjust formating issues:")
                               )
 
             def memoize(f):
+                "store previous value to speed up vector retrieval"
                 memo = {}
 
                 def helper(x):
