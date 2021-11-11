@@ -256,9 +256,12 @@ class AnnA:
                 for ac in acronym_dict.keys():
                     if ac.lower() == ac:
                         compiled = re.compile(r"\b" + ac + r"\b",
-                                              flags=re.IGNORECASE)
+                                              flags=re.IGNORECASE |
+                                              re.MULTILINE |
+                                              re.DOTALL)
                     else:
-                        compiled = re.compile(r"\b" + ac + r"\b")
+                        compiled = re.compile(r"\b" + ac + r"\b",
+                                              flags=RE.MULTILINE | re.DOTALL)
                     compiled_dic[compiled] = acronym_dict[ac]
                 self.acronym_dict = compiled_dic
         if self.field_mappings is not None:
@@ -694,7 +697,8 @@ threads of size {batchsize})")
         text = " ".join(text.split())  # multiple spaces
         if len(text) < 10:
             if "src=" in orig:
-                text = text + " " + " ".join(re.findall('src="(.*?)">', orig))
+                text = text + " " + " ".join(re.findall('src="(.*?)">', orig,
+                    flags=RE.MULTILINE | re.DOTALL))
         if len(text) > 2:
             text = text[0].upper() + text[1:]
             if text[-1] not in ["?", ".", "!"]:
@@ -704,7 +708,8 @@ threads of size {batchsize})")
         if self.vectorizer == "TFIDF":
             if self.TFIDF_stem is True:
                 text = " ".join([ps.stem(x) for x in text.split()])
-            text += " " + " ".join(re.findall(r'src="(.*?\..{2,3})" ', orig))
+            text += " " + " ".join(re.findall(r'src="(.*?\..{2,3})" ', orig,
+                flags=re.MULTILINE | re.DOTALL))
         return text
 
     def _format_card(self):
@@ -792,7 +797,8 @@ threads of size {batchsize})")
         threads = []
         to_notify = []
         # stopwords
-        stop_reg = re.compile("\b" + "\b|\b".join(self.stops) + "\b")
+        stop_reg = re.compile("\b" + "\b|\b".join(self.stops) + "\b",
+                flags=re.MULTILINE | re.IGNORECASE | re.DOTALL)
 
         with tqdm(total=n,
                   desc="Combining relevant fields",
