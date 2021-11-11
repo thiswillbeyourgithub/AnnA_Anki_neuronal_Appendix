@@ -931,18 +931,25 @@ adjust formating issues:")
                     df["VEC_FULL"] = [x for x in ft_vec]
 
             if store_vectors:
-                whi("Storing computed vectors")
-                fastText_store = Path("./stored_vectors.pickle")
-                if not fastText_store.exists():
-                    df_store = pd.DataFrame(columns=["cardId", "mod", "text", "VEC_FULL"]).set_index("cardId")
-                else:
-                    df_store = pd.read_pickle(fastText_store)
-                for i in tqdm(df.index):
-                    df_store.loc[i, :] = df.loc[i, ["mod", "text", "VEC_FULL"]]
-                df_store.to_pickle("stored_vectors.pickle_temp")
-                if fastText_store.exists():
-                    fastText_store.unlink()
-                Path("stored_vectors.pickle_temp").rename("stored_vectors.pickle")
+                def storing_vectors(df):
+                    yel("Storing computed vectors")
+                    fastText_store = Path("./stored_vectors.pickle")
+                    if not fastText_store.exists():
+                        df_store = pd.DataFrame(columns=["cardId", "mod", "text", "VEC_FULL"]).set_index("cardId")
+                    else:
+                        df_store = pd.read_pickle(fastText_store)
+                    for i in df.index:
+                        df_store.loc[i, :] = df.loc[i, ["mod", "text", "VEC_FULL"]]
+                    df_store.to_pickle("stored_vectors.pickle_temp")
+                    if fastText_store.exists():
+                        fastText_store.unlink()
+                    Path("stored_vectors.pickle_temp").rename("stored_vectors.pickle")
+                    yel("Finished storing computed vectors")
+                thread = threading.Thread(target=storing_vectors,
+                                          args=(df.copy()),
+                                          daemon=False)
+                thread.start()
+
 
 
 
