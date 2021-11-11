@@ -781,16 +781,8 @@ threads of size {batchsize})")
                     self.df.at[index, "comb_text"] = comb_text
                     pbar.update(1)
 
-#        import multiprocessing as mp
-#        lock = mp.Lock()
-#        man = mp.Manager()
-#        ns = man.Namespace()
-#        ns.df = self.df
-#        ns.df["comb_text"] = ""
-#        pool = mp.Pool(processes=7)
 
         n = len(self.df.index)
-        #batchsize = n // mp.cpu_count() + 1
         batchsize = n // 4 + 1
         lock = threading.Lock()
 
