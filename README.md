@@ -124,11 +124,10 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * `show_acronyms` shows the acronym present in your deck that were not extended. Useful if you want to adjust your acronym list.
 
 ## TODO
-* actually the slicing of the stats showing the usefulness of AnnA is broken, take a look at the algorithm to compute order
 * add tags to cards that are to do on a given run, that would help rebuilding on mobile
-* faq: mention "how can I know if it's working?"
-* remove search_note and the store, it will be a separate project that leverages ankipandas
-* print result score with pyfiglet at the end
+* download the right size of fasttext if needed and save it locally, allow to specify the original dimension
+* add a "auto" mode that fetches the number of max reviews per day and use it as "target_deck_size"
+* faq: mention "how can I know if it's working?" + print result score with pyfiglet at the end
 * remove accents when fasttext
 * ankify how to use multiprocessing manager: https://izziswift.com/multiprocessing-in-python-sharing-large-object-e-g-pandas-dataframe-between-multiple-processes/
 
@@ -143,6 +142,7 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * implement multilingual support thanks to these people: https://github.com/babylonhealth/fastText_multilingual
 
 * turn into an anki addon
+* create a standalone version of search_for_note using ankipandas
 
 * add ability to click on plots to open the browser : https://plotly.com/python/click-events/
 * look into sentence mining methods from sbert, that might contain useful ideas
