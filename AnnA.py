@@ -885,7 +885,7 @@ adjust formating issues:")
 
                 def helper(x):
                     if x not in memo:
-                        memo[x] = f(preprocessor(x))
+                        memo[x] = f(x)
                     return memo[x]
                 return helper
 
@@ -894,7 +894,7 @@ adjust formating issues:")
             def vec(string, pbar=None):
                 if pbar is not None:
                     pbar.update(1)
-                return normalize(np.sum([get_vec(x)
+                return normalize(np.sum([get_vec(preprocessor(x))
                                          for x in string.split(" ")
                                          if x != ""],
                                         axis=0).reshape(1, -1),
