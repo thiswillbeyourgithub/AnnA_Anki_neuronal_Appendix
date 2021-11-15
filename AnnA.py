@@ -946,9 +946,10 @@ adjust formating issues:")
                         fastText_store.unlink()
                     Path("stored_vectors.pickle_temp").rename("stored_vectors.pickle")
                     yel("Finished storing computed vectors")
+                stored_df = df.copy()
                 thread = threading.Thread(target=storing_vectors,
-                                          args=(df.copy()),
-                                          daemon=False)
+                                          args=(stored_df,),
+                                          daemon=True)
                 thread.start()
 
 
