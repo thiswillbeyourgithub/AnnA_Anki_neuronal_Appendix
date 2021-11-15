@@ -1244,14 +1244,15 @@ lowest value.")
             df_dist = df_dist*w2
 
         pd.set_option('display.float_format', lambda x: '%.5f' % x)
-        try:
-            whi("\nScore stats:")
-            whi(f"Reference: {(df['ref']*w1).describe()}\n")
-            val = pd.DataFrame(data=df_dist.values.flatten(),
-                               columns=['distance matrix']).describe(include='all')
-            whi(f"Distance: {val}\n\n")
-        except Exception as e:
-            red(f"Exception: {e}")
+        if len(df.index) < 5000:
+            try:
+                whi("\nScore stats:")
+                whi(f"Reference: {(df['ref']*w1).describe()}\n")
+                val = pd.DataFrame(data=df_dist.values.flatten(),
+                                   columns=['distance matrix']).describe(include='all')
+                whi(f"Distance: {val}\n\n")
+            except Exception as e:
+                red(f"Exception: {e}")
         pd.reset_option('display.float_format')
 
         with tqdm(desc="Computing optimal review order",
