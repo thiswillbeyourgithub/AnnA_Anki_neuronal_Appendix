@@ -185,6 +185,12 @@ class AnnA:
                  prefer_similar_card=False,
                  save_instance_as_pickle=False,
                  ):
+
+        if show_banner:
+            red(pyfiglet.figlet_format("AnnA"))
+            red("(Anki neuronal Appendix)\n\n")
+
+        # miscellaneous
         if log_level == 0:
             log.setLevel(logging.ERROR)
         elif log_level == 1:
@@ -193,10 +199,6 @@ class AnnA:
             log.setLevel(logging.DEBUG)
         else:
             log.setLevel(logging.INFO)
-
-        if show_banner:
-            red(pyfiglet.figlet_format("AnnA"))
-            red("(Anki neuronal Appendix)\n\n")
 
         if vectorizer == "fasttext":
             vectorizer = "fastText"
