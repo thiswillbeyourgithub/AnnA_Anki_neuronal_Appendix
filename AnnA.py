@@ -976,8 +976,6 @@ TFIDF"))
             if self.TFIDF_dim is None:
                 df["VEC_FULL"] = [x for x in t_vec]
                 df["VEC"] = [x for x in t_vec]
-                self.t_vec = [x for x in t_vec]
-                self.t_red = None
             else:
                 if self.TFIDF_red_algo.lower() == "umap":
                     use_SVD = False
@@ -1010,8 +1008,6 @@ dimension reduction. Using SVD instead: {e}")
 
                 df["VEC_FULL"] = [x for x in t_vec]
                 df["VEC"] = [x for x in t_red]
-                self.t_vec = [x for x in t_vec]
-                self.t_red = [x for x in t_red]
 
         self.df = df
         return True
