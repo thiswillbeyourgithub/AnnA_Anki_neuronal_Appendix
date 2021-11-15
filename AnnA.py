@@ -275,13 +275,6 @@ class AnnA:
                 imp = importlib.import_module(
                     self.field_mappings.replace(".py", ""))
                 self.field_dic = imp.field_dic
-#               Ability to disable weighted fields if using something
-#               else than TF_IF
-#                if self.vectorizer == "fastText" or self.task == "index":
-#                    temp = {}
-#                    for a, b in self.field_dic.items():
-#                        temp[a] = sorted(set(b), key=b.index)
-#                    self.field_dic = temp
             except Exception as e:
                 red(f"Error with field mapping file, will use default \
 values. {e}")
