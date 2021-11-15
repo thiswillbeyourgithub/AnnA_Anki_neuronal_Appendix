@@ -1288,24 +1288,24 @@ lowest value.")
 
         try:
             red("Quadratic mean of the distance among the optimized queue:")
+            breakpoint()
             yel(np.sqrt(np.mean(np.square(
-                self.df_dist_unscaled.loc[queue, queue].values.flatten()))))
+                self.df_dist.loc[queue, queue].values.flatten()))))
 
             dueNQ = [x for x in self.due_cards if x not in queue]
             if dueNQ:
                 red("Quadratic mean of the distance among the cards that didn't \
 make it into the queue:")
                 yel(np.sqrt(np.mean(np.square(
-                    self.df_dist_unscaled.loc[dueNQ, dueNQ].values.flatten()))))
+                    self.df_dist.loc[dueNQ, dueNQ].values.flatten()))))
 
             red("Quadratic mean of the distance if you had not used AnnA:")
             woAnnA = [x
                       for x in df.sort_values(
-                          "ref", ascending=True).iloc[0:len(queue)].index.tolist()
-                      if x in self.due_cards
-                      ]
+                          "ref", ascending=True).index.tolist()
+                      if x in self.due_cards][0:len(queue)]
             yel(np.sqrt(np.mean(np.square(
-                self.df_dist_unscaled.loc[woAnnA, woAnnA].values.flatten()))))
+                self.df_dist.loc[woAnnA, woAnnA].values.flatten()))))
         except Exception as e:
             red(f"\nException: {e}")
 
