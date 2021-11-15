@@ -235,6 +235,7 @@ class AnnA:
         self.task = task
         self.save_instance_as_pickle = save_instance_as_pickle
 
+        # args sanity checks
         assert TFIDF_stem + TFIDF_tokenize in [0, 1]
         assert stride > 0
         assert reference_order in ["lowest_interval", "relative_overdueness",
@@ -264,6 +265,7 @@ class AnnA:
                                               flags=re.MULTILINE | re.DOTALL)
                     compiled_dic[compiled] = acronym_dict[ac]
                 self.acronym_dict = compiled_dic
+
         if self.field_mappings is not None:
             f = Path(self.field_mappings)
             try:
