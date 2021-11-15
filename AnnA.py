@@ -1023,11 +1023,11 @@ dimension reduction. Using SVD instead: {e}")
 
         print("\nComputing distance matrix on all available cores...")
         df_temp = pd.DataFrame(
-            columns=["V"+str(x+1)
+            columns=["vec_"+str(x+1)
                      for x in range(len(df.loc[df.index[0], input_col]))],
-            data=[x[0:] for x in df[input_col]])
+            data=[x[0:] for x in df[input_col].values])
 
-        df_dist = pairwise_distances(df_temp, n_jobs=-1, metric="cosine")
+        df_dist = pairwise_distances(df_temp.reset_index(), n_jobs=-1, metric="cosine")
 #        print("Interpolating matrix between 0 and 1...")
 #        df_dist = np.interp(df_dist, (df_dist.min(), df_dist.max()), (0, 1))
 
