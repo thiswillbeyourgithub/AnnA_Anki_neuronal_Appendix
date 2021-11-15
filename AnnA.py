@@ -809,8 +809,9 @@ threads of size {batchsize})")
             cnt = 0
             while sum(self.df.isna()["comb_text"]) != 0:
                 cnt += 1
-                na_list = [str(x) for x in self.df.index[self.df.isna()["comb_text"]].tolist()]
-                to_notify.append(f"Found {m} null values in comb_text: {','.join(na_list)}, retrying:")
+                na_list = [x for x in self.df.index[self.df.isna()["comb_text"]].tolist()]
+                pbar.update(-len(na_list))
+                red(f"Found {sum(self.df.isna()['comb_text'])} null values in comb_text: retrying")
                 thread = threading.Thread(target=_threaded_field_filter,
                                           args=(self.df,
                                                 na_list,
@@ -823,6 +824,9 @@ threads of size {batchsize})")
                 if cnt > 10:
                     red(f"Error: restart anki then rerun AnnA.")
                     raise SystemExit()
+            if cnt > 0:
+                yel("Succesfully corrected null combined texts.")
+
 
         for notification in list(set(to_notify)):
             red(notification)
