@@ -126,7 +126,7 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 ## TODO
 * add tags to cards that are to do on a given run, that would help rebuilding on mobile
 * add argument to include tags as part of the text
-* download the right size of fasttext if needed and save it locally, allow to specify the original dimension
+* add a tutorial to reduce the size of the fasttext model and tell people that they can ask you to do it
 * add a "deck_settings" mode that fetches the number of max reviews per day and use it as "target_deck_size"
 * faq: mention "how can I know if it's working?" + print result score with pyfiglet at the end
 
