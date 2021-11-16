@@ -124,23 +124,23 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * `show_acronyms` shows the acronym present in your deck that were not extended. Useful if you want to adjust your acronym list.
 
 ## TODO
+*More or less by order of urgency*
 * add tags to cards that are to do on a given run, that would help rebuilding on mobile
-* add argument to include tags as part of the text
-* add a tutorial to reduce the size of the fasttext model and tell people that they can ask you to do it
+* add tags to the text and tell it in the field mapping and FAQ
 * add a "deck_settings" mode that fetches the number of max reviews per day and use it as "target_deck_size"
-* faq: mention "how can I know if it's working?" + print result score with pyfiglet at the end
-
-* fix the nan scoring of woanna + check when printing distribution change if ref has to be max or min for anki
-* fix searching + open the browser and add tags, then ask to sort by tags
-* test using fasttext get_sentence_vector
+* add a tutorial to reduce the size of the fasttext model and reorient it to english
+* implement multilingual support thanks to these people: https://github.com/babylonhealth/fastText_multilingual
 * replace all df_temp by a on-memory numpy array
+* faq: mention "how can I know if it's working?"
+
+* fix searching + open the browser and add tags, then ask to sort by tags
 * set better tokenizer settings for tf_idf
 * check that docstrings are up to date
 * implement ability to set a correction vector (ex: favor cards closer to "neuroanatomy")
 * implement index scoring
-* implement multilingual support thanks to these people: https://github.com/babylonhealth/fastText_multilingual
 
-* turn into an anki addon
+* create a search algorithm that expands your query by fetching synonyms
+* turn AnnA into an anki addon
 * create a standalone version of search_for_note using ankipandas
 
 * add ability to click on plots to open the browser : https://plotly.com/python/click-events/
