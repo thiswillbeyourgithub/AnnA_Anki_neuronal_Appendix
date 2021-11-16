@@ -256,7 +256,7 @@ class AnnA:
                     acronym_list.replace(".py", ""))
                 acronym_dict = imp.acronym_dict
                 compiled_dic = {}
-                for ac in acronym_dict.keys():
+                for ac in acronym_dict:
                     if ac.lower() == ac:
                         compiled = re.compile(r"\b" + ac + r"\b",
                                               flags=re.IGNORECASE |
@@ -729,7 +729,7 @@ threads of size {batchsize})")
                 # in field_dic
                 field_dic = self.field_dic
                 target_model = []
-                for user_model in field_dic.keys():
+                for user_model in field_dic:
                     if user_model.lower() in card_model.lower():
                         target_model.append(user_model)
                 if len(target_model) == 0:
@@ -1218,7 +1218,7 @@ dimension reduction. Using SVD instead: {e}")
         noteCard = {}
         for card, note in {df.loc[x].name: df.loc[x, "note"]
                            for x in indTODO}.items():
-            if note not in noteCard.keys():
+            if note not in noteCard:
                 noteCard[note] = card
             else:
                 if float(df.loc[noteCard[note], "ref"]
@@ -1881,7 +1881,7 @@ be used.")
 found...")
             pprint(relevant)
         else:
-            acro_list = list(self.acronym_dict.keys())
+            acro_list = list(self.acronym_dict)
 
             for compiled in acro_list:
                 for acr in relevant:
