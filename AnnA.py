@@ -1285,24 +1285,27 @@ lowest value.")
 
         try:
             red("Quadratic mean of the distance among the optimized queue:")
-            breakpoint()
-            yel(np.sqrt(np.mean(np.square(
-                self.df_dist.loc[queue, queue].values.flatten()))))
+            spread_queue = np.sqrt(np.mean(np.square(self.df_dist.loc[queue, queue].values.flatten())))
+            yel(spread_queue)
 
             dueNQ = [x for x in self.due_cards if x not in queue]
             if dueNQ:
                 red("Quadratic mean of the distance among the cards that didn't \
 make it into the queue:")
-                yel(np.sqrt(np.mean(np.square(
-                    self.df_dist.loc[dueNQ, dueNQ].values.flatten()))))
+                spread_nqueue = np.sqrt(np.mean(np.square(self.df_dist.loc[dueNQ, dueNQ].values.flatten())))
+                yel(spread_nqueue)
 
             red("Quadratic mean of the distance if you had not used AnnA:")
             woAnnA = [x
                       for x in df.sort_values(
                           "ref", ascending=True).index.tolist()
                       if x in self.due_cards][0:len(queue)]
-            yel(np.sqrt(np.mean(np.square(
-                self.df_dist.loc[woAnnA, woAnnA].values.flatten()))))
+            spread_else = np.sqrt(np.mean(np.square(self.df_dist.loc[woAnnA, woAnnA].values.flatten())))
+            yel(spread_else)
+
+            ratio = round(spread_queue / spread_else, 3)
+            red("Improvement ratio:")
+            red(pyfiglet.figlet_format(str(ratio)))
         except Exception as e:
             red(f"\nException: {e}")
 
