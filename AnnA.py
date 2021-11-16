@@ -374,7 +374,7 @@ execute the code using:\n'import pickle ; a = pickle.load(open(\"last_run.pickle
             whi("Re-optimizing Anki database")
             self._ankiconnect(action="guiCheckDatabase")
 
-        yel(f"Done with {self.deckname}")
+        yel(f"Done with '{self.task}' on deck {self.deckname}")
 
     def _collect_memory(self):
         gc.collect()
