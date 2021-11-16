@@ -865,23 +865,21 @@ adjust formating issues:")
 
         if self.vectorizer == "fastText":
 
-            alphanum = re.compile(r"[^ _\w]|\d|_")
-            apostrophes = re.compile("[a-zA-Z]\'")
-
             def preprocessor(string):
                 """
                 prepare string of text to be vectorized by fastText
                 * makes lowercase
-                * removes every letter+apostrophe like " t'aime "
                 * removes all non letters
+                * removes extra spaces
+                * outputs each words in a list
                 """
-                return re.sub(alphanum,
-                              "",
-                              re.sub(apostrophes, "", string.lower())
-                              )
+                return re.sub(alphanum, " ", string.lower()).split()
 
             def memoize(f):
-                "store previous value to speed up vector retrieval"
+                """
+                store previous value to speed up vector retrieval
+                (sped up by about x40)
+                """
                 memo = {}
 
                 def helper(x):
@@ -890,26 +888,25 @@ adjust formating issues:")
                     return memo[x]
                 return helper
 
-            get_vec = memoize(ft.get_word_vector)
-
-            def vec(string, pbar=None):
-                if pbar is not None:
-                    pbar.update(1)
-                return normalize(np.sum([get_vec(preprocessor(x))
-                                         for x in string.split(" ")
+            def vec(string):
+                return normalize(np.sum([mvec(x)
+                                         for x in preprocessor(string)
                                          if x != ""],
                                         axis=0).reshape(1, -1),
                                  norm='l2')
 
-            pbar = tqdm(total=len(df.index), desc="Vectorizing using fastText")
-            ft_vec = np.empty(shape=(len(df.index), 300), dtype=float)
-            for i, x in enumerate(df.index):
-                ft_vec[i] = vec(str(df.loc[x, "text"]), pbar)
-            pbar.close()
+            alphanum = re.compile(r"[^ _\w]|\d|_")
+            mvec = memoize(ft.get_word_vector)
+            ft_vec = np.empty(shape=(len(df.index), ft.get_dimension()),
+                              dtype=float)
+
+            for i, x in enumerate(
+                    tqdm(df.index, desc="Vectorizing using fastText")):
+                ft_vec[i] = vec(str(df.loc[x, "text"]))
 
             if self.fastText_dim is None:
-                    df["VEC"] = [x for x in ft_vec]
-                    df["VEC_FULL"] = [x for x in ft_vec]
+                df["VEC"] = [x for x in ft_vec]
+                df["VEC_FULL"] = [x for x in ft_vec]
             else:
                 print(f"Reducing dimensions to {self.fastText_dim} using UMAP")
                 umap_kwargs = {"n_jobs": -1,
