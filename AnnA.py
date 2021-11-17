@@ -582,15 +582,15 @@ threads of size {batchsize})")
         self.due_cards = due_cards
         self.rated_cards = rated_cards
 
-        limit = self.debug_card_limit if self.debug_card_limit else None
-        combined_card_list = list(rated_cards + due_cards)[:limit]
-
-        if len(combined_card_list) < self.due_threshold:
+        if len(self.due_cards) < self.due_threshold:
             red("Number of due cards is less than threshold.\nStopping.")
             self.not_enough_cards = True
             return
         else:
             self.not_enough_cards = False
+
+        limit = self.debug_card_limit if self.debug_card_limit else None
+        combined_card_list = list(rated_cards + due_cards)[:limit]
 
         list_cardInfo = []
 
