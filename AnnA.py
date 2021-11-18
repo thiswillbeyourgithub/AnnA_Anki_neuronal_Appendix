@@ -172,7 +172,7 @@ class AnnA:
 
                  # vectorization:
                  vectorizer="TFIDF",  # can be "TFIDF" or "fastText"
-                 fastText_dim=100,
+                 fastText_dim=None,
                  fastText_lang="fr",
                  TFIDF_dim=100,
                  TFIDF_red_algo="SVD", #can be SVD or UMAP
