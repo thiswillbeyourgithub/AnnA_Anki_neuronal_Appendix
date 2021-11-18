@@ -238,6 +238,8 @@ class AnnA:
         self.save_instance_as_pickle = save_instance_as_pickle
 
         # args sanity checks
+        if isinstance(self.target_deck_size, int):
+            self.target_deck_size = str(self.target_deck_size)
         assert TFIDF_stem + TFIDF_tokenize in [0, 1]
         assert stride > 0
         assert reference_order in ["lowest_interval", "relative_overdueness",
