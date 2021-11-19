@@ -785,8 +785,7 @@ threads of size {batchsize})")
                 tags = self.df.loc[index, "tags"].split(" ")
                 for t in tags:
                     if "AnnA" not in t:
-                        t = str(" ".join(t.split("::")) + " ") * max(field_counter.values())
-                        comb_text += " " + t
+                        comb_text += " " + t.replace("::", " ")
 
                 with lock:
                     self.df.at[index, "comb_text"] = comb_text
