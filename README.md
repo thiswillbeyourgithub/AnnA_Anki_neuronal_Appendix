@@ -134,7 +134,6 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * faq: mention "how can I know if it's working?"
 
 * fix searching + open the browser and add tags, then ask to sort by tags
-* set better tokenizer settings for tf_idf
 * check that docstrings are up to date
 * implement ability to set a correction vector (ex: favor cards closer to "neuroanatomy")
 * implement index scoring

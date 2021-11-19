@@ -21,9 +21,8 @@ from pathlib import Path
 import threading
 from sklearn.feature_extraction.text import TfidfTransformer
 from nltk.corpus import stopwords
-from transformers import BertTokenizerFast
-tokenizer = BertTokenizerFast.from_pretrained("bert-base-multilingual-\
-uncased")
+from transformers import AutoTokenizer
+tokenizer = AutoTokenizer.from_pretrained("bert-base-multilingual-uncased")
 import scipy.sparse as sp
 import logging
 
