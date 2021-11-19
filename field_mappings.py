@@ -1,8 +1,12 @@
-# This variable contains as key a notetype model name and as value the
-# name of the fields to keep, in order
-# * for example : "occlusion": ["Header", "Image"] will match all templates that
-#     contain "occlusion" in their name
-# * note that matching for note type or field name is case insensitive
+# The variable field_dic contains as key a notetype model name and as value the
+#    name of the fields to keep. For example:
+#         occlusion": ["Header", "Image"]
+#     will match all templates that contain "occlusion" in their name, and
+#     make sure that AnnA takes into account the fields Header and Image
+# * If you add a field multiple times, it will weight more than the other fields
+# * The tags of the card is appended to the text, and weighs as much as
+#     the most important field of your card
+# * Matching for note type or field name is case insensitive
 
 field_dic = {
              "clozolkor": ["Header", "Header",

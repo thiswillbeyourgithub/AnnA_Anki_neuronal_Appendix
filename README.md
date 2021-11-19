@@ -126,7 +126,6 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 ## TODO
 *More or less by order of urgency*
 * add tags to cards that are to do on a given run, that would help rebuilding on mobile
-* add tags to the text and tell it in the field mapping and FAQ
 * add a "deck_settings" mode that fetches the number of max reviews per day and use it as "target_deck_size"
 * add a tutorial to reduce the size of the fasttext model and reorient it to english
 * implement multilingual support thanks to these people: https://github.com/babylonhealth/fastText_multilingual

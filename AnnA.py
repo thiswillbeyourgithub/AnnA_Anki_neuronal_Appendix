@@ -762,7 +762,12 @@ threads of size {batchsize})")
 {card_model}. Chose first 2 fields: {', '.join(fields_to_keep)}")
 
                 comb_text = ""
+                field_counter = {}
                 for f in fields_to_keep:
+                    if f in field_counter:
+                        field_counter[f] += 1
+                    else:
+                        field_counter[f] = 1
                     try:
                         next_field = re.sub(stopw_compiled,
                                             "",
@@ -775,6 +780,13 @@ threads of size {batchsize})")
 {df.loc[index, 'modelName']} identified as notetype {target_model}")
                 if comb_text[-2:] == ": ":
                     comb_text = comb_text[:-2]
+
+                # add tags to comb_text
+                tags = self.df.loc[index, "tags"].split(" ")
+                for t in tags:
+                    if "AnnA" not in t:
+                        t = str(" ".join(t.split("::")) + " ") * max(field_counter.values())
+                        comb_text += " " + t
 
                 with lock:
                     self.df.at[index, "comb_text"] = comb_text
