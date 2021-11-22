@@ -1,5 +1,5 @@
+import logging
 import gc
-import sys
 import pickle
 import time
 import random
@@ -9,22 +9,29 @@ import os
 import json
 import urllib.request
 import pyfiglet
-import pandas as pd
 from pprint import pprint
 from tqdm import tqdm
 import re
 import importlib
-from prompt_toolkit import prompt
-from prompt_toolkit.completion import WordCompleter
-import Levenshtein as lev
 from pathlib import Path
 import threading
-from sklearn.feature_extraction.text import TfidfTransformer
+from prompt_toolkit import prompt
+from prompt_toolkit.completion import WordCompleter
+
+import pandas as pd
+import numpy as np
+import Levenshtein as lev
 from nltk.corpus import stopwords
-from transformers import AutoTokenizer
-tokenizer = AutoTokenizer.from_pretrained("bert-base-multilingual-uncased")
-import scipy.sparse as sp
-import logging
+from nltk.stem import PorterStemmer
+
+from scipy import interpolate, sparse
+from sklearn.feature_extraction.text import TfidfTransformer, TfidfVectorizer, CountVectorizer
+from sklearn.metrics import pairwise_distances
+from sklearn.decomposition import PCA, TruncatedSVD
+from sklearn.cluster import KMeans, DBSCAN, AgglomerativeClustering, MiniBatchKMeans
+from sklearn.preprocessing import normalize, StandardScaler
+import plotly.express as px
+import umap.umap_
 
 # avoids annoying warning
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
@@ -81,6 +88,11 @@ whi = coloured_log("white")
 yel = coloured_log("yellow")
 red = coloured_log("red")
 
+set_global_logging_level(logging.ERROR,
+                         ["transformers", "nlp", "torch",
+                          "tensorflow", "sklearn", "nltk",
+                          "fastText"])
+
 
 def asynchronous_importer(vectorizer, task, fastText_lang):
     """
@@ -88,20 +100,9 @@ def asynchronous_importer(vectorizer, task, fastText_lang):
     importing AnnA and creating the instance of the class, the language model
     have some more time to load
     """
-    global np, KMeans, DBSCAN, ps, \
-        AgglomerativeClustering, transformers, normalize, TfidfVectorizer,\
-        CountVectorizer, TruncatedSVD, StandardScaler, \
-        pairwise_distances, PCA, px, umap,\
-        MiniBatchKMeans, interpolate
-
-    if "numpy" not in sys.modules:
-        whi("Began importing modules...\n")
-        print_when_ends = True
-    else:
-        print_when_ends = False
-    import numpy as np
-    from sklearn.feature_extraction.text import TfidfVectorizer
-    from sklearn.feature_extraction.text import CountVectorizer
+    global tokenizer
+    from transformers import AutoTokenizer
+    tokenizer = AutoTokenizer.from_pretrained("bert-base-multilingual-uncased")
     if vectorizer == "fastText" or task == "index":
         if "ft" not in globals():
             global fastText, ft
@@ -113,24 +114,6 @@ def asynchronous_importer(vectorizer, task, fastText_lang):
             except Exception as e:
                 red(f"Couldn't load fastText model: {e}")
                 raise SystemExit()
-    from nltk.stem import PorterStemmer
-    ps = PorterStemmer()
-    from sklearn.metrics import pairwise_distances
-    from sklearn.decomposition import PCA
-    from sklearn.cluster import KMeans, DBSCAN, AgglomerativeClustering
-    from sklearn.cluster import MiniBatchKMeans
-    import plotly.express as px
-    import umap.umap_
-    from sklearn.preprocessing import normalize
-    from sklearn.decomposition import TruncatedSVD
-    from sklearn.preprocessing import StandardScaler
-    from scipy import interpolate
-    if print_when_ends:
-        red("Finished importing modules.\n\n")
-    set_global_logging_level(logging.ERROR,
-                             ["transformers", "nlp", "torch",
-                              "tensorflow", "sklearn", "nltk",
-                              "fastText"])
 
 
 class AnnA:
@@ -290,6 +273,7 @@ values. {e}")
                 [temp.extend(tokenizer.tokenize(x)) for x in stops]
                 stops.extend(temp)
             elif self.TFIDF_stem:
+                ps = PorterStemmer()
                 stops += [ps.stem(x) for x in stops]
             self.stops = list(set(stops))
         except Exception as e:
@@ -1915,18 +1899,18 @@ class CTFIDFVectorizer(TfidfTransformer):
     def __init__(self, *args, **kwargs):
         super(CTFIDFVectorizer, self).__init__(*args, **kwargs)
 
-    def fit(self, X: sp.csr_matrix, n_samples: int):
+    def fit(self, X: sparse.csr_matrix, n_samples: int):
         """Learn the idf vector (global term weights) """
         _, n_features = X.shape
         df = np.squeeze(np.asarray(X.sum(axis=0)))
         idf = np.log(n_samples / df)
-        self._idf_diag = sp.diags(idf, offsets=0,
+        self._idf_diag = sparse.diags(idf, offsets=0,
                                   shape=(n_features, n_features),
                                   format='csr',
                                   dtype=np.float64)
         return self
 
-    def transform(self, X: sp.csr_matrix) -> sp.csr_matrix:
+    def transform(self, X: sparse.csr_matrix) -> sparse.csr_matrix:
         """Transform a count-based matrix to c-TF-IDF """
         X = X * self._idf_diag
         X = normalize(X, axis=1, norm='l2', copy=False)
