@@ -106,6 +106,8 @@ AnnA was made with usability in mind. With the right arguments, you can have to 
 
  * `vectorizer` can be either "TFIDF" or "fastText". Default is "TFIDF".
  * `fastText_dim` number of dimensions to keep after doing a UMAP reduction. This can speed up the computation somewhat, but with reduced precision. And computing the UMAP projection is in itself an additional slow step. Default is `None`. The original number of dimension is 300.
+ * `fastText_lang` language of the fastText model to load or download. Default is "en".
+ * `fastText_model_name` name of the fastText model to load. Bypasses fastText_lang. Useful if you created a smaller fastText model. Default is None.
  * `TFIDF_dim` the number of dimension to keep using [SVD](https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.TruncatedSVD.html). Default is `100`, you cannot disable dimension reduction for TF_IDF because that would result in a sparse matrix.
  * `TFIDF_red_algo` specify the dimension reduction algorithm used for TFIDF. Can be either "SVD" or "UMAP", can't be disabled. Default is "SVD". In case of error using UMAP, SVD will be used.
  * `TFIDF_stopw_lang` a list of languages used to construct a list of stop words (i.e. words that will be ignored). Default is `["english", "french"]`.
@@ -126,7 +128,6 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 
 ## TODO
 *More or less by order of urgency*
-* create a 50dim french fasttext
 * rename stride into "queue_window"
 * add a "deck_settings" mode that fetches the number of max reviews per day and use it as "target_deck_size"
 * replace all df_temp by a on-memory numpy array

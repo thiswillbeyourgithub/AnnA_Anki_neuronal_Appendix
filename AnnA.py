@@ -96,7 +96,7 @@ set_global_logging_level(logging.ERROR,
                           "fastText"])
 
 
-def asynchronous_importer(vectorizer, task, fastText_lang):
+def asynchronous_importer(vectorizer, task, fastText_lang, fastText_model_name):
     """
     used to asynchronously import large modules, this way between
     importing AnnA and creating the instance of the class, the language model
@@ -109,7 +109,10 @@ def asynchronous_importer(vectorizer, task, fastText_lang):
             import fasttext.util
             try:
                 fasttext.util.download_model(fastText_lang, if_exists='ignore')
-                ft = fastText.load_model(f"cc.{fastText_lang[0:2]}.300.bin")
+                if fastText_model_name is None:
+                    ft = fastText.load_model(f"cc.{fastText_lang[0:2]}.300.bin")
+                else:
+                    ft = fastText.load_model(fastText_model_name)
             except Exception as e:
                 red(f"Couldn't load fastText model: {e}")
                 raise SystemExit()
@@ -154,7 +157,8 @@ class AnnA:
                  # vectorization:
                  vectorizer="TFIDF",  # can be "TFIDF" or "fastText"
                  fastText_dim=None,
-                 fastText_lang="fr",
+                 fastText_model_name=None,
+                 fastText_lang="en",
                  TFIDF_dim=100,
                  TFIDF_red_algo="SVD", #can be SVD or UMAP
                  TFIDF_stopw_lang=["english", "french"],
@@ -188,7 +192,8 @@ class AnnA:
         import_thread = threading.Thread(target=asynchronous_importer,
                                          args=(vectorizer,
                                                task,
-                                               fastText_lang))
+                                               fastText_lang,
+                                               fastText_model_name))
         import_thread.start()
 
         # loading args
@@ -210,6 +215,7 @@ class AnnA:
         self.vectorizer = vectorizer
         self.fastText_lang = fastText_lang
         self.fastText_dim = fastText_dim
+        self.fastText_model_name = fastText_model_name
         self.TFIDF_dim = TFIDF_dim
         self.TFIDF_stopw_lang = TFIDF_stopw_lang
         self.TFIDF_stem = TFIDF_stem
