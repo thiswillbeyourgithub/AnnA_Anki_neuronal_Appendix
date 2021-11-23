@@ -23,6 +23,8 @@ import numpy as np
 import Levenshtein as lev
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
+from transformers import AutoTokenizer
+tokenizer = AutoTokenizer.from_pretrained("bert-base-multilingual-uncased")
 
 from scipy import interpolate, sparse
 from sklearn.feature_extraction.text import TfidfTransformer, TfidfVectorizer, CountVectorizer
@@ -100,9 +102,6 @@ def asynchronous_importer(vectorizer, task, fastText_lang):
     importing AnnA and creating the instance of the class, the language model
     have some more time to load
     """
-    global tokenizer
-    from transformers import AutoTokenizer
-    tokenizer = AutoTokenizer.from_pretrained("bert-base-multilingual-uncased")
     if vectorizer == "fastText" or task == "index":
         if "ft" not in globals():
             global fastText, ft
