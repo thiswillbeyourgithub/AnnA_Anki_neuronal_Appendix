@@ -820,7 +820,7 @@ threads of size {batchsize})")
                     red(f"Error: restart anki then rerun AnnA.")
                     raise SystemExit()
             if cnt > 0:
-                yel("Succesfully corrected null combined texts.")
+                yel("Succesfully corrected null combined texts on #{cnt} trial.")
 
 
         for notification in list(set(to_notify)):
@@ -958,9 +958,9 @@ adjust formating issues:")
             vectorizer = TfidfVectorizer(strip_accents="ascii",
                                          lowercase=True,
                                          tokenizer=tknzer,
-                                         stop_words=None,
                                          ngram_range=(1, 6),
                                          max_features=1000,
+                                         stop_words=None,  # already removed
                                          norm="l2")
             t_vec = vectorizer.fit_transform(tqdm(df["text"],
                                              desc="Vectorizing text using \
