@@ -126,17 +126,18 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 
 ## TODO
 *More or less by order of urgency*
-* add tags to cards that are to do on a given run, that would help rebuilding on mobile
+* create a 50dim french fasttext
+* rename stride into "queue_window"
 * add a "deck_settings" mode that fetches the number of max reviews per day and use it as "target_deck_size"
-* add a tutorial to reduce the size of the fasttext model and reorient it to english
-* implement multilingual support thanks to these people: https://github.com/babylonhealth/fastText_multilingual
 * replace all df_temp by a on-memory numpy array
+* investigate normalizing the distance matrix
 * faq: mention "how can I know if it's working?"
 
 * fix searching + open the browser and add tags, then ask to sort by tags
 * check that docstrings are up to date
 * implement ability to set a correction vector (ex: favor cards closer to "neuroanatomy")
 * implement index scoring
+* add a tutorial to reduce the size of the fasttext model and reorient it to english
 
 * create a search algorithm that expands your query by fetching synonyms
 * turn AnnA into an anki addon
