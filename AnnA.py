@@ -1279,23 +1279,23 @@ lowest value.")
         assert len(queue) != 0
 
         try:
-            red("Quadratic mean of the distance among the optimized queue:")
-            spread_queue = np.sqrt(np.mean(np.square(self.df_dist.loc[queue, queue].values.flatten())))
+            red("Sum of the minimum distance among the optimized queue:")
+            spread_queue = np.sum(np.min(np.abs(self.df_dist.loc[queue, queue].values)))
             yel(spread_queue)
 
             dueNQ = [x for x in self.due_cards if x not in queue]
             if dueNQ:
-                red("Quadratic mean of the distance among the cards that didn't \
+                red("Sum of the minimum distance among the cards that didn't \
 make it into the queue:")
-                spread_nqueue = np.sqrt(np.mean(np.square(self.df_dist.loc[dueNQ, dueNQ].values.flatten())))
+                spread_nqueue = np.sum(np.min(np.abs(self.df_dist.loc[dueNQ, dueNQ].values)))
                 yel(spread_nqueue)
 
-            red("Quadratic mean of the distance if you had not used AnnA:")
+            red("Sum of the minimum distance if you had not used AnnA:")
             woAnnA = [x
                       for x in df.sort_values(
                           "ref", ascending=True).index.tolist()
                       if x in self.due_cards][0:len(queue)]
-            spread_else = np.sqrt(np.mean(np.square(self.df_dist.loc[woAnnA, woAnnA].values.flatten())))
+            spread_else = np.sum(np.min(np.abs(self.df_dist.loc[woAnnA, woAnnA].values)))
             yel(spread_else)
 
             ratio = round(spread_queue / spread_else, 3)
