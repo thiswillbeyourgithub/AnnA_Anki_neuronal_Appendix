@@ -826,7 +826,7 @@ threads of size {batchsize})")
                     red(f"Error: restart anki then rerun AnnA.")
                     raise SystemExit()
             if cnt > 0:
-                yel("Succesfully corrected null combined texts on #{cnt} trial.")
+                yel(f"Succesfully corrected null combined texts on #{cnt} trial.")
 
 
         for notification in list(set(to_notify)):
