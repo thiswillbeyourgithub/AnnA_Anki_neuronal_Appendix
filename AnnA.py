@@ -963,9 +963,9 @@ adjust formating issues:")
             vectorizer = TfidfVectorizer(strip_accents="ascii",
                                          lowercase=True,
                                          tokenizer=tknzer,
-                                         ngram_range=(1, 6),
-                                         max_features=1000,
                                          stop_words=None,  # already removed
+                                         ngram_range=(1, 10),
+                                         max_features=10_000,
                                          norm="l2")
             t_vec = vectorizer.fit_transform(tqdm(df["text"],
                                              desc="Vectorizing text using \
