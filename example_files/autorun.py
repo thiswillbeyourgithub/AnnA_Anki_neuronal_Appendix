@@ -14,26 +14,22 @@ def interscreen():
 
 
 a = AnnA(deckname="Some_Deck",
+        task="create_filtered",
         target_deck_size="100",
         rated_last_X_days=3,
         reference_order="relative_overdueness",
-        clustering_enable=True,
-        task="create_filtered",
         )
 interscreen()
 b = AnnA(deckname="Some_OtherDeck::subdeck#1",
+        task="bury_excess_learning_cards",
         target_deck_size="80%",
         rated_last_X_days=3,
         reference_order="lowest_interval",
-        clustering_enable=True,
-        task="bury_excess_learning_cards",
         )
 interscreen()
 c = AnnA(deckname="Some_OtherDeck::subdeck#2",
+        task="bury_excess_review_cards",
         target_deck_size="50",
         rated_last_X_days=3,
-        reference_order="lowest_interval",
-        clustering_enable=True,
-        task="bury_excess_review_cards",
         check_database=True
         )
