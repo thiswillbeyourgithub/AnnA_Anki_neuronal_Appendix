@@ -127,7 +127,7 @@ class AnnA:
     def __init__(self, show_banner=True,
                  # main settings
                  deckname=None,
-                 reference_order="lowest_interval",
+                 reference_order="relative_overdueness",
                  # can be "lowest_interval", "relative overdueness",
                  # "order_added"
                  target_deck_size="80%",
