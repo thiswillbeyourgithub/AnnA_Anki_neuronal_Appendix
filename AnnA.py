@@ -1288,13 +1288,6 @@ lowest value.")
             spread_queue = np.sum(np.min(np.abs(self.df_dist.loc[queue, queue].values)))
             yel(spread_queue)
 
-            dueNQ = [x for x in self.due_cards if x not in queue]
-            if dueNQ:
-                red("Sum of the minimum distance among the cards that didn't \
-make it into the queue:")
-                spread_nqueue = np.sum(np.min(np.abs(self.df_dist.loc[dueNQ, dueNQ].values)))
-                yel(spread_nqueue)
-
             red("Sum of the minimum distance if you had not used AnnA:")
             woAnnA = [x
                       for x in df.sort_values(
