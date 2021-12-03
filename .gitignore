@@ -5,6 +5,6 @@ __pycache__/
 AMIMA_jupyter.py
 *.pickle
 acronym_list.py
-autorun.py
+autorun*.py
 logs.txt
-cc.fr.300.bin
+cc.fr.*00.bin
