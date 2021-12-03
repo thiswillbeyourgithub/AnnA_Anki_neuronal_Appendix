@@ -847,7 +847,7 @@ adjust formating issues:")
 
     def _compute_card_vectors(self,
                               df=None,
-                              store_vectors=True,
+                              store_vectors=False,
                               import_thread=None):
         """
         Assigne fastText vectors to each card
