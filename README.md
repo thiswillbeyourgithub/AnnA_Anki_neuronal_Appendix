@@ -128,6 +128,8 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 
 ## TODO
 *More or less by order of urgency*
+* remove umap as a dimension reducing technique, keep it only for plotting and import it at the last moment
+* removing the overlap between due and rated cards is actually a bad idea
 * rename stride into "queue_window"
 * add a "deck_settings" mode that fetches the number of max reviews per day and use it as "target_deck_size"
 * replace all df_temp by a on-memory numpy array
@@ -136,7 +138,7 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 
 * fix searching + open the browser and add tags, then ask to sort by tags
 * check that docstrings are up to date
-* implement ability to set a correction vector (ex: favor cards closer to "neuroanatomy")
+* implement ability to set a correction vector (ex: favor cards closer to "neuroanatomy"), could actually just be a card ID to favor
 * implement index scoring
 * add a tutorial to reduce the size of the fasttext model and reorient it to english
 
