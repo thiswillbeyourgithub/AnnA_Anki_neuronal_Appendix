@@ -641,20 +641,19 @@ threads of size {batchsize})")
         Greek letters can also be replaced on the fly
         """
         orig = text
-
         s = re.sub
 
         text = str(text)
+        text = s("<blockquote(.*?)</blockquote>",
+                 lambda x: x.group(0).replace("<br>", " ; "), text)
+        text = s('\\n|<div>|</div>|<br>|<span>|</span>|<li>|</li>|<ul>|</ul>',
+                 " ", text)  # newlines
         text = " ".join(text.split())
         if self.keep_ocr:
             # keep image title (usually OCR)
             text = s("title=(\".*?\")", "> Caption: '\\1' <", text)
             text = text.replace('Caption: \'""\'', "")
         text = s(r'[a-zA-Z0-9-]+\....', " ", text)  # media file name
-        text = s("<blockquote(.*?)</blockquote>",
-                 lambda x: x.group(0).replace("<br>", " ; "), text)
-        text = s('\\n|<div>|</div>|<br>|<span>|</span>|<li>|</li>|<ul>|</ul>',
-                 " ", text)  # newlines
         text = s("<a href.*?</a>", " ", text)  # html links
         text = s(r'http[s]?://\S*', " ", text)  # plaintext links
         text = s("<.*?>", " ", text)  # remaining html tags
