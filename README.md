@@ -74,7 +74,7 @@ Tired of having to deal with anki flashcards that are too similar when grinding 
 * Edit `field_mapping.py` and `example_files/acronym_list.py` to your liking
 * Edit the file `example_files/autorun.py` to suit your needs
 * Move the new example_files to the main folder
-* Open AnnA in a python console, for example: `ipython3 -c 'exec(open("autorun.py").read())'`
+* run AnnA : `python3 autorun.py`
 * Enjoy your filtered deck, but don't empty it or rebuilt it. You can delete it though.
 * Open an issue telling me your remarks and suggestion
 
