@@ -651,7 +651,9 @@ threads of size {batchsize})")
         text = " ".join(text.split())
         if self.keep_ocr:
             # keep image title (usually OCR)
-            text = s("title=(\".*?\")", "> Caption: '\\1' <", text)
+            text = s("title=(\".*?\")", "> Caption: '\\1' <",
+                     text,
+                     flags=re.MULTILINE | re.DOTALL)
             text = text.replace('Caption: \'""\'', "")
         text = s(r'[a-zA-Z0-9-]+\....', " ", text)  # media file name
         text = s("<a href.*?</a>", " ", text)  # html links
