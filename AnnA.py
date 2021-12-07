@@ -1,4 +1,5 @@
-import sys
+import logging
+import gc
 import pickle
 import time
 import random
@@ -8,19 +9,31 @@ import os
 import json
 import urllib.request
 import pyfiglet
-import pandas as pd
 from pprint import pprint
 from tqdm import tqdm
 import re
 import importlib
-from prompt_toolkit import prompt
-from prompt_toolkit.completion import WordCompleter
-import Levenshtein as lev
 from pathlib import Path
 import threading
-from sklearn.feature_extraction.text import TfidfTransformer
-import scipy.sparse as sp
-import logging
+from prompt_toolkit import prompt
+from prompt_toolkit.completion import WordCompleter
+
+import pandas as pd
+import numpy as np
+import Levenshtein as lev
+from nltk.corpus import stopwords
+from nltk.stem import PorterStemmer
+from transformers import AutoTokenizer
+tokenizer = AutoTokenizer.from_pretrained("bert-base-multilingual-uncased")
+
+from scipy import interpolate, sparse
+from sklearn.feature_extraction.text import TfidfTransformer, TfidfVectorizer, CountVectorizer
+from sklearn.metrics import pairwise_distances
+from sklearn.decomposition import PCA, TruncatedSVD
+from sklearn.cluster import KMeans, DBSCAN, AgglomerativeClustering, MiniBatchKMeans
+from sklearn.preprocessing import normalize, StandardScaler
+import plotly.express as px
+import umap.umap_
 
 # avoids annoying warning
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
@@ -30,10 +43,11 @@ signal.signal(signal.SIGINT, (lambda signal, frame: pdb.set_trace()))
 
 # adds logger, restrict it to 5000 lines
 Path("logs.txt").write_text(
-        "\n".join(
-            Path("logs.txt").read_text().split("\n")[-5000:]))
-logging.basicConfig(filename="logs.txt", filemode='a',
-        format=f"{time.asctime()}: %(message)s")
+    "\n".join(
+        Path("logs.txt").read_text().split("\n")[-5000:]))
+logging.basicConfig(filename="logs.txt",
+                    filemode='a',
+                    format=f"{time.asctime()}: %(message)s")
 log = logging.getLogger()
 log.setLevel(logging.INFO)
 
@@ -76,54 +90,32 @@ whi = coloured_log("white")
 yel = coloured_log("yellow")
 red = coloured_log("red")
 
+set_global_logging_level(logging.ERROR,
+                         ["transformers", "nlp", "torch",
+                          "tensorflow", "sklearn", "nltk",
+                          "fastText"])
 
-def asynchronous_importer(vectorizer, task):
+
+def asynchronous_importer(vectorizer, task, fastText_lang, fastText_model_name):
     """
     used to asynchronously import large modules, this way between
     importing AnnA and creating the instance of the class, the language model
     have some more time to load
     """
-    global np, KMeans, DBSCAN, tokenizer, ps, \
-        AgglomerativeClustering, transformers, normalize, TfidfVectorizer,\
-        CountVectorizer, TruncatedSVD, StandardScaler, \
-        pairwise_distances, PCA, px, umap, np, tokenizer_bert, \
-        MiniBatchKMeans, interpolate
-    if "numpy" not in sys.modules:
-        whi("Began importing modules...\n")
-        print_when_ends = True
-    else:
-        print_when_ends = False
-    import numpy as np
-    from sklearn.feature_extraction.text import TfidfVectorizer
-    from sklearn.feature_extraction.text import CountVectorizer
-    if vectorizer != "TFIDF" or task == "index":
-        global sBERT
-        from sentence_transformers import SentenceTransformer
-        sBERT = SentenceTransformer('distiluse-base-multilingual-cased-v1')
-    else:
-        global stopwords
-        from nltk.corpus import stopwords
-        from nltk.stem import PorterStemmer
-        ps = PorterStemmer()
-
-    from transformers import BertTokenizerFast
-    tokenizer = BertTokenizerFast.from_pretrained(
-            "bert-base-multilingual-uncased")
-    from sklearn.metrics import pairwise_distances
-    from sklearn.decomposition import PCA
-    from sklearn.cluster import KMeans, DBSCAN, AgglomerativeClustering
-    from sklearn.cluster import MiniBatchKMeans
-    import plotly.express as px
-    import umap.umap_
-    from sklearn.preprocessing import normalize
-    from sklearn.decomposition import TruncatedSVD
-    from sklearn.preprocessing import StandardScaler
-    from scipy import interpolate
-    if print_when_ends:
-        red("Finished importing modules.\n\n")
-    set_global_logging_level(logging.ERROR,
-                             ["transformers", "nlp", "torch",
-                              "tensorflow", "sklearn", "nltk"])
+    if vectorizer == "fastText" or task == "index":
+        if "ft" not in globals():
+            global fastText, ft
+            import fasttext as fastText
+            import fasttext.util
+            try:
+                fasttext.util.download_model(fastText_lang, if_exists='ignore')
+                if fastText_model_name is None:
+                    ft = fastText.load_model(f"cc.{fastText_lang[0:2]}.300.bin")
+                else:
+                    ft = fastText.load_model(fastText_model_name)
+            except Exception as e:
+                red(f"Couldn't load fastText model: {e}")
+                raise SystemExit()
 
 
 class AnnA:
@@ -135,11 +127,12 @@ class AnnA:
     def __init__(self, show_banner=True,
                  # main settings
                  deckname=None,
-                 reference_order="lowest_interval",
+                 reference_order="relative_overdueness",
                  # can be "lowest_interval", "relative overdueness",
                  # "order_added"
-                 desired_deck_size="80%",
+                 target_deck_size="80%",
                  rated_last_X_days=4,
+                 due_threshold=50,
                  highjack_due_query=None,
                  highjack_rated_query=None,
                  stride=2500,
@@ -154,17 +147,20 @@ class AnnA:
                  clustering_enable=False,
                  clustering_nb_clust="auto",
                  compute_opti_rev_order=True,
-                 task="create_filtered",
-                 # can be "create_filtered",
+                 task="filter_due_cards",
+                 # can be "filter_due_cards",
                  # "bury_excess_review_cards",
                  # "bury_excess_learning_cards",
                  # "index"
                  check_database=False,
 
                  # vectorization:
-                 vectorizer="TFIDF",  # can be "TFIDF" or "sBERT"
-                 sBERT_dim=None,
-                 TFIDF_dim=250,
+                 vectorizer="TFIDF",  # can be "TFIDF" or "fastText"
+                 fastText_dim=None,
+                 fastText_model_name=None,
+                 fastText_lang="en",
+                 TFIDF_dim=100,
+                 TFIDF_red_algo="SVD", #can be SVD or UMAP
                  TFIDF_stopw_lang=["english", "french"],
                  TFIDF_stem=False,
                  TFIDF_tokenize=True,
@@ -174,6 +170,12 @@ class AnnA:
                  prefer_similar_card=False,
                  save_instance_as_pickle=False,
                  ):
+
+        if show_banner:
+            red(pyfiglet.figlet_format("AnnA"))
+            red("(Anki neuronal Appendix)\n\n")
+
+        # miscellaneous
         if log_level == 0:
             log.setLevel(logging.ERROR)
         elif log_level == 1:
@@ -183,23 +185,25 @@ class AnnA:
         else:
             log.setLevel(logging.INFO)
 
-        if show_banner:
-            red(pyfiglet.figlet_format("AnnA"))
-            red("(Anki neuronal Appendix)\n\n")
+        if vectorizer == "fasttext":
+            vectorizer = "fastText"
 
         # start importing large modules
         import_thread = threading.Thread(target=asynchronous_importer,
-                                         args=(vectorizer, task))
+                                         args=(vectorizer,
+                                               task,
+                                               fastText_lang,
+                                               fastText_model_name))
         import_thread.start()
 
         # loading args
         self.replace_greek = replace_greek
         self.keep_ocr = keep_ocr
-        self.desired_deck_size = desired_deck_size
+        self.target_deck_size = target_deck_size
         self.rated_last_X_days = rated_last_X_days
+        self.due_threshold = due_threshold
         self.debug_card_limit = debug_card_limit
         self.clustering_nb_clust = clustering_nb_clust
-        self.sBERT_dim = sBERT_dim
         self.highjack_due_query = highjack_due_query
         self.highjack_rated_query = highjack_rated_query
         self.stride = stride
@@ -209,21 +213,28 @@ class AnnA:
         self.field_mappings = field_mappings
         self.acronym_list = acronym_list
         self.vectorizer = vectorizer
+        self.fastText_lang = fastText_lang
+        self.fastText_dim = fastText_dim
+        self.fastText_model_name = fastText_model_name
         self.TFIDF_dim = TFIDF_dim
         self.TFIDF_stopw_lang = TFIDF_stopw_lang
         self.TFIDF_stem = TFIDF_stem
         self.TFIDF_tokenize = TFIDF_tokenize
+        self.TFIDF_red_algo = TFIDF_red_algo
         self.task = task
         self.save_instance_as_pickle = save_instance_as_pickle
 
+        # args sanity checks
+        if isinstance(self.target_deck_size, int):
+            self.target_deck_size = str(self.target_deck_size)
         assert TFIDF_stem + TFIDF_tokenize in [0, 1]
         assert stride > 0
         assert reference_order in ["lowest_interval", "relative_overdueness",
                                    "order_added"]
-        assert task in ["create_filtered", "index",
+        assert task in ["filter_due_cards", "index",
                         "bury_excess_learning_cards",
                         "bury_excess_review_cards"]
-        assert vectorizer in ["TFIDF", "sBERT"]
+        assert vectorizer in ["TFIDF", "fastText"]
 
         if self.acronym_list is not None:
             file = Path(acronym_list)
@@ -231,37 +242,57 @@ class AnnA:
                 raise Exception(f"Acronym file was not found: {acronym_list}")
             else:
                 imp = importlib.import_module(
-                        acronym_list.replace(".py", ""))
+                    acronym_list.replace(".py", ""))
                 acronym_dict = imp.acronym_dict
                 compiled_dic = {}
-                for ac in acronym_dict.keys():
-                    compiled = re.compile(r"\b"+ac+r"\b", flags=re.IGNORECASE)
+                for ac in acronym_dict:
+                    if ac.lower() == ac:
+                        compiled = re.compile(r"\b" + ac + r"\b",
+                                              flags=re.IGNORECASE |
+                                              re.MULTILINE |
+                                              re.DOTALL)
+                    else:
+                        compiled = re.compile(r"\b" + ac + r"\b",
+                                              flags=re.MULTILINE | re.DOTALL)
                     compiled_dic[compiled] = acronym_dict[ac]
                 self.acronym_dict = compiled_dic
+
         if self.field_mappings is not None:
             f = Path(self.field_mappings)
             try:
                 assert f.exists()
                 imp = importlib.import_module(
-                        self.field_mappings.replace(".py", ""))
+                    self.field_mappings.replace(".py", ""))
                 self.field_dic = imp.field_dic
-                if self.vectorizer == "sBERT":
-                    # sBERT should not be used with repeting fields
-                    temp = {}
-                    for a, b in self.field_dic.items():
-                        temp[a] = sorted(set(b), key=b.index)
-                    self.field_dic = temp
             except Exception as e:
                 red(f"Error with field mapping file, will use default \
 values. {e}")
                 self.field_dic = {"dummyvalue": "dummyvalue"}
+
+        try:
+            stops = []
+            for lang in self.TFIDF_stopw_lang:
+                stops += stopwords.words(lang)
+            if self.TFIDF_tokenize:
+                temp = []
+                [temp.extend(tokenizer.tokenize(x)) for x in stops]
+                stops.extend(temp)
+            elif self.TFIDF_stem:
+                ps = PorterStemmer()
+                stops += [ps.stem(x) for x in stops]
+            self.stops = list(set(stops))
+        except Exception as e:
+            red(f"Error when extracting stop words: {e}")
+            red("Setting stop words list to None.")
+            self.stops = None
 
         # actual execution
         self.deckname = self._check_deck(deckname, import_thread)
         yel(f"Selected deck: {self.deckname}\n")
         if task == "index":
             yel(f"Task : cache vectors of deck: {self.deckname}\n")
-            self.vectorizer = "sBERT"
+            self.vectorizer = "fastText"
+            self.fastText_dim = None
             self.rated_last_X_days = 0
             self._create_and_fill_df()
             if self.not_enough_cards is True:
@@ -269,17 +300,20 @@ values. {e}")
             self.df = self._reset_index_dtype(self.df)
             self._format_card()
             self.show_acronyms()
-            self._compute_sBERT_vec(import_thread=import_thread)
+            self._compute_card_vectors(import_thread=import_thread)
             if clustering_enable:
                 self.compute_clusters(minibatchk_kwargs={"verbose": 0})
-        elif task in ["bury_excess_learning_cards", "bury_excess_review_cards"]:
+
+        elif task in ["bury_excess_learning_cards",
+                      "bury_excess_review_cards"]:
             # bypasses most of the code to bury learning cards
             # directly in the deck without creating filtered decks
             if task == "bury_excess_learning_cards":
                 yel("Task : bury some learning cards")
                 if self.reference_order == "relative_overdueness":
-                    red("Reference order cannot be 'relative_overdueness' for this task.")
-                    raise SystemExit()
+                    red("Reference order cannot be 'relative_overdueness' \
+for this task. Switching to 'lowest_interval'.")
+                    self.reference_order = "lowest_interval"
             if task == "bury_excess_review_cards":
                 yel("Task : bury some reviews\n")
             self._create_and_fill_df()
@@ -288,7 +322,7 @@ values. {e}")
             self.df = self._reset_index_dtype(self.df)
             self._format_card()
             self.show_acronyms()
-            self._compute_sBERT_vec(import_thread=import_thread)
+            self._compute_card_vectors(import_thread=import_thread)
             if clustering_enable:
                 self.compute_clusters(minibatchk_kwargs={"verbose": 0})
             self._compute_distance_matrix()
@@ -302,16 +336,17 @@ values. {e}")
             self.df = self._reset_index_dtype(self.df)
             self._format_card()
             self.show_acronyms()
-            self._compute_sBERT_vec(import_thread=import_thread)
+            self._compute_card_vectors(import_thread=import_thread)
             if clustering_enable:
                 self.compute_clusters(minibatchk_kwargs={"verbose": 0})
             self._compute_distance_matrix()
             if compute_opti_rev_order:
                 self._compute_opti_rev_order()
-                if task == "create_filtered":
+                if task == "filter_due_cards":
                     self.task_filtered_deck()
 
         # pickle itself
+        self._collect_memory()
         if save_instance_as_pickle:
             yel("\nSaving instance as 'last_run.pickle'...")
             if Path("./last_run.pickle").exists():
@@ -329,7 +364,10 @@ execute the code using:\n'import pickle ; a = pickle.load(open(\"last_run.pickle
             whi("Re-optimizing Anki database")
             self._ankiconnect(action="guiCheckDatabase")
 
-        yel(f"Done with {self.deckname}")
+        yel(f"Done with '{self.task}' on deck {self.deckname}")
+
+    def _collect_memory(self):
+        gc.collect()
 
     def _reset_index_dtype(self, df):
         """
@@ -353,9 +391,9 @@ execute the code using:\n'import pickle ; a = pickle.load(open(\"last_run.pickle
                                  ).encode('utf-8')
         try:
             response = json.load(urllib.request.urlopen(
-                                    urllib.request.Request(
-                                        'http://localhost:8765',
-                                        requestJson)))
+                urllib.request.Request(
+                    'http://localhost:8765',
+                    requestJson)))
         except (ConnectionRefusedError, urllib.error.URLError) as e:
             raise Exception(f"{e}: is Anki open and ankiconnect enabled?")
 
@@ -391,7 +429,7 @@ execute the code using:\n'import pickle ; a = pickle.load(open(\"last_run.pickle
                 cnt = 0
                 r_list = []
                 target_thread_n = 5
-                batchsize = len(card_id)//target_thread_n+3
+                batchsize = len(card_id) // target_thread_n + 3
                 whi(f"(Large number of cards to retrieve: creating 10 \
 threads of size {batchsize})")
 
@@ -412,7 +450,7 @@ threads of size {batchsize})")
                           smoothing=0) as pbar:
                     for nb in range(0, len(card_id), batchsize):
                         cnt += 1
-                        temp_card_id = card_id[nb: nb+batchsize]
+                        temp_card_id = card_id[nb: nb + batchsize]
                         thread = threading.Thread(target=retrieve_cards,
                                                   args=(temp_card_id,
                                                         lock,
@@ -464,6 +502,7 @@ threads of size {batchsize})")
         create a pandas DataFrame, fill it with the information gathered from
         anki connect like card content, intervals, etc
         """
+        self._collect_memory()
 
         if self.highjack_due_query is not None:
             red("Highjacking due card list:")
@@ -472,7 +511,7 @@ threads of size {batchsize})")
             due_cards = self._ankiconnect(action="findCards", query=query)
             whi(f"Found {len(due_cards)} cards...\n")
 
-        elif self.task == "create_filtered":
+        elif self.task == "filter_due_cards":
             yel("Getting due card list...")
             query = f"\"deck:{self.deckname}\" is:due is:review -is:learn \
 -is:suspended -is:buried -is:new -rated:1"
@@ -517,12 +556,11 @@ threads of size {batchsize})")
 -is:suspended -is:buried"
             whi(" >  '" + query)
             rated_cards = self._ankiconnect(action="findCards",
-                                        query=query)
+                                            query=query)
             whi(f"Found {len(rated_cards)} cards...\n")
         else:
             yel("Will not look for cards rated in past days.")
             rated_cards = []
-
 
         if rated_cards != []:
             temp = [x for x in rated_cards if x not in due_cards]
@@ -534,15 +572,15 @@ threads of size {batchsize})")
         self.due_cards = due_cards
         self.rated_cards = rated_cards
 
-        limit = self.debug_card_limit if self.debug_card_limit else None
-        combined_card_list = list(rated_cards + due_cards)[:limit]
-
-        if len(combined_card_list) < 20:
-            red("You don't have enough cards!\nStopping.")
+        if len(self.due_cards) < self.due_threshold:
+            red("Number of due cards is less than threshold.\nStopping.")
             self.not_enough_cards = True
             return
         else:
             self.not_enough_cards = False
+
+        limit = self.debug_card_limit if self.debug_card_limit else None
+        combined_card_list = list(rated_cards + due_cards)[:limit]
 
         list_cardInfo = []
 
@@ -550,8 +588,8 @@ threads of size {batchsize})")
         yel(f"\nAsking Anki for information about {n} cards...")
         start = time.time()
         list_cardInfo.extend(
-                self._get_cards_info_from_card_id(
-                    card_id=combined_card_list))
+            self._get_cards_info_from_card_id(
+                card_id=combined_card_list))
         whi(f"Got all infos in {int(time.time()-start)} seconds.\n\n")
 
         for i, card in enumerate(list_cardInfo):
@@ -561,9 +599,8 @@ threads of size {batchsize})")
             list_cardInfo[i].pop("css")
             list_cardInfo[i].pop("fields_no_html")
             list_cardInfo[i]["fields"] = dict(
-                    (k.lower(), v)
-                    for k, v in list_cardInfo[i]["fields"].items()
-                    )
+                (k.lower(), v)
+                for k, v in list_cardInfo[i]["fields"].items())
             list_cardInfo[i]["tags"] = " ".join(list_cardInfo[i]["tags"])
             if card["cardId"] in due_cards:
                 list_cardInfo[i]["status"] = "due"
@@ -590,8 +627,9 @@ threads of size {batchsize})")
         """
         if len(string.groups()):
             for i in range(len(string.groups())):
-                if string.group(i+1) is not None:
-                    new_w = new_w.replace('\\' + str(i+1), string.group(i+1))
+                if string.group(i + 1) is not None:
+                    new_w = new_w.replace('\\' + str(i + 1),
+                                          string.group(i + 1))
         out = string.group(0) + f" ({new_w})"
         return out
 
@@ -613,8 +651,10 @@ threads of size {batchsize})")
         text = " ".join(text.split())
         if self.keep_ocr:
             # keep image title (usually OCR)
-            text = s("title=(\".*?\")", "> Caption: '\\1' <", text)
-            text = text.replace('Caption: \'""\'', "")
+            text = s("title=(\".*?\")", "> Caption: '\\1' <",
+                     text,
+                     flags=re.MULTILINE | re.DOTALL)
+        text = text.replace('Caption: \'""\'', "")
         text = s(r'[a-zA-Z0-9-]+\....', " ", text)  # media file name
         text = s("<a href.*?</a>", " ", text)  # html links
         text = s(r'http[s]?://\S*', " ", text)  # plaintext links
@@ -635,16 +675,18 @@ threads of size {batchsize})")
         if self.acronym_list is not None:
             for compiled, new_word in self.acronym_dict.items():
                 text = s(compiled,
-                         lambda string: self._smart_acronym_replacer(string,
-                                                            compiled,
-                                                            new_word),
+                         lambda string:
+                         self._smart_acronym_replacer(string,
+                                                      compiled,
+                                                      new_word),
                          text)
 
         text = text.replace(" : ", ": ")
         text = " ".join(text.split())  # multiple spaces
         if len(text) < 10:
             if "src=" in orig:
-                text = text + " " + " ".join(re.findall('src="(.*?)">', orig))
+                text = text + " " + " ".join(re.findall('src="(.*?)">', orig,
+                    flags=re.MULTILINE | re.DOTALL))
         if len(text) > 2:
             text = text[0].upper() + text[1:]
             if text[-1] not in ["?", ".", "!"]:
@@ -654,7 +696,8 @@ threads of size {batchsize})")
         if self.vectorizer == "TFIDF":
             if self.TFIDF_stem is True:
                 text = " ".join([ps.stem(x) for x in text.split()])
-            text += " " + " ".join(re.findall('src="(.*?\..{2,3})" ', orig))
+            text += " " + " ".join(re.findall(r'src="(.*?\..{2,3})" ', orig,
+                flags=re.MULTILINE | re.DOTALL))
         return text
 
     def _format_card(self):
@@ -664,7 +707,8 @@ threads of size {batchsize})")
         which can be found at the top of the file. If not relevant field are
         found then only the first field is kept.
         """
-        def _threaded_field_filter(df, index_list, lock, pbar):
+        self._collect_memory()
+        def _threaded_field_filter(df, index_list, lock, pbar, stopw_compiled):
             """
             threaded implementation to speed up execution
             """
@@ -676,7 +720,7 @@ threads of size {batchsize})")
                 # in field_dic
                 field_dic = self.field_dic
                 target_model = []
-                for user_model in field_dic.keys():
+                for user_model in field_dic:
                     if user_model.lower() in card_model.lower():
                         target_model.append(user_model)
                 if len(target_model) == 0:
@@ -707,9 +751,16 @@ threads of size {batchsize})")
 {card_model}. Chose first 2 fields: {', '.join(fields_to_keep)}")
 
                 comb_text = ""
+                field_counter = {}
                 for f in fields_to_keep:
+                    if f in field_counter:
+                        field_counter[f] += 1
+                    else:
+                        field_counter[f] = 1
                     try:
-                        next_field = df.loc[index, "fields"][f.lower()]["value"].strip()
+                        next_field = re.sub(stopw_compiled,
+                                            "",
+                                df.loc[index, "fields"][f.lower()]["value"].strip())
                         if next_field != "":
                             comb_text = comb_text + next_field + ": "
                     except KeyError as e:
@@ -719,168 +770,188 @@ threads of size {batchsize})")
                 if comb_text[-2:] == ": ":
                     comb_text = comb_text[:-2]
 
+                # add tags to comb_text
+                tags = self.df.loc[index, "tags"].split(" ")
+                for t in tags:
+                    if "AnnA" not in t:
+                        comb_text += " " + t.replace("::", " ")
+
                 with lock:
                     self.df.at[index, "comb_text"] = comb_text
-                pbar.update(1)
+                    pbar.update(1)
 
-        df = self.df.copy()
-        n = len(df.index)
-        batchsize = n//5+1
+        n = len(self.df.index)
+        batchsize = n // 4 + 1
         lock = threading.Lock()
+
         threads = []
         to_notify = []
+        stopw_compiled = re.compile("\b" + "\b|\b".join(self.stops) + "\b",
+                                    flags=re.MULTILINE | re.IGNORECASE | re.DOTALL)
+
         with tqdm(total=n,
                   desc="Combining relevant fields",
                   smoothing=0,
                   unit=" card") as pbar:
+
             for nb in range(0, n, batchsize):
-                sub_card_list = df.index[nb: nb+batchsize]
+                sub_card_list = self.df.index[nb: nb + batchsize]
                 thread = threading.Thread(target=_threaded_field_filter,
-                                          args=(df,
+                                          args=(self.df,
                                                 sub_card_list,
                                                 lock,
-                                                pbar),
+                                                pbar,
+                                                stopw_compiled),
                                           daemon=False)
                 thread.start()
                 threads.append(thread)
+
             [t.join() for t in threads]
+
+            cnt = 0
+            while sum(self.df.isna()["comb_text"]) != 0:
+                cnt += 1
+                na_list = [x for x in self.df.index[self.df.isna()["comb_text"]].tolist()]
+                pbar.update(-len(na_list))
+                red(f"Found {sum(self.df.isna()['comb_text'])} null values in comb_text: retrying")
+                thread = threading.Thread(target=_threaded_field_filter,
+                                          args=(self.df,
+                                                na_list,
+                                                lock,
+                                                pbar,
+                                                stopw_compiled),
+                                          daemon=False)
+                thread.start()
+                thread.join()
+                if cnt > 10:
+                    red(f"Error: restart anki then rerun AnnA.")
+                    raise SystemExit()
+            if cnt > 0:
+                yel(f"Succesfully corrected null combined texts on #{cnt} trial.")
+
 
         for notification in list(set(to_notify)):
             red(notification)
-            
-        df = self.df.copy()
+
         tqdm.pandas(desc="Formating text", smoothing=0, unit=" card")
-        df["text"] = df["comb_text"].progress_apply(lambda x: self._format_text(x))
+        self.df["text"] = self.df["comb_text"].progress_apply(lambda x: self._format_text(x))
         print("\n\nPrinting 5 random samples of your formated text, to help \
 adjust formating issues:")
         pd.set_option('display.max_colwidth', 80)
-        sub_index = random.choices(df.index.tolist(), k=5)
+        max_length = 100
+        sub_index = random.choices(self.df.index.tolist(), k=5)
         for i in sub_index:
-            print(f" *  {i}: {df.loc[i, 'text']}")
+            print(f" *  {i}: {str(self.df.loc[i, 'text'])[0:max_length]}...")
         pd.reset_option('display.max_colwidth')
         print("\n")
-        self.df = df.sort_index()
+        self.df = self.df.sort_index()
         return True
 
-    def _compute_sBERT_vec(self,
-                           df=None,
-                           use_sBERT_cache=True,
-                           import_thread=None):
+    def _compute_card_vectors(self,
+                              df=None,
+                              store_vectors=False,
+                              import_thread=None):
         """
-        Assigne sBERT vectors to each card
+        Assigne fastText vectors to each card
         df["VEC_FULL"], contains the vectors
         df["VEC"] contains either all the vectors or less if you
             enabled dimensionality reduction
-        * given how long it is to compute the vectors I decided to store
-            all already computed sBERT to a pickled DataFrame at each run
         """
+        self._collect_memory()
         if df is None:
             df = self.df
 
-        if self.vectorizer == "sBERT":
-            if use_sBERT_cache:
-                print("\nLooking for cached sBERT pickle file...", end="")
-                sBERT_file = Path("./sBERT_cache.pickle")
-                df["VEC"] = 0*len(df.index)
-                df["VEC"] = df["VEC"].astype("object")
-                loaded_sBERT = 0
-                id_to_recompute = []
+        if import_thread is not None:
+            import_thread.join()
+            time.sleep(0.5)
 
-                # reloads sBERT vectors and only recomputes the new one:
-                if not sBERT_file.exists():
-                    whi(" sBERT cache not found, will create it.")
-                    df_cache = pd.DataFrame(
-                            columns=["cardId", "mod", "text", "VEC"]
-                            ).set_index("cardId")
-                    id_to_recompute = df.index
-                else:
-                    print(" Found sBERT cache.")
-                    df_cache = pd.read_pickle(sBERT_file)
-                    df_cache["VEC"] = df_cache["VEC"].astype("object")
-                    df_cache["mod"] = df_cache["mod"].astype("object")
-                    df_cache["text"] = df_cache["text"]
-                    df_cache = self._reset_index_dtype(df_cache)
-                    for i in df.index:
-                        if i in df_cache.index and \
-                                (str(df_cache.loc[i, "text"]) ==
-                                    str(df.loc[i, "text"])):
-                            df.at[i, "VEC"] = df_cache.loc[i, "VEC"]
-                            loaded_sBERT += 1
-                        else:
-                            id_to_recompute.append(i)
+        if self.vectorizer == "fastText":
 
-                yel(f"Loaded {loaded_sBERT} vectors from cache, will compute \
-{len(id_to_recompute)} others...")
-                if import_thread is not None:
-                    import_thread.join()
-                    time.sleep(0.5)
-                if len(id_to_recompute) != 0:
-                    sentence_list = [df.loc[x, "text"]
-                                     for x in df.index if x in id_to_recompute]
-                    sentence_embeddings = sBERT.encode(
-                            sentence_list,
-                            normalize_embeddings=True,
-                            show_progress_bar=True)
+            def preprocessor(string):
+                """
+                prepare string of text to be vectorized by fastText
+                * makes lowercase
+                * removes all non letters
+                * removes extra spaces
+                * outputs each words in a list
+                """
+                return re.sub(alphanum, " ", string.lower()).split()
 
-                    for i, ind in enumerate(tqdm(id_to_recompute)):
-                        df.at[ind, "VEC"] = sentence_embeddings[i]
+            def memoize(f):
+                """
+                store previous value to speed up vector retrieval
+                (sped up by about x40)
+                """
+                memo = {}
 
-                # stores newly computed sBERT vectors in a file:
-                df_cache = self._reset_index_dtype(df_cache)
-                for i in [x for x in id_to_recompute
-                          if x not in df_cache.index]:
-                    df_cache.loc[i, "VEC"] = df.loc[i, "VEC"].astype("object")
-                    df_cache.loc[i, "mod"] = df.loc[i, "mod"].astype("object")
-                    df_cache.loc[i, "text"] = df.loc[i, "text"]
-                for i in [x for x in id_to_recompute if x in df_cache.index]:
-                    df_cache.loc[i, "VEC"] = df.loc[i, "VEC"].astype("object")
-                    df_cache.loc[i, "mod"] = df.loc[i, "mod"].astype("object")
-                    df_cache.loc[i, "text"] = df.loc[i, "text"]
-                df_cache = self._reset_index_dtype(df_cache)
+                def helper(x):
+                    if x not in memo:
+                        memo[x] = f(x)
+                    return memo[x]
+                return helper
+
+            def vec(string):
+                return normalize(np.sum([mvec(x)
+                                         for x in preprocessor(string)
+                                         if x != ""],
+                                        axis=0).reshape(1, -1),
+                                 norm='l2')
+
+            alphanum = re.compile(r"[^ _\w]|\d|_")
+            mvec = memoize(ft.get_word_vector)
+            ft_vec = np.empty(shape=(len(df.index), ft.get_dimension()),
+                              dtype=float)
+
+            for i, x in enumerate(
+                    tqdm(df.index, desc="Vectorizing using fastText")):
+                ft_vec[i] = vec(str(df.loc[x, "text"]))
+
+            if self.fastText_dim is None:
+                df["VEC"] = [x for x in ft_vec]
+                df["VEC_FULL"] = [x for x in ft_vec]
+            else:
+                print(f"Reducing dimensions to {self.fastText_dim} using UMAP")
+                umap_kwargs = {"n_jobs": -1,
+                               "verbose": 1,
+                               "n_components": min(self.fastText_dim,
+                                                   len(df.index) - 1),
+                               "metric": "cosine",
+                               "init": 'spectral',
+                               "random_state": 42,
+                               "transform_seed": 42,
+                               "n_neighbors": 5,
+                               "min_dist": 0.01}
                 try:
-                    Path("sBERT_cache.pickle_temp").unlink()
-                except FileNotFoundError:
-                    pass
-                df_cache.to_pickle("sBERT_cache.pickle_temp")
-                sBERT_file.unlink()
-                Path("sBERT_cache.pickle_temp").rename("sBERT_cache.pickle")
+                    ft_vec_red = umap.UMAP(**umap_kwargs).fit_transform(ft_vec)
+                    df["VEC"] = [x for x in ft_vec_red]
+                except Exception as e:
+                    red(f"Error when computing UMAP reduction, using all vectors: {e}")
+                    df["VEC"] = [x for x in ft_vec]
+                finally:
+                    df["VEC_FULL"] = [x for x in ft_vec]
 
-            df["VEC_FULL"] = df["VEC"]
-            if self.sBERT_dim is not None:
-                print(f"Reducing sBERT to {self.sBERT_dim} dimensions \
-using PCA...")
-                pca_sBERT = PCA(n_components=self.sBERT_dim, random_state=42)
-                df_temp = pd.DataFrame(
-                    columns=["V"+str(x+1)
-                             for x in range(len(df.loc[df.index[0], "VEC"]))],
-                    data=[x[0:] for x in df["VEC"]])
-                out = pca_sBERT.fit_transform(df_temp)
-                whi(f"Explained variance ratio after PCA on sBERT: \
-{round(sum(pca_sBERT.explained_variance_ratio_)*100,1)}%")
-                df["VEC"] = [x for x in out]
+            if store_vectors:
+                def storing_vectors(df):
+                    yel("Storing computed vectors")
+                    fastText_store = Path("./stored_vectors.pickle")
+                    if not fastText_store.exists():
+                        df_store = pd.DataFrame(columns=["cardId", "mod", "text", "VEC_FULL"]).set_index("cardId")
+                    else:
+                        df_store = pd.read_pickle(fastText_store)
+                    for i in df.index:
+                        df_store.loc[i, :] = df.loc[i, ["mod", "text", "VEC_FULL"]]
+                    df_store.to_pickle("stored_vectors.pickle_temp")
+                    if fastText_store.exists():
+                        fastText_store.unlink()
+                    Path("stored_vectors.pickle_temp").rename("stored_vectors.pickle")
+                    yel("Finished storing computed vectors")
+                stored_df = df.copy()
+                thread = threading.Thread(target=storing_vectors,
+                                          args=(stored_df,),
+                                          daemon=True)
+                thread.start()
 
-        else:  # use TFIDF instead of sBERT
-            if import_thread is not None:
-                import_thread.join()
-                time.sleep(0.5)
-
-            print("Creating stop words list...")
-            try:
-                stops = []
-                for lang in self.TFIDF_stopw_lang:
-                    stops += stopwords.words(lang)
-                if self.TFIDF_tokenize:
-                    temp = []
-                    [temp.extend(tknzer(x)) for x in stops]
-                    stops.extend(temp)
-                elif self.TFIDF_stem:
-                    stops += [ps.stem(x) for x in stops]
-                stops = list(set(stops))
-            except Exception as e:
-                red(f"Error when extracting stop words: {e}")
-                red("Setting stop words list to None.")
-                stops = None
-
+        elif self.vectorizer == "TFIDF":
             if self.TFIDF_tokenize:
                 def tknzer(x):
                     return tokenizer.tokenize(x)
@@ -891,9 +962,9 @@ using PCA...")
             vectorizer = TfidfVectorizer(strip_accents="ascii",
                                          lowercase=True,
                                          tokenizer=tknzer,
-                                         stop_words=stops,
-                                         ngram_range=(1, 5),
-                                         max_features=1000,
+                                         stop_words=None,  # already removed
+                                         ngram_range=(1, 10),
+                                         max_features=10_000,
                                          norm="l2")
             t_vec = vectorizer.fit_transform(tqdm(df["text"],
                                              desc="Vectorizing text using \
@@ -901,38 +972,58 @@ TFIDF"))
             if self.TFIDF_dim is None:
                 df["VEC_FULL"] = [x for x in t_vec]
                 df["VEC"] = [x for x in t_vec]
-                self.t_vec = [x for x in t_vec]
-                self.t_red = None
             else:
-                print(f"Reducing dimensions to {self.TFIDF_dim}")
-                svd = TruncatedSVD(n_components=min(self.TFIDF_dim,
-                                                    t_vec.shape[1]))
-                t_red = svd.fit_transform(t_vec)
-                whi(f"Explained variance ratio after SVD on Tf_idf: \
+                if self.TFIDF_red_algo.lower() == "umap":
+                    use_SVD = False
+                    try:
+                        print(f"Reducing dimensions to {self.TFIDF_dim} using UMAP")
+                        umap_kwargs = {"n_jobs": -1,
+                                       "verbose": 1,
+                                       "n_components": self.TFIDF_dim,
+                                       "metric": "cosine",
+                                       "init": 'spectral',
+                                       "random_state": 42,
+                                       "transform_seed": 42,
+                                       "n_neighbors": 5,
+                                       "min_dist": 0.01}
+
+                        U = umap.UMAP(**umap_kwargs)
+                        t_red = U.fit_transform(t_vec)
+                    except Exception as e:
+                        red(f"An error occured while using UMAP for \
+dimension reduction. Using SVD instead: {e}")
+                        use_SVD = True
+                if self.TFIDF_red_algo.lower() == "svd" or use_SVD:
+                    print(f"Reducing dimensions to {self.TFIDF_dim} using SVD")
+                    svd = TruncatedSVD(n_components=min(self.TFIDF_dim,
+                                                        t_vec.shape[1]))
+                    t_red = svd.fit_transform(t_vec)
+                    whi(f"Explained variance ratio after SVD on T f_idf: \
 {round(sum(svd.explained_variance_ratio_)*100,1)}%")
+
+
                 df["VEC_FULL"] = [x for x in t_vec]
                 df["VEC"] = [x for x in t_red]
-                self.t_vec = [x for x in t_vec]
-                self.t_red = [x for x in t_red]
 
         self.df = df
         return True
 
-    def _compute_distance_matrix(self, method="cosine", input_col="VEC"):
+    def _compute_distance_matrix(self, input_col="VEC"):
         """
         compute distance matrix between all the cards
         * the distance matrix can be parallelised by scikit learn so I didn't
             bother saving and reusing the matrix
         """
+        self._collect_memory()
         df = self.df
 
         print("\nComputing distance matrix on all available cores...")
         df_temp = pd.DataFrame(
-            columns=["V"+str(x+1)
+            columns=["vec_"+str(x+1)
                      for x in range(len(df.loc[df.index[0], input_col]))],
-            data=[x[0:] for x in df[input_col]])
+            data=[x[0:] for x in df[input_col].values])
 
-        df_dist = pairwise_distances(df_temp, n_jobs=-1, metric=method)
+        df_dist = pairwise_distances(df_temp, n_jobs=-1, metric="cosine")
 #        print("Interpolating matrix between 0 and 1...")
 #        df_dist = np.interp(df_dist, (df_dist.min(), df_dist.max()), (0, 1))
 
@@ -944,15 +1035,20 @@ TFIDF"))
         # for troubleshooting
         red("Printing the most semantically different cards:")
         pd.set_option('display.max_colwidth', 80)
+        max_length = 100
         maxs = np.where(self.df_dist.values == np.max(self.df_dist.values))
         maxs = [x for x in zip(maxs[0], maxs[1])]
-        yel("* " + df.loc[df.index[maxs[0][0]]].text)
-        yel("* " + df.loc[df.index[maxs[0][1]]].text)
+        yel(f"* {str(df.loc[df.index[maxs[0][0]]].text)[0:max_length]}...")
+        yel(f"* {str(df.loc[df.index[maxs[0][1]]].text)[0:max_length]}...")
         print("")
 
         printed = False
         lowest_values = [0]
+        start_time = time.time()
         for i in range(9999):
+            if time.time() - start_time >= 60:
+                red("Taking too long to show similar cards, skipping")
+                break
             if printed is True:
                 break
             lowest_values.append(self.df_dist.values[self.df_dist.values > max(
@@ -963,12 +1059,12 @@ TFIDF"))
             random.shuffle(mins)
             for x in range(len(mins)):
                 pair = mins[x]
-                text_1 = df.loc[df.index[pair[0]]].text
-                text_2 = df.loc[df.index[pair[1]]].text
+                text_1 = str(df.loc[df.index[pair[0]]].text)
+                text_2 = str(df.loc[df.index[pair[1]]].text)
                 if text_1 != text_2:
                     red("Printing among most semantically similar cards:")
-                    yel("* " + text_1)
-                    yel("* " + text_2)
+                    yel(f"* {text_1[0:max_length]}...")
+                    yel(f"* {text_2[0:max_length]}...")
                     printed = True
                     break
         if printed is False:
@@ -1011,11 +1107,12 @@ TFIDF"))
         CAREFUL: this docstring might not be up to date as I am constantly
             trying to improve the code
         """
+        self._collect_memory()
         # getting args
         reference_order = self.reference_order
         df = self.df.copy()
         df_dist = self.df_dist
-        desired_deck_size = self.desired_deck_size
+        target_deck_size = self.target_deck_size
         rated = self.rated_cards
         due = self.due_cards
         queue = []
@@ -1089,19 +1186,19 @@ TFIDF"))
         red(f"\nCards identified as rated in the past {self.rated_last_X_days} days: \
 {len(rated)}")
 
-        if isinstance(desired_deck_size, float):
-            if desired_deck_size < 1.0:
-                desired_deck_size = str(desired_deck_size*100) + "%"
-        if isinstance(desired_deck_size, str):
-            if desired_deck_size in ["all", "100%"]:
+        if isinstance(target_deck_size, float):
+            if target_deck_size < 1.0:
+                target_deck_size = str(target_deck_size*100) + "%"
+        if isinstance(target_deck_size, str):
+            if target_deck_size in ["all", "100%"]:
                 red("Taking the whole deck.")
-                desired_deck_size = len(df.index) - len(rated)
-            elif desired_deck_size.endswith("%"):
-                red(f"Taking {desired_deck_size} of the deck.")
-                desired_deck_size = 0.01*int(desired_deck_size[:-1])*(
+                target_deck_size = len(df.index) - len(rated)
+            elif target_deck_size.endswith("%"):
+                red(f"Taking {target_deck_size} of the deck.")
+                target_deck_size = 0.01*int(target_deck_size[:-1])*(
                             len(df.index)-len(rated)
                             )
-        desired_deck_size = int(desired_deck_size)
+        target_deck_size = int(target_deck_size)
 
         if len(rated+queue) < 1:  # can't start with an empty queue
             # so picking 1 urgent cards
@@ -1117,7 +1214,7 @@ TFIDF"))
         noteCard = {}
         for card, note in {df.loc[x].name: df.loc[x, "note"]
                            for x in indTODO}.items():
-            if note not in noteCard.keys():
+            if note not in noteCard:
                 noteCard[note] = card
             else:
                 if float(df.loc[noteCard[note], "ref"]
@@ -1132,23 +1229,27 @@ TFIDF"))
             red(f"Removed {previous_len-cur_len} siblings cards out of \
 {previous_len}.")
 
-        if desired_deck_size > cur_len:
+        if target_deck_size > cur_len:
             red(f"You wanted to create a deck with \
-{desired_deck_size} in it but only {cur_len} cards remain, taking the \
+{target_deck_size} in it but only {cur_len} cards remain, taking the \
 lowest value.")
-        queue_size_goal = min(desired_deck_size, cur_len)
+        queue_size_goal = min(target_deck_size, cur_len)
 
         if use_index_of_score is False:
             df["ref"] = df["ref"]*w1
             df_dist = df_dist*w2
 
-        whi("\nScore stats:")
-        pd.set_option('display.float_format', lambda x: '%.5f' % x)
-        whi(f"Reference: {(df['ref']*w1).describe()}\n")
-        val = pd.DataFrame(data=df_dist.values.flatten(),
-                           columns=['distance matrix']).describe()
-        whi(f"Distance: {val}\n\n")
-        pd.reset_option('display.float_format')
+#        pd.set_option('display.float_format', lambda x: '%.5f' % x)
+#        if len(df.index) < 5000:
+#            try:
+#                whi("\nScore stats:")
+#                whi(f"Reference: {(df['ref']).describe()}\n")
+#                val = pd.DataFrame(data=df_dist.values.flatten(),
+#                                   columns=['distance matrix']).describe(include='all')
+#                whi(f"Distance: {val}\n\n")
+#            except Exception as e:
+#                red(f"Exception: {e}")
+#        pd.reset_option('display.float_format')
 
         with tqdm(desc="Computing optimal review order",
                   unit=" card",
@@ -1172,10 +1273,7 @@ lowest value.")
                 else:
                     queue.append(indTODO[
                             (-df.loc[indTODO, "ref"].values +\
-                                0.9*np.min(
-                                    df_dist.loc[indQUEUE[-self.stride:], indTODO].values,
-                                    axis=0) +\
-                                0.1*np.mean(
+                                np.min(
                                     df_dist.loc[indQUEUE[-self.stride:], indTODO].values,
                                     axis=0)
                              ).argmax()])
@@ -1185,27 +1283,25 @@ lowest value.")
         assert len(queue) != 0
 
         try:
-            red("Quadratic mean of the distance among the optimized queue:")
-            yel(np.sqrt(np.mean(np.square(
-                self.df_dist_unscaled.loc[queue, queue].values.flatten()))))
+            red("Sum of the minimum distance among the optimized queue:")
+            spread_queue = np.sum(np.min(np.abs(self.df_dist.loc[queue, queue].values)))
+            yel(spread_queue)
 
-            red("Quadratic mean of the distance among the cards that didn't \
-    make it into the queue:")
-            dueNQ = [x for x in self.due_cards if x not in queue]
-            yel(np.sqrt(np.mean(np.square(
-                self.df_dist_unscaled.loc[dueNQ, dueNQ].values.flatten()))))
-
-            red("Quadratic mean of the distance if you had not used AnnA:")
+            red("Sum of the minimum distance if you had not used AnnA:")
             woAnnA = [x
                       for x in df.sort_values(
-                          "ref", ascending=True).iloc[0:len(queue)].index.tolist()
-                      if x in dueNQ]
-            yel(np.sqrt(np.mean(np.square(
-                self.df_dist_unscaled.loc[woAnnA, woAnnA].values.flatten()))))
-        except Exception as e:
-            err(f"\nException: {e}")
+                          "ref", ascending=True).index.tolist()
+                      if x in self.due_cards][0:len(queue)]
+            spread_else = np.sum(np.min(np.abs(self.df_dist.loc[woAnnA, woAnnA].values)))
+            yel(spread_else)
 
-        yel("Done.\n")
+            ratio = round(spread_queue / spread_else, 3)
+            red("Improvement ratio:")
+            red(pyfiglet.figlet_format(str(ratio)))
+        except Exception as e:
+            red(f"\nException: {e}")
+
+        yel("Done computing order.\n")
         self.opti_rev_order = queue
         self.df = df
         return True
@@ -1215,6 +1311,7 @@ lowest value.")
         display the cards in the best optimal order. Useful to see if something
         went wrong before creating the filtered deck
         """
+        self._collect_memory()
         order = self.opti_rev_order[:display_limit]
         print(self.df.loc[order, "text"])
         return True
@@ -1240,6 +1337,7 @@ lowest value.")
             deck will be created and AnnA will just bury the cards that are
             too similar
         """
+        self._collect_memory()
         if task in ["bury_excess_learning_cards", "bury_excess_review_cards"]:
             to_keep = self.opti_rev_order
             to_bury = [x for x in self.due_cards if x not in to_keep]
@@ -1311,7 +1409,7 @@ deck.")
 
         whi(f"Creating deck containing the cards to review: \
 {filtered_deck_name}")
-        query = "cid:" + ','.join([str(x) for x in self.opti_rev_order])
+        query = "is:due -rated:1 cid:" + ','.join([str(x) for x in self.opti_rev_order])
         self._ankiconnect(action="createFilteredDeck",
                           newDeckName=filtered_deck_name,
                           searchQuery=query,
@@ -1342,7 +1440,7 @@ as opti_rev_order!")
         return True
 
     def compute_clusters(self,
-                         method="minibatch-kmeans",
+                         algo="minibatch-kmeans",
                          input_col="VEC",
                          cluster_col="clusters",
                          n_topics=5,
@@ -1361,6 +1459,7 @@ as opti_rev_order!")
         * n_topics is the number of topics (=word) to get for each cluster
         * To find the topic of each cluster, ctf-idf is used
         """
+        self._collect_memory()
         df = self.df
         if self.clustering_nb_clust is None or \
                 self.clustering_nb_clust == "auto":
@@ -1390,19 +1489,19 @@ as opti_rev_order!")
         if agglo_kwargs is not None:
             agglo_kwargs_deploy.update(agglo_kwargs)
 
-        if method.lower() in "minibatch-kmeans":
+        if algo.lower() in "minibatch-kmeans":
             clust = MiniBatchKMeans(**minibatchk_kwargs_deploy)
-            method = "minibatch-K-Means"
-        elif method.lower() in "kmeans":
+            algo = "minibatch-K-Means"
+        elif algo.lower() in "kmeans":
             clust = KMeans(**kmeans_kwargs_deploy)
-            method = "K-Means"
-        elif method.lower() in "DBSCAN":
+            algo = "K-Means"
+        elif algo.lower() in "DBSCAN":
             clust = DBSCAN(**dbscan_kwargs_deploy)
-            method = "DBSCAN"
-        elif method.lower() in "agglomerative":
+            algo = "DBSCAN"
+        elif algo.lower() in "agglomerative":
             clust = AgglomerativeClustering(**agglo_kwargs_deploy)
-            method = "Agglomerative Clustering"
-        print(f"Clustering using {method}...")
+            algo = "Agglomerative Clustering"
+        print(f"Clustering using {algo}...")
 
         df_temp = pd.DataFrame(
             columns=["V"+str(x)
@@ -1632,47 +1731,58 @@ plotting...")
                          user_col="VEC_FULL",
                          do_format_input=False,
                          anki_or_print="anki",
-                         dist="cosine",
                          reverse=False,
+                         fastText_lang="fr",
                          offline=False):
         """
         given a text input, find notes with highest cosine similarity
-        * note that you cannot use the pca version of the sBERT vectors
+        * note that you cannot use the pca version of the fastText vectors
             otherwise you'd have to re run the whole PCA, so it's quicker
             to just use the full vectors
         * note that if the results are displayed in the browser, the order
             cannot be maintained. So you will get the nlimit best match
             randomly displayed, then the nlimit+1 to 2*nlimit best match
             randomly displayed etc
-        * note that this obviously only works using sBERT vectors and not TFIDF
+        * note that this obviously only works using fastText vectors and not TFIDF
             (they would have to be recomputed each time)
         """
         pd.set_option('display.max_colwidth', None)
         if offline:
-            sBERT_file = Path("./sBERT_cache.pickle")
-            if sBERT_file.exists():
-                df = pd.read_pickle(sBERT_file)
+            fastText_cachefile = Path("./cached_vectors.pickle")
+            if fastText_cachefile.exists():
+                df = pd.read_pickle(fastText_cachefile)
             else:
-                red("sBERT cache file not found.")
+                red("cached vectors not found.")
                 return False
 
-            red("Loading sBERT model")
-            from sentence_transformers import SentenceTransformer
-            sBERT = SentenceTransformer('distiluse-base-multilingual-cased-v1')
+            red("Loading fastText model")
+            import fastText
+            import fastText.util
+            try:
+                fastText.util.download_model(fastText_lang, if_exists='ignore')
+                ft = fastText.load_model(f"cc.{fastText_lang[0:2]}.300.bin")
+            except Exception as e:
+                red(f"Couldn't load fastText model: {e}")
+                raise SystemExit()
+
             from sklearn.metrics import pairwise_distances
 
             anki_or_print = "print"
             user_col = "VEC"
+
         elif self.vectorizer == "TFIDF":
-            red("Cannot search for note using TFIDF vectors, only sBERT can \
+            red("Cannot search for note using TFIDF vectors, only fastText can \
 be used.")
             return False
+
         else:
             df = self.df.copy()
 
         if do_format_input:
             user_input = self._format_text(user_input)
-        embed = sBERT.encode(user_input, normalize_embeddings=True)
+
+        embed = np.max([ft.get_word_vector(x) for x in user_input.split(" ")], axis=0)
+
         print("")
         tqdm.pandas(desc="Searching")
         try:
@@ -1680,7 +1790,7 @@ be used.")
             df["distance"] = df[user_col].progress_apply(
                     lambda x: pairwise_distances(embed.reshape(1, -1),
                                                  x.reshape(1, -1),
-                                                 metric=dist))
+                                                 metric="cosine"))
             df["distance"] = df["distance"].astype("float")
         except ValueError as e:
             red(f"Error {e}: did you select column 'VEC' instead of \
@@ -1738,8 +1848,15 @@ be used.")
         """
         full_text = " ".join(self.df["text"].tolist())
         if exclude_OCR_text:
-            full_text = re.sub("> Caption: '.*?' <", " ", full_text)
+            full_text = re.sub(" Caption: '.*?' ", " ", full_text,
+                               flags=re.MULTILINE | re.DOTALL)
         matched = list(set(re.findall("[A-Z]{3,}", full_text)))
+
+        # if exists as lowercase : it's probably not an acronym and just
+        # used for emphasis
+        for m in matched:
+            if m.lower() in full_text:
+                matched.remove(m)
         if len(matched) == 0:
             return True
         sorted_by_count = sorted([x for x in matched],
@@ -1756,7 +1873,7 @@ be used.")
 found...")
             pprint(relevant)
         else:
-            acro_list = list(self.acronym_dict.keys())
+            acro_list = list(self.acronym_dict)
 
             for compiled in acro_list:
                 for acr in relevant:
@@ -1778,18 +1895,18 @@ class CTFIDFVectorizer(TfidfTransformer):
     def __init__(self, *args, **kwargs):
         super(CTFIDFVectorizer, self).__init__(*args, **kwargs)
 
-    def fit(self, X: sp.csr_matrix, n_samples: int):
+    def fit(self, X: sparse.csr_matrix, n_samples: int):
         """Learn the idf vector (global term weights) """
         _, n_features = X.shape
         df = np.squeeze(np.asarray(X.sum(axis=0)))
         idf = np.log(n_samples / df)
-        self._idf_diag = sp.diags(idf, offsets=0,
+        self._idf_diag = sparse.diags(idf, offsets=0,
                                   shape=(n_features, n_features),
                                   format='csr',
                                   dtype=np.float64)
         return self
 
-    def transform(self, X: sp.csr_matrix) -> sp.csr_matrix:
+    def transform(self, X: sparse.csr_matrix) -> sparse.csr_matrix:
         """Transform a count-based matrix to c-TF-IDF """
         X = X * self._idf_diag
         X = normalize(X, axis=1, norm='l2', copy=False)

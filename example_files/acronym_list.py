@@ -1,7 +1,9 @@
 # list of user defined acronym list:
-# keep in mind that the acronym will be matched even if it's lowercase
-# for example with items "TACH": "tachycardia":
-# 'John has TACH' becomes 'John has TACH (tachycardia)'
+# * for example with items "TACH": "tachycardia":
+#    'John has TACH' becomes 'John has TACH (tachycardia)'
+# * if the key contains uppercase, the matching will be case sensiive
+#    otherwise matching will be case insensitive
+
 acronym_dict = {
         r"IL(\d+)": r"interleukin \1",
         "AI": "artificial intelligence",
