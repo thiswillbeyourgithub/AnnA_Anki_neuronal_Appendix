@@ -14,7 +14,7 @@ def interscreen():
 
 
 a = AnnA(deckname="Some_Deck",
-        task="create_filtered",
+        task="filter_due_cards",
         target_deck_size="100",
         rated_last_X_days=3,
         reference_order="relative_overdueness",
