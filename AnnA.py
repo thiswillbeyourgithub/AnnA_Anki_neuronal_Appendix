@@ -654,7 +654,7 @@ threads of size {batchsize})")
             text = s("title=(\".*?\")", "> Caption: '\\1' <",
                      text,
                      flags=re.MULTILINE | re.DOTALL)
-            text = text.replace('Caption: \'""\'', "")
+        text = text.replace('Caption: \'""\'', "")
         text = s(r'[a-zA-Z0-9-]+\....', " ", text)  # media file name
         text = s("<a href.*?</a>", " ", text)  # html links
         text = s(r'http[s]?://\S*', " ", text)  # plaintext links
