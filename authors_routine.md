@@ -4,7 +4,7 @@ This page shows one way AnnA can be used.
 
 ## A few notes:
 *  I am a medschool student and my steps are over multiple days (something like 12h 2d 4d then 7 day graduation)
-*  My True Retention rate is above 93% but that might be because I have long learning steps so hard cards can spend weeks in learning.
+*  My True Retention rate is above 90% but that might be because I have long learning steps so hard cards can spend weeks in learning.
 *  I created AnnA less than a year ago so expect me to grow along the way.
 
 
