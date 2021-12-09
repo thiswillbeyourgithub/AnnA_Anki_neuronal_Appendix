@@ -1116,6 +1116,7 @@ dimension reduction. Using SVD instead: {e}")
         if self.prefer_similar_card is True:
             w2 *= -1
         use_index_of_score = False
+        display_stats=False
 
         if reference_order == "lowest_interval":
             # alter the value from rated cards as they will not be useful
@@ -1219,17 +1220,18 @@ lowest value.")
             df["ref"] = df["ref"]*w1
             df_dist = df_dist*w2
 
-#        pd.set_option('display.float_format', lambda x: '%.5f' % x)
-#        if len(df.index) < 5000:
-#            try:
-#                whi("\nScore stats:")
-#                whi(f"Reference: {(df['ref']).describe()}\n")
-#                val = pd.DataFrame(data=df_dist.values.flatten(),
-#                                   columns=['distance matrix']).describe(include='all')
-#                whi(f"Distance: {val}\n\n")
-#            except Exception as e:
-#                red(f"Exception: {e}")
-#        pd.reset_option('display.float_format')
+        if display_stats:
+            pd.set_option('display.float_format', lambda x: '%.5f' % x)
+            if len(df.index) < 5000:
+                try:
+                    whi("\nScore stats:")
+                    whi(f"Reference: {(df['ref']).describe()}\n")
+                    val = pd.DataFrame(data=df_dist.values.flatten(),
+                                       columns=['distance matrix']).describe(include='all')
+                    whi(f"Distance: {val}\n\n")
+                except Exception as e:
+                    red(f"Exception: {e}")
+            pd.reset_option('display.float_format')
 
         with tqdm(desc="Computing optimal review order",
                   unit=" card",
