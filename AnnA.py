@@ -1099,11 +1099,6 @@ dimension reduction. Using SVD instead: {e}")
         * the_chosen_one is the card with the lowest score at each round
         * the queue starts empty. At the end of each turn, the_chosen_one is
             added to it
-        * some values are clipped,cented, scaled. Relative
-            overdueness is weird so I'm trying interpolating if > 500 o
-            < -500
-        * I clipped the distance value below 0.3 as they were messing with the
-            scaling afterwards
         * Index score: combining two scores was hard (they had really different
             distribution, so I added this flag to tell wether to use the scores
             or the argsort of the scores as score
@@ -1155,31 +1150,9 @@ dimension reduction. Using SVD instead: {e}")
             # computing relative overdueness
             ro = -1 * (df["interval"].values + 0.001) / (overdue.T + 0.001)
 
-            # either: clipping abnormal values
-#            ro_intp = np.clip(ro, -500, 500)
-
-            # or: interpolating values
-            n_pos = sum(sum(ro > 500))
-            n_neg = sum(sum(ro < -500))
-            ro_intp = ro
-            if n_pos == 1:
-                ro[ro > 500] = 500
-            elif n_pos > 1:
-                f = interpolate.interp1d(x=ro[ro > 500],
-                                         y=[500+x for x in range(n_pos)])
-                ro_intp[ro > 500] = f(ro[ro > 500])
-
-            if n_neg == 1:
-                ro[ro < -500] = -500
-            elif n_neg > 1:
-                f = interpolate.interp1d(x=ro[ro < -500],
-                                         y=[-500-x for x in range(n_neg)])
-                ro_intp[ro < -500] = f(ro[ro < -500])
-
             # center and scale
-            ro_cs = StandardScaler().fit_transform(ro_intp.T)
-            ro_cs_clipped = np.clip(ro_cs, -2, 2)  # clip beyond 2sigma
-            df["ref"] = ro_cs_clipped
+            ro_cs = StandardScaler().fit_transform(ro.T)
+            df["ref"] = ro_cs
 
         # centering and scaling df_dist after clipping
         print("Centering and scaling distance matrix...")
