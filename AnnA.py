@@ -1135,15 +1135,17 @@ dimension reduction. Using SVD instead: {e}")
 
         elif reference_order == "relative_overdueness":
             print("Computing relative overdueness...")
+            anki_col_time = int(self._ankiconnect(
+                action="getCollectionCreationTime"))
             # getting due date
             for i in df.index:
                 df.at[i, "ref_due"] = df.loc[i, "odue"]
                 if df.loc[i, "ref_due"] == 0:
                     df.at[i, "ref_due"] = df.at[i, "due"]
+                if df.loc[i, "ref_due"] >= 10_000:  # timestamp instead of days
+                    df.at[i, "ref_due"] = (df.at[i, "ref_due"]-anki_col_time) // 86400
 
             # computing overdue
-            anki_col_time = int(self._ankiconnect(
-                action="getCollectionCreationTime"))
             time_offset = int((time.time() - anki_col_time) // 86400)
             overdue = (df["ref_due"] - time_offset).to_numpy().reshape(-1, 1)
 
