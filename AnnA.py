@@ -310,11 +310,7 @@ values. {e}")
             # directly in the deck without creating filtered decks
             if task == "bury_excess_learning_cards":
                 yel("Task : bury some learning cards")
-                if self.reference_order == "relative_overdueness":
-                    red("Reference order cannot be 'relative_overdueness' \
-for this task. Switching to 'lowest_interval'.")
-                    self.reference_order = "lowest_interval"
-            if task == "bury_excess_review_cards":
+            elif task == "bury_excess_review_cards":
                 yel("Task : bury some reviews\n")
             self._create_and_fill_df()
             if self.not_enough_cards is True:
