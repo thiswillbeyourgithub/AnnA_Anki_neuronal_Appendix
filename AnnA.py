@@ -132,10 +132,10 @@ class AnnA:
                  # "order_added"
                  target_deck_size="80%",
                  rated_last_X_days=4,
-                 due_threshold=50,
+                 due_threshold=30,
                  highjack_due_query=None,
                  highjack_rated_query=None,
-                 stride=2500,
+                 stride=10_000,
                  score_adjustment_factor=(1, 5),
                  log_level=2,
                  replace_greek=True,
