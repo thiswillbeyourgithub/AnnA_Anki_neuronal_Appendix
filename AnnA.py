@@ -1144,6 +1144,8 @@ dimension reduction. Using SVD instead: {e}")
                     df.at[i, "ref_due"] = df.at[i, "due"]
                 if df.loc[i, "ref_due"] >= 100_000:  # timestamp instead of days
                     df.at[i, "ref_due"] = (df.at[i, "ref_due"]-anki_col_time) / 86400
+            df.loc[rated, "ref_due"] = np.median(df.loc[due, "ref_due"].values)
+            df.loc[rated, "interval"] = np.median(df.loc[due, "interval"].values)
 
             # computing overdue
             time_offset = int((time.time() - anki_col_time) / 86400)
@@ -1153,8 +1155,6 @@ dimension reduction. Using SVD instead: {e}")
             ro = -1 * (df["interval"].values + 0.001) / (overdue.T + 0.001)
 
             # center and scale
-            df.loc[rated, "due"] = np.median(df.loc[due, "due"].values)
-            df.loc[rated, "interval"] = np.median(df.loc[due, "interval"].values)
             ro_cs = StandardScaler().fit_transform(ro.T)
             df["ref"] = ro_cs
 
