@@ -310,11 +310,7 @@ values. {e}")
             # directly in the deck without creating filtered decks
             if task == "bury_excess_learning_cards":
                 yel("Task : bury some learning cards")
-                if self.reference_order == "relative_overdueness":
-                    red("Reference order cannot be 'relative_overdueness' \
-for this task. Switching to 'lowest_interval'.")
-                    self.reference_order = "lowest_interval"
-            if task == "bury_excess_review_cards":
+            elif task == "bury_excess_review_cards":
                 yel("Task : bury some reviews\n")
             self._create_and_fill_df()
             if self.not_enough_cards is True:
@@ -1096,11 +1092,6 @@ dimension reduction. Using SVD instead: {e}")
         * the_chosen_one is the card with the lowest score at each round
         * the queue starts empty. At the end of each turn, the_chosen_one is
             added to it
-        * some values are clipped,cented, scaled. Relative
-            overdueness is weird so I'm trying interpolating if > 500 o
-            < -500
-        * I clipped the distance value below 0.3 as they were messing with the
-            scaling afterwards
         * Index score: combining two scores was hard (they had really different
             distribution, so I added this flag to tell wether to use the scores
             or the argsort of the scores as score
@@ -1122,11 +1113,13 @@ dimension reduction. Using SVD instead: {e}")
         if self.prefer_similar_card is True:
             w2 *= -1
         use_index_of_score = False
-        # alter the value from rated cards as they will not be useful
-        df.loc[rated, "due"] = np.median(df.loc[due, "due"].values)
-        df.loc[rated, "interval"] = np.median(df.loc[due, "interval"].values)
+        display_stats=False
 
         if reference_order == "lowest_interval":
+            # alter the value from rated cards as they will not be useful
+            df.loc[rated, "due"] = np.median(df.loc[due, "due"].values)
+            df.loc[rated, "interval"] = np.median(df.loc[due, "interval"].values)
+
             ivl = df['interval'].to_numpy().reshape(-1, 1)
             df["interval_cs"] = StandardScaler().fit_transform(ivl)
             df["ref"] = df["interval_cs"]
@@ -1134,49 +1127,33 @@ dimension reduction. Using SVD instead: {e}")
         elif reference_order == "order_added":
             order_added = df.index.to_numpy().reshape(-1, 1)
             df["ref"] = StandardScaler().fit_transform(order_added)
+            df.loc[rated, "due"] = np.median(df.loc[due, "due"].values)
+            df.loc[rated, "interval"] = np.median(df.loc[due, "interval"].values)
 
         elif reference_order == "relative_overdueness":
             print("Computing relative overdueness...")
+            anki_col_time = int(self._ankiconnect(
+                action="getCollectionCreationTime"))
             # getting due date
             for i in df.index:
                 df.at[i, "ref_due"] = df.loc[i, "odue"]
                 if df.loc[i, "ref_due"] == 0:
                     df.at[i, "ref_due"] = df.at[i, "due"]
+                if df.loc[i, "ref_due"] >= 100_000:  # timestamp instead of days
+                    df.at[i, "ref_due"] = (df.at[i, "ref_due"]-anki_col_time) / 86400
+            df.loc[rated, "ref_due"] = np.median(df.loc[due, "ref_due"].values)
+            df.loc[rated, "interval"] = np.median(df.loc[due, "interval"].values)
 
             # computing overdue
-            anki_col_time = int(self._ankiconnect(
-                action="getCollectionCreationTime"))
-            time_offset = int((time.time() - anki_col_time) // 86400)
+            time_offset = int((time.time() - anki_col_time) / 86400)
             overdue = (df["ref_due"] - time_offset).to_numpy().reshape(-1, 1)
 
             # computing relative overdueness
             ro = -1 * (df["interval"].values + 0.001) / (overdue.T + 0.001)
 
-            # either: clipping abnormal values
-#            ro_intp = np.clip(ro, -500, 500)
-
-            # or: interpolating values
-            n_pos = sum(sum(ro > 500))
-            n_neg = sum(sum(ro < -500))
-            ro_intp = ro
-            if n_pos == 1:
-                ro[ro > 500] = 500
-            elif n_pos > 1:
-                f = interpolate.interp1d(x=ro[ro > 500],
-                                         y=[500+x for x in range(n_pos)])
-                ro_intp[ro > 500] = f(ro[ro > 500])
-
-            if n_neg == 1:
-                ro[ro < -500] = -500
-            elif n_neg > 1:
-                f = interpolate.interp1d(x=ro[ro < -500],
-                                         y=[-500-x for x in range(n_neg)])
-                ro_intp[ro < -500] = f(ro[ro < -500])
-
             # center and scale
-            ro_cs = StandardScaler().fit_transform(ro_intp.T)
-            ro_cs_clipped = np.clip(ro_cs, -2, 2)  # clip beyond 2sigma
-            df["ref"] = ro_cs_clipped
+            ro_cs = StandardScaler().fit_transform(ro.T)
+            df["ref"] = ro_cs
 
         # centering and scaling df_dist after clipping
         print("Centering and scaling distance matrix...")
@@ -1240,17 +1217,18 @@ lowest value.")
             df["ref"] = df["ref"]*w1
             df_dist = df_dist*w2
 
-#        pd.set_option('display.float_format', lambda x: '%.5f' % x)
-#        if len(df.index) < 5000:
-#            try:
-#                whi("\nScore stats:")
-#                whi(f"Reference: {(df['ref']).describe()}\n")
-#                val = pd.DataFrame(data=df_dist.values.flatten(),
-#                                   columns=['distance matrix']).describe(include='all')
-#                whi(f"Distance: {val}\n\n")
-#            except Exception as e:
-#                red(f"Exception: {e}")
-#        pd.reset_option('display.float_format')
+        if display_stats:
+            pd.set_option('display.float_format', lambda x: '%.5f' % x)
+            if len(df.index) < 5000:
+                try:
+                    whi("\nScore stats:")
+                    whi(f"Reference: {(df['ref']).describe()}\n")
+                    val = pd.DataFrame(data=df_dist.values.flatten(),
+                                       columns=['distance matrix']).describe(include='all')
+                    whi(f"Distance: {val}\n\n")
+                except Exception as e:
+                    red(f"Exception: {e}")
+            pd.reset_option('display.float_format')
 
         with tqdm(desc="Computing optimal review order",
                   unit=" card",
