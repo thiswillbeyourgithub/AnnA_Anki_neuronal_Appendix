@@ -1142,7 +1142,7 @@ dimension reduction. Using SVD instead: {e}")
                 df.at[i, "ref_due"] = df.loc[i, "odue"]
                 if df.loc[i, "ref_due"] == 0:
                     df.at[i, "ref_due"] = df.at[i, "due"]
-                if df.loc[i, "ref_due"] >= 10_000:  # timestamp instead of days
+                if df.loc[i, "ref_due"] >= 100_000:  # timestamp instead of days
                     df.at[i, "ref_due"] = (df.at[i, "ref_due"]-anki_col_time) // 86400
 
             # computing overdue
