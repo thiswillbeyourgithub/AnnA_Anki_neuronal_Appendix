@@ -1120,11 +1120,12 @@ dimension reduction. Using SVD instead: {e}")
         if self.prefer_similar_card is True:
             w2 *= -1
         use_index_of_score = False
-        # alter the value from rated cards as they will not be useful
-        df.loc[rated, "due"] = np.median(df.loc[due, "due"].values)
-        df.loc[rated, "interval"] = np.median(df.loc[due, "interval"].values)
 
         if reference_order == "lowest_interval":
+            # alter the value from rated cards as they will not be useful
+            df.loc[rated, "due"] = np.median(df.loc[due, "due"].values)
+            df.loc[rated, "interval"] = np.median(df.loc[due, "interval"].values)
+
             ivl = df['interval'].to_numpy().reshape(-1, 1)
             df["interval_cs"] = StandardScaler().fit_transform(ivl)
             df["ref"] = df["interval_cs"]
@@ -1132,6 +1133,8 @@ dimension reduction. Using SVD instead: {e}")
         elif reference_order == "order_added":
             order_added = df.index.to_numpy().reshape(-1, 1)
             df["ref"] = StandardScaler().fit_transform(order_added)
+            df.loc[rated, "due"] = np.median(df.loc[due, "due"].values)
+            df.loc[rated, "interval"] = np.median(df.loc[due, "interval"].values)
 
         elif reference_order == "relative_overdueness":
             print("Computing relative overdueness...")
@@ -1153,6 +1156,8 @@ dimension reduction. Using SVD instead: {e}")
             ro = -1 * (df["interval"].values + 0.001) / (overdue.T + 0.001)
 
             # center and scale
+            df.loc[rated, "due"] = np.median(df.loc[due, "due"].values)
+            df.loc[rated, "interval"] = np.median(df.loc[due, "interval"].values)
             ro_cs = StandardScaler().fit_transform(ro.T)
             df["ref"] = ro_cs
 
