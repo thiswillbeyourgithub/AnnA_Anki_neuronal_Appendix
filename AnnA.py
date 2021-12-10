@@ -33,7 +33,6 @@ from sklearn.decomposition import PCA, TruncatedSVD
 from sklearn.cluster import KMeans, DBSCAN, AgglomerativeClustering, MiniBatchKMeans
 from sklearn.preprocessing import normalize, StandardScaler
 import plotly.express as px
-import umap.umap_
 
 # avoids annoying warning
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
@@ -160,7 +159,6 @@ class AnnA:
                  fastText_model_name=None,
                  fastText_lang="en",
                  TFIDF_dim=100,
-                 TFIDF_red_algo="SVD", #can be SVD or UMAP
                  TFIDF_stopw_lang=["english", "french"],
                  TFIDF_stem=False,
                  TFIDF_tokenize=True,
@@ -220,7 +218,6 @@ class AnnA:
         self.TFIDF_stopw_lang = TFIDF_stopw_lang
         self.TFIDF_stem = TFIDF_stem
         self.TFIDF_tokenize = TFIDF_tokenize
-        self.TFIDF_red_algo = TFIDF_red_algo
         self.task = task
         self.save_instance_as_pickle = save_instance_as_pickle
 
@@ -908,6 +905,8 @@ adjust formating issues:")
                 df["VEC_FULL"] = [x for x in ft_vec]
             else:
                 print(f"Reducing dimensions to {self.fastText_dim} using UMAP")
+                red("(WARNING: EXPERIMENTAL FEATURE)")
+                import umap.umap_
                 umap_kwargs = {"n_jobs": -1,
                                "verbose": 1,
                                "n_components": min(self.fastText_dim,
@@ -973,32 +972,11 @@ TFIDF"))
                 df["VEC_FULL"] = [x for x in t_vec]
                 df["VEC"] = [x for x in t_vec]
             else:
-                if self.TFIDF_red_algo.lower() == "umap":
-                    use_SVD = False
-                    try:
-                        print(f"Reducing dimensions to {self.TFIDF_dim} using UMAP")
-                        umap_kwargs = {"n_jobs": -1,
-                                       "verbose": 1,
-                                       "n_components": self.TFIDF_dim,
-                                       "metric": "cosine",
-                                       "init": 'spectral',
-                                       "random_state": 42,
-                                       "transform_seed": 42,
-                                       "n_neighbors": 5,
-                                       "min_dist": 0.01}
-
-                        U = umap.UMAP(**umap_kwargs)
-                        t_red = U.fit_transform(t_vec)
-                    except Exception as e:
-                        red(f"An error occured while using UMAP for \
-dimension reduction. Using SVD instead: {e}")
-                        use_SVD = True
-                if self.TFIDF_red_algo.lower() == "svd" or use_SVD:
-                    print(f"Reducing dimensions to {self.TFIDF_dim} using SVD")
-                    svd = TruncatedSVD(n_components=min(self.TFIDF_dim,
-                                                        t_vec.shape[1]))
-                    t_red = svd.fit_transform(t_vec)
-                    whi(f"Explained variance ratio after SVD on T f_idf: \
+                print(f"Reducing dimensions to {self.TFIDF_dim} using SVD")
+                svd = TruncatedSVD(n_components=min(self.TFIDF_dim,
+                                                    t_vec.shape[1]))
+                t_red = svd.fit_transform(t_vec)
+                whi(f"Explained variance ratio after SVD on T f_idf: \
 {round(sum(svd.explained_variance_ratio_)*100,1)}%")
 
 
@@ -1675,6 +1653,7 @@ plotting...")
             x_coor = res[0]
             y_coor = res[1]
         elif reduce_dim.lower() in "umap":
+            import umap.umap_
             res = umap.UMAP(**umap_kwargs_deploy).fit_transform(df_temp).T
             x_coor = res[0]
             y_coor = res[1]

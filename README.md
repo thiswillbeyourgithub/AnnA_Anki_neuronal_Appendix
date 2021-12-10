@@ -109,7 +109,6 @@ AnnA was made with usability in mind. With the right arguments, you can have to 
  * `fastText_lang` language of the fastText model to load or download. Default is "en".
  * `fastText_model_name` name of the fastText model to load. Bypasses fastText_lang. Useful if you created a smaller fastText model. Default is None.
  * `TFIDF_dim` the number of dimension to keep using [SVD](https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.TruncatedSVD.html). Default is `100`, you cannot disable dimension reduction for TF_IDF because that would result in a sparse matrix.
- * `TFIDF_red_algo` specify the dimension reduction algorithm used for TFIDF. Can be either "SVD" or "UMAP", can't be disabled. Default is "SVD". In case of error using UMAP, SVD will be used.
  * `TFIDF_stopw_lang` a list of languages used to construct a list of stop words (i.e. words that will be ignored). Default is `["english", "french"]`.
  * `TFIDF_stem` default to `True`. Wether to enable stemming of words. Currently the PorterStemmer is used, and was made for English but can still be useful for some other languages. Keep in mind that this is the longest step when formatting text.
 
@@ -128,7 +127,6 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 
 ## TODO
 *More or less by order of urgency*
-* remove umap as a dimension reducing technique, keep it only for plotting and import it at the last moment
 * removing the overlap between due and rated cards is actually a bad idea
 * rename stride into "queue_window"
 * add a "deck_settings" mode that fetches the number of max reviews per day and use it as "target_deck_size"
