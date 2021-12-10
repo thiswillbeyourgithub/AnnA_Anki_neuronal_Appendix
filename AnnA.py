@@ -147,8 +147,8 @@ class AnnA:
                  clustering_enable=False,
                  clustering_nb_clust="auto",
                  compute_opti_rev_order=True,
-                 task="filter_due_cards",
-                 # can be "filter_due_cards",
+                 task="filter_review_cards",
+                 # can be "filter_review_cards",
                  # "bury_excess_review_cards",
                  # "bury_excess_learning_cards",
                  # "index"
@@ -231,7 +231,7 @@ class AnnA:
         assert stride > 0
         assert reference_order in ["lowest_interval", "relative_overdueness",
                                    "order_added"]
-        assert task in ["filter_due_cards", "index",
+        assert task in ["filter_review_cards", "index",
                         "bury_excess_learning_cards",
                         "bury_excess_review_cards"]
         assert vectorizer in ["TFIDF", "fastText"]
@@ -338,7 +338,7 @@ values. {e}")
             self._compute_distance_matrix()
             if compute_opti_rev_order:
                 self._compute_opti_rev_order()
-                if task == "filter_due_cards":
+                if task == "filter_review_cards":
                     self.task_filtered_deck()
 
         # pickle itself
@@ -507,7 +507,7 @@ threads of size {batchsize})")
             due_cards = self._ankiconnect(action="findCards", query=query)
             whi(f"Found {len(due_cards)} cards...\n")
 
-        elif self.task == "filter_due_cards":
+        elif self.task == "filter_review_cards":
             yel("Getting due card list...")
             query = f"\"deck:{self.deckname}\" is:due is:review -is:learn \
 -is:suspended -is:buried -is:new -rated:1"

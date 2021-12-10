@@ -62,7 +62,7 @@ Tired of having to deal with anki flashcards that are too similar when grinding 
 
 * **What is the field_mapping.py file?** It's a file with a unique python dictionary used by AnnA to figure out which field of which card to keep. Using it is optional. By default, each notetype will see only it's first field kept. But if you use this file you can keep multiple fields. Due to how TF_IDF works, you can add a field multiple times to give it more importance relative to other fields.
 * **What is "XXX - AnnA Optideck"?** The default name for the filtered deck created by AnnA. It contains the reviews in the best order for you.
-* **Why are there only reviews and no learning cards in the filtered decks?** When task is set to `filter_due_cards`, AnnA will fetch only review cards and not deal with learning cards. This is because I'm afraid of some weird behavior that would arise if I change the due order of learning cards. Whereas I can change it just find using review cards.
+* **Why are there only reviews and no learning cards in the filtered decks?** When task is set to `filter_review_cards`, AnnA will fetch only review cards and not deal with learning cards. This is because I'm afraid of some weird behavior that would arise if I change the due order of learning cards. Whereas I can change it just find using review cards.
 * **Why does the progress bar of "Computing optimal review order" doesn't always start at 0?** It's just cosmetic. At each step of the loop, the next card to review is computed by comparing it against the previously added cards and the cards rated in the last few days. This means that each turn is slower than the last. So the progress bar begins with the number of cards rated in the past to indicate that. It took great care to optimize the loop so it should not really be an issue.
 * **Does AnnA take into account my card's tags ?** Yes, the tags are appended at the end of the text and used like if it was part of the content of the card. Note that "::" are replaced by a space.
 
@@ -102,7 +102,7 @@ AnnA was made with usability in mind. With the right arguments, you can have to 
  * `compute_opti_rev_order` if `False`, won't compute optimal review order and will set `to_anki` to False. Default to `True`.
  * `check_database` at the end of execution, ask anki to check the database or not. Default is `False`.
 
- * `task` can be "filter_due_cards", "bury_excess_learning_cards", "bury_excess_review_cards" or "index". Respectively to create a filtered deck with the cards, or bury only the similar learning cards (among other learning cards), or bury only the similar cards in review (among other review cards), or to add all the fastText vectors in the cache file (to speed up later runs). Default is "`filter_due_cards`".
+ * `task` can be "filter_review_cards", "bury_excess_learning_cards", "bury_excess_review_cards" or "index". Respectively to create a filtered deck with the cards, or bury only the similar learning cards (among other learning cards), or bury only the similar cards in review (among other review cards), or to add all the fastText vectors in the cache file (to speed up later runs). Default is "`filter_review_cards`".
 
  * `vectorizer` can be either "TFIDF" or "fastText". Default is "TFIDF".
  * `fastText_dim` number of dimensions to keep after doing a UMAP reduction. This can speed up the computation somewhat, but with reduced precision. And computing the UMAP projection is in itself an additional slow step. Default is `None`. The original number of dimension is 300.
