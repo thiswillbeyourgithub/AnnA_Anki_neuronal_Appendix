@@ -129,10 +129,9 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 
 ## TODO
 *More or less by order of urgency*
-* removing the overlap between due and rated cards is actually a bad idea
+* implement pca reduction for fasttext (that's what the authors use)
+* replace all df_temp by an on-memory numpy array
 * add a "deck_settings" mode that fetches the number of max reviews per day and use it as "target_deck_size"
-* replace all df_temp by a on-memory numpy array
-* investigate normalizing the distance matrix
 * faq: mention "how can I know if it's working?"
 
 * fix searching + open the browser and add tags, then ask to sort by tags
