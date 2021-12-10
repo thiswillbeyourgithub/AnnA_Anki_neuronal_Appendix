@@ -24,6 +24,7 @@ Tired of having to deal with anki flashcards that are too similar when grinding 
 4. This project is still very early and I don't recommend you start using it if you're not skilled enough to do damage control. I have lost a lot of my tags several times (recovered them all afterwards) and some issue can still happen. Use at your own risks :)
 5. I implemented two vectorization methods, either [fastText](https://en.wikipedia.org/wiki/FastText) or [subword TF_IDF](https://en.wikipedia.org/wiki/Tf%E2%80%93idf). TF_IDF is known to be reliable, fast, very general (it does not assume anything about your cards and will work for just about any language, format, phrasing etc). TF_IDF works very well if you have large number of cards. fastText is still experimental and needs lots of RAM but should provide very good results, even with just a few cards as it assigns vectors that have a meaning. Note that semantic searching is currently only possible using fastText.
 6. If you want to know how I'm using this, take a look at [authors_routine.md](./authors_routine.md)
+7. I am using the V2 scheduler.
 
 ## Other features
 * Keeps the OCR data of pictures in your cards, if you analyzed them beforehand using [AnkiOCR](https://github.com/cfculhane/AnkiOCR/).
