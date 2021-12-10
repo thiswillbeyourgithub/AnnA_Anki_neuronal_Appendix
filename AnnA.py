@@ -1216,17 +1216,13 @@ dimension reduction. Using SVD instead: {e}")
 lowest value.")
         queue_size_goal = min(target_deck_size, cur_len)
 
-        if use_index_of_score is False:
-            df["ref"] = df["ref"]*w1
-            df_dist = df_dist*w2
-
         if display_stats:
             pd.set_option('display.float_format', lambda x: '%.5f' % x)
             if len(df.index) < 5000:
                 try:
                     whi("\nScore stats:")
-                    whi(f"Reference: {(df['ref']).describe()}\n")
-                    val = pd.DataFrame(data=df_dist.values.flatten(),
+                    whi(f"Reference: {(w1*df['ref']).describe()}\n")
+                    val = pd.DataFrame(data=w2*df_dist.values.flatten(),
                                        columns=['distance matrix']).describe(include='all')
                     whi(f"Distance: {val}\n\n")
                 except Exception as e:
@@ -1254,10 +1250,10 @@ lowest value.")
                     indQUEUE.append(indTODO.pop(indTODO.index(queue[-1])))
                 else:
                     queue.append(indTODO[
-                            (-df.loc[indTODO, "ref"].values +\
-                                np.min(
-                                    df_dist.loc[indQUEUE[-self.stride:], indTODO].values,
-                                    axis=0)
+                            (-w1*df.loc[indTODO, "ref"].values +\
+                             w2*np.min(
+                                 df_dist.loc[indQUEUE[-self.stride:], indTODO].values,
+                                 axis=0)
                              ).argmax()])
                     indQUEUE.append(indTODO.pop(indTODO.index(queue[-1])))
 
