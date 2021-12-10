@@ -976,7 +976,7 @@ TFIDF"))
                 svd = TruncatedSVD(n_components=min(self.TFIDF_dim,
                                                     t_vec.shape[1]))
                 t_red = svd.fit_transform(t_vec)
-                whi(f"Explained variance ratio after SVD on T f_idf: \
+                whi(f"Explained variance ratio after SVD on Tf_idf: \
 {round(sum(svd.explained_variance_ratio_)*100,1)}%")
 
 
