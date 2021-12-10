@@ -1008,6 +1008,10 @@ TFIDF"))
                                         n_jobs=-1,
                                         metric="cosine"))
 
+        print("Centering and scaling distance matrix...")
+        self.df_dist_unscaled = self.df_dist.copy()
+        self.df_dist.loc[:, :] = StandardScaler().fit_transform(self.df_dist)
+
 
         # showing to user which cards are similar and different,
         # for troubleshooting
@@ -1135,11 +1139,6 @@ TFIDF"))
             # center and scale
             ro_cs = StandardScaler().fit_transform(ro.T)
             df["ref"] = ro_cs
-
-        # centering and scaling df_dist after clipping
-        print("Centering and scaling distance matrix...")
-        self.df_dist_unscaled = df_dist.copy()
-        df_dist.loc[:, :] = StandardScaler().fit_transform(df_dist)
 
         assert len([x for x in rated if df.loc[x, "status"] != "rated"]) == 0
         red(f"\nCards identified as rated in the past {self.rated_last_X_days} days: \
