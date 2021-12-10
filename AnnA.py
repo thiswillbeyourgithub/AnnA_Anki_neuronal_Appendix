@@ -963,7 +963,7 @@ adjust formating issues:")
                                          tokenizer=tknzer,
                                          stop_words=None,  # already removed
                                          ngram_range=(1, 10),
-                                         max_features=10_000,
+                                         max_features=1000,
                                          norm="l2")
             t_vec = vectorizer.fit_transform(tqdm(df["text"],
                                              desc="Vectorizing text using \
