@@ -1215,7 +1215,7 @@ lowest value.")
                 if use_index_of_score:
                     # NOT YET USABLE:
                     queue.append(indTODO[
-                            (w1*df.loc[indTODO, "ref"].values.argsort() +\
+                            (w1*df.loc[indTODO, "ref"].values.argsort() -\
                              w2*(
                              np.min(
                                  df_dist.loc[indQUEUE[-self.queue_stride:], indTODO].values,
@@ -1227,11 +1227,11 @@ lowest value.")
                     indQUEUE.append(indTODO.pop(indTODO.index(queue[-1])))
                 else:
                     queue.append(indTODO[
-                            (-w1*df.loc[indTODO, "ref"].values +\
+                            (w1*df.loc[indTODO, "ref"].values -\
                              w2*np.min(
                                  df_dist.loc[indQUEUE[-self.queue_stride:], indTODO].values,
                                  axis=0)
-                             ).argmax()])
+                             ).argmin()])
                     indQUEUE.append(indTODO.pop(indTODO.index(queue[-1])))
 
                 pbar.update(1)
