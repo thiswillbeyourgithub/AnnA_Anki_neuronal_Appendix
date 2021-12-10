@@ -1023,13 +1023,13 @@ dimension reduction. Using SVD instead: {e}")
                      for x in range(len(df.loc[df.index[0], input_col]))],
             data=[x[0:] for x in df[input_col].values])
 
-        df_dist = pairwise_distances(df_temp, n_jobs=-1, metric="cosine")
-#        print("Interpolating matrix between 0 and 1...")
-#        df_dist = np.interp(df_dist, (df_dist.min(), df_dist.max()), (0, 1))
-
         self.df_dist = pd.DataFrame(columns=df.index,
                                     index=df.index,
-                                    data=df_dist)
+                                    data=pairwise_distances(
+                                        df_temp,
+                                        n_jobs=-1,
+                                        metric="cosine"))
+
 
         # showing to user which cards are similar and different,
         # for troubleshooting
