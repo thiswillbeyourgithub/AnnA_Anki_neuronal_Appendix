@@ -1098,7 +1098,7 @@ TFIDF"))
         if self.prefer_similar_card is True:
             w2 *= -1
         use_index_of_score = False
-        display_stats=False
+        display_stats = False
 
         if reference_order == "lowest_interval":
             # alter the value from rated cards as they will not be useful
