@@ -66,7 +66,6 @@ Tired of having to deal with anki flashcards that are too similar when grinding 
 * **Why are there only reviews and no learning cards in the filtered decks?** When task is set to `filter_review_cards`, AnnA will fetch only review cards and not deal with learning cards. This is because I'm afraid of some weird behavior that would arise if I change the due order of learning cards. Whereas I can change it just find using review cards.
 * **Why does the progress bar of "Computing optimal review order" doesn't always start at 0?** It's just cosmetic. At each step of the loop, the next card to review is computed by comparing it against the previously added cards and the cards rated in the last few days. This means that each turn is slower than the last. So the progress bar begins with the number of cards rated in the past to indicate that. It took great care to optimize the loop so it should not really be an issue.
 * **Does AnnA take into account my card's tags ?** Yes, the tags are appended at the end of the text and used like if it was part of the content of the card. Note that "::" are replaced by a space.
-* **Why is there no task "filter_learning_cards"?** Because you can't use the deck settings to limit the number of learning cards, only reviews and new cards.
 
 ## Getting started
 * First, **read this page in its entirety, this is a complicated piece of software and you don't want to use it irresponsibly on your cards. The [usage section](#Usage-and-arguments) is especially useful.**
@@ -130,6 +129,7 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 ## TODO
 *More or less by order of urgency*
 * implement pca reduction for fasttext (that's what the authors use)
+* implement task "filter_learning_cards", by burying the cards not in the original deck
 * replace all df_temp by an on-memory numpy array
 * add a "deck_settings" mode that fetches the number of max reviews per day and use it as "target_deck_size"
 * faq: mention "how can I know if it's working?"
