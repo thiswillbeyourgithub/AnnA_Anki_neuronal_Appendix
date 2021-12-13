@@ -1229,6 +1229,9 @@ lowest value.")
                     red(f"Exception: {e}")
             pd.reset_option('display.float_format')
 
+        def combinator(array):
+            return 0.9*np.min(array, axis=0) + 0.1*np.mean(array, axis=0)
+
         with tqdm(desc="Computing optimal review order",
                   unit=" card",
                   initial=len(rated),
@@ -1251,9 +1254,7 @@ lowest value.")
                 else:
                     queue.append(indTODO[
                             (w1*df.loc[indTODO, "ref"].values -\
-                             w2*np.min(
-                                 df_dist.loc[indQUEUE[-self.queue_stride:], indTODO].values,
-                                 axis=0)
+                             w2*combinator(df_dist.loc[indQUEUE[-self.queue_stride:], indTODO ].values)
                              ).argmin()])
                     indQUEUE.append(indTODO.pop(indTODO.index(queue[-1])))
 
