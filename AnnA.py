@@ -546,7 +546,7 @@ threads of size {batchsize})")
             yel(f"Getting cards that where rated in the last \
 {self.rated_last_X_days} days...")
             query = f"\"deck:{self.deckname}\" rated:{self.rated_last_X_days} \
--is:suspended -is:buried -rated:2:1"
+-is:suspended -is:buried"
             whi(" >  '" + query)
             rated_cards = self._ankiconnect(action="findCards",
                                             query=query)
