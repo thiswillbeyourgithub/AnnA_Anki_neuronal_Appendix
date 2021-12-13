@@ -89,8 +89,8 @@ AnnA was made with usability in mind. With the right arguments, you can have to 
  * `target_deck_size` indicates the size of the filtered deck to create. Can be the number of cards (500), a proportion of due cards ("80%" or 0.80) or the word "all". Default is `"80%"`.
  * `rated_last_X_days` indicates the number of passed days to take into account. If you rated 500 cards yesterday, then you don't want your today cards to be too close to what you viewed yesterday, so AnnA will find the 500 cards you reviewed yesterday, and all the cards you rated before that, up to the number of days in rated_last_X_days value. Default is `4` (meaning rated today + rated yesterday). A value of 0 will disable fetching ref cards..
  * `due_threshold` stops AnnA if the number of due cards is inferior to this value. Default to `30`.
-* `highjack_due_query` bypasses the query used to fetch due cards in anki. Default is `None`.
-* `highjack_rated_query` bypasses the query used to fetch rated cards in anki. Default is `None`.
+ * `highjack_due_query` bypasses the query used to fetch due cards in anki. Default is `None`.
+ * `highjack_rated_query` bypasses the query used to fetch rated cards in anki. Default is `None`.
  * `queue_stride` if you have X due cards, want to create a filtered deck containing all of them and have reviewed Y cards yesterday, the queue_stride value will make computing the optimal review order only compares a maximum of `queue_stride` cards at any given time. This eases calculation. Default is `10_000`.
  * `score_adjustment_factor` a tuple used to adjust the value of the reference order compared to how similar the cards are. Default is `(1, 5)`. For example: (1, 1.3) means that the algorithm will spread the similar cards farther apart.
  * `log_level` can be any number between 0 and 2. Default is `2` to only print errors. 1 means print also useful information and >=2 means print everything. Messages are color coded so it might be better to leave it at 3 and just focus on colors.
