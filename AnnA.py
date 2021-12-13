@@ -1157,7 +1157,7 @@ TFIDF"))
             overdue = (df["ref_due"] - time_offset).to_numpy().reshape(-1, 1)
 
             # computing relative overdueness
-            ro = -1 * (df["interval"].values + 0.001) / (overdue.T + 0.001)
+            ro = -1 * (df["interval"].values + 0.5) / (overdue.T + 0.5)
 
             # center and scale
             ro_cs = StandardScaler().fit_transform(ro.T)
