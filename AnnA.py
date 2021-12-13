@@ -523,7 +523,7 @@ threads of size {batchsize})")
         elif self.task == "bury_excess_learning_cards":
             yel("Getting is:learn card list...")
             query = f"\"deck:{self.deckname}\" is:learn -is:suspended is:due \
--rated:1"
+-rated:1 -rated:2:1"
             whi(" >  '" + query)
             due_cards = self._ankiconnect(action="findCards", query=query)
             whi(f"Found {len(due_cards)} learning cards...\n")
@@ -546,7 +546,7 @@ threads of size {batchsize})")
             yel(f"Getting cards that where rated in the last \
 {self.rated_last_X_days} days...")
             query = f"\"deck:{self.deckname}\" rated:{self.rated_last_X_days} \
--is:suspended -is:buried"
+-is:suspended -is:buried -rated:2:1"
             whi(" >  '" + query)
             rated_cards = self._ankiconnect(action="findCards",
                                             query=query)
