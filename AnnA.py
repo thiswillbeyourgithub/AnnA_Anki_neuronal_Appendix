@@ -1262,21 +1262,25 @@ lowest value.")
         assert len(queue) != 0
 
         try:
-            red("Sum of the minimum distance among the optimized queue:")
-            spread_queue = np.sum(np.min(np.abs(self.df_dist.loc[queue, queue].values)))
+            red("Sum distance among the optimized queue:")
+            spread_queue = np.sum(self.df_dist_unscaled.loc[queue, queue].values)
             yel(spread_queue)
 
-            red("Sum of the minimum distance if you had not used AnnA:")
+            red("Sum distance if you had not used AnnA:")
             woAnnA = [x
                       for x in df.sort_values(
                           "ref", ascending=True).index.tolist()
                       if x in self.due_cards][0:len(queue)]
-            spread_else = np.sum(np.min(np.abs(self.df_dist.loc[woAnnA, woAnnA].values)))
+            spread_else = np.sum(self.df_dist_unscaled.loc[woAnnA, woAnnA].values)
             yel(spread_else)
 
             ratio = round(spread_queue / spread_else, 3)
             red("Improvement ratio:")
             red(pyfiglet.figlet_format(str(ratio)))
+
+            if np.isclose(ratio, 1):
+                print(f"Difference: {len(set([int(x) for x in spread_queue])^set([int(x) for x in spread_else]))} cards in {len(queue)}")
+
         except Exception as e:
             red(f"\nException: {e}")
 
