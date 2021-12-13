@@ -636,35 +636,48 @@ threads of size {batchsize})")
         orig = text
         s = re.sub
 
-        text = str(text)
+
+        text = s('\u001F|&nbsp;', " ", text)
+        text = text.replace("&amp;", "&").replace("/", " / ")
+        text = text.replace("+++", " important ")
+
+        # spaces
         text = s("<blockquote(.*?)</blockquote>",
                  lambda x: x.group(0).replace("<br>", " ; "), text)
         text = s('\\n|<div>|</div>|<br>|<span>|</span>|<li>|</li>|<ul>|</ul>',
                  " ", text)  # newlines
         text = " ".join(text.split())
+
+        # OCR
         if self.keep_ocr:
             # keep image title (usually OCR)
             text = s("title=(\".*?\")", "> Caption: '\\1' <",
                      text,
                      flags=re.MULTILINE | re.DOTALL)
-        text = text.replace('Caption: \'""\'', "")
+            text = text.replace('Caption: \'""\'', "")
+
+        # cloze
+        text = s(r"{{c\d+?::", "", text)
+        text = s("{{c|{{|}}|::", " ", text)
+
+        # misc
         text = s(r'[a-zA-Z0-9-]+\....', " ", text)  # media file name
         text = s("<a href.*?</a>", " ", text)  # html links
         text = s(r'http[s]?://\S*', " ", text)  # plaintext links
         text = s("<.*?>", " ", text)  # remaining html tags
-        text = s('\u001F|&nbsp;', " ", text)
-        text = s(r"{{c\d+?::", "", text)
-        text = s("{{c|{{|}}|::", " ", text)
         text = s(r"\[\d*\]", "", text)  # wiki citation
-        text = text.replace("&amp;", "&")
-        text = text.replace("/", " / ")
-        text = s(r"\w{1,5}>", " ", text)  # missed html tags
+        text = s(r"\b\w{1,5}>", " ", text)  # missed html tags
         text = s("&gt;|&lt;|<|>", "", text)
-        text = s(r"[.?!]\s+?([a-zA-Z])", lambda x: x.group(0).upper(), text)
+
         # adds capital letter after punctuation
+        text = s(r"[.?!]\s+?([a-zA-Z])", lambda x: x.group(0).upper(), text)
+
+        # replace greek letter
         if self.replace_greek:
             for a, b in greek_alphabet_mapping.items():
                 text = s(a, b, text)
+
+        # replace acronyms
         if self.acronym_list is not None:
             for compiled, new_word in self.acronym_dict.items():
                 text = s(compiled,
@@ -674,23 +687,33 @@ threads of size {batchsize})")
                                                       new_word),
                          text)
 
+        # misc
         text = text.replace(" : ", ": ")
         text = " ".join(text.split())  # multiple spaces
+
+        # if text too short, include image name if present
         if len(text) < 10:
             if "src=" in orig:
                 text = text + " " + " ".join(re.findall('src="(.*?)">', orig,
                     flags=re.MULTILINE | re.DOTALL))
-        if len(text) > 2:
-            text = text[0].upper() + text[1:]
-            if text[-1] not in ["?", ".", "!"]:
-                text += "."
+
+        # add punctuation
+#        if len(text) > 2:
+#            text = text[0].upper() + text[1:]
+#            if text[-1] not in ["?", ".", "!"]:
+#                text += "."
+
+        # misc
         text = text.replace(" :.", ".")
         text = text.replace(":.", ".")
+
+        # optionnal stemmer
         if self.vectorizer == "TFIDF":
             if self.TFIDF_stem is True:
                 text = " ".join([ps.stem(x) for x in text.split()])
             text += " " + " ".join(re.findall(r'src="(.*?\..{2,3})" ', orig,
                 flags=re.MULTILINE | re.DOTALL))
+
         return text
 
     def _format_card(self):
