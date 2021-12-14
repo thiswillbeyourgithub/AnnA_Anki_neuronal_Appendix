@@ -1091,7 +1091,7 @@ retrying until above 80% or 2000 dimensions)")
             red("Couldn't find lowest values to print!")
         print("")
         pd.reset_option('display.max_colwidth')
-        print("\n\n\n")
+        print("\n")
         return True
 
     def _compute_opti_rev_order(self):
