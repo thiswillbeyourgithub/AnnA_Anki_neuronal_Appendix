@@ -129,11 +129,10 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 *More or less by order of urgency*
 * ps stemmer is not properly imported
 * check that relative overdueness still works
-* implement task "filter_learning_cards", by burying the cards not in the original deck
 * replace all df_temp by an on-memory numpy array
 * add a "deck_settings" mode that fetches the number of max reviews per day and use it as "target_deck_size"
-* implement pca reduction for fasttext (that's what the authors use)
 * faq: mention "how can I know if it's working?"
+* implement task "filter_learning_cards", by burying the cards not in the original deck
 
 * fix searching + open the browser and add tags, then ask to sort by tags
 * check that docstrings are up to date
