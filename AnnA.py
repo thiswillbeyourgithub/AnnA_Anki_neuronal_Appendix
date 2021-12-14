@@ -1000,10 +1000,27 @@ TFIDF"))
                 df["VEC_FULL"] = [x for x in t_vec]
                 df["VEC"] = [x for x in t_vec]
             else:
-                print(f"Reducing dimensions to {self.TFIDF_dim} using SVD")
-                svd = TruncatedSVD(n_components=min(self.TFIDF_dim,
-                                                    t_vec.shape[1]))
-                t_red = svd.fit_transform(t_vec)
+                while True:
+                    print(f"Reducing dimensions to {self.TFIDF_dim} using SVD")
+                    svd = TruncatedSVD(n_components=min(self.TFIDF_dim,
+                                                        t_vec.shape[1]))
+                    t_red = svd.fit_transform(t_vec)
+                    evr = round(sum(svd.explained_variance_ratio_)*100,1)
+                    if evr >= 80:
+                        break
+                    else:
+                        if self.TFIDF_dim >= 2000:
+                            break
+                        if evr <= 40:
+                            self.TFIDF_dim *= 4
+                        elif evr <= 60:
+                            self.TFIDF_dim *= 2
+                        else:
+                            self.TFIDF_dim += int(self.TFIDF_dim*0.5)
+                        self.TFIDF_dim = min(self.TFIDF_dim, 2000)
+                        yel(f"Explained variance ratio is only {evr}% (\
+retrying until above 80% or 2000 dimensions)")
+                        continue
                 whi(f"Explained variance ratio after SVD on Tf_idf: \
 {round(sum(svd.explained_variance_ratio_)*100,1)}%")
 
