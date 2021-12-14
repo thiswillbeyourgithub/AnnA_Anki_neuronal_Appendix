@@ -1297,11 +1297,11 @@ lowest value.")
             spread_else = np.sum(self.df_dist_unscaled.loc[woAnnA, woAnnA].values)
             yel(spread_else)
 
+            red(f"Cards in common: {len(set(queue)&set(woAnnA))} in a queue of {len(queue)} cards.")
+
             ratio = round(spread_queue / spread_else, 3)
             red("Improvement ratio:")
             red(pyfiglet.figlet_format(str(ratio)))
-
-            red(f"Cards in common: {len(set(queue)&set(woAnnA))} in a queue of {len(queue)} cards.")
 
         except Exception as e:
             red(f"\nException: {e}")
