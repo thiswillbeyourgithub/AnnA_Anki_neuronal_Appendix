@@ -1140,7 +1140,12 @@ retrying until above 80% or 2000 dimensions)")
         use_index_of_score = False
         display_stats = False
 
-        if reference_order == "lowest_interval":
+        if w1 == 0:
+            yel("Ignoring reference order because the first score adjustment \
+factor is 0.")
+            df["ref"] = 0
+
+        elif reference_order == "lowest_interval":
             # alter the value from rated cards as they will not be useful
             df.loc[rated, "due"] = np.median(df.loc[due, "due"].values)
             df.loc[rated, "interval"] = np.median(df.loc[due, "interval"].values)
