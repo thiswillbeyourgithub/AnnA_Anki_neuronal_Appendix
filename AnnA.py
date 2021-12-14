@@ -134,7 +134,6 @@ class AnnA:
                  due_threshold=30,
                  highjack_due_query=None,
                  highjack_rated_query=None,
-                 queue_stride=10_000,
                  score_adjustment_factor=(1, 5),
                  log_level=2,
                  replace_greek=True,
@@ -203,7 +202,6 @@ class AnnA:
         self.clustering_nb_clust = clustering_nb_clust
         self.highjack_due_query = highjack_due_query
         self.highjack_rated_query = highjack_rated_query
-        self.queue_stride = queue_stride
         self.score_adjustment_factor = score_adjustment_factor
         self.reference_order = reference_order
         self.field_mappings = field_mappings
@@ -223,7 +221,6 @@ class AnnA:
         if isinstance(self.target_deck_size, int):
             self.target_deck_size = str(self.target_deck_size)
         assert TFIDF_stem + TFIDF_tokenize in [0, 1]
-        assert queue_stride > 0
         assert reference_order in ["lowest_interval", "relative_overdueness",
                                    "order_added"]
         assert task in ["filter_review_cards", "index",
@@ -1266,17 +1263,17 @@ lowest value.")
                             (w1*df.loc[indTODO, "ref"].values.argsort() -\
                              w2*(
                              np.min(
-                                 df_dist.loc[indQUEUE[-self.queue_stride:], indTODO].values,
+                                 self.df_dist.loc[indQUEUE, indTODO].values,
                                  axis=0).argsort() +\
                              np.mean(
-                                 df_dist.loc[indQUEUE[-self.queue_stride:], indTODO].values,
+                                 self.df_dist.loc[indQUEUE, indTODO].values,
                                  axis=0).argsort()
                              )).argmin()])
                     indQUEUE.append(indTODO.pop(indTODO.index(queue[-1])))
                 else:
                     queue.append(indTODO[
                             (w1*df.loc[indTODO, "ref"].values -\
-                             w2*combinator(df_dist.loc[indQUEUE[-self.queue_stride:], indTODO ].values)
+                             w2*combinator(self.df_dist.loc[indQUEUE, indTODO ].values)
                              ).argmin()])
                     indQUEUE.append(indTODO.pop(indTODO.index(queue[-1])))
 

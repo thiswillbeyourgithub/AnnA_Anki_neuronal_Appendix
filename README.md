@@ -91,7 +91,6 @@ AnnA was made with usability in mind. With the right arguments, you can have to 
  * `due_threshold` stops AnnA if the number of due cards is inferior to this value. Default to `30`.
  * `highjack_due_query` bypasses the query used to fetch due cards in anki. Default is `None`.
  * `highjack_rated_query` bypasses the query used to fetch rated cards in anki. Default is `None`.
- * `queue_stride` if you have X due cards, want to create a filtered deck containing all of them and have reviewed Y cards yesterday, the queue_stride value will make computing the optimal review order only compares a maximum of `queue_stride` cards at any given time. This eases calculation. Default is `10_000`.
  * `score_adjustment_factor` a tuple used to adjust the value of the reference order compared to how similar the cards are. Default is `(1, 5)`. For example: (1, 1.3) means that the algorithm will spread the similar cards farther apart.
  * `log_level` can be any number between 0 and 2. Default is `2` to only print errors. 1 means print also useful information and >=2 means print everything. Messages are color coded so it might be better to leave it at 3 and just focus on colors.
  * `replace_greek` if True, all greek letters will be replaced with a spelled version. For example `\u03C3` becomes `sigma`. Default is `True`.
