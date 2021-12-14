@@ -1053,11 +1053,6 @@ retrying until above 80% or 2000 dimensions)")
                                         n_jobs=-1,
                                         metric="cosine"))
 
-        print("Centering and scaling distance matrix...")
-        self.df_dist_unscaled = self.df_dist.copy()
-        self.df_dist.loc[:, :] = StandardScaler().fit_transform(self.df_dist)
-
-
         # showing to user which cards are similar and different,
         # for troubleshooting
         red("Printing the most semantically different cards:")
