@@ -1134,7 +1134,7 @@ retrying until above 80% or 2000 dimensions)")
         w1 = self.score_adjustment_factor[0]
         w2 = self.score_adjustment_factor[1]
         use_index_of_score = False
-        display_stats = False
+        display_stats = True
 
         if w1 == 0:
             yel("Ignoring reference order because the first score adjustment \
@@ -1236,15 +1236,15 @@ lowest value.")
 
         if display_stats:
             pd.set_option('display.float_format', lambda x: '%.5f' % x)
-            if len(df.index) < 5000:
-                try:
-                    whi("\nScore stats:")
+            try:
+                whi("\nScore stats (adjusted):")
+                if w1 != 0:
                     whi(f"Reference: {(w1*df['ref']).describe()}\n")
-                    val = pd.DataFrame(data=w2*df_dist.values.flatten(),
-                                       columns=['distance matrix']).describe(include='all')
-                    whi(f"Distance: {val}\n\n")
-                except Exception as e:
-                    red(f"Exception: {e}")
+                val = pd.DataFrame(data=w2*df_dist.values.flatten(),
+                                   columns=['distance matrix']).describe(include='all')
+                whi(f"Distance: {val}\n\n")
+            except Exception as e:
+                red(f"Exception: {e}")
             pd.reset_option('display.float_format')
 
         def combinator(array):
