@@ -1296,8 +1296,7 @@ lowest value.")
             red("Improvement ratio:")
             red(pyfiglet.figlet_format(str(ratio)))
 
-            if np.isclose(ratio, 1):
-                print(f"Difference: {len(set([int(x) for x in spread_queue])^set([int(x) for x in spread_else]))} cards in {len(queue)}")
+            red(f"Cards in common: {len(set(queue)&set(woAnnA))} in a queue of {len(queue)} cards.")
 
         except Exception as e:
             red(f"\nException: {e}")
