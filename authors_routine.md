@@ -18,7 +18,7 @@ This page shows one way AnnA can be used.
         * I run autorun.py: the result is 1. a new filtered deck containins 50% of my due reviews and 2. the number of learning cards that are not buried is down 20%.
 
         * I review the cards in the filtered deck.
-        * I then also create another filtered deck with as settings `deck:med_school_deck is:due is:learn -is:buried -rated:1`, ordered by order added. I work my way through it too. It contains the learning cards, in reverse order of creation, but when some cards are too similar, one of them get buried. I think this is the most efficient way to go.
+        * I then also create another filtered deck with as settings `deck:med_school_deck is:due is:learn -is:buried -rated:1 -rated:2:1`, ordered by random. I work my way through it too. It contains the learning cards, in reverse order of creation, but when some cards are too similar, one of them get buried. But it ignores cards that are due and were failed yesterday, as they are urgent. I think this is the most efficient way to go.
 
 * During the weekend:
     * I sometimes have very limited time to devote to medschool on the weekends so I take only the 20% most different cards and I think it still helps a lot.
