@@ -1060,13 +1060,13 @@ retrying until above 80% or 2000 dimensions)")
         print("")
 
         printed = False
-        lowest_values = [0]
+        lowest_values = [0.1]
         start_time = time.time()
         for i in range(9999):
             if printed is True:
                 break
             if time.time() - start_time >= 60:
-                red("Taking too long to show similar cards, skipping")
+                red("Taking too long to find nonequal similar cards, skipping")
                 break
             lowest_values.append(self.df_dist.values[self.df_dist.values > max(
                         lowest_values)].min())
@@ -1079,7 +1079,7 @@ retrying until above 80% or 2000 dimensions)")
                 text_1 = str(df.loc[df.index[pair[0]]].text)
                 text_2 = str(df.loc[df.index[pair[1]]].text)
                 if text_1 != text_2:
-                    red("Printing among most semantically similar cards:")
+                    red("Example among most semantically similar cards:")
                     yel(f"* {text_1[0:max_length]}...")
                     yel(f"* {text_2[0:max_length]}...")
                     printed = True
