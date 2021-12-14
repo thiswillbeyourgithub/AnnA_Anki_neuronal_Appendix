@@ -1137,9 +1137,9 @@ retrying until above 80% or 2000 dimensions)")
         display_stats = True
 
         if w1 == 0:
-            yel("Ignoring reference order because the first score adjustment \
-factor is 0.")
-            df["ref"] = 0
+            # if ignoring due order, df["ref"] value is at least needed to
+            # show improvement ratio at the end
+            self.reference_order = "relative_overdueness"
 
         elif reference_order == "lowest_interval":
             # alter the value from rated cards as they will not be useful
@@ -1180,6 +1180,10 @@ factor is 0.")
             # center and scale
             ro_cs = StandardScaler().fit_transform(ro.T)
             df["ref"] = ro_cs
+
+        if w1 == 0:
+            df["relative_overdueness"] = df["ref"]
+            df["ref"] = 0
 
         assert len([x for x in rated if df.loc[x, "status"] != "rated"]) == 0
         red(f"\nCards identified as rated in the past {self.rated_last_X_days} days: \
@@ -1285,9 +1289,13 @@ lowest value.")
             yel(spread_queue)
 
             red("Sum distance if you had not used AnnA:")
+            if w1 != 0:
+                col = "ref"
+            else:
+                col = "relative_overdueness"
             woAnnA = [x
                       for x in df.sort_values(
-                          "ref", ascending=True).index.tolist()
+                          col, ascending=True).index.tolist()
                       if x in self.due_cards][0:len(queue)]
             spread_else = np.sum(self.df_dist_unscaled.loc[woAnnA, woAnnA].values)
             yel(spread_else)
