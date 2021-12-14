@@ -165,7 +165,6 @@ class AnnA:
 
                  # misc:
                  debug_card_limit=None,
-                 prefer_similar_card=False,
                  save_instance_as_pickle=False,
                  ):
 
@@ -205,7 +204,6 @@ class AnnA:
         self.highjack_due_query = highjack_due_query
         self.highjack_rated_query = highjack_rated_query
         self.queue_stride = queue_stride
-        self.prefer_similar_card = prefer_similar_card
         self.score_adjustment_factor = score_adjustment_factor
         self.reference_order = reference_order
         self.field_mappings = field_mappings
@@ -1135,8 +1133,6 @@ retrying until above 80% or 2000 dimensions)")
         queue = []
         w1 = self.score_adjustment_factor[0]
         w2 = self.score_adjustment_factor[1]
-        if self.prefer_similar_card is True:
-            w2 *= -1
         use_index_of_score = False
         display_stats = False
 
