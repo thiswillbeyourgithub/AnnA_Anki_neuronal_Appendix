@@ -1122,8 +1122,11 @@ retrying until above 80% or 2000 dimensions)")
         self._collect_memory()
         # getting args
         reference_order = self.reference_order
-        df = self.df.copy()
-        df_dist = self.df_dist
+        df = self.df
+        df_dist_nan = self.df_dist
+        df_dist_nan[np.isclose(df_dist_nan, 0)] = np.nan # ignore the diagonal
+        # of the distance matrix when computing improvement ratio and score stats
+
         target_deck_size = self.target_deck_size
         rated = self.rated_cards
         due = self.due_cards
@@ -1241,7 +1244,7 @@ lowest value.")
                 whi("\nScore stats (adjusted):")
                 if w1 != 0:
                     whi(f"Reference: {(w1*df['ref']).describe()}\n")
-                val = pd.DataFrame(data=w2*df_dist.values.flatten(),
+                val = pd.DataFrame(data=w2*df_dist_nan.values.flatten(),
                                    columns=['distance matrix']).describe(include='all')
                 whi(f"Distance: {val}\n\n")
             except Exception as e:
@@ -1249,7 +1252,7 @@ lowest value.")
             pd.reset_option('display.float_format')
 
         def combinator(array):
-            return 0.9*np.min(array, axis=0) + 0.1*np.mean(array, axis=0)
+            return 0.9*np.nanmin(array, axis=0) + 0.1*np.nanmean(array, axis=0)
 
         with tqdm(desc="Computing optimal review order",
                   unit=" card",
@@ -1281,11 +1284,12 @@ lowest value.")
         assert len(queue) != 0
 
         try:
-            red("Sum distance among the optimized queue:")
-            spread_queue = np.sum(self.df_dist_unscaled.loc[queue, queue].values)
+            spread_deck = np.sum(combinator(df_dist_nan.loc[:, :].values))
+            red("Sum distance ratio among the optimized queue:")
+            spread_queue = np.sum(combinator(df_dist_nan.loc[queue, queue].values)) / spread_deck
             yel(spread_queue)
 
-            red("Sum distance if you had not used AnnA:")
+            red("Sum distance ratio without AnnA:")
             if w1 != 0:
                 col = "ref"
             else:
@@ -1294,7 +1298,7 @@ lowest value.")
                       for x in df.sort_values(
                           col, ascending=True).index.tolist()
                       if x in self.due_cards][0:len(queue)]
-            spread_else = np.sum(self.df_dist_unscaled.loc[woAnnA, woAnnA].values)
+            spread_else = np.sum(combinator(df_dist_nan.loc[woAnnA, woAnnA].values)) / spread_deck
             yel(spread_else)
 
             red(f"Cards in common: {len(set(queue)&set(woAnnA))} in a queue of {len(queue)} cards.")
