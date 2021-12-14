@@ -1060,7 +1060,7 @@ retrying until above 80% or 2000 dimensions)")
         print("")
 
         printed = False
-        lowest_values = [np.max(np.diag(self.df_dist))]
+        lowest_values = [0]
         start_time = time.time()
         for i in range(9999):
             if printed is True:
