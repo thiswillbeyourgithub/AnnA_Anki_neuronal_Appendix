@@ -628,7 +628,6 @@ threads of size {batchsize})")
             when instantiating AnnA
         Greek letters can also be replaced on the fly
         """
-        orig = text
         s = re.sub
 
 
