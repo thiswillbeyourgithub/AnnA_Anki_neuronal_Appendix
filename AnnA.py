@@ -841,13 +841,18 @@ threads of size {batchsize})")
             red("{len(ind_short)} cards contain less than 10 characters after \
 formatting: {','.join(ind_short)}")
 
-        print("\n\nPrinting 5 random samples of your formated text, to help \
+        print("\n\nPrinting 2 random samples of your formated text, to help \
 adjust formating issues:")
         pd.set_option('display.max_colwidth', 80)
-        max_length = 100
-        sub_index = random.choices(self.df.index.tolist(), k=5)
+        max_length = 1000
+        sub_index = random.choices(self.df.index.tolist(), k=2)
         for i in sub_index:
-            print(f" *  {i}: {str(self.df.loc[i, 'text'])[0:max_length]}...")
+            if len(self.df.loc[i, "text"]) > max_length:
+                ending = "...\n"
+            else:
+                ending = "\n"
+            print(f" *{i}: {str(self.df.loc[i, 'text'])[0:max_length]}",
+                  end=ending)
         pd.reset_option('display.max_colwidth')
         print("\n")
         self.df = self.df.sort_index()
