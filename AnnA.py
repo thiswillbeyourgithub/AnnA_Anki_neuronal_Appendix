@@ -687,10 +687,10 @@ threads of size {batchsize})")
         text = " ".join(text.split())  # multiple spaces
 
         # if text too short, include image name if present
-        if len(text) < 10:
-            if "src=" in orig:
-                text = text + " " + " ".join(re.findall('src="(.*?)">', orig,
-                    flags=re.MULTILINE | re.DOTALL))
+#        if len(text) < 10:
+#            if "src=" in orig:
+#                text = text + " " + " ".join(re.findall('src="(.*?)">', orig,
+#                    flags=re.MULTILINE | re.DOTALL))
 
         # add punctuation
 #        if len(text) > 2:
@@ -706,8 +706,8 @@ threads of size {batchsize})")
         if self.vectorizer == "TFIDF":
             if self.TFIDF_stem is True:
                 text = " ".join([ps.stem(x) for x in text.split()])
-            text += " " + " ".join(re.findall(r'src="(.*?\..{2,3})" ', orig,
-                flags=re.MULTILINE | re.DOTALL))
+#            text += " " + " ".join(re.findall(r'src="(.*?\..{2,3})" ', orig,
+#                flags=re.MULTILINE | re.DOTALL))
 
         return text
 
