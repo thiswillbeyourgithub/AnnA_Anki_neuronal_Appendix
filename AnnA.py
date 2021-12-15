@@ -1245,7 +1245,7 @@ lowest value.")
                 whi("\nScore stats (adjusted):")
                 if w1 != 0:
                     whi(f"Reference: {(w1*df['ref']).describe()}\n")
-                val = pd.DataFrame(data=w2*df_dist_nan.values.flatten(),
+                val = pd.DataFrame(data=w2*self.df_dist.values.flatten(),
                                    columns=['distance matrix']).describe(include='all')
                 whi(f"Distance: {val}\n\n")
             except Exception as e:
