@@ -832,6 +832,15 @@ threads of size {batchsize})")
 
         tqdm.pandas(desc="Formating text", smoothing=0, unit=" card")
         self.df["text"] = self.df["comb_text"].progress_apply(lambda x: self._format_text(x))
+
+        ind_short = []
+        for ind in self.df.index:
+            if len(self.df.loc[ind, "text"]) < 10:
+                ind_short.append(ind)
+        if ind_short:
+            red("{len(ind_short)} cards contain less than 10 characters after \
+formatting: {','.join(ind_short)}")
+
         print("\n\nPrinting 5 random samples of your formated text, to help \
 adjust formating issues:")
         pd.set_option('display.max_colwidth', 80)
