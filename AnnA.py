@@ -691,12 +691,6 @@ threads of size {batchsize})")
 #                text = text + " " + " ".join(re.findall('src="(.*?)">', orig,
 #                    flags=re.MULTILINE | re.DOTALL))
 
-        # add punctuation
-#        if len(text) > 2:
-#            text = text[0].upper() + text[1:]
-#            if text[-1] not in ["?", ".", "!"]:
-#                text += "."
-
         # misc
         text = text.replace(" :.", ".")
         text = text.replace(":.", ".")
