@@ -984,7 +984,7 @@ adjust formating issues:")
                                          lowercase=True,
                                          tokenizer=tknzer,
                                          stop_words=None,
-                                         ngram_range=(1, 5),
+                                         ngram_range=(1, 10),
                                          max_features=n_features,
                                          norm="l2")
             # stop words have already been removed
