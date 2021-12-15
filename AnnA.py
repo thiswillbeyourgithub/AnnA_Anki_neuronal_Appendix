@@ -1049,6 +1049,17 @@ retrying until above 80% or 2000 dimensions)")
                                         n_jobs=-1,
                                         metric="cosine"))
 
+        print("Computing mean distance...")
+        # ignore the diagonal of the distance matrix to get a sensible mean
+        # value then scale the matrix:
+        df_dist_nan = self.df_dist.copy()
+        df_dist_nan[np.isclose(df_dist_nan, 0)] = np.nan
+        mean_dist = np.nanmean(df_dist_nan.values.flatten())
+        std_dist = np.nanstd(df_dist_nan.values.flatten())
+        yel(f"Mean distance: {mean_dist}, std: {std_dist}")
+        self.df_dist /= mean_dist
+#        self.df_dist[~np.isnan(df_dist_nan)] /= std_dist
+
         # showing to user which cards are similar and different,
         # for troubleshooting
         red("Printing the most semantically different cards:")
@@ -1124,9 +1135,6 @@ retrying until above 80% or 2000 dimensions)")
         # getting args
         reference_order = self.reference_order
         df = self.df
-        df_dist_nan = self.df_dist
-        df_dist_nan[np.isclose(df_dist_nan, 0)] = np.nan # ignore the diagonal
-        # of the distance matrix when computing improvement ratio and score stats
 
         target_deck_size = self.target_deck_size
         rated = self.rated_cards
@@ -1253,7 +1261,7 @@ lowest value.")
             pd.reset_option('display.float_format')
 
         def combinator(array):
-            return 0.9*np.nanmin(array, axis=0) + 0.1*np.nanmean(array, axis=0)
+            return 0.9*np.min(array, axis=0) + 0.1*np.mean(array, axis=0)
 
         with tqdm(desc="Computing optimal review order",
                   unit=" card",
@@ -1285,12 +1293,11 @@ lowest value.")
         assert len(queue) != 0
 
         try:
-            spread_deck = np.sum(combinator(df_dist_nan.loc[:, :].values))
-            red("Sum distance ratio among the optimized queue:")
-            spread_queue = np.sum(combinator(df_dist_nan.loc[queue, queue].values)) / spread_deck
+            red("Sum distance of the new queue:")
+            spread_queue = np.sum(self.df_dist.loc[queue, queue].values.flatten())
             yel(spread_queue)
 
-            red("Sum distance ratio without AnnA:")
+            red("Sum distance without AnnA:")
             if w1 != 0:
                 col = "ref"
             else:
@@ -1299,7 +1306,7 @@ lowest value.")
                       for x in df.sort_values(
                           col, ascending=True).index.tolist()
                       if x in self.due_cards][0:len(queue)]
-            spread_else = np.sum(combinator(df_dist_nan.loc[woAnnA, woAnnA].values)) / spread_deck
+            spread_else = np.sum(self.df_dist.loc[woAnnA, woAnnA].values.flatten())
             yel(spread_else)
 
             red(f"Cards in common: {len(set(queue)&set(woAnnA))} in a queue of {len(queue)} cards.")
