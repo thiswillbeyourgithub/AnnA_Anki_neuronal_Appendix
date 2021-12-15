@@ -693,8 +693,6 @@ threads of size {batchsize})")
         if self.vectorizer == "TFIDF":
             if self.TFIDF_stem is True:
                 text = " ".join([ps.stem(x) for x in text.split()])
-#            text += " " + " ".join(re.findall(r'src="(.*?\..{2,3})" ', orig,
-#                flags=re.MULTILINE | re.DOTALL))
 
         return text
 
