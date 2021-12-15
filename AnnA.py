@@ -843,7 +843,7 @@ formatting: {','.join(ind_short)}")
 
         print("\n\nPrinting 2 random samples of your formated text, to help \
 adjust formating issues:")
-        pd.set_option('display.max_colwidth', 80)
+        pd.set_option('display.max_colwidth', 8000)
         max_length = 1000
         sub_index = random.choices(self.df.index.tolist(), k=2)
         for i in sub_index:
