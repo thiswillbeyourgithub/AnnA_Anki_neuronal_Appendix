@@ -128,8 +128,9 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 ## TODO
 *More or less by order of urgency*
 * ps stemmer is not properly imported
+* implement index scoring
 * check that relative overdueness still works
-* replace all df_temp by an on-memory numpy array
+* replace all df_temp by an on-memory numpy array (faster)
 * add a "deck_settings" mode that fetches the number of max reviews per day and use it as "target_deck_size"
 * faq: mention "how can I know if it's working?"
 * implement task "filter_learning_cards", by burying the cards not in the original deck
@@ -137,7 +138,6 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * fix searching + open the browser and add tags, then ask to sort by tags
 * check that docstrings are up to date
 * implement ability to set a correction vector (ex: favor cards closer to "neuroanatomy"), could actually just be a card ID to favor
-* implement index scoring
 * add a tutorial to reduce the size of the fasttext model and reorient it to english
 
 * create a search algorithm that expands your query by fetching synonyms
