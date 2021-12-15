@@ -685,12 +685,6 @@ threads of size {batchsize})")
         text = text.replace(" : ", ": ")
         text = " ".join(text.split())  # multiple spaces
 
-        # if text too short, include image name if present
-#        if len(text) < 10:
-#            if "src=" in orig:
-#                text = text + " " + " ".join(re.findall('src="(.*?)">', orig,
-#                    flags=re.MULTILINE | re.DOTALL))
-
         # misc
         text = text.replace(" :.", ".")
         text = text.replace(":.", ".")
