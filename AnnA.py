@@ -316,6 +316,7 @@ values. {e}")
             self._compute_distance_matrix()
             self._compute_opti_rev_order()
             self.task_filtered_deck(task=task)
+            print("All done!\n\n")
         else:
             yel("Task : created filtered deck containing review cards")
             self._create_and_fill_df()
@@ -332,6 +333,7 @@ values. {e}")
                 self._compute_opti_rev_order()
                 if task == "filter_review_cards":
                     self.task_filtered_deck()
+                    print("All done!\n\n")
 
         # pickle itself
         self._collect_memory()
@@ -1055,7 +1057,7 @@ retrying until above 80% or 2000 dimensions)")
         df_dist_nan[np.isclose(df_dist_nan, 0)] = np.nan
         mean_dist = np.nanmean(df_dist_nan.values.flatten())
         std_dist = np.nanstd(df_dist_nan.values.flatten())
-        yel(f"Mean distance: {mean_dist}, std: {std_dist}")
+        yel(f"Mean distance: {mean_dist}, std: {std_dist}\n")
         self.df_dist /= mean_dist
 #        self.df_dist[~np.isnan(df_dist_nan)] /= std_dist
 
@@ -1317,7 +1319,7 @@ lowest value.")
         except Exception as e:
             red(f"\nException: {e}")
 
-        yel("Done computing order.\n")
+        print("")
         self.opti_rev_order = queue
         self.df = df
         return True
@@ -1362,7 +1364,6 @@ lowest value.")
             red("This will not affect the due order.")
             self._ankiconnect(action="bury",
                               cards=to_bury)
-            print("Done.")
             return True
         else:
             if deck_template is not None:
@@ -1445,14 +1446,11 @@ deck.")
 as opti_rev_order!")
             pprint(diff)
             red(f"\nNumber of inconsistent cards: {len(diff)}")
-        else:
-            print(" Done.")
 
         _threaded_value_setter(card_list=self.opti_rev_order,
                                tqdm_desc="Altering due order",
                                keys=["due"],
                                newValues=None)
-        print("All done!\n\n")
         return True
 
     def compute_clusters(self,
