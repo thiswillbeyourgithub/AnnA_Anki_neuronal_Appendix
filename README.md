@@ -127,21 +127,22 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 
 ## TODO
 *More or less by order of urgency*
+* check that docstrings are up to date
 * ps stemmer is not properly imported
-* implement index scoring
 * check that relative overdueness still works
+* faq: mention "how can I know if it's working?"
+
+* implement index scoring
 * replace all df_temp by an on-memory numpy array (faster)
 * add a "deck_settings" mode that fetches the number of max reviews per day and use it as "target_deck_size"
-* faq: mention "how can I know if it's working?"
 * implement task "filter_learning_cards", by burying the cards not in the original deck
 
 * fix searching + open the browser and add tags, then ask to sort by tags
-* check that docstrings are up to date
 * implement ability to set a correction vector (ex: favor cards closer to "neuroanatomy"), could actually just be a card ID to favor
-* add a tutorial to reduce the size of the fasttext model and reorient it to english
+* add a link to reduce the size of the fasttext model
 
 * create a search algorithm that expands your query by fetching synonyms
-* turn AnnA into an anki addon
+* turn AnnA into AnnAddon
 * create a standalone version of search_for_note using ankipandas
 
 * add ability to click on plots to open the browser : https://plotly.com/python/click-events/
