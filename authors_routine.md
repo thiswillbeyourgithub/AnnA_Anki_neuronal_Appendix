@@ -20,4 +20,4 @@ This page shows one way AnnA can be used.
 ## Further notes:
 * During weekends, I tend to do 50% of the learning and 20% of the reviews.
 * If I have a huge backlog, say 1000 cards. I can spread it over 10 days using 100 cards per day while aggressively penalizing similarity by setting the argument `rated_last_X_days` to 6 days for example.
-* At the end of each semester, I add my most important decks to an `Archive` deck and review 10 cards every day, maximally spread over the deck and ordered by `lowest_interval`.
+* At the end of each semester, I add my most important decks to an `Archive` deck. Every day, I review 10 maximally spread cards over all my past decks and ordered by `lowest_interval`. The idea is to keep decently sharp on all the past cards I've created without taking too much of my time.
