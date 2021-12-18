@@ -1285,7 +1285,7 @@ lowest value.")
                 else:
                     queue.append(indTODO[
                             (w1*df.loc[indTODO, "ref"].values -\
-                             w2*combinator(self.df_dist.loc[indQUEUE, indTODO ].values)
+                             w2*combinator(self.df_dist.loc[indQUEUE, indTODO].values)
                              ).argmin()])
                     indQUEUE.append(indTODO.pop(indTODO.index(queue[-1])))
 
