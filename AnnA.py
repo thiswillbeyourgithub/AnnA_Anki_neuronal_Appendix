@@ -630,17 +630,18 @@ threads of size {batchsize})")
         """
         s = re.sub
 
-
-        text = s('\u001F|&nbsp;', " ", text)
-        text = text.replace("&amp;", "&").replace("/", " / ")
-        text = text.replace("+++", " important ")
+        text = text.replace("&amp;", "&"
+                            ).replace("/", " / "
+                                      ).replace("+++", " important "
+                                                ).replace("&nbsp", " "
+                                                          ).replace("\u001F",
+                                                                    " ")
 
         # spaces
         text = s("<blockquote(.*?)</blockquote>",
                  lambda x: x.group(0).replace("<br>", " ; "), text)
         text = s('\\n|</?div>|<br>|</?span>|</?li>|</?ul>',
                  " ", text)  # newlines
-        text = " ".join(text.split())
 
         # OCR
         if self.keep_ocr:
