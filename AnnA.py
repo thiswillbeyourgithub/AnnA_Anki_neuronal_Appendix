@@ -316,7 +316,6 @@ values. {e}")
             self._compute_distance_matrix()
             self._compute_opti_rev_order()
             self.task_filtered_deck(task=task)
-            print("All done!\n\n")
         else:
             yel("Task : created filtered deck containing review cards")
             self._create_and_fill_df()
@@ -333,7 +332,6 @@ values. {e}")
                 self._compute_opti_rev_order()
                 if task == "filter_review_cards":
                     self.task_filtered_deck()
-                    print("All done!\n\n")
 
         # pickle itself
         self._collect_memory()
