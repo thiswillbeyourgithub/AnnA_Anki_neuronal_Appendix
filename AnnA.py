@@ -1139,7 +1139,6 @@ retrying until above 70% or 2000 dimensions)")
         target_deck_size = self.target_deck_size
         rated = self.rated_cards
         due = self.due_cards
-        queue = []
         w1 = self.score_adjustment_factor[0]
         w2 = self.score_adjustment_factor[1]
         use_index_of_score = False
@@ -1212,7 +1211,8 @@ retrying until above 70% or 2000 dimensions)")
                             )
         target_deck_size = int(target_deck_size)
 
-        if len(rated+queue) < 1:  # can't start with an empty queue
+        queue = []
+        if len(rated) < 1:  # can't start with an empty queue
             # so picking 1 urgent cards
             pool = df.loc[df["status"] == "due", "ref"].nsmallest(
                     n=min(50, len(self.due_cards))
