@@ -12,8 +12,9 @@ This page shows one way AnnA can be used.
     2. I then open the file autorun.py, and adjust the settings to what would be best depending on my mood, schedule, etc. I usually let it to `50%` of the reviews and `80%` of the learnings.
     3. I run my autorun.py, resulting in a `20%` drop in the number of learning cards in the original deck and a new filtered deck containing about `150` of my reviews.
     4. I then refill two (regular) filtered deck for the learning cards using as settings:
+        *I exclude the cards rated today because it tends to mess with my learning steps*
         1. `deck:med_school_deck is:due is:learn -is:buried -rated:1 -rated:2:1 -rated:2:2` (ordered by random, will contain the learning cards that I struggled with the day before)
-        2. `deck:med_school_deck is:due is:learn -is:buried (rated:1 or rated:2:1 or rated:2:2)` (ordered by random, contains the easier learning cards)
+        2. `deck:med_school_deck is:due is:learn -is:buried -rated:1 (rated:2:1 or rated:2:2)` (ordered by random, contains the easier learning cards)
     5. I work my way through all those decks. This will ensure I reviewed all the useful cards of the day, but when some similar cards would have appeared on the same day, one of them has been buried. I think this is the most efficient way to go.
 
 
