@@ -908,7 +908,7 @@ adjust formating issues:")
                                         axis=0).reshape(1, -1),
                                  norm='l2')
 
-            alphanum = re.compile(r"[^ _\w]|\d|_|\s\w\s")
+            alphanum = re.compile(r"[^ _\w]|\d|_|\b\w\b")
             mvec = memoize(ft.get_word_vector)
             ft_vec = np.empty(shape=(len(df.index), ft.get_dimension()),
                               dtype=float)
