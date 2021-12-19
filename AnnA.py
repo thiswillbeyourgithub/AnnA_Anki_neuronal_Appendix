@@ -1146,9 +1146,9 @@ retrying until above 70% or 2000 dimensions)")
         if w1 == 0:
             # if ignoring due order, df["ref"] value is at least needed to
             # show improvement ratio at the end
-            self.reference_order = "relative_overdueness"
+            reference_order = "relative_overdueness"
 
-        elif reference_order == "lowest_interval":
+        if reference_order == "lowest_interval":
             # alter the value from rated cards as they will not be useful
             df.loc[rated, "due"] = np.median(df.loc[due, "due"].values)
             df.loc[rated, "interval"] = np.median(df.loc[due, "interval"].values)
