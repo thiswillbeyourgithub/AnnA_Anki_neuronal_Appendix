@@ -573,12 +573,12 @@ threads of size {batchsize})")
         list_cardInfo = []
 
         n = len(combined_card_list)
-        yel(f"\nAsking Anki for information about {n} cards...")
+        yel(f"Asking Anki for information about {n} cards...")
         start = time.time()
         list_cardInfo.extend(
             self._get_cards_info_from_card_id(
                 card_id=combined_card_list))
-        whi(f"Got all infos in {int(time.time()-start)} seconds.\n\n")
+        whi(f"Got all infos in {int(time.time()-start)} seconds.\n")
 
         for i, card in enumerate(list_cardInfo):
             # removing large fields:
@@ -1100,7 +1100,6 @@ retrying until above 70% or 2000 dimensions)")
             red("Couldn't find lowest values to print!")
         print("")
         pd.reset_option('display.max_colwidth')
-        print("\n")
         return True
 
     def _compute_opti_rev_order(self):
@@ -1318,7 +1317,6 @@ lowest value.")
         except Exception as e:
             red(f"\nException: {e}")
 
-        print("")
         self.opti_rev_order = queue
         self.df = df
         return True
