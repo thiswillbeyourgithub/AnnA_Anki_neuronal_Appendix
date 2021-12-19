@@ -883,9 +883,8 @@ adjust formating issues:")
                 """
                 prepare string of text to be vectorized by fastText
                 * makes lowercase
-                * removes all non letters
-                * removes extra spaces
-                * outputs each words in a list
+                * replaces all non letters by a space
+                * outputs the sentence as a list of words
                 """
                 return re.sub(alphanum, " ", string.lower()).split()
 
