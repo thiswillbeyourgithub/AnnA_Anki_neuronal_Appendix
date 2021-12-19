@@ -1158,8 +1158,7 @@ retrying until above 70% or 2000 dimensions)")
             df["ref"] = df["interval_cs"]
 
         elif reference_order == "order_added":
-            order_added = df.index.to_numpy().reshape(-1, 1)
-            df["ref"] = StandardScaler().fit_transform(order_added)
+            df["ref"] = StandardScaler().fit_transform(df.index.argsort().reshape(-1, 1))
             df.loc[rated, "due"] = np.median(df.loc[due, "due"].values)
             df.loc[rated, "interval"] = np.median(df.loc[due, "interval"].values)
 
