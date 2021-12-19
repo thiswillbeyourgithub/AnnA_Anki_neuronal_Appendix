@@ -628,8 +628,6 @@ threads of size {batchsize})")
             when instantiating AnnA
         Greek letters can also be replaced on the fly
         """
-        s = re.sub
-
         text = text.replace("&amp;", "&"
                             ).replace("/", " / "
                                       ).replace("+++", " important "
@@ -638,44 +636,43 @@ threads of size {batchsize})")
                                                                     " ")
 
         # spaces
-        text = s("<blockquote(.*?)</blockquote>",
-                 lambda x: x.group(0).replace("<br>", " ; "), text)
-        text = s('\\n|</?div>|<br>|</?span>|</?li>|</?ul>',
-                 " ", text)  # newlines
+        text = re.sub("<blockquote(.*?)</blockquote>",
+                      lambda x: x.group(0).replace("<br>", " ; "), text)
+        text = re.sub('\\n|</?div>|<br>|</?span>|</?li>|</?ul>',
+                      " ", text)  # newlines
 
         # OCR
         if self.keep_ocr:
             # keep image title (usually OCR)
-            text = s("title=(\".*?\")", "> Caption: '\\1' <",
-                     text,
-                     flags=re.MULTILINE | re.DOTALL)
+            text = re.sub("title=(\".*?\")", "> Caption: '\\1' <",
+                          text, flags=re.M | re.DOTALL)
             text = text.replace('Caption: \'""\'', "")
 
         # cloze
-        text = s(r"{{c\d+?::", "", text)
-        text = s("{{c|{{|}}|::", " ", text)
+        text = re.sub(r"{{c\d+?::", "", text)
+        text = re.sub("{{c|{{|}}|::", " ", text)
 
         # misc
-        text = s(r'[a-zA-Z0-9-]+\....', " ", text)  # media file name
-        text = s("<a href.*?</a>", " ", text)  # html links
-        text = s(r'http[s]?://\S*', " ", text)  # plaintext links
-        text = s("<.*?>", " ", text)  # remaining html tags
-        text = s(r"\[\d*\]", "", text)  # wiki citation
-        text = s(r"\b\w{1,5}>", " ", text)  # missed html tags
-        text = s("&gt;|&lt;|<|>", "", text)
+        text = re.sub(r'[a-zA-Z0-9-]+\....', " ", text)  # media file name
+        text = re.sub("<a href.*?</a>", " ", text)  # html links
+        text = re.sub(r'http[s]?://\S*', " ", text)  # plaintext links
+        text = re.sub("<.*?>", " ", text)  # remaining html tags
+        text = re.sub(r"\[\d*\]", "", text)  # wiki citation
+        text = re.sub(r"\b\w{1,5}>", " ", text)  # missed html tags
+        text = re.sub("&gt;|&lt;|<|>", "", text)
 
         # adds capital letter after punctuation
-        text = s(r"[.?!]\s+?([a-zA-Z])", lambda x: x.group(0).upper(), text)
+        text = re.sub(r"[.?!]\s+?([a-zA-Z])", lambda x: x.group(0).upper(), text)
 
         # replace greek letter
         if self.replace_greek:
             for a, b in greek_alphabet_mapping.items():
-                text = s(a, b, text)
+                text = re.sub(a, b, text)
 
         # replace acronyms
         if self.acronym_list is not None:
             for compiled, new_word in self.acronym_dict.items():
-                text = s(compiled,
+                text = re.sub(compiled,
                          lambda string:
                          self._smart_acronym_replacer(string,
                                                       compiled,
