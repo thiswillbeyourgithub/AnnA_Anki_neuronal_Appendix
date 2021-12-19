@@ -1140,8 +1140,8 @@ retrying until above 70% or 2000 dimensions)")
         due = self.due_cards
         w1 = self.score_adjustment_factor[0]
         w2 = self.score_adjustment_factor[1]
-        use_index_of_score = False
         display_stats = True
+        use_index_of_score = False
 
         if w1 == 0:
             # if ignoring due order, df["ref"] value is at least needed to
@@ -1258,8 +1258,15 @@ lowest value.")
                 red(f"Exception: {e}")
             pd.reset_option('display.float_format')
 
-        def combinator(array):
-            return 0.9*np.min(array, axis=0) + 0.1*np.mean(array, axis=0)
+        if use_index_of_score:
+            df.loc[indTODO, "index_ref"] = df.loc[indTODO, "ref"].values.argsort()
+            col_ref = "index_ref"
+            def combinator(array):
+                return 0.9 * np.min(array, axis=0).argsort() + 0.1 * np.mean(array, axis=0).argsort()
+        else:
+            col_ref = "ref"
+            def combinator(array):
+                return 0.9 * np.min(array, axis=0) + 0.1 * np.mean(array, axis=0)
 
         with tqdm(desc="Computing optimal review order",
                   unit=" card",
@@ -1267,26 +1274,11 @@ lowest value.")
                   smoothing=0,
                   total=queue_size_goal+len(rated)) as pbar:
             while len(queue) < queue_size_goal:
-                if use_index_of_score:
-                    # NOT YET USABLE:
-                    queue.append(indTODO[
-                            (w1*df.loc[indTODO, "ref"].values.argsort() -\
-                             w2*(
-                             np.min(
-                                 self.df_dist.loc[indQUEUE, indTODO].values,
-                                 axis=0).argsort() +\
-                             np.mean(
-                                 self.df_dist.loc[indQUEUE, indTODO].values,
-                                 axis=0).argsort()
-                             )).argmin()])
-                    indQUEUE.append(indTODO.pop(indTODO.index(queue[-1])))
-                else:
-                    queue.append(indTODO[
-                            (w1*df.loc[indTODO, "ref"].values -\
-                             w2*combinator(self.df_dist.loc[indQUEUE, indTODO].values)
-                             ).argmin()])
-                    indQUEUE.append(indTODO.pop(indTODO.index(queue[-1])))
-
+                queue.append(indTODO[
+                        (w1*df.loc[indTODO, col_ref].values -\
+                         w2*combinator(self.df_dist.loc[indQUEUE, indTODO].values)
+                         ).argmin()])
+                indQUEUE.append(indTODO.pop(indTODO.index(queue[-1])))
                 pbar.update(1)
         assert len(queue) != 0
 
