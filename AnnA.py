@@ -1279,7 +1279,7 @@ lowest value.")
                          ).argmin()])
                 indQUEUE.append(indTODO.pop(indTODO.index(queue[-1])))
                 pbar.update(1)
-        assert len(queue) != 0
+        assert len(indQUEUE) == len(rated) + len(queue)
 
         try:
             red("Sum distance of the new queue:")
