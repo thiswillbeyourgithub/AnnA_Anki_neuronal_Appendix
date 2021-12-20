@@ -154,7 +154,8 @@ class AnnA:
 
                  # vectorization:
                  vectorizer="TFIDF",  # can be "TFIDF" or "fastText"
-                 fastText_dim=None,
+                 fastText_dim=100,
+                 fastText_dim_algo="PCA", # can be "PCA" or "UMAP" or None
                  fastText_model_name=None,
                  fastText_lang="en",
                  TFIDF_dim=100,
@@ -209,6 +210,7 @@ class AnnA:
         self.vectorizer = vectorizer
         self.fastText_lang = fastText_lang
         self.fastText_dim = fastText_dim
+        self.fastText_dim_algo = fastText_dim_algo.upper()
         self.fastText_model_name = fastText_model_name
         self.TFIDF_dim = TFIDF_dim
         self.TFIDF_stopw_lang = TFIDF_stopw_lang
@@ -227,6 +229,7 @@ class AnnA:
                         "bury_excess_learning_cards",
                         "bury_excess_review_cards"]
         assert vectorizer in ["TFIDF", "fastText"]
+        assert self.fastText_dim_algo in ["PCA", "UMAP", None]
 
         if self.acronym_list is not None:
             file = Path(acronym_list)
@@ -917,31 +920,49 @@ adjust formating issues:")
                     tqdm(df.index, desc="Vectorizing using fastText")):
                 ft_vec[i] = vec(str(df.loc[x, "text"]))
 
-            if self.fastText_dim is None:
+            if self.fastText_dim is None or self.fastText_dim_algo is None:
+                yel("Not doing dimension reduction.")
                 df["VEC"] = [x for x in ft_vec]
                 df["VEC_FULL"] = [x for x in ft_vec]
             else:
-                print(f"Reducing dimensions to {self.fastText_dim} using UMAP")
-                red("(WARNING: EXPERIMENTAL FEATURE)")
-                import umap.umap_
-                umap_kwargs = {"n_jobs": -1,
-                               "verbose": 1,
-                               "n_components": min(self.fastText_dim,
-                                                   len(df.index) - 1),
-                               "metric": "cosine",
-                               "init": 'spectral',
-                               "random_state": 42,
-                               "transform_seed": 42,
-                               "n_neighbors": 5,
-                               "min_dist": 0.01}
-                try:
-                    ft_vec_red = umap.UMAP(**umap_kwargs).fit_transform(ft_vec)
-                    df["VEC"] = [x for x in ft_vec_red]
-                except Exception as e:
-                    red(f"Error when computing UMAP reduction, using all vectors: {e}")
-                    df["VEC"] = [x for x in ft_vec]
-                finally:
-                    df["VEC_FULL"] = [x for x in ft_vec]
+                if self.fastText_dim_algo == "UMAP":
+                    print(f"Reducing dimensions to {self.fastText_dim} using UMAP")
+                    red("(WARNING: EXPERIMENTAL FEATURE)")
+                    import umap.umap_
+                    umap_kwargs = {"n_jobs": -1,
+                                   "verbose": 1,
+                                   "n_components": min(self.fastText_dim,
+                                                       len(df.index) - 1),
+                                   "metric": "cosine",
+                                   "init": 'spectral',
+                                   "random_state": 42,
+                                   "transform_seed": 42,
+                                   "n_neighbors": 5,
+                                   "min_dist": 0.01}
+                    try:
+                        ft_vec_red = umap.UMAP(**umap_kwargs).fit_transform(ft_vec)
+                        df["VEC"] = [x for x in ft_vec_red]
+                    except Exception as e:
+                        red(f"Error when computing UMAP reduction, using all vectors: {e}")
+                        df["VEC"] = [x for x in ft_vec]
+                    finally:
+                        df["VEC_FULL"] = [x for x in ft_vec]
+                
+                if self.fastText_dim_algo == "PCA":
+                    print("Reducing dimensions to {self.fastText_dim} using PCA")
+                    if self.fastText_dim > ft_vec.shape[1]:
+                        red(f"Not enough dimensions: {ft_vec.shape[1]} < {self.fastText_dim}")
+                        df["VEC"] = [x for x in ft_vec]
+                        df["VEC_FULL"] = [x for x in ft_vec]
+                    else:
+                        try:
+                            pca = PCA(n_components=self.fastText_dim, random_state=42)
+                            ft_vec_red = pca.fit_transform(ft_vec)
+                            df["VEC"] = [x for x in ft_vec_red]
+                        except Exception as e:
+                            red(f"Error when computing PCA reduction, using all vectors: {e}")
+                            df["VEC"] = [x for x in ft_vec]
+                        df["VEC_FULL"] = [x for x in ft_vec]
 
             if store_vectors:
                 def storing_vectors(df):
