@@ -495,7 +495,7 @@ threads of size {batchsize})")
         if self.highjack_due_query is not None:
             red("Highjacking due card list:")
             query = self.highjack_due_query
-            red(" >  '" + query)
+            red(" >  '" + query + "'")
             due_cards = self._ankiconnect(action="findCards", query=query)
             whi(f"Found {len(due_cards)} cards...\n")
 
@@ -503,7 +503,7 @@ threads of size {batchsize})")
             yel("Getting due card list...")
             query = f"\"deck:{self.deckname}\" is:due is:review -is:learn \
 -is:suspended -is:buried -is:new -rated:1"
-            whi(" >  '" + query)
+            whi(" >  '" + query + "'")
             due_cards = self._ankiconnect(action="findCards", query=query)
             whi(f"Found {len(due_cards)} due cards...\n")
 
@@ -511,7 +511,7 @@ threads of size {batchsize})")
             yel("Getting due card list...")
             query = f"\"deck:{self.deckname}\" is:due is:review -is:learn \
 -is:suspended -is:buried -is:new -rated:1"
-            whi(" >  '" + query)
+            whi(" >  '" + query + "'")
             due_cards = self._ankiconnect(action="findCards", query=query)
             whi(f"Found {len(due_cards)} reviews...\n")
 
@@ -519,14 +519,14 @@ threads of size {batchsize})")
             yel("Getting is:learn card list...")
             query = f"\"deck:{self.deckname}\" is:learn -is:suspended is:due \
 -rated:1 -rated:2:1 -rated:2:2"
-            whi(" >  '" + query)
+            whi(" >  '" + query + "'")
             due_cards = self._ankiconnect(action="findCards", query=query)
             whi(f"Found {len(due_cards)} learning cards...\n")
 
         elif self.task == "index":
             yel("Getting all cards from deck...")
             query = f"\"deck:{self.deckname}\" -is:suspended"
-            whi(" >  '" + query)
+            whi(" >  '" + query + "'")
             due_cards = self._ankiconnect(action="findCards", query=query)
             whi(f"Found {len(due_cards)} cards...\n")
 
@@ -534,7 +534,7 @@ threads of size {batchsize})")
         if self.highjack_rated_query is not None:
             red("Highjacking rated card list:")
             query = self.highjack_rated_query
-            red(" >  '" + query)
+            red(" >  '" + query + "'")
             rated_cards = self._ankiconnect(action="findCards", query=query)
             red(f"Found {len(rated_cards)} cards...\n")
         elif self.rated_last_X_days != 0:
@@ -542,7 +542,7 @@ threads of size {batchsize})")
 {self.rated_last_X_days} days...")
             query = f"\"deck:{self.deckname}\" rated:{self.rated_last_X_days} \
 -is:suspended -is:buried"
-            whi(" >  '" + query)
+            whi(" >  '" + query + "'")
             rated_cards = self._ankiconnect(action="findCards",
                                             query=query)
             whi(f"Found {len(rated_cards)} cards...\n")
