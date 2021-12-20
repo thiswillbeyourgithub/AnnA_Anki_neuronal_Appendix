@@ -905,11 +905,10 @@ adjust formating issues:")
                 return helper
 
             def vec(string):
-                return normalize(np.sum([mvec(x)
-                                         for x in preprocessor(string)
-                                         if x != ""],
-                                        axis=0).reshape(1, -1),
-                                 norm='l2')
+                return np.sum([mvec(x)
+                               for x in preprocessor(string)
+                               if x != ""
+                               ], axis=0)
 
             alphanum = re.compile(r"[^ _\w]|\d|_|\b\w\b")
             mvec = memoize(ft.get_word_vector)
@@ -919,6 +918,8 @@ adjust formating issues:")
             for i, x in enumerate(
                     tqdm(df.index, desc="Vectorizing using fastText")):
                 ft_vec[i] = vec(str(df.loc[x, "text"]))
+
+            ft_vec = normalize(ft_vec, norm='l2')
 
             if self.fastText_dim is None or self.fastText_dim_algo is None:
                 yel("Not doing dimension reduction.")
