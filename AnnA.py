@@ -882,6 +882,7 @@ adjust formating issues:")
             time.sleep(0.5)
 
         if self.vectorizer == "fastText":
+            alphanum = re.compile(r"[^ _\w]|\d|_|\b\w\b")
 
             def preprocessor(string):
                 """
@@ -905,14 +906,14 @@ adjust formating issues:")
                     return memo[x]
                 return helper
 
+            mvec = memoize(ft.get_word_vector)
+
             def vec(string):
                 return np.sum([mvec(x)
                                for x in preprocessor(string)
                                if x != ""
                                ], axis=0)
 
-            alphanum = re.compile(r"[^ _\w]|\d|_|\b\w\b")
-            mvec = memoize(ft.get_word_vector)
             ft_vec = np.zeros(shape=(len(df.index), ft.get_dimension()), dtype=float)
             for i, x in enumerate(
                     tqdm(df.index, desc="Vectorizing using fastText")):
