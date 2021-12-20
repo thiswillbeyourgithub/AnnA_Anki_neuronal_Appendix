@@ -112,7 +112,7 @@ AnnA was made with usability in mind. With the right arguments, you can have to 
  * `fastText_dim` number of dimensions to keep after doing a UMAP or PCA reduction. This can speed up the computation somewhat, but with reduced precision. Computing the UMAP projection is in itself an additional slow step. Default is `100`. The original number of dimension is 300. Set to `None` to disable dimension reduction.
  * `fastText_dim_algo` can be "PCA", "UMAP" or None. Specified the algorithm used for the optionnal dimension reduction. Note that UMAP usage is experimental and slow.
  * `fastText_lang` language of the fastText model to load or download. Default is "en".
- * `fastText_model_name` name of the fastText model to load. Bypasses fastText_lang. Useful if you created a smaller fastText model. Default is None.
+ * `fastText_model_name` name of a fastText model to load. Bypasses fastText_lang. Useful if you created a smaller fastText model. Default is `None`.
  * `TFIDF_dim` the number of dimension to keep using [SVD](https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.TruncatedSVD.html). Default is `100`, you cannot disable dimension reduction for TF_IDF because that would result in a sparse matrix. AnnA will automatically try a higher number of dimension if needed, up to 2000.
  * `TFIDF_stem` default to `True`. Wether to enable stemming of words. Currently the PorterStemmer is used, and was made for English but can still be useful for some other languages. Keep in mind that this is the longest step when formatting text.
 

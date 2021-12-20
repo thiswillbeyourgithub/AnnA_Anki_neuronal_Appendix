@@ -157,7 +157,7 @@ class AnnA:
                  vectorizer="TFIDF",  # can be "TFIDF" or "fastText"
                  fastText_dim=100,
                  fastText_dim_algo="PCA", # can be "PCA" or "UMAP" or None
-                 fastText_model_name=None,
+                 fastText_model_name=None,  # if you want to force a specific model
                  fastText_lang="en",
                  TFIDF_dim=100,
                  TFIDF_stem=False,
