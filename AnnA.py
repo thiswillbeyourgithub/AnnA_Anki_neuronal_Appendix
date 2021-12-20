@@ -1079,13 +1079,11 @@ retrying until above 70% or 2000 dimensions)")
         print("Computing mean distance...")
         # ignore the diagonal of the distance matrix to get a sensible mean
         # value then scale the matrix:
-        df_dist_nan = self.df_dist.copy()
-        df_dist_nan[np.isclose(df_dist_nan, 0)] = np.nan
-        mean_dist = np.nanmean(df_dist_nan.values.flatten())
-        std_dist = np.nanstd(df_dist_nan.values.flatten())
+        mean_dist = np.nanmean(self.df_dist[self.df_dist != 0])
+        std_dist = np.nanstd(self.df_dist[self.df_dist != 0])
         yel(f"Mean distance: {mean_dist}, std: {std_dist}\n")
-        self.df_dist /= mean_dist
-#        self.df_dist[~np.isnan(df_dist_nan)] /= std_dist
+#        self.df_dist -= mean_dist
+#        self.df_dist /= std_dist
 
         # showing to user which cards are similar and different,
         # for troubleshooting
