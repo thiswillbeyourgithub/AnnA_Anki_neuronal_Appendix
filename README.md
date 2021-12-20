@@ -131,7 +131,6 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 
 ## TODO
 *More or less by order of urgency*
-* find a way to load fasttext only once, probably using another file with a class that contains metadata and is loaded only once
 * always compare to relative overdueness
 * check that docstrings are up to date
 

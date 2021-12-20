@@ -102,16 +102,25 @@ def asynchronous_importer(vectorizer, task, fastText_lang, fastText_model_name):
     have some more time to load
     """
     if vectorizer == "fastText" or task == "index":
-        if "ft" not in globals():
+        if "ft" in globals():
+            if ft.model_name in [fastText_model_name,
+                                 f"cc.{fastText_lang}.300.bin"]:
+                reload_ft = False
+            else:
+                reload_ft = True
+
+        if ("ft" not in globals()) or (reload_ft is True):
             global fastText, ft
             import fasttext as fastText
             import fasttext.util
             try:
                 fasttext.util.download_model(fastText_lang, if_exists='ignore')
                 if fastText_model_name is None:
-                    ft = fastText.load_model(f"cc.{fastText_lang[0:2]}.300.bin")
+                    ft = fastText.load_model(f"cc.{fastText_lang}.300.bin")
+                    ft.model_name = f"cc.{fastText_lang}.300.bin"
                 else:
                     ft = fastText.load_model(fastText_model_name)
+                    ft.model_name = fastText_model_name
             except Exception as e:
                 red(f"Couldn't load fastText model: {e}")
                 raise SystemExit()
@@ -1781,7 +1790,7 @@ plotting...")
             import fastText.util
             try:
                 fastText.util.download_model(fastText_lang, if_exists='ignore')
-                ft = fastText.load_model(f"cc.{fastText_lang[0:2]}.300.bin")
+                ft = fastText.load_model(f"cc.{fastText_lang}.300.bin")
             except Exception as e:
                 red(f"Couldn't load fastText model: {e}")
                 raise SystemExit()
