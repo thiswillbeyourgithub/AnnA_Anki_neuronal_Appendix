@@ -1113,8 +1113,7 @@ retrying until above 70% or 2000 dimensions)")
             mins = np.where(self.df_dist.values == low)
             mins = [x for x in zip(mins[0], mins[1]) if x[0] != x[1]]
             random.shuffle(mins)
-            for x in range(len(mins)):
-                pair = mins[x]
+            for pair in mins: 
                 text_1 = str(df.loc[df.index[pair[0]]].text)
                 text_2 = str(df.loc[df.index[pair[1]]].text)
                 if text_1 != text_2:
