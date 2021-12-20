@@ -113,6 +113,7 @@ AnnA was made with usability in mind. With the right arguments, you can have to 
  * `fastText_dim_algo` can be "PCA", "UMAP" or None. Specified the algorithm used for the optionnal dimension reduction. Note that UMAP usage is experimental and slow.
  * `fastText_lang` language of the fastText model to load or download. Default is `"en"`.
  * `fastText_model_name` name of a fastText model to load. Bypasses fastText_lang. Useful if you created a smaller fastText model. Default is `None`.
+ * `fastText_correction_vector` can be any sentence or `None`. Default is `None`. Used to orient the fastText matrix somewhat. For example, for a medical anatomy deck, if you set it to "medical anatomy" AnnA will convert this sentence to a vector and add it to the vector of each card. This will reduce the noise by prioritizing these directions in the dataset to pick up cards that contain too many contextual words relative to medical anatomy words. Note that this is experimental.
  * `TFIDF_dim` the number of dimension to keep using [SVD](https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.TruncatedSVD.html). Default is `100`, you cannot disable dimension reduction for TF_IDF because that would result in a sparse matrix. AnnA will automatically try a higher number of dimension if needed, up to 2000.
  * `TFIDF_stem` default to `True`. Wether to enable stemming of words. Currently the PorterStemmer is used, and was made for English but can still be useful for some other languages. Keep in mind that this is the longest step when formatting text.
 
@@ -140,7 +141,6 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * implement task "filter_learning_cards", by burying the cards not in the original deck
 
 * fix searching + open the browser and add tags, then ask to sort by tags
-* implement ability to set a correction vector (ex: favor cards closer to "neuroanatomy"), could actually just be a card ID to favor
 * add a link to reduce the size of the fasttext model
 
 * create a search algorithm that expands your query by fetching synonyms

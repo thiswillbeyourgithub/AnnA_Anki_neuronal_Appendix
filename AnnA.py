@@ -159,6 +159,7 @@ class AnnA:
                  fastText_dim_algo="PCA", # can be "PCA" or "UMAP" or None
                  fastText_model_name=None,  # if you want to force a specific model
                  fastText_lang="en",
+                 fastText_correction_vector=None,  # for example "medical"
                  TFIDF_dim=100,
                  TFIDF_stem=False,
                  TFIDF_tokenize=True,
@@ -212,6 +213,7 @@ class AnnA:
         self.fastText_dim = fastText_dim
         self.fastText_dim_algo = fastText_dim_algo.upper()
         self.fastText_model_name = fastText_model_name
+        self.fastText_correction_vector = fastText_correction_vector
         self.TFIDF_dim = TFIDF_dim
         self.stopwords_lang = stopwords_lang
         self.TFIDF_stem = TFIDF_stem
@@ -919,12 +921,19 @@ adjust formating issues:")
                     tqdm(df.index, desc="Vectorizing using fastText")):
                 ft_vec[i] = vec(str(df.loc[x, "text"]))
 
+            if self.fastText_correction_vector:
+                norm_vec = vec(self.fastText_correction_vector)
+                norm_vec = normalize(norm_vec.reshape(-1, 1),
+                                     norm='l1').reshape(1, -1)
+                ft_vec = ft_vec + norm_vec
+
             # adding the mean of each dimension to each row's corresonding
             # dimension. The idea is to avoid penalizing cards that have
             # few words dealing with the overall context of the deck
             # for example "where is the superior colliculi ?" has one third
             # of its words being "where".
             ft_vec = ft_vec + np.median(ft_vec, axis=0)
+
             ft_vec = normalize(ft_vec, norm='l2')
 
             if self.fastText_dim is None or self.fastText_dim_algo is None:
