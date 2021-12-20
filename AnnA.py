@@ -153,13 +153,13 @@ class AnnA:
                  check_database=False,
 
                  # vectorization:
+                 stopwords_lang=["english", "french"],
                  vectorizer="TFIDF",  # can be "TFIDF" or "fastText"
                  fastText_dim=100,
                  fastText_dim_algo="PCA", # can be "PCA" or "UMAP" or None
                  fastText_model_name=None,
                  fastText_lang="en",
                  TFIDF_dim=100,
-                 TFIDF_stopw_lang=["english", "french"],
                  TFIDF_stem=False,
                  TFIDF_tokenize=True,
 
@@ -213,7 +213,7 @@ class AnnA:
         self.fastText_dim_algo = fastText_dim_algo.upper()
         self.fastText_model_name = fastText_model_name
         self.TFIDF_dim = TFIDF_dim
-        self.TFIDF_stopw_lang = TFIDF_stopw_lang
+        self.stopwords_lang = stopwords_lang
         self.TFIDF_stem = TFIDF_stem
         self.TFIDF_tokenize = TFIDF_tokenize
         self.task = task
@@ -266,7 +266,7 @@ values. {e}")
 
         try:
             stops = []
-            for lang in self.TFIDF_stopw_lang:
+            for lang in self.stopwords_lang:
                 stops += stopwords.words(lang)
             if self.TFIDF_tokenize:
                 temp = []
