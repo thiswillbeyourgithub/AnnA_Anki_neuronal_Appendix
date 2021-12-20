@@ -1073,15 +1073,10 @@ retrying until above 70% or 2000 dimensions)")
         df = self.df
 
         print("\nComputing distance matrix on all available cores...")
-        df_temp = pd.DataFrame(
-            columns=["vec_"+str(x+1)
-                     for x in range(len(df.loc[df.index[0], input_col]))],
-            data=[x[0:] for x in df[input_col].values])
-
         self.df_dist = pd.DataFrame(columns=df.index,
                                     index=df.index,
                                     data=pairwise_distances(
-                                        df_temp,
+                                        [x for x in df[input_col]],
                                         n_jobs=-1,
                                         metric="cosine"))
 
