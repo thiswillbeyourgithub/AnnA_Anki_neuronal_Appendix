@@ -1533,11 +1533,7 @@ as opti_rev_order!")
             algo = "Agglomerative Clustering"
         print(f"Clustering using {algo}...")
 
-        df_temp = pd.DataFrame(
-            columns=["V"+str(x)
-                     for x in range(len(df.loc[df.index[0], input_col]))],
-            data=[x[0:] for x in df[input_col]])
-        df[cluster_col] = clust.fit_predict(df_temp)
+        df[cluster_col] = clust.fit_predict([x[0:] for x in df[input_col])
 
         cluster_list = sorted(list(set(list(df[cluster_col]))))
         cluster_nb = len(cluster_list)
@@ -1713,22 +1709,16 @@ as opti_rev_order!")
                 data = [x[0:] for x in df.loc[specific_index, coordinate_col]]
             else:
                 data = [x[0:] for x in df[coordinate_col]]
-            df_temp = pd.DataFrame(
-                columns=["V"+str(x)
-                         for x in
-                         range(len(df.loc[df.index[0],
-                                   coordinate_col]))
-                         ], data=data)
             print(f"Reduce to 2 dimensions using {reduce_dim} before \
 plotting...")
         if reduce_dim.lower() in "pca":
             pca_2D = PCA(**pca_kwargs_deploy)
-            res = pca_2D.fit_transform(df_temp).T
+            res = pca_2D.fit_transform(data).T
             x_coor = res[0]
             y_coor = res[1]
         elif reduce_dim.lower() in "umap":
             import umap.umap_
-            res = umap.UMAP(**umap_kwargs_deploy).fit_transform(df_temp).T
+            res = umap.UMAP(**umap_kwargs_deploy).fit_transform(data).T
             x_coor = res[0]
             y_coor = res[1]
         elif reduce_dim is None:

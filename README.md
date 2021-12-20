@@ -136,7 +136,6 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * check that docstrings are up to date
 
 * implement index scoring
-* replace all df_temp by an on-memory numpy array (faster)
 * add a "deck_settings" mode that fetches the number of max reviews per day and use it as "target_deck_size"
 * implement task "filter_learning_cards", by burying the cards not in the original deck
 
