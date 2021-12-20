@@ -927,7 +927,7 @@ adjust formating issues:")
                                      norm='l1').reshape(1, -1)
                 ft_vec = ft_vec + norm_vec
 
-            # adding the mean of each dimension to each row's corresonding
+            # adding the median of each dimension to each row's corresonding
             # dimension. The idea is to avoid penalizing cards that have
             # few words dealing with the overall context of the deck
             # for example "where is the superior colliculi ?" has one third
