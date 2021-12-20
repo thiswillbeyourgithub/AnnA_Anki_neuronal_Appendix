@@ -222,7 +222,7 @@ class AnnA:
         # args sanity checks
         if isinstance(self.target_deck_size, int):
             self.target_deck_size = str(self.target_deck_size)
-        assert TFIDF_stem + TFIDF_tokenize in [0, 1]
+        assert TFIDF_stem + TFIDF_tokenize != 2
         assert reference_order in ["lowest_interval", "relative_overdueness",
                                    "order_added"]
         assert task in ["filter_review_cards", "index",
