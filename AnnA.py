@@ -273,6 +273,7 @@ values. {e}")
                 [temp.extend(tokenizer.tokenize(x)) for x in stops]
                 stops.extend(temp)
             elif self.TFIDF_stem:
+                global ps
                 ps = PorterStemmer()
                 stops += [ps.stem(x) for x in stops]
             self.stops = list(set(stops))
