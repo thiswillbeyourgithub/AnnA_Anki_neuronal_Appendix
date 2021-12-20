@@ -912,9 +912,7 @@ adjust formating issues:")
 
             alphanum = re.compile(r"[^ _\w]|\d|_|\b\w\b")
             mvec = memoize(ft.get_word_vector)
-            ft_vec = np.empty(shape=(len(df.index), ft.get_dimension()),
-                              dtype=float)
-
+            ft_vec = np.zeros(shape=(len(df.index), ft.get_dimension()), dtype=float)
             for i, x in enumerate(
                     tqdm(df.index, desc="Vectorizing using fastText")):
                 ft_vec[i] = vec(str(df.loc[x, "text"]))
