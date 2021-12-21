@@ -867,7 +867,7 @@ adjust formating issues:")
                 ending = "...\n"
             else:
                 ending = "\n"
-            print(f" *{i}: {str(self.df.loc[i, 'text'])[0:max_length]}",
+            print(f" * {i} : {str(self.df.loc[i, 'text'])[0:max_length]}",
                   end=ending)
         pd.reset_option('display.max_colwidth')
         print("\n")
@@ -974,7 +974,7 @@ adjust formating issues:")
                         df["VEC_FULL"] = [x for x in ft_vec]
                 
                 if self.fastText_dim_algo == "PCA":
-                    print("Reducing dimensions to {self.fastText_dim} using PCA")
+                    print(f"Reducing dimensions to {self.fastText_dim} using PCA")
                     if self.fastText_dim > ft_vec.shape[1]:
                         red(f"Not enough dimensions: {ft_vec.shape[1]} < {self.fastText_dim}")
                         df["VEC"] = [x for x in ft_vec]
@@ -1120,8 +1120,7 @@ retrying until above 70% or 2000 dimensions)")
                 break
             lowest_values.append(self.df_dist.values[self.df_dist.values > max(
                         lowest_values)].min())
-            low = lowest_values[-1]
-            mins = np.where(self.df_dist.values == low)
+            mins = np.where(self.df_dist.values == lowest_values[-1])
             mins = [x for x in zip(mins[0], mins[1]) if x[0] != x[1]]
             random.shuffle(mins)
             for pair in mins: 
@@ -1542,7 +1541,7 @@ as opti_rev_order!")
             algo = "Agglomerative Clustering"
         print(f"Clustering using {algo}...")
 
-        df[cluster_col] = clust.fit_predict([x[0:] for x in df[input_col])
+        df[cluster_col] = clust.fit_predict([x[0:] for x in df[input_col]])
 
         cluster_list = sorted(list(set(list(df[cluster_col]))))
         cluster_nb = len(cluster_list)
