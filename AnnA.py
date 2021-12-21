@@ -1,3 +1,4 @@
+import sys
 import logging
 import gc
 import pickle
@@ -102,6 +103,7 @@ def asynchronous_importer(vectorizer, task, fastText_lang, fastText_model_name):
     have some more time to load
     """
     if vectorizer == "fastText" or task == "index":
+        global fastText, ft
         if "ft" in globals():
             if ft.model_name in [fastText_model_name,
                                  f"cc.{fastText_lang}.300.bin"]:
@@ -110,7 +112,6 @@ def asynchronous_importer(vectorizer, task, fastText_lang, fastText_model_name):
                 reload_ft = True
 
         if ("ft" not in globals()) or (reload_ft is True):
-            global fastText, ft
             import fasttext as fastText
             import fasttext.util
             try:
