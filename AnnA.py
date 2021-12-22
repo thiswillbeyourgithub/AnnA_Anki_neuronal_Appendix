@@ -515,15 +515,7 @@ threads of size {batchsize})")
             due_cards = self._ankiconnect(action="findCards", query=query)
             whi(f"Found {len(due_cards)} cards...\n")
 
-        elif self.task == "filter_review_cards":
-            yel("Getting due card list...")
-            query = f"\"deck:{self.deckname}\" is:due is:review -is:learn \
--is:suspended -is:buried -is:new -rated:1"
-            whi(" >  '" + query + "'")
-            due_cards = self._ankiconnect(action="findCards", query=query)
-            whi(f"Found {len(due_cards)} due cards...\n")
-
-        elif self.task == "bury_excess_review_cards":
+        elif self.task in ["filter_review_cards", "bury_excess_review_cards"]:
             yel("Getting due card list...")
             query = f"\"deck:{self.deckname}\" is:due is:review -is:learn \
 -is:suspended -is:buried -is:new -rated:1"
