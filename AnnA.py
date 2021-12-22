@@ -525,7 +525,7 @@ threads of size {batchsize})")
 
         elif self.task == "bury_excess_learning_cards":
             yel("Getting is:learn card list...")
-            query = f"\"deck:{self.deckname}\" is:learn -is:suspended is:due \
+            query = f"\"deck:{self.deckname}\" is:due is:learn -is:suspended \
 -rated:1 -rated:2:1 -rated:2:2"
             whi(" >  '" + query + "'")
             due_cards = self._ankiconnect(action="findCards", query=query)
