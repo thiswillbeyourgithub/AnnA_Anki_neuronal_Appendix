@@ -661,7 +661,7 @@ threads of size {batchsize})")
 
         # cloze
         text = re.sub(r"{{c\d+?::", "", text)
-        text = re.sub("{{c|{{|}}|::", " ", text)
+        text = re.sub("{{c|{{|}}|::", "", text)
 
         # misc
         text = re.sub(r'[a-zA-Z0-9-]+\....', " ", text)  # media file name
