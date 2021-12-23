@@ -1170,11 +1170,6 @@ retrying until above 80% or 2000 dimensions)")
         display_stats = True
         use_index_of_score = False
 
-        if w1 == 0:
-            # if ignoring due order, df["ref"] value is at least needed to
-            # show improvement ratio at the end
-            reference_order = "relative_overdueness"
-
         if reference_order == "lowest_interval":
             # alter the value from rated cards as they will not be useful
             df.loc[rated, "due"] = np.median(df.loc[due, "due"].values)
@@ -1213,10 +1208,6 @@ retrying until above 80% or 2000 dimensions)")
             # center and scale
             ro_cs = StandardScaler().fit_transform(ro.T)
             df["ref"] = ro_cs
-
-        if w1 == 0:
-            df["relative_overdueness"] = df["ref"]
-            df["ref"] = 0
 
         assert len([x for x in rated if df.loc[x, "status"] != "rated"]) == 0
         red(f"\nCards identified as rated in the past {self.rated_last_X_days} days: \
@@ -1278,6 +1269,9 @@ lowest value.")
                 whi("\nScore stats (adjusted):")
                 if w1 != 0:
                     whi(f"Reference: {(w1*df['ref']).describe()}\n")
+                else:
+                    whi(f"Not showing statistics of the reference score, you \
+set its adjustment weight to 0")
                 val = pd.DataFrame(data=w2*self.df_dist.values.flatten(),
                                    columns=['distance matrix']).describe(include='all')
                 whi(f"Distance: {val}\n\n")
@@ -1310,27 +1304,28 @@ lowest value.")
         assert len(indQUEUE) == len(rated) + len(queue)
 
         try:
-            red("Sum distance of the new queue:")
-            spread_queue = np.sum(self.df_dist.loc[queue, queue].values.flatten())
+            red("Median distance of the new queue:")
+            spread_queue = np.median(self.df_dist.loc[queue, queue].values.flatten())
             yel(spread_queue)
 
-            red("Sum distance without AnnA:")
-            if w1 != 0:
-                col = "ref"
+            if w1 == 0:
+                yel("Not showing distance without AnnA because you set \
+the adjustment weight of the reference score to 0.")
             else:
-                col = "relative_overdueness"
-            woAnnA = [x
-                      for x in df.sort_values(
-                          col, ascending=True).index.tolist()
-                      if x in self.due_cards][0:len(queue)]
-            spread_else = np.sum(self.df_dist.loc[woAnnA, woAnnA].values.flatten())
-            yel(spread_else)
+                red("Median distance of the whole queue if you had not used \
+AnnA:")
+                woAnnA = [x
+                          for x in df.sort_values(
+                              "ref", ascending=True).index.tolist()
+                          if x in self.due_cards]
+                spread_else = np.median(self.df_dist.loc[woAnnA, woAnnA].values.flatten())
+                yel(spread_else)
 
-            red(f"Cards in common: {len(set(queue)&set(woAnnA))} in a queue of {len(queue)} cards.")
+                #red(f"Cards in common: {len(set(queue)&set(woAnnA))} in a queue of {len(queue)} cards.")
 
-            ratio = round(spread_queue / spread_else, 3)
-            red("Improvement ratio:")
-            red(pyfiglet.figlet_format(str(ratio)))
+                ratio = round(spread_queue / spread_else, 3)
+                red("Improvement ratio:")
+                red(pyfiglet.figlet_format(str(ratio)))
 
         except Exception as e:
             red(f"\nException: {e}")
