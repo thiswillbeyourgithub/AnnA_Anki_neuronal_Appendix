@@ -691,6 +691,7 @@ threads of size {batchsize})")
                          text)
 
         # misc
+        text = text.replace("'", " ") # used for french apostrophe etc
         text = text.replace(" : ", ": ")
         text = " ".join(text.split())  # multiple spaces
 
