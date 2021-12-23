@@ -131,12 +131,14 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 
 ## TODO
 *More or less by order of urgency*
-* always compare to relative overdueness
-* check that docstrings are up to date
+* disable improvement ratio when w1 == 0
+* use combinator when computing improvement ratio
+* allow to use several acronym dic, basically implement ability to put a list of file, don't forget to alter the example too
+* correction vector should be used when computing scores: bonus to be close to this vector + rename it to "desired_topic" + "penalized_topic"
 
+* check that docstrings are up to date
 * implement index scoring
 * add a "deck_settings" mode that fetches the number of max reviews per day and use it as "target_deck_size"
-* implement task "filter_learning_cards", by burying the cards not in the original deck
 
 * fix searching + open the browser and add tags, then ask to sort by tags
 * add a link to reduce the size of the fasttext model
