@@ -655,7 +655,7 @@ threads of size {batchsize})")
         # OCR
         if self.keep_ocr:
             # keep image title (usually OCR)
-            text = re.sub("title=(\".*?\")", "> Caption: '\\1' <",
+            text = re.sub("title=(\".*?\")", "> Caption:___\\1___ <",
                           text, flags=re.M | re.DOTALL)
             text = text.replace('Caption: \'""\'', "")
 
@@ -1866,7 +1866,7 @@ be used.")
         """
         full_text = " ".join(self.df["text"].tolist())
         if exclude_OCR_text:
-            full_text = re.sub(" Caption: '.*?' ", " ", full_text,
+            full_text = re.sub(" Caption:___.*?___ ", " ", full_text,
                                flags=re.MULTILINE | re.DOTALL)
         matched = list(set(re.findall("[A-Z]{3,}", full_text)))
 
