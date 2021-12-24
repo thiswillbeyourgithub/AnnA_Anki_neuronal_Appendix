@@ -977,7 +977,7 @@ adjust formating issues:")
                         try:
                             pca = PCA(n_components=self.fastText_dim, random_state=42)
                             ft_vec_red = pca.fit_transform(ft_vec)
-                            evr = round(sum(pca.explained_variance_ratio_), 1)
+                            evr = round(sum(pca.explained_variance_ratio_) * 100, 1)
                             whi(f"Explained variance ratio after PCA on fastText: {evr}%")
                             df["VEC"] = [x for x in ft_vec_red]
                         except Exception as e:
