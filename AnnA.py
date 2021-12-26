@@ -911,10 +911,10 @@ adjust formating issues:")
                     return memo[x]
                 return helper
 
-            mvec = memoize(ft.get_word_vector)
+            memoized_vec = memoize(ft.get_word_vector)
 
             def vec(string):
-                return np.sum([mvec(x)
+                return np.sum([memoized_vec(x)
                                for x in preprocessor(string)
                                if x != ""
                                ], axis=0)
