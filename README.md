@@ -139,6 +139,7 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * check that docstrings are up to date
 * implement index scoring
 * add a "deck_settings" mode that fetches the number of max reviews per day and use it as "target_deck_size"
+* implement task "optimize_filtered_deck" to optimize the order of an already existing filtered deck without burying anything
 
 * fix searching + open the browser and add tags, then ask to sort by tags
 * add a link to reduce the size of the fasttext model
