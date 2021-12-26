@@ -931,17 +931,18 @@ adjust formating issues:")
                                      norm='l1').reshape(1, -1)
                 ft_vec = ft_vec + norm_vec
 
-            # adding the median of each dimension to each row's corresonding
+            # adding the median of each dimension to each row's corresponding
             # dimension. The idea is to avoid penalizing cards that have
             # few words dealing with the overall context of the deck
             # for example "where is the superior colliculi ?" has one third
-            # of its words being "where".
+            # of its words being "where", and only one word being strictly
+            # medical.
             ft_vec = ft_vec + np.median(ft_vec, axis=0)
 
             ft_vec = normalize(ft_vec, norm='l2')
 
             if self.fastText_dim is None or self.fastText_dim_algo is None:
-                yel("Not doing dimension reduction.")
+                yel("Not applying dimension reduction.")
                 df["VEC"] = [x for x in ft_vec]
                 df["VEC_FULL"] = [x for x in ft_vec]
             else:
