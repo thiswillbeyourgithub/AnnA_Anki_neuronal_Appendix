@@ -949,25 +949,25 @@ adjust formating issues:")
                 if self.fastText_dim_algo == "UMAP":
                     print(f"Reducing dimensions to {self.fastText_dim} using UMAP")
                     red("(WARNING: EXPERIMENTAL FEATURE)")
-                    import umap.umap_
-                    umap_kwargs = {"n_jobs": -1,
-                                   "verbose": 1,
-                                   "n_components": min(self.fastText_dim,
-                                                       len(df.index) - 1),
-                                   "metric": "cosine",
-                                   "init": 'spectral',
-                                   "random_state": 42,
-                                   "transform_seed": 42,
-                                   "n_neighbors": 5,
-                                   "min_dist": 0.01}
                     try:
+                        import umap.umap_
+                        umap_kwargs = {"n_jobs": -1,
+                                       "verbose": 1,
+                                       "n_components": min(self.fastText_dim,
+                                                           len(df.index) - 1),
+                                       "metric": "cosine",
+                                       "init": 'spectral',
+                                       "random_state": 42,
+                                       "transform_seed": 42,
+                                       "n_neighbors": 5,
+                                       "min_dist": 0.01}
                         ft_vec_red = umap.UMAP(**umap_kwargs).fit_transform(ft_vec)
                         df["VEC"] = [x for x in ft_vec_red]
-                    except Exception as e:
-                        red(f"Error when computing UMAP reduction, using all vectors: {e}")
-                        df["VEC"] = [x for x in ft_vec]
-                    finally:
                         df["VEC_FULL"] = [x for x in ft_vec]
+                    except Exception as e:
+                        red(f"Error when computing UMAP reduction, using PCA \
+as fallback: {e}")
+                        self.fastText_dim_algo = "PCA"
                 
                 if self.fastText_dim_algo == "PCA":
                     print(f"Reducing dimensions to {self.fastText_dim} using PCA")
