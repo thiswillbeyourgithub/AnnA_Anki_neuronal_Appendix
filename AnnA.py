@@ -923,6 +923,7 @@ adjust formating issues:")
             for i, x in enumerate(
                     tqdm(df.index, desc="Vectorizing using fastText")):
                 ft_vec[i] = vec(str(df.loc[x, "text"]))
+            ft_vec = normalize(ft_vec, norm='l2')
 
             if self.fastText_correction_vector:
                 norm_vec = vec(self.fastText_correction_vector)
