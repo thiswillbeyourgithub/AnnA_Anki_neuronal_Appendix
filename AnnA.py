@@ -778,10 +778,14 @@ threads of size {batchsize})")
 
                 # add tags to comb_text
                 tags = self.df.loc[index, "tags"].split(" ")
-                spacers_reg = re.compile("::|_|-|/")
+                spacers_reg = re.compile("_|-|/")
                 for t in tags:
                     if "AnnA" not in t:
-                        comb_text += " " + re.sub(spacers_reg, " ", t)
+                        t = re.sub(spacers_reg,  # replaces _ - and /
+                                   " ",  # by a space
+                                   " ".join(t.split("::")[-2:]))
+                        # and keep only the last 2 levels of each tags
+                        comb_text += " " + t
 
                 with lock:
                     self.df.at[index, "comb_text"] = comb_text
