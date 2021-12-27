@@ -1218,6 +1218,7 @@ retrying until above 80% or 2000 dimensions)")
                     df.at[i, "ref_due"] = df.at[i, "due"]
                 if df.loc[i, "ref_due"] >= 100_000:  # timestamp instead of days
                     df.at[i, "ref_due"] = (df.at[i, "ref_due"]-anki_col_time) / 86400
+                assert df.at[i, "ref_due"] > 0
             df.loc[rated, "ref_due"] = np.median(df.loc[due, "ref_due"].values)
 
             # computing overdue
