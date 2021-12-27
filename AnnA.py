@@ -296,6 +296,8 @@ values. {e}")
         # actual execution
         self.deckname = self._check_deck(deckname, import_thread)
         yel(f"Selected deck: {self.deckname}\n")
+        self.deck_config = self._ankiconnect(action="getDeckConfig",
+                                             deck=self.deckname)
         if task == "index":
             yel(f"Task : cache vectors of deck: {self.deckname}\n")
             self.vectorizer = "fastText"
@@ -613,6 +615,7 @@ threads of size {batchsize})")
                                         ignore_index=True,
                                         sort=True
                                         ).set_index("cardId").sort_index()
+        self.df["interval"] = self.df["interval"].astype(object)
         return True
 
     def _smart_acronym_replacer(self, string, compiled, new_w):
@@ -1177,6 +1180,16 @@ retrying until above 80% or 2000 dimensions)")
         w2 = self.score_adjustment_factor[1]
         display_stats = True
         use_index_of_score = False
+
+        # setting interval to correct value for learning and relearnings:
+        steps_L = [x/1440 for x in self.deck_config["new"]["delays"]]
+        steps_RL = [x/1440 for x in self.deck_config["lapse"]["delays"]]
+        for i in df.index:
+            if df.loc[i, "type"] == 1:  # learning
+                df.at[i, "interval"] = steps_L[int(str(df.loc[i, "left"])[-3:])-1]
+            elif df.loc[i, "type"] == 3:  # relearning
+                df.at[i, "interval"] = steps_RL[int(str(df.loc[i, "left"])[-3:])-1]
+            assert df.at[i, "interval"] > 0
 
         if reference_order == "lowest_interval":
             # alter the value from rated cards as they will not be useful
