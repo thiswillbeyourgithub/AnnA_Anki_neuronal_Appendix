@@ -1191,10 +1191,12 @@ retrying until above 80% or 2000 dimensions)")
                 df.at[i, "interval"] = steps_RL[int(str(df.loc[i, "left"])[-3:])-1]
             assert df.at[i, "interval"] > 0
 
+        # setting rated cards value to median value, to avoid them
+        # skewing the dataset
+        df.loc[rated, "interval"] = np.median(df.loc[due, "interval"].values)
+
         if reference_order == "lowest_interval":
-            # alter the value from rated cards as they will not be useful
             df.loc[rated, "due"] = np.median(df.loc[due, "due"].values)
-            df.loc[rated, "interval"] = np.median(df.loc[due, "interval"].values)
 
             ivl = df['interval'].to_numpy().reshape(-1, 1)
             df["interval_cs"] = StandardScaler().fit_transform(ivl)
@@ -1203,12 +1205,12 @@ retrying until above 80% or 2000 dimensions)")
         elif reference_order == "order_added":
             df["ref"] = StandardScaler().fit_transform(df.index.argsort().reshape(-1, 1))
             df.loc[rated, "due"] = np.median(df.loc[due, "due"].values)
-            df.loc[rated, "interval"] = np.median(df.loc[due, "interval"].values)
 
         elif reference_order == "relative_overdueness":
             print("Computing relative overdueness...")
             anki_col_time = int(self._ankiconnect(
                 action="getCollectionCreationTime"))
+
             # getting due date
             for i in df.index:
                 df.at[i, "ref_due"] = df.loc[i, "odue"]
@@ -1217,7 +1219,6 @@ retrying until above 80% or 2000 dimensions)")
                 if df.loc[i, "ref_due"] >= 100_000:  # timestamp instead of days
                     df.at[i, "ref_due"] = (df.at[i, "ref_due"]-anki_col_time) / 86400
             df.loc[rated, "ref_due"] = np.median(df.loc[due, "ref_due"].values)
-            df.loc[rated, "interval"] = np.median(df.loc[due, "interval"].values)
 
             # computing overdue
             time_offset = int((time.time() - anki_col_time) / 86400)
