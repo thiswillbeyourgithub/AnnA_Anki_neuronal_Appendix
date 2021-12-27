@@ -1,4 +1,3 @@
-import sys
 import logging
 import gc
 import pickle
