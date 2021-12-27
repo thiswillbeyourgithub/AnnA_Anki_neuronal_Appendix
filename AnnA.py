@@ -1231,6 +1231,7 @@ retrying until above 80% or 2000 dimensions)")
             # center and scale
             ro_cs = StandardScaler().fit_transform(ro.T)
             df["ref"] = ro_cs
+            df.drop("ref_due", axis=1, inplace=True)
 
         assert len([x for x in rated if df.loc[x, "status"] != "rated"]) == 0
         red(f"\nCards identified as rated in the past {self.rated_last_X_days} days: \
