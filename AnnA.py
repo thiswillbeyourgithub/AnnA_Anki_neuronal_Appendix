@@ -1255,7 +1255,8 @@ retrying until above 80% or 2000 dimensions)")
             else:
                 if float(df.loc[noteCard[note], "ref"]
                          ) > float(df.loc[card, "ref"]):
-                    noteCard[note] = card
+                    noteCard[note] = card  # always keep the smallest ref
+                    # value, because it indicates urgency to review
         previous_len = len(indTODO)
         [indTODO.remove(x) for x in indTODO if x not in noteCard.values()]
         cur_len = len(indTODO)
