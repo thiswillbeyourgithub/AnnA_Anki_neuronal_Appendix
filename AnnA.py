@@ -916,7 +916,8 @@ adjust formating issues:")
                                if x != ""
                                ], axis=0)
 
-            ft_vec = np.zeros(shape=(len(df.index), ft.get_dimension()), dtype=float)
+            ft_vec = np.zeros(shape=(len(df.index), ft.get_dimension()),
+                              dtype=float)
             for i, x in enumerate(
                     tqdm(df.index, desc="Vectorizing using fastText")):
                 ft_vec[i] = vec(str(df.loc[x, "text"]))
@@ -1831,11 +1832,11 @@ be used.")
         tqdm.pandas(desc="Searching")
         try:
             df["distance"] = 0.0
+            df["distance"] = df["distance"].astype(float)
             df["distance"] = df[user_col].progress_apply(
                     lambda x: pairwise_distances(embed.reshape(1, -1),
                                                  x.reshape(1, -1),
                                                  metric="cosine"))
-            df["distance"] = df["distance"].astype("float")
         except ValueError as e:
             red(f"Error {e}: did you select column 'VEC' instead of \
 'VEC_FULL'?")
@@ -1947,7 +1948,7 @@ class CTFIDFVectorizer(TfidfTransformer):
         self._idf_diag = sparse.diags(idf, offsets=0,
                                   shape=(n_features, n_features),
                                   format='csr',
-                                  dtype=np.float64)
+                                  dtype=float)
         return self
 
     def transform(self, X: sparse.csr_matrix) -> sparse.csr_matrix:
