@@ -664,8 +664,9 @@ threads of size {batchsize})")
             text = text.replace('Caption: \'""\'', "")
 
         # cloze
-        text = re.sub(r"{{c\d+?::", "", text)
-        text = re.sub("{{c|{{|}}|::", "", text)
+        text = re.sub(r"{{c\d+?::|}}", "", text)  # remove cloze brackets
+        text = re.sub("::", " ", text)  # keep cloze hint
+        text = re.sub("{{c", "", text)  # missed cloze?
 
         # misc
         text = re.sub(r'[a-zA-Z0-9-]+\....', " ", text)  # media file name
