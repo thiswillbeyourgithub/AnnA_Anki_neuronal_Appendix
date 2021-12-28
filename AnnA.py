@@ -1192,9 +1192,13 @@ retrying until above 80% or 2000 dimensions)")
         for i in df.index:
             if df.loc[i, "type"] == 1:  # learning
                 df.at[i, "interval"] = steps_L[int(str(df.loc[i, "left"])[-3:])-1]
+                assert df.at[i, "interval"] >= 0
             elif df.loc[i, "type"] == 3:  # relearning
                 df.at[i, "interval"] = steps_RL[int(str(df.loc[i, "left"])[-3:])-1]
-            assert df.at[i, "interval"] > 0
+                assert df.at[i, "interval"] >= 0
+            if df.loc[i, "interval"] < 0:  # negative values are in seconds
+                yel(f"Changing interval: cid: {i}, ivl: {df.loc[i, 'interval']} => {df.loc[i, 'interval']/(-86400)}")
+                df.at[i, "interval"] /= -86400
 
         # setting rated cards value to median value, to avoid them
         # skewing the dataset
