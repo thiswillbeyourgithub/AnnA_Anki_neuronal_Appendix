@@ -644,9 +644,11 @@ threads of size {batchsize})")
                                                 ).replace("&nbsp", " "
                                                           ).replace("\u001F",
                                                                     " ")
-        # duplicate bold and underlined content
+        # duplicate bold and underlined content, as well as clozes
         text = re.sub("<u>(.*?)</u>", r"\1 \1", text, flags=re.M | re.DOTALL)
         text = re.sub("<b>(.*?)</b>", r"\1 \1", text, flags=re.M | re.DOTALL)
+        text = re.sub(r"{{c\d+::.*?}}", lambda x: 2 * (f"{x.group(0)} "),
+                      text, flags=re.M | re.DOTALL)
 
         # spaces
         text = re.sub("<blockquote(.*?)</blockquote>",
