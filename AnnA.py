@@ -917,7 +917,7 @@ adjust formating issues:")
                                ], axis=0)
 
             ft_vec = np.zeros(shape=(len(df.index), ft.get_dimension()),
-                              dtype=float)
+                              dtype=np.float)
             for i, x in enumerate(
                     tqdm(df.index, desc="Vectorizing using fastText")):
                 ft_vec[i] = vec(str(df.loc[x, "text"]))
