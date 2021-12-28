@@ -1354,7 +1354,7 @@ AnnA:")
                 spread_else = np.median(self.df_dist.loc[woAnnA, woAnnA].values.flatten())
                 yel(spread_else)
 
-                #red(f"Cards in common: {len(set(queue)&set(woAnnA))} in a queue of {len(queue)} cards.")
+                red(f"Cards in common: {len(set(queue)&set(woAnnA))} in a queue of {len(queue)} cards.")
 
                 ratio = round(spread_queue / spread_else, 3)
                 red("Improvement ratio:")
