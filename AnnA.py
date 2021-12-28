@@ -615,7 +615,7 @@ threads of size {batchsize})")
                                         ignore_index=True,
                                         sort=True
                                         ).set_index("cardId").sort_index()
-        self.df["interval"] = self.df["interval"].astype(object)
+        self.df["interval"] = self.df["interval"].astype(float)
         return True
 
     def _smart_acronym_replacer(self, string, compiled, new_w):
