@@ -1200,21 +1200,21 @@ retrying until above 80% or 2000 dimensions)")
                 yel(f"Changing interval: cid: {i}, ivl: {df.loc[i, 'interval']} => {df.loc[i, 'interval']/(-86400)}")
                 df.at[i, "interval"] /= -86400
 
-        # setting rated cards value to median value, to avoid them
-        # skewing the dataset
-        df.loc[rated, "interval"] = np.median(df.loc[due, "interval"].values)
+        # setting rated cards value to nan value, to avoid them
+        # skewing the dataset distribution:
+        df.loc[rated, "interval"] = np.nan
+        df.loc[rated, "due"] = np.nan
+        df["ref"] = np.nan
 
         # computing reference order:
         if reference_order == "lowest_interval":
-            df.loc[rated, "due"] = np.median(df.loc[due, "due"].values)
-
-            ivl = df['interval'].to_numpy().reshape(-1, 1)
-            df["interval_cs"] = StandardScaler().fit_transform(ivl)
-            df["ref"] = df["interval_cs"]
+            ivl = df.loc[due, 'interval'].to_numpy().reshape(-1, 1)
+            interval_cs = StandardScaler().fit_transform(ivl)
+            df.loc[due, "ref"] = interval_cs
 
         elif reference_order == "order_added":
-            df["ref"] = StandardScaler().fit_transform(df.index.argsort().reshape(-1, 1))
-            df.loc[rated, "due"] = np.median(df.loc[due, "due"].values)
+            due_order = np.argsort(due).reshape(-1, 1)
+            df[due, "ref"] = StandardScaler().fit_transform(due_order)
 
         elif reference_order == "relative_overdueness":
             print("Computing relative overdueness...")
@@ -1222,7 +1222,8 @@ retrying until above 80% or 2000 dimensions)")
                 action="getCollectionCreationTime"))
             time_offset = int((time.time() - anki_col_time) / 86400)
 
-            for i in df.index:
+            df["ref_due"] = np.nan
+            for i in due:
                 df.at[i, "ref_due"] = df.loc[i, "odue"]
                 if df.loc[i, "ref_due"] == 0:
                     df.at[i, "ref_due"] = df.at[i, "due"]
@@ -1230,19 +1231,12 @@ retrying until above 80% or 2000 dimensions)")
                     df.at[i, "ref_due"] -= anki_col_time
                     df.at[i, "ref_due"] /= 86400
                 assert df.at[i, "ref_due"] > 0
-            df.loc[rated, "ref_due"] = np.median(df.loc[due, "ref_due"].values)
-
-            # computing overdue
-            time_offset = int((time.time() - anki_col_time) / 86400)
-            overdue = (df["ref_due"] - time_offset).to_numpy().reshape(-1, 1)
-
-            # computing relative overdueness
-            ro = -1 * (df["interval"].values + 0.5) / (overdue.T + 0.5)
-
-            # center and scale
-            ro_cs = StandardScaler().fit_transform(ro.T)
-            df["ref"] = ro_cs
+            overdue = (df.loc[due, "ref_due"] - time_offset).to_numpy().reshape(-1, 1)
             df.drop("ref_due", axis=1, inplace=True)
+
+            ro = -1 * (df.loc[due, "interval"].values + 0.01) / (overdue.T + 0.01)
+            ro_cs = StandardScaler().fit_transform(ro.T)
+            df.loc[due, "ref"] = ro_cs
 
         assert len([x for x in rated if df.loc[x, "status"] != "rated"]) == 0
         red(f"\nCards identified as rated in the past {self.rated_last_X_days} days: \
@@ -1306,9 +1300,10 @@ lowest value.")
         if display_stats:
             pd.set_option('display.float_format', lambda x: '%.5f' % x)
             try:
-                whi("\nScore stats of cards (weight adjusted):")
+                whi("\nScore stats of due cards (weight adjusted):")
                 if w1 != 0:
-                    whi(f"Reference: {(w1*df['ref']).describe()}\n")
+                    whi(f"Reference score of due cards: \
+{(w1*df.loc[due, 'ref']).describe()}\n")
                 else:
                     whi(f"Not showing statistics of the reference score, you \
 set its adjustment weight to 0")
@@ -1318,6 +1313,11 @@ set its adjustment weight to 0")
             except Exception as e:
                 red(f"Exception: {e}")
             pd.reset_option('display.float_format')
+
+        # final check before computing optimal order:
+        for x in ["interval", "ref", "due"]:
+            assert np.sum(np.isnan(df.loc[rated, x].values)) == len(due)
+            assert np.sum(np.isnan(df.loc[due, x].values)) == 0
 
         if use_index_of_score:
             df.loc[indTODO, "index_ref"] = df.loc[indTODO, "ref"].values.argsort()
@@ -1358,7 +1358,7 @@ AnnA:")
                 woAnnA = [x
                           for x in df.sort_values(
                               "ref", ascending=True).index.tolist()
-                          if x in self.due_cards]
+                          if x in due]
                 spread_else = np.median(self.df_dist.loc[woAnnA, woAnnA].values.flatten())
                 yel(spread_else)
 
