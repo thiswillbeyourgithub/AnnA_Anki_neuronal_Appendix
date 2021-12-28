@@ -924,10 +924,12 @@ adjust formating issues:")
             ft_vec = normalize(ft_vec, norm='l2')
 
             if self.fastText_correction_vector:
-                norm_vec = vec(self.fastText_correction_vector)
-                norm_vec = normalize(norm_vec.reshape(-1, 1),
-                                     norm='l1').reshape(1, -1)
-                ft_vec = ft_vec + norm_vec
+                red(f"Temporarily disabled the feature 'correction vecto' as \
+is it not yet fully implemented.")
+#                norm_vec = vec(self.fastText_correction_vector)
+#                norm_vec = normalize(norm_vec.reshape(-1, 1),
+#                                     norm='l1').reshape(1, -1)
+#                ft_vec = ft_vec + norm_vec
 
             # adding the median of each dimension to each row's corresponding
             # dimension. The idea is to avoid penalizing cards that have
