@@ -1172,21 +1172,23 @@ retrying until above 80% or 2000 dimensions)")
             trying to improve the code
         """
         self._collect_memory()
-        # getting args
+        # getting args etc
         reference_order = self.reference_order
         df = self.df
-
         target_deck_size = self.target_deck_size
         rated = self.rated_cards
         due = self.due_cards
         w1 = self.score_adjustment_factor[0]
         w2 = self.score_adjustment_factor[1]
+        queue = []
+
+        # settings
         display_stats = True
         use_index_of_score = False
 
         # setting interval to correct value for learning and relearnings:
-        steps_L = [x/1440 for x in self.deck_config["new"]["delays"]]
-        steps_RL = [x/1440 for x in self.deck_config["lapse"]["delays"]]
+        steps_L = [x / 1440 for x in self.deck_config["new"]["delays"]]
+        steps_RL = [x / 1440 for x in self.deck_config["lapse"]["delays"]]
         for i in df.index:
             if df.loc[i, "type"] == 1:  # learning
                 df.at[i, "interval"] = steps_L[int(str(df.loc[i, "left"])[-3:])-1]
@@ -1198,6 +1200,7 @@ retrying until above 80% or 2000 dimensions)")
         # skewing the dataset
         df.loc[rated, "interval"] = np.median(df.loc[due, "interval"].values)
 
+        # computing reference order:
         if reference_order == "lowest_interval":
             df.loc[rated, "due"] = np.median(df.loc[due, "due"].values)
 
@@ -1213,14 +1216,15 @@ retrying until above 80% or 2000 dimensions)")
             print("Computing relative overdueness...")
             anki_col_time = int(self._ankiconnect(
                 action="getCollectionCreationTime"))
+            time_offset = int((time.time() - anki_col_time) / 86400)
 
-            # getting due date
             for i in df.index:
                 df.at[i, "ref_due"] = df.loc[i, "odue"]
                 if df.loc[i, "ref_due"] == 0:
                     df.at[i, "ref_due"] = df.at[i, "due"]
-                if df.loc[i, "ref_due"] >= 100_000:  # timestamp instead of days
-                    df.at[i, "ref_due"] = (df.at[i, "ref_due"]-anki_col_time) / 86400
+                if df.loc[i, "ref_due"] >= 100_000:  # timestamp and not days
+                    df.at[i, "ref_due"] -= anki_col_time
+                    df.at[i, "ref_due"] /= 86400
                 assert df.at[i, "ref_due"] > 0
             df.loc[rated, "ref_due"] = np.median(df.loc[due, "ref_due"].values)
 
@@ -1240,32 +1244,20 @@ retrying until above 80% or 2000 dimensions)")
         red(f"\nCards identified as rated in the past {self.rated_last_X_days} days: \
 {len(rated)}")
 
-        if isinstance(target_deck_size, float):
-            if target_deck_size < 1.0:
-                target_deck_size = str(target_deck_size * 100) + "%"
-        if isinstance(target_deck_size, str):
-            if target_deck_size in ["all", "100%"]:
-                red("Taking the whole deck.")
-                target_deck_size = len(df.index) - len(rated)
-            elif target_deck_size.endswith("%"):
-                red(f"Taking {target_deck_size} of the deck.")
-                target_deck_size = 0.01 * int(target_deck_size[:-1]) * (
-                    len(df.index) - len(rated))
-        target_deck_size = int(target_deck_size)
-
-        queue = []
-        if len(rated) < 1:  # can't start with an empty queue
-            # so picking 1 urgent cards
+        # can't start with an empty queue so picking 1 urgent cards if needed:
+        if len(rated) < 1:
             pool = df.loc[df["status"] == "due",
                           "ref"].nsmallest(
                               n=min(50,
                                     len(self.due_cards))).index
             queue.extend(random.choices(pool, k=1))
 
+        # contain the index of the cards that will be use when
+        # computing optimal order
         indTODO = df.drop(index=rated + queue).index.tolist()
         indQUEUE = (rated + queue)
 
-        # remove siblings of indTODO:
+        # remove potential siblings of indTODO:
         noteCard = {}
         for card, note in {df.loc[x].name: df.loc[x, "note"]
                            for x in indTODO}.items():
@@ -1284,16 +1276,33 @@ retrying until above 80% or 2000 dimensions)")
             red(f"Removed {previous_len-cur_len} siblings cards out of \
 {previous_len}.")
 
+        # parsing desired deck size:
+        if isinstance(target_deck_size, float):
+            if target_deck_size < 1.0:
+                target_deck_size = str(target_deck_size * 100) + "%"
+        if isinstance(target_deck_size, str):
+            if target_deck_size in ["all", "100%"]:
+                red("Taking the whole deck.")
+                target_deck_size = len(df.index) - len(rated)
+            elif target_deck_size.endswith("%"):
+                red(f"Taking {target_deck_size} of the deck.")
+                target_deck_size = 0.01 * int(target_deck_size[:-1]) * (
+                    len(df.index) - len(rated))
+        target_deck_size = int(target_deck_size)
+
+        # checking if desired deck size is feasible:
         if target_deck_size > cur_len:
             red(f"You wanted to create a deck with \
 {target_deck_size} in it but only {cur_len} cards remain, taking the \
 lowest value.")
         queue_size_goal = min(target_deck_size, cur_len)
 
+        # displaying stats of the reference order or the
+        # distance matrix:
         if display_stats:
             pd.set_option('display.float_format', lambda x: '%.5f' % x)
             try:
-                whi("\nScore stats (adjusted):")
+                whi("\nScore stats of cards (weight adjusted):")
                 if w1 != 0:
                     whi(f"Reference: {(w1*df['ref']).describe()}\n")
                 else:
@@ -1320,7 +1329,7 @@ set its adjustment weight to 0")
                   unit=" card",
                   initial=len(rated),
                   smoothing=0,
-                  total=queue_size_goal+len(rated)) as pbar:
+                  total=queue_size_goal + len(rated)) as pbar:
             while len(queue) < queue_size_goal:
                 queue.append(indTODO[
                         (w1*df.loc[indTODO, col_ref].values -\
@@ -1328,6 +1337,7 @@ set its adjustment weight to 0")
                          ).argmin()])
                 indQUEUE.append(indTODO.pop(indTODO.index(queue[-1])))
                 pbar.update(1)
+
         assert len(indQUEUE) == len(rated) + len(queue)
 
         try:
