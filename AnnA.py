@@ -306,7 +306,6 @@ values. {e}")
             self._create_and_fill_df()
             if self.not_enough_cards is True:
                 return
-            self.df = self._reset_index_dtype(self.df)
             self._format_card()
             self.show_acronyms()
             self._compute_card_vectors(import_thread=import_thread)
@@ -324,7 +323,6 @@ values. {e}")
             self._create_and_fill_df()
             if self.not_enough_cards is True:
                 return
-            self.df = self._reset_index_dtype(self.df)
             self._format_card()
             self.show_acronyms()
             self._compute_card_vectors(import_thread=import_thread)
@@ -338,7 +336,6 @@ values. {e}")
             self._create_and_fill_df()
             if self.not_enough_cards is True:
                 return
-            self.df = self._reset_index_dtype(self.df)
             self._format_card()
             self.show_acronyms()
             self._compute_card_vectors(import_thread=import_thread)
@@ -373,16 +370,6 @@ execute the code using:\n'import pickle ; a = pickle.load(open(\"last_run.pickle
 
     def _collect_memory(self):
         gc.collect()
-
-    def _reset_index_dtype(self, df):
-        """
-        the index dtype (cardId) somehow gets turned into float so I
-        occasionally turn it back into int
-        """
-        temp = df.reset_index()
-        temp["cardId"] = temp["cardId"].astype(int)
-        df = temp.set_index("cardId")
-        return df
 
     @classmethod
     def _ankiconnect(self, action, **params):
@@ -613,8 +600,9 @@ threads of size {batchsize})")
 
         self.df = pd.DataFrame().append(list_cardInfo,
                                         ignore_index=True,
-                                        sort=True
-                                        ).set_index("cardId").sort_index()
+                                        sort=True)
+        self.df["cardId"] = self.df["cardId"].astype(int)
+        self.df = self.df.set_index("cardId").sort_index()
         self.df["interval"] = self.df["interval"].astype(float)
         return True
 
