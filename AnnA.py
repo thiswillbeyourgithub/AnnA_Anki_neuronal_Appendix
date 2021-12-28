@@ -1239,28 +1239,28 @@ retrying until above 80% or 2000 dimensions)")
 
         if isinstance(target_deck_size, float):
             if target_deck_size < 1.0:
-                target_deck_size = str(target_deck_size*100) + "%"
+                target_deck_size = str(target_deck_size * 100) + "%"
         if isinstance(target_deck_size, str):
             if target_deck_size in ["all", "100%"]:
                 red("Taking the whole deck.")
                 target_deck_size = len(df.index) - len(rated)
             elif target_deck_size.endswith("%"):
                 red(f"Taking {target_deck_size} of the deck.")
-                target_deck_size = 0.01*int(target_deck_size[:-1])*(
-                            len(df.index)-len(rated)
-                            )
+                target_deck_size = 0.01 * int(target_deck_size[:-1]) * (
+                    len(df.index) - len(rated))
         target_deck_size = int(target_deck_size)
 
         queue = []
         if len(rated) < 1:  # can't start with an empty queue
             # so picking 1 urgent cards
-            pool = df.loc[df["status"] == "due", "ref"].nsmallest(
-                    n=min(50, len(self.due_cards))
-                    ).index
+            pool = df.loc[df["status"] == "due",
+                          "ref"].nsmallest(
+                              n=min(50,
+                                    len(self.due_cards))).index
             queue.extend(random.choices(pool, k=1))
 
-        indTODO = df.drop(index=rated+queue).index.tolist()
-        indQUEUE = (rated+queue)
+        indTODO = df.drop(index=rated + queue).index.tolist()
+        indQUEUE = (rated + queue)
 
         # remove siblings of indTODO:
         noteCard = {}
