@@ -606,7 +606,7 @@ threads of size {batchsize})")
                                         sort=True)
         self.df["cardId"] = self.df["cardId"].astype(np.int)
         self.df = self.df.set_index("cardId").sort_index()
-        self.df["interval"] = self.df["interval"].astype(np.float)
+        self.df["interval"] = self.df["interval"].astype(np.float32)
         return True
 
     def _smart_acronym_replacer(self, string, compiled, new_w):
@@ -920,7 +920,7 @@ adjust formating issues:")
                                ], axis=0)
 
             ft_vec = np.zeros(shape=(len(df.index), ft.get_dimension()),
-                              dtype=np.float)
+                              dtype=np.float32)
             for i, x in enumerate(
                     tqdm(df.index, desc="Vectorizing using fastText")):
                 ft_vec[i] = vec(str(df.loc[x, "text"]))
@@ -1838,7 +1838,7 @@ be used.")
         tqdm.pandas(desc="Searching")
         try:
             df["distance"] = 0.0
-            df["distance"] = df["distance"].astype(np.float)
+            df["distance"] = df["distance"].astype(np.float32)
             df["distance"] = df[user_col].progress_apply(
                     lambda x: pairwise_distances(embed.reshape(1, -1),
                                                  x.reshape(1, -1),
@@ -1954,7 +1954,7 @@ class CTFIDFVectorizer(TfidfTransformer):
         self._idf_diag = sparse.diags(idf, offsets=0,
                                   shape=(n_features, n_features),
                                   format='csr',
-                                  dtype=np.float)
+                                  dtype=np.float32)
         return self
 
     def transform(self, X: sparse.csr_matrix) -> sparse.csr_matrix:
