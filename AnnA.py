@@ -149,6 +149,7 @@ class AnnA:
                  keep_ocr=True,
                  field_mappings="field_mappings.py",
                  acronym_file="acronym_file.py",
+                 acronym_list=None,
 
                  # steps:
                  clustering_enable=False,
@@ -218,6 +219,7 @@ class AnnA:
         self.reference_order = reference_order
         self.field_mappings = field_mappings
         self.acronym_file = acronym_file
+        self.acronym_list = acronym_list
         self.vectorizer = vectorizer
         self.fastText_lang = fastText_lang
         self.fastText_dim = fastText_dim
@@ -248,25 +250,56 @@ class AnnA:
                 red("Ignoring argument 'deck_template' because 'task' is not \
 set to 'filter_review_cards'.")
 
-        if self.acronym_file is not None:
+        if self.acronym_file is not None and self.acronym_list is not None:
             file = Path(acronym_file)
             if not file.exists():
                 raise Exception(f"Acronym file was not found: {acronym_file}")
             else:
-                imp = importlib.import_module(
-                    acronym_file.replace(".py", ""))
-                acronym_dict = imp.acronym_dict
+                # importing acronym file
+                if ".py" in acronym_file:
+                    acr_mod = importlib.import_module(acronym_file.replace(
+                        ".py", ""))
+                else:
+                    acr_mod = importlib.import_module(acronym_file)
+
+                # getting acronym dictionnary list
+                acr_dict_list = [x for x in dir(acr_mod)
+                                 if not x.startswith("_")]
+
+                # if empty file:
+                if len(acr_dict_list) == 0:
+                    red(f"No dictionnary found in {acronym_file}")
+                    raise SystemExit()
+
+                if isinstance(self.acronym_list, str):
+                    self.acronym_list = [self.acronym_list]
+                acr_dict_list = [x for x in acr_dict_list
+                                 if x in self.acronym_list]
+
+                if len(acr_dict_list) == 0:
+                    red(f"No dictionnary from {self.acr_dict_list} \
+found in {acronym_file}")
+                    raise SystemExit()
+
                 compiled_dic = {}
-                for ac in acronym_dict:
-                    if ac.lower() == ac:
-                        compiled = re.compile(r"\b" + ac + r"\b",
-                                              flags=re.IGNORECASE |
-                                              re.MULTILINE |
-                                              re.DOTALL)
-                    else:
-                        compiled = re.compile(r"\b" + ac + r"\b",
-                                              flags=re.MULTILINE | re.DOTALL)
-                    compiled_dic[compiled] = acronym_dict[ac]
+                notifs = []
+                for item in acr_dict_list:
+                    acronym_dict = eval(f"{acronym_file}.{item}")
+                    for ac in acronym_dict:
+                        if ac.lower() == ac:
+                            compiled = re.compile(r"\b" + ac + r"\b",
+                                                  flags=re.IGNORECASE |
+                                                  re.MULTILINE |
+                                                  re.DOTALL)
+                        else:
+                            compiled = re.compile(r"\b" + ac + r"\b",
+                                                  flags=re.MULTILINE | re.DOTALL)
+                        if compiled in compiled_dic:
+                            notifs.append(f"Pattern '{compiled}' found \
+multiple times in acronym dictionnary, keeping only the last one.")
+                        compiled_dic[compiled] = acronym_dict[ac]
+                for n in notifs:
+                    red(n)
                 self.acronym_dict = compiled_dic
 
         if self.field_mappings is not None:

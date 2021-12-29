@@ -98,7 +98,8 @@ AnnA was made with usability in mind. With the right arguments, you can have to 
  * `replace_greek` if True, all greek letters will be replaced with a spelled version. For example `\u03C3` becomes `sigma`. Default is `True`.
  * `keep_ocr` if True, the OCR text extracted using [the great AnkiOCR addon](https://github.com/cfculhane/AnkiOCR/) will be included in the card. Default is `True`.
  * `field_mapping` path of file that indicates which field to keep from which note type and in which order. Default value is `field_mappings.py`. If empty, only takes into account the first 2 fields.
- * `acronym_file` a python dictionary containing acronyms to extend. For example `CRC` can be extended to `CRC (colorectal cancer)`. (The parenthesis are automatically added.) Default is `"acronym_file.py"`. The matching is case sensitive only if the key contains uppercase characters.
+ * `acronym_file` a python file containing dictionaries that themselves contain acronyms to extend in the text of cards. For example `CRC` can be extended to `CRC (colorectal cancer)`. (The parenthesis are automatically added.) Default is `"acronym_file.py"`. The matching is case sensitive only if the key contains uppercase characters. The ".py" file extension is not mandatory.
+ * `acronym_list` a list of name of dictionaries found in the file from `acronym_file` to use to extend text. For example `["AI_machine_learning", "medical_terms"]` from `example_file/acronym_file.py`. Default to None.
 
  * `clustering_enable` whether to enable clustering or not. Default is `True`.
  * `clustering_nb_clust` number specifying the number of clusters to look for. Only relevant for some clustering algorithms. Default is `"auto"`, this will look for one cluster every 20 cards.
@@ -133,7 +134,6 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 ## TODO
 *More or less by order of urgency*
 * use combinator when computing improvement ratio
-* allow to use several acronym dic, basically implement ability to put a list of file, don't forget to alter the example too
 * correction vector should be used when computing scores: bonus to be close to this vector + rename it to "desired_topic" + "penalized_topic"
 
 * check that docstrings are up to date
