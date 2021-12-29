@@ -1311,7 +1311,7 @@ set its adjustment weight to 0")
 
         # final check before computing optimal order:
         for x in ["interval", "ref", "due"]:
-            assert np.sum(np.isnan(df.loc[rated, x].values)) == len(due)
+            assert np.sum(np.isnan(df.loc[rated, x].values)) == len(rated)
             assert np.sum(np.isnan(df.loc[due, x].values)) == 0
 
         if use_index_of_score:
