@@ -578,10 +578,13 @@ threads of size {batchsize})")
 
         for i, card in enumerate(list_cardInfo):
             # removing large fields:
-            list_cardInfo[i].pop("question")
-            list_cardInfo[i].pop("answer")
-            list_cardInfo[i].pop("css")
-            list_cardInfo[i].pop("fields_no_html")
+            try:
+                list_cardInfo[i].pop("question")
+                list_cardInfo[i].pop("answer")
+                list_cardInfo[i].pop("css")
+                list_cardInfo[i].pop("fields_no_html")
+            except KeyError as e:
+                pass
             list_cardInfo[i]["fields"] = dict(
                 (k.lower(), v)
                 for k, v in list_cardInfo[i]["fields"].items())
