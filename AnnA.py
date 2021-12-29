@@ -303,6 +303,8 @@ multiple times in acronym dictionnary, keeping only the last one.")
                     for n in notifs:
                         red(n)
                 self.acronym_dict = compiled_dic
+        else:
+            self.acronym_dict = {}
 
         if self.field_mappings is not None:
             f = Path(self.field_mappings)
