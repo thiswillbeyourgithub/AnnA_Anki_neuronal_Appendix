@@ -1945,12 +1945,12 @@ be used.")
         if not len(self.acronym_dict.keys()):
             return True
 
-        full_text = " ".join(self.df["text"].tolist())
+        full_text = " ".join(self.df["text"].tolist()).replace("'", " ")
         if exclude_OCR_text:
             full_text = re.sub(" Caption:___.*?___ ", " ", full_text,
                                flags=re.MULTILINE | re.DOTALL)
 
-        matched = list({x for x in re.findall("[A-Z]{3,}", full_text)
+        matched = list({x for x in re.findall("[A-Z][A-Z0-9]{2,}", full_text)
                         if x.lower() not in full_text})
         # if exists as lowercase : probably just shouting for emphasis
 
