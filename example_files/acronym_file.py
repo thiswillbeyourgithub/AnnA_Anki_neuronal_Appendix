@@ -5,6 +5,7 @@
 #    otherwise matching will be case insensitive
 # * the name of the dictionnary is what you put into
 #    the `acronym_list` argument
+# * avoid using stop words as they will not be removed
 
 medical_terms = {r"IL(\d+)": r"interleukin \1",
                  "LT": "lymphocyte T",
