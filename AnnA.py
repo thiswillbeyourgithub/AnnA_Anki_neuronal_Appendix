@@ -940,7 +940,7 @@ is it not yet fully implemented.")
             # of the deck for example "where is the superior colliculi ?"
             # has one third of its words being "where", and only one word
             # being strictly medical.
-            ft_vec = ft_vec * normalize(np.median(ft_vec, axis=0), norm='l2')
+            ft_vec = ft_vec * normalize(np.median(ft_vec, axis=0).reshape(1, -1), norm='l2')
 
             ft_vec = normalize(ft_vec, norm='l2')
 
