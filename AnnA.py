@@ -1942,43 +1942,35 @@ be used.")
         the file supplied by the argument `acronym_file`
         * acronyms found in OCR caption are removed by default
         """
+        if not len(self.acronym_dict.keys()):
+            return True
+
         full_text = " ".join(self.df["text"].tolist())
         if exclude_OCR_text:
             full_text = re.sub(" Caption:___.*?___ ", " ", full_text,
                                flags=re.MULTILINE | re.DOTALL)
-        matched = list(set(re.findall("[A-Z]{3,}", full_text)))
 
-        # if exists as lowercase : it's probably not an acronym and just
-        # used for emphasis
-        for m in matched:
-            if m.lower() in full_text:
-                matched.remove(m)
+        matched = list({x for x in re.findall("[A-Z]{3,}", full_text)
+                        if x.lower() not in full_text})
+        # if exists as lowercase : probably just shouting for emphasis
+
         if len(matched) == 0:
-            return True
-        sorted_by_count = sorted([x for x in matched],
-                                 key=lambda x: full_text.count(x),
-                                 reverse=True)
-        relevant = list(set(random.choices(sorted_by_count[0:50],
-                                           k=min(len(sorted_by_count), 10))))
-        if not len(matched):
             print("No acronym found in those cards.")
             return True
 
-        if self.acronym_file is None:
-            red("\nYou did not supply an acronym list, printing all acronym \
-found...")
-            pprint(relevant)
-        else:
-            acro_list = list(self.acronym_dict)
+        for compiled in self.acronym_dict:
+            for acr in matched:
+                if re.match(compiled, acr) is not None:
+                    matched.remove(acr)
 
-            for compiled in acro_list:
-                for acr in relevant:
-                    if re.match(compiled, acr) is not None:
-                        relevant.remove(acr)
+        if not matched:
+            print("All found acronyms were already replaced using \
+the data in `acronym_list`.")
+        else:
             print("List of some acronyms still found:")
             if exclude_OCR_text:
                 print("(Excluding OCR text)")
-            pprint(sorted(relevant))
+            pprint(random.choices(matched, k=min(5, len(matched))))
         print("")
         return True
 
