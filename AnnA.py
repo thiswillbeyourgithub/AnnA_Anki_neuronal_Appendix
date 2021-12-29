@@ -159,6 +159,7 @@ class AnnA:
                  # "bury_excess_review_cards",
                  # "bury_excess_learning_cards",
                  # "index"
+                 deck_template=None,
                  check_database=False,
 
                  # vectorization:
@@ -228,6 +229,7 @@ class AnnA:
         self.TFIDF_stem = TFIDF_stem
         self.TFIDF_tokenize = TFIDF_tokenize
         self.task = task
+        self.deck_template = deck_template
         self.save_instance_as_pickle = save_instance_as_pickle
 
         # args sanity checks
@@ -241,6 +243,10 @@ class AnnA:
                         "bury_excess_review_cards"]
         assert vectorizer in ["TFIDF", "fastText"]
         assert self.fastText_dim_algo in ["PCA", "UMAP", None]
+        if task != "filter_review_cards":
+            if self.deck_template is not None:
+                red("Ignoring argument 'deck_template' because 'task' is not \
+set to 'filter_review_cards'.")
 
         if self.acronym_list is not None:
             file = Path(acronym_list)
@@ -1412,6 +1418,8 @@ AnnA:")
                               cards=to_bury)
             return True
         else:
+            if self.deck_template is not None:
+                deck_template = self.deck_template
             if deck_template is not None:
                 filtered_deck_name = str(deck_template + f" - {self.deckname}")
                 filtered_deck_name = filtered_deck_name.replace("::", "_")
