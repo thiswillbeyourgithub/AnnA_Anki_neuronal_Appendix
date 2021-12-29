@@ -148,7 +148,7 @@ class AnnA:
                  replace_greek=True,
                  keep_ocr=True,
                  field_mappings="field_mappings.py",
-                 acronym_list="acronym_list.py",
+                 acronym_file="acronym_file.py",
 
                  # steps:
                  clustering_enable=False,
@@ -217,7 +217,7 @@ class AnnA:
         self.score_adjustment_factor = score_adjustment_factor
         self.reference_order = reference_order
         self.field_mappings = field_mappings
-        self.acronym_list = acronym_list
+        self.acronym_file = acronym_file
         self.vectorizer = vectorizer
         self.fastText_lang = fastText_lang
         self.fastText_dim = fastText_dim
@@ -248,13 +248,13 @@ class AnnA:
                 red("Ignoring argument 'deck_template' because 'task' is not \
 set to 'filter_review_cards'.")
 
-        if self.acronym_list is not None:
-            file = Path(acronym_list)
+        if self.acronym_file is not None:
+            file = Path(acronym_file)
             if not file.exists():
-                raise Exception(f"Acronym file was not found: {acronym_list}")
+                raise Exception(f"Acronym file was not found: {acronym_file}")
             else:
                 imp = importlib.import_module(
-                    acronym_list.replace(".py", ""))
+                    acronym_file.replace(".py", ""))
                 acronym_dict = imp.acronym_dict
                 compiled_dic = {}
                 for ac in acronym_dict:
@@ -683,7 +683,7 @@ threads of size {batchsize})")
                 text = re.sub(a, b, text)
 
         # replace acronyms
-        if self.acronym_list is not None:
+        if self.acronym_file is not None:
             for compiled, new_word in self.acronym_dict.items():
                 text = re.sub(compiled,
                          lambda string:
@@ -1902,7 +1902,7 @@ be used.")
     def show_acronyms(self, exclude_OCR_text=True):
         """
         shows acronym present in your collection that were not found in
-        the file supplied by the argument `acronym_list`
+        the file supplied by the argument `acronym_file`
         * acronyms found in OCR caption are removed by default
         """
         full_text = " ".join(self.df["text"].tolist())
@@ -1927,7 +1927,7 @@ be used.")
             print("No acronym found in those cards.")
             return True
 
-        if self.acronym_list is None:
+        if self.acronym_file is None:
             red("\nYou did not supply an acronym list, printing all acronym \
 found...")
             pprint(relevant)

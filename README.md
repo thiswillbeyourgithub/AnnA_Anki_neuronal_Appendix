@@ -75,7 +75,7 @@ Tired of having to deal with anki flashcards that are too similar when grinding 
 * Make sure the addon [anki-connect](https://github.com/FooSoft/anki-connect) is installed (**see notes above**)
 * Clone this repository: `git clone https://github.com/thiswillbeyourgithub/AnnA_Anki_neuronal_Appendix`
 * Use python to install the necessary packages : `pip install -r requirements.py`
-* Edit `field_mapping.py` and `example_files/acronym_list.py` to your liking
+* Edit `field_mapping.py` and `example_files/acronym_file.py` to your liking
 * Edit the file `example_files/autorun.py` to suit your needs
 * Move the new example_files to the main folder
 * run AnnA : `python3 autorun.py`
@@ -98,7 +98,7 @@ AnnA was made with usability in mind. With the right arguments, you can have to 
  * `replace_greek` if True, all greek letters will be replaced with a spelled version. For example `\u03C3` becomes `sigma`. Default is `True`.
  * `keep_ocr` if True, the OCR text extracted using [the great AnkiOCR addon](https://github.com/cfculhane/AnkiOCR/) will be included in the card. Default is `True`.
  * `field_mapping` path of file that indicates which field to keep from which note type and in which order. Default value is `field_mappings.py`. If empty, only takes into account the first 2 fields.
- * `acronym_list` a python dictionary containing acronyms to extend. For example `CRC` can be extended to `CRC (colorectal cancer)`. (The parenthesis are automatically added.) Default is `"acronym_list.py"`. The matching is case sensitive only if the key contains uppercase characters.
+ * `acronym_file` a python dictionary containing acronyms to extend. For example `CRC` can be extended to `CRC (colorectal cancer)`. (The parenthesis are automatically added.) Default is `"acronym_file.py"`. The matching is case sensitive only if the key contains uppercase characters.
 
  * `clustering_enable` whether to enable clustering or not. Default is `True`.
  * `clustering_nb_clust` number specifying the number of clusters to look for. Only relevant for some clustering algorithms. Default is `"auto"`, this will look for one cluster every 20 cards.
