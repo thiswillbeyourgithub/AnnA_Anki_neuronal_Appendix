@@ -298,8 +298,10 @@ found in {acronym_file}")
                             notifs.append(f"Pattern '{compiled}' found \
 multiple times in acronym dictionnary, keeping only the last one.")
                         compiled_dic[compiled] = acronym_dict[ac]
-                for n in notifs:
-                    red(n)
+                notifs = list(set(notifs))
+                if notifs:
+                    for n in notifs:
+                        red(n)
                 self.acronym_dict = compiled_dic
 
         if self.field_mappings is not None:
