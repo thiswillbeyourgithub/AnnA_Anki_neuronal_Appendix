@@ -133,11 +133,12 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 
 ## TODO
 *More or less by order of urgency*
+* test how close relative overdueness is to the real deal
 * use combinator when computing improvement ratio
 * correction vector should be used when computing scores: bonus to be close to this vector + rename it to "desired_topic" + "penalized_topic"
+* implement index scoring: the length of the queue is changing along the algorithm so you have to set the value before hand
 
 * check that docstrings are up to date
-* implement index scoring
 * add a "deck_settings" mode that fetches the number of max reviews per day and use it as "target_deck_size"
 * implement task "optimize_filtered_deck" to optimize the order of an already existing filtered deck without burying anything
 
