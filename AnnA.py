@@ -934,13 +934,13 @@ is it not yet fully implemented.")
 #                                     norm='l1').reshape(1, -1)
 #                ft_vec = ft_vec + norm_vec
 
-            # adding the median of each dimension to each row's corresponding
-            # dimension. The idea is to avoid penalizing cards that have
-            # few words dealing with the overall context of the deck
-            # for example "where is the superior colliculi ?" has one third
-            # of its words being "where", and only one word being strictly
-            # medical.
-            ft_vec = ft_vec + np.median(ft_vec, axis=0)
+            # multiplying the median of each dimension by each row's
+            # corresponding dimension. The idea is to avoid penalizing
+            # cards that have few words dealing with the overall context
+            # of the deck for example "where is the superior colliculi ?"
+            # has one third of its words being "where", and only one word
+            # being strictly medical.
+            ft_vec = ft_vec * normalize(np.median(ft_vec, axis=0), norm='l2')
 
             ft_vec = normalize(ft_vec, norm='l2')
 
