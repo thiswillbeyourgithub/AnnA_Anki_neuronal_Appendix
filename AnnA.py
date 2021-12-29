@@ -1228,7 +1228,7 @@ retrying until above 80% or 2000 dimensions)")
             overdue = (df.loc[due, "ref_due"] - time_offset).to_numpy().reshape(-1, 1)
             df.drop("ref_due", axis=1, inplace=True)
 
-            ro = -1 * (df.loc[due, "interval"].values + 0.01) / (overdue.T + 0.01)
+            ro = -1 * (df.loc[due, "interval"].values + 0.5) / (overdue.T + 0.5)
             ro_cs = StandardScaler().fit_transform(ro.T)
             df.loc[due, "ref"] = ro_cs
 
