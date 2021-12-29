@@ -26,7 +26,7 @@ from nltk.stem import PorterStemmer
 from transformers import AutoTokenizer
 tokenizer = AutoTokenizer.from_pretrained("bert-base-multilingual-uncased")
 
-from scipy import interpolate, sparse
+from scipy import sparse
 from sklearn.feature_extraction.text import TfidfTransformer, TfidfVectorizer, CountVectorizer
 from sklearn.metrics import pairwise_distances
 from sklearn.decomposition import PCA, TruncatedSVD
