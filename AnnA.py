@@ -710,6 +710,7 @@ threads of size {batchsize})")
         text = re.sub(r'[a-zA-Z0-9-]+\....', " ", text)  # media file name
         text = re.sub("<a href.*?</a>", " ", text)  # html links
         text = re.sub(r'https?://\S*?', " ", text)  # plaintext links
+        text = re.sub("</?su[bp]>", "", text) # exponant or indices
         text = re.sub(r"\[\d*\]", "", text)  # wiki style citation
 
         text = re.sub("<.*?>", " ", text)  # remaining html tags
