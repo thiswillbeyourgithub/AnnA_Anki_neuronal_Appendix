@@ -733,8 +733,8 @@ threads of size {batchsize})")
                               text)
 
         # misc
-        text = text.replace("'", " ") # used for french apostrophe etc
         text = " ".join(text.split())  # multiple spaces
+        text = re.sub(r"\b[a-zA-Z]'(\w{2,})", r"\1", text)  # french apostrophe etc
 
         # optionnal stemmer
         if self.vectorizer == "TFIDF":
