@@ -684,11 +684,10 @@ threads of size {batchsize})")
         text = re.sub(r"{{c\d+::.*?}}", lambda x: 2 * (f"{x.group(0)} "),
                       text, flags=re.M | re.DOTALL)
 
-        # spaces
-        text = re.sub("<blockquote(.*?)</blockquote>",
-                      lambda x: x.group(0).replace("<br>", " ; "), text)
-        text = re.sub('\\n|</?div>|<br>|</?span>|</?li>|</?ul>',
-                      " ", text)  # newlines
+
+        # remove html spaces
+        text = re.sub('\\n|</?div>|<br>|</?span>|</?li>|</?ul>', " ", text)
+        text = re.sub('</?blockquote(.*?)>', " ", text)
 
         # OCR
         if self.keep_ocr:
@@ -699,16 +698,17 @@ threads of size {batchsize})")
 
         # cloze
         text = re.sub(r"{{c\d+?::|}}", "", text)  # remove cloze brackets
-        text = re.sub("::", " ", text)  # keep cloze hint
+        text = re.sub("::", " ", text)  # cloze hints
         text = re.sub("{{c", "", text)  # missed cloze?
 
         # misc
         text = re.sub(r'[a-zA-Z0-9-]+\....', " ", text)  # media file name
         text = re.sub("<a href.*?</a>", " ", text)  # html links
-        text = re.sub(r'http[s]?://\S*', " ", text)  # plaintext links
+        text = re.sub(r'https?://\S*?', " ", text)  # plaintext links
+        text = re.sub(r"\[\d*\]", "", text)  # wiki style citation
+
         text = re.sub("<.*?>", " ", text)  # remaining html tags
-        text = re.sub(r"\[\d*\]", "", text)  # wiki citation
-        text = re.sub(r"\b\w{1,5}>", " ", text)  # missed html tags
+        text = re.sub(r"\b\w{1,5}>", " ", text)  # missed html tags?
         text = re.sub("&gt;|&lt;|<|>", "", text)
 
         # adds capital letter after punctuation
@@ -723,20 +723,15 @@ threads of size {batchsize})")
         if self.acronym_file is not None:
             for compiled, new_word in self.acronym_dict.items():
                 text = re.sub(compiled,
-                         lambda string:
-                         self._smart_acronym_replacer(string,
-                                                      compiled,
-                                                      new_word),
-                         text)
+                              lambda string:
+                              self._smart_acronym_replacer(string,
+                                                           compiled,
+                                                           new_word),
+                              text)
 
         # misc
         text = text.replace("'", " ") # used for french apostrophe etc
-        text = text.replace(" : ", ": ")
         text = " ".join(text.split())  # multiple spaces
-
-        # misc
-        text = text.replace(" :.", ".")
-        text = text.replace(":.", ".")
 
         # optionnal stemmer
         if self.vectorizer == "TFIDF":
