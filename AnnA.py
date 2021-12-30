@@ -284,7 +284,7 @@ found in {acronym_file}")
                 compiled_dic = {}
                 notifs = []
                 for item in acr_dict_list:
-                    acronym_dict = eval(f"{acronym_file}.{item}")
+                    acronym_dict = eval(f"acr_mod.{item}")
                     for ac in acronym_dict:
                         if ac.lower() == ac:
                             compiled = re.compile(r"\b" + ac + r"\b",
