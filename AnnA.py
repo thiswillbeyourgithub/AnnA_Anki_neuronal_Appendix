@@ -696,9 +696,10 @@ threads of size {batchsize})")
         # OCR
         if self.keep_ocr:
             # keep image title (usually OCR)
-            text = re.sub("title=(\".*?\")", "> Caption:___\\1___ <",
+            text = re.sub("title=(\".*?\")",
+                          "> Caption:___\\1___ <",
                           text, flags=re.M | re.DOTALL)
-            text = text.replace('Caption: \'""\'', "")
+            text = text.replace('Caption:___""___', "")
 
         # cloze
         text = re.sub(r"{{c\d+?::|}}", "", text)  # remove cloze brackets
