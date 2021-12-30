@@ -717,9 +717,6 @@ threads of size {batchsize})")
         text = re.sub(r"\b\w{1,5}>", " ", text)  # missed html tags?
         text = re.sub("&gt;|&lt;|<|>", "", text)
 
-        # adds capital letter after punctuation
-        text = re.sub(r"[.?!]\s+?([a-zA-Z])", lambda x: x.group(0).upper(), text)
-
         # replace greek letter
         if self.replace_greek:
             for a, b in greek_alphabet_mapping.items():
