@@ -684,6 +684,10 @@ threads of size {batchsize})")
         text = re.sub(r"{{c\d+::.*?}}", lambda x: 2 * (f"{x.group(0)} "),
                       text, flags=re.M | re.DOTALL)
 
+        # if blockquote or li or ul, mention that it's a list item
+        # usually indicating a harder card
+        if re.match("</blockquote>|</li>|</ul|", text, flags=re.M):
+            text += " list"
 
         # remove html spaces
         text = re.sub('\\n|</?div>|<br>|</?span>|</?li>|</?ul>', " ", text)
