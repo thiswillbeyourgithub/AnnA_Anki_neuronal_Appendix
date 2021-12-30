@@ -6,6 +6,8 @@
 # * the name of the dictionnary is what you put into
 #    the `acronym_list` argument
 # * avoid using stop words as they will not be removed
+# * regexp matching is supported, this allows very complex string replacement
+#    rules
 
 medical_terms = {r"IL(\d+)": r"interleukin \1",
                  "LT": "lymphocyte T",
