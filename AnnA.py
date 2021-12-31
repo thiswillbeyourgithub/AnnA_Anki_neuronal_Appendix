@@ -678,6 +678,9 @@ threads of size {batchsize})")
                                                 ).replace("&nbsp", " "
                                                           ).replace("\u001F",
                                                                     " ")
+        # remove weird clozes
+        text = re.sub(r"}}{{c\d+::", "", text)
+
         # duplicate bold and underlined content, as well as clozes
         text = re.sub(r"\b<u>(.*?)</u>\b", r" \1 \1 ", text,
                       flags=re.M | re.DOTALL)
