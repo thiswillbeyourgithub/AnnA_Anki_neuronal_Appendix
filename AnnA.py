@@ -718,8 +718,8 @@ threads of size {batchsize})")
         text = re.sub("</?su[bp]>", "", text) # exponant or indices
         text = re.sub(r"\[\d*\]", "", text)  # wiki style citation
 
-        text = re.sub("<.*?>", " ", text)  # remaining html tags
-        text = re.sub(r"\b\w{1,5}>", " ", text)  # missed html tags?
+        text = re.sub("<.*?>", "", text)  # remaining html tags
+        #text = re.sub(r"\b\w{1,5}>", " ", text)  # missed html tags?
         text = re.sub("&gt;|&lt;|<|>", "", text)
 
         # replace greek letter
