@@ -1220,7 +1220,6 @@ retrying until above 80% or 2000 dimensions)")
         due = self.due_cards
         w1 = self.score_adjustment_factor[0]
         w2 = self.score_adjustment_factor[1]
-        queue = []
 
         # settings
         display_stats = True
@@ -1282,14 +1281,6 @@ retrying until above 80% or 2000 dimensions)")
         red(f"\nCards identified as rated in the past {self.rated_last_X_days} days: \
 {len(rated)}")
 
-        # can't start with an empty queue so picking 1 urgent cards if needed:
-        if len(rated) < 1:
-            pool = df.loc[df["status"] == "due",
-                          "ref"].nsmallest(
-                              n=min(50,
-                                    len(self.due_cards))).index
-            queue.extend(random.choices(pool, k=1))
-
         # contain the index of the cards that will be use when
         # computing optimal order
         indQUEUE = (rated)
@@ -1318,6 +1309,18 @@ retrying until above 80% or 2000 dimensions)")
         else:
             red(f"Removed {previous_len-len(indTODO)} siblings cards out of \
 {previous_len}.")
+
+        # can't start with an empty queue so picking 1 urgent card:
+        if len(indQUEUE) == 0:
+            pool = df.loc[indTODO, "ref"].nsmallest(
+                n=min(10,
+                      len(indTODO)
+                      )).index
+            queue = random.choices(pool, k=1)
+            indQUEUE.append(queue[-1])
+            indTODO.remove(queue[-1])
+        else:
+            queue = []
 
         # parsing desired deck size:
         if isinstance(target_deck_size, float):
