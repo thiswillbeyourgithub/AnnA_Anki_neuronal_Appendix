@@ -133,23 +133,20 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 
 ## TODO
 *More or less by order of urgency*
-* test how close relative overdueness is to the real deal
-* use combinator when computing improvement ratio
-* correction vector should be used when computing scores: bonus to be close to this vector + rename it to "desired_topic" + "penalized_topic"
-* implement index scoring: the length of the queue is changing along the algorithm so you have to set the value before hand
-
-* check that docstrings are up to date
+* relative overdueness v2 : either square or take square root of interval
+* check how close relative overdueness is to the real deal
 * add a "deck_settings" mode that fetches the number of max reviews per day and use it as "target_deck_size"
-* implement task "optimize_filtered_deck" to optimize the order of an already existing filtered deck without burying anything
-
-* fix searching + open the browser and add tags, then ask to sort by tags
 * add a link to reduce the size of the fasttext model
+* check that docstrings are up to date, make them way more extensive
+* implement autonomous mode : mean distance across the queue probably follows an elbow curve with diminishing returns, this should help do only most important reviews
 
-* create a search algorithm that expands your query by fetching synonyms
+* implement task "optimize_filtered_deck" to optimize the order of an already existing filtered deck without burying anything
+* implement index scoring?
+* correction vector should be used when computing scores: bonus to be close to this vector + rename it to "desired_topic" + "penalized_topic"
+
+
 * turn AnnA into AnnAddon
-* create a standalone version of search_for_note using ankipandas
 
-* add ability to click on plots to open the browser : https://plotly.com/python/click-events/
 * look into sentence mining methods from sbert, that might contain useful ideas
 * take a look at topic modelling techniques that might be cleaner to invoke than the current ctf-idf implementation
 * warn LW
