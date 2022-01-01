@@ -273,6 +273,14 @@ set to 'filter_review_cards'.")
 
                 if isinstance(self.acronym_list, str):
                     self.acronym_list = [self.acronym_list]
+
+                missing = [x for x in self.acronym_list
+                           if x not in acr_dict_list]
+                if missing:
+                    red(f"Mising the following acronym dictionnary in \
+{acronym_file}: {','.join(missing)}")
+                    raise SystemExit()
+
                 acr_dict_list = [x for x in acr_dict_list
                                  if x in self.acronym_list]
 
