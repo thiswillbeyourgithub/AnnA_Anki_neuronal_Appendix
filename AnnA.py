@@ -1292,8 +1292,13 @@ retrying until above 80% or 2000 dimensions)")
 
         # contain the index of the cards that will be use when
         # computing optimal order
-        indTODO = df.drop(index=rated + queue).index.tolist()
-        indQUEUE = (rated + queue)
+        indQUEUE = (rated)
+        indTODO = [x for x in df.index.tolist() if x not in indQUEUE]
+        # at each turn of the scoring algorithm, all cards whose index is
+        # in indTODO will have their distance compared to all cards whose
+        # index is in indQUEUE. The lowest score card is then taken from
+        # indTODO and added to indQUEUE. Rinse and repeat until queue is
+        # the size desired by the user or indTODO is empty.
 
         # remove potential siblings of indTODO:
         noteCard = {}
