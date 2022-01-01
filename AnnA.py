@@ -1313,11 +1313,10 @@ retrying until above 80% or 2000 dimensions)")
                     # value, because it indicates urgency to review
         previous_len = len(indTODO)
         [indTODO.remove(x) for x in indTODO if x not in noteCard.values()]
-        cur_len = len(indTODO)
-        if previous_len - cur_len == 0:
+        if previous_len - len(indTODO) == 0:
             yel("No siblings found.")
         else:
-            red(f"Removed {previous_len-cur_len} siblings cards out of \
+            red(f"Removed {previous_len-len(indTODO)} siblings cards out of \
 {previous_len}.")
 
         # parsing desired deck size:
@@ -1335,11 +1334,11 @@ retrying until above 80% or 2000 dimensions)")
         target_deck_size = int(target_deck_size)
 
         # checking if desired deck size is feasible:
-        if target_deck_size > cur_len:
+        if target_deck_size > len(indTODO):
             red(f"You wanted to create a deck with \
-{target_deck_size} in it but only {cur_len} cards remain, taking the \
+{target_deck_size} in it but only {len(indTODO)} cards remain, taking the \
 lowest value.")
-        queue_size_goal = min(target_deck_size, cur_len)
+        queue_size_goal = min(target_deck_size, len(indTODO))
 
         # displaying stats of the reference order or the
         # distance matrix:
