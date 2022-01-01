@@ -1322,6 +1322,9 @@ retrying until above 80% or 2000 dimensions)")
         else:
             queue = []
 
+        duewsb = indTODO[:]  # copy of indTODO, used when computing
+        # improvement ratio
+
         # parsing desired deck size:
         if isinstance(target_deck_size, float):
             if target_deck_size < 1.0:
@@ -1393,21 +1396,20 @@ set its adjustment weight to 0")
         assert len(indQUEUE) == len(rated) + len(queue)
 
         try:
-            red("Median distance of the new queue:")
-            spread_queue = np.median(self.df_dist.loc[queue, queue].values.flatten())
+            red("Mean of distance in the new queue:")
+            spread_queue = np.mean(self.df_dist.loc[queue, queue].values.flatten())
             yel(spread_queue)
 
             if w1 == 0:
                 yel("Not showing distance without AnnA because you set \
 the adjustment weight of the reference score to 0.")
             else:
-                red("Median distance of the whole queue if you had not used \
-AnnA:")
+                red("Mean of distance of the queue if you had not used AnnA:")
                 woAnnA = [x
                           for x in df.sort_values(
                               "ref", ascending=True).index.tolist()
-                          if x in due]
-                spread_else = np.median(self.df_dist.loc[woAnnA, woAnnA].values.flatten())
+                          if x in duewsb][0:len(queue)]
+                spread_else = np.sum(self.df_dist.loc[woAnnA, woAnnA].values.flatten())
                 yel(spread_else)
 
                 red(f"Cards in common: {len(set(queue)&set(woAnnA))} in a queue of {len(queue)} cards.")
