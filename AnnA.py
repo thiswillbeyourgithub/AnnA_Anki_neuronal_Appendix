@@ -608,7 +608,8 @@ threads of size {batchsize})")
         self.rated_cards = rated_cards
 
         if len(self.due_cards) < self.due_threshold:
-            red("Number of due cards is less than threshold.\nStopping.")
+            red(f"Number of due cards is {len(self.due_cards)} which is \
+less than threshold ({self.due_threshold}).\nStopping.")
             self.not_enough_cards = True
             return
         else:
