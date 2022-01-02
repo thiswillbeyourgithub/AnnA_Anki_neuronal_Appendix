@@ -1417,7 +1417,7 @@ the adjustment weight of the reference score to 0.")
                           for x in df.sort_values(
                               "ref", ascending=True).index.tolist()
                           if x in duewsb][0:len(queue)]
-                spread_else = np.sum(self.df_dist.loc[woAnnA, woAnnA].values.flatten())
+                spread_else = np.mean(self.df_dist.loc[woAnnA, woAnnA].values.flatten())
                 yel(spread_else)
 
                 red(f"Cards in common: {len(set(queue)&set(woAnnA))} in a queue of {len(queue)} cards.")
