@@ -1291,7 +1291,7 @@ retrying until above 80% or 2000 dimensions)")
 
         # contain the index of the cards that will be use when
         # computing optimal order
-        indQUEUE = (rated)
+        indQUEUE = rated[:]
         indTODO = [x for x in df.index.tolist() if x not in indQUEUE]
         # at each turn of the scoring algorithm, all cards whose index is
         # in indTODO will have their distance compared to all cards whose
@@ -1401,7 +1401,7 @@ set its adjustment weight to 0")
                 indQUEUE.append(indTODO.pop(indTODO.index(queue[-1])))
                 pbar.update(1)
 
-        assert len(indQUEUE) == len(rated) + len(queue)
+        assert indQUEUE == rated + queue
 
         try:
             red("Mean of distance in the new queue:")
