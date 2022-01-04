@@ -144,8 +144,7 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 * implement index scoring?
 * correction vector should be used when computing scores: bonus to be close to this vector + rename it to "desired_topic" + "penalized_topic"
 
-
-* turn AnnA into AnnAddon
+* turn AnnA into AnnAddon : gui should be mainly by clicking on the gear of deck settings : AnnA > create new preset / run AnnA with active presets > each preset / edit presets / run all active presets / About
 
 * look into sentence mining methods from sbert, that might contain useful ideas
 * take a look at topic modelling techniques that might be cleaner to invoke than the current ctf-idf implementation
