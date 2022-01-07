@@ -690,6 +690,9 @@ less than threshold ({self.due_threshold}).\nStopping.")
         # remove weird clozes
         text = re.sub(r"}}{{c\d+::", "", text)
 
+        # remove sound recordings
+        text = re.sub(r"\[sound:.*?\..*?\]", " ", text)
+
         # duplicate bold and underlined content, as well as clozes
         text = re.sub(r"\b<u>(.*?)</u>\b", r" \1 \1 ", text,
                       flags=re.M | re.DOTALL)
