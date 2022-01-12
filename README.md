@@ -133,18 +133,18 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 
 ## TODO
 *More or less by order of urgency*
-* relative overdueness v2 : either square or take square root of interval
-* check how close relative overdueness is to the real deal
-* add a "deck_settings" mode that fetches the number of max reviews per day and use it as "target_deck_size"
-* add a link to reduce the size of the fasttext model
+* remove fastText
+* remove plotting
+* remove clustering
+* add to FAQ that you're removing those features
+* add a "deck_settings" mode that fetches the number of max reviews per day and use it as "target_deck_size", make it the default
 * check that docstrings are up to date, make them way more extensive
-* implement autonomous mode : mean distance across the queue probably follows an elbow curve with diminishing returns, this should help do only most important reviews
+* relative overdueness v2 : either square or take square root of interval
+* turn AnnA into AnnAddon : gui should be mainly by clicking on the gear of deck settings : AnnA > run AnnA with preset > each preset / run all active presets / About / configuration > acronym editor | field mappings | presets
 
 * implement task "optimize_filtered_deck" to optimize the order of an already existing filtered deck without burying anything
-* implement index scoring?
-* correction vector should be used when computing scores: bonus to be close to this vector + rename it to "desired_topic" + "penalized_topic"
+* implement autonomous mode : mean distance across the queue probably follows an elbow curve with diminishing returns, this should help do only most important reviews
 
-* turn AnnA into AnnAddon : gui should be mainly by clicking on the gear of deck settings : AnnA > create new preset / run AnnA with active presets > each preset / edit presets / run all active presets / About
 
 * look into sentence mining methods from sbert, that might contain useful ideas
 * take a look at topic modelling techniques that might be cleaner to invoke than the current ctf-idf implementation
