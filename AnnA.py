@@ -1303,24 +1303,29 @@ retrying until above 80% or 2000 dimensions)")
         # indTODO and added to indQUEUE. Rinse and repeat until queue is
         # the size desired by the user or indTODO is empty.
 
-        # remove potential siblings of indTODO:
-        noteCard = {}
-        for card, note in {df.loc[x].name: df.loc[x, "note"]
-                           for x in indTODO}.items():
-            if note not in noteCard:
-                noteCard[note] = card
+        # remove potential siblings of indTODO, only if the intent is not
+        # to study all the backlog over a few days:
+        if (target_deck_size not in ["all", "100%", 1, "1"]) and (len(indTODO) >= 500):
+            noteCard = {}
+            for card, note in {df.loc[x].name: df.loc[x, "note"]
+                               for x in indTODO}.items():
+                if note not in noteCard:
+                    noteCard[note] = card
+                else:
+                    if float(df.loc[noteCard[note], "ref"]
+                             ) > float(df.loc[card, "ref"]):
+                        noteCard[note] = card  # always keep the smallest ref
+                        # value, because it indicates urgency to review
+            previous_len = len(indTODO)
+            [indTODO.remove(x) for x in indTODO if x not in noteCard.values()]
+            if previous_len - len(indTODO) == 0:
+                yel("No siblings found.")
             else:
-                if float(df.loc[noteCard[note], "ref"]
-                         ) > float(df.loc[card, "ref"]):
-                    noteCard[note] = card  # always keep the smallest ref
-                    # value, because it indicates urgency to review
-        previous_len = len(indTODO)
-        [indTODO.remove(x) for x in indTODO if x not in noteCard.values()]
-        if previous_len - len(indTODO) == 0:
-            yel("No siblings found.")
-        else:
-            red(f"Removed {previous_len-len(indTODO)} siblings cards out of \
+                red(f"Removed {previous_len-len(indTODO)} siblings cards out of \
 {previous_len}.")
+        else:
+            yel("Not excluding siblings because AnnA assumes you want to keep \
+all the cards and study the deck over multipl days.")
 
         # can't start with an empty queue so picking 1 urgent card:
         if len(indQUEUE) == 0:
