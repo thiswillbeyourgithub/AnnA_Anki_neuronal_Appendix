@@ -1413,27 +1413,34 @@ set its adjustment weight to 0")
         assert indQUEUE == rated + queue
 
         try:
-            red("Mean of distance in the new queue:")
-            spread_queue = np.mean(self.df_dist.loc[queue, queue].values.flatten())
-            yel(spread_queue)
-
             if w1 == 0:
                 yel("Not showing distance without AnnA because you set \
 the adjustment weight of the reference score to 0.")
             else:
-                red("Mean of distance of the queue if you had not used AnnA:")
                 woAnnA = [x
                           for x in df.sort_values(
                               "ref", ascending=True).index.tolist()
                           if x in duewsb][0:len(queue)]
-                spread_else = np.mean(self.df_dist.loc[woAnnA, woAnnA].values.flatten())
-                yel(spread_else)
 
-                red(f"Cards in common: {len(set(queue)&set(woAnnA))} in a queue of {len(queue)} cards.")
+                common = len(set(queue) & set(woAnnA))
+                if common / len(queue) >= 0.95:
+                    yel("Not displaying Improvement Ratio because almost \
+all cards were included in the new queue.")
+                else:
+                    spread_queue = np.mean(self.df_dist.loc[queue, queue].values.flatten())
+                    spread_else = np.mean(self.df_dist.loc[woAnnA, woAnnA].values.flatten())
 
-                ratio = round(spread_queue / spread_else, 3)
-                red("Improvement ratio:")
-                red(pyfiglet.figlet_format(str(ratio)))
+                    red("Mean of distance in the new queue:")
+                    yel(spread_queue)
+                    red(f"Cards in common: {common} in a queue of \
+{len(queue)} cards.")
+                    red("Mean of distance of the queue if you had not used \
+AnnA:")
+                    yel(spread_else)
+
+                    ratio = round(spread_queue / spread_else, 3)
+                    red("Improvement ratio:")
+                    red(pyfiglet.figlet_format(str(ratio)))
 
         except Exception as e:
             red(f"\nException: {e}")
