@@ -128,8 +128,6 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 
 ## TODO
 *More or less by order of urgency*
-* update docstrings and make them comprehensive
-
 * add a "all" feature to field_mapping
 * warn LW
 
