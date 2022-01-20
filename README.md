@@ -128,8 +128,8 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 
 ## TODO
 *More or less by order of urgency*
-* remove fastText
 * add a "deck_settings" mode that fetches the number of max reviews per day and use it as "target_deck_size", make it the default
+* add a "all" feature to field_mapping
 * check that docstrings are up to date, make them way more extensive
 * relative overdueness v2 : either square or take square root of interval
 * turn AnnA into AnnAddon : gui should be mainly by clicking on the gear of deck settings : AnnA > run AnnA with preset > each preset / run all active presets / About / configuration > acronym editor | field mappings | presets
