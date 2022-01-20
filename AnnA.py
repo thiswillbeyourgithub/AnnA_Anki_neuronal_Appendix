@@ -340,7 +340,7 @@ values. {e}")
         # actual execution
         self.deckname = self._check_deck(deckname, import_thread)
         yel(f"Selected deck: {self.deckname}\n")
-        self.deck_config = self._ankiconnect(action="getDeckConfig",
+        self.deck_config = self._call_anki(action="getDeckConfig",
                                              deck=self.deckname)
         if task == "index":
             yel(f"Task : cache vectors of deck: {self.deckname}\n")
@@ -406,7 +406,7 @@ execute the code using:\n'import pickle ; a = pickle.load(open(\"last_run.pickle
         gc.collect()
 
     @classmethod
-    def _ankiconnect(self, action, **params):
+    def _call_anki(self, action, **params):
         """
         used to send request to anki using the addon anki-connect
         """
@@ -418,7 +418,7 @@ execute the code using:\n'import pickle ; a = pickle.load(open(\"last_run.pickle
         try:
             response = json.load(urllib.request.urlopen(
                 urllib.request.Request(
-                    'http://localhost:8765',
+                    'http://localhost:8775',
                     requestJson)))
         except (ConnectionRefusedError, urllib.error.URLError) as e:
             raise Exception(f"{e}: is Anki open and ankiconnect enabled?")
@@ -445,7 +445,7 @@ execute the code using:\n'import pickle ; a = pickle.load(open(\"last_run.pickle
             if len(card_id) < 50:
                 r_list = []
                 for card in tqdm(card_id):
-                    r_list.extend(self._ankiconnect(action="cardsInfo",
+                    r_list.extend(self._call_anki(action="cardsInfo",
                                   cards=[card]))
                 return r_list
 
@@ -461,7 +461,7 @@ threads of size {batchsize})")
 
                 def retrieve_cards(card_list, lock, cnt, r_list):
                     "for multithreaded card retrieval"
-                    out_list = self._ankiconnect(action="cardsInfo",
+                    out_list = self._call_anki(action="cardsInfo",
                                                         cards=card_list)
                     with lock:
                         r_list.extend(out_list)
@@ -497,7 +497,7 @@ threads of size {batchsize})")
                 return r_list
 
         if isinstance(card_id, int):
-            return self._ankiconnect(action="cardsInfo",
+            return self._call_anki(action="cardsInfo",
                                             cards=[card_id])
 
     def _check_deck(self, deckname, import_thread):
@@ -505,7 +505,7 @@ threads of size {batchsize})")
         used to check if the deckname is correct
         if incorrect, user is asked to enter the name, using autocompletion
         """
-        decklist = self._ankiconnect(action="deckNames") + ["*"]
+        decklist = self._call_anki(action="deckNames") + ["*"]
         if deckname is not None:
             if deckname not in decklist:
                 red("Couldn't find this deck.")
@@ -534,7 +534,7 @@ threads of size {batchsize})")
             red("Highjacking due card list:")
             query = self.highjack_due_query
             red(" >  '" + query + "'")
-            due_cards = self._ankiconnect(action="findCards", query=query)
+            due_cards = self._call_anki(action="findCards", query=query)
             whi(f"Found {len(due_cards)} cards...\n")
 
         elif self.task in ["filter_review_cards", "bury_excess_review_cards"]:
@@ -542,7 +542,7 @@ threads of size {batchsize})")
             query = f"\"deck:{self.deckname}\" is:due is:review -is:learn \
 -is:suspended -is:buried -is:new -rated:1"
             whi(" >  '" + query + "'")
-            due_cards = self._ankiconnect(action="findCards", query=query)
+            due_cards = self._call_anki(action="findCards", query=query)
             whi(f"Found {len(due_cards)} reviews...\n")
 
         elif self.task == "bury_excess_learning_cards":
@@ -550,14 +550,14 @@ threads of size {batchsize})")
             query = f"\"deck:{self.deckname}\" is:due is:learn -is:suspended \
 -rated:1 -rated:2:1 -rated:2:2"
             whi(" >  '" + query + "'")
-            due_cards = self._ankiconnect(action="findCards", query=query)
+            due_cards = self._call_anki(action="findCards", query=query)
             whi(f"Found {len(due_cards)} learning cards...\n")
 
         elif self.task == "index":
             yel("Getting all cards from deck...")
             query = f"\"deck:{self.deckname}\" -is:suspended"
             whi(" >  '" + query + "'")
-            due_cards = self._ankiconnect(action="findCards", query=query)
+            due_cards = self._call_anki(action="findCards", query=query)
             whi(f"Found {len(due_cards)} cards...\n")
 
         rated_cards = []
@@ -565,7 +565,7 @@ threads of size {batchsize})")
             red("Highjacking rated card list:")
             query = self.highjack_rated_query
             red(" >  '" + query + "'")
-            rated_cards = self._ankiconnect(action="findCards", query=query)
+            rated_cards = self._call_anki(action="findCards", query=query)
             red(f"Found {len(rated_cards)} cards...\n")
         elif self.rated_last_X_days != 0:
             yel(f"Getting cards that where rated in the last \
@@ -573,7 +573,7 @@ threads of size {batchsize})")
             query = f"\"deck:{self.deckname}\" rated:{self.rated_last_X_days} \
 -is:suspended -is:buried"
             whi(" >  '" + query + "'")
-            rated_cards = self._ankiconnect(action="findCards",
+            rated_cards = self._call_anki(action="findCards",
                                             query=query)
             whi(f"Found {len(rated_cards)} cards...\n")
         else:
@@ -1252,7 +1252,7 @@ retrying until above 80% or 2000 dimensions)")
 
         elif reference_order == "relative_overdueness":
             print("Computing relative overdueness...")
-            anki_col_time = int(self._ankiconnect(
+            anki_col_time = int(self._call_anki(
                 action="getCollectionCreationTime"))
             time_offset = int((time.time() - anki_col_time) / 86400)
 
@@ -1470,7 +1470,7 @@ AnnA:")
             assert len(to_bury) < len(self.due_cards)
             red(f"Burying {len(to_bury)} cards out of {len(self.due_cards)}.")
             red("This will not affect the due order.")
-            self._ankiconnect(action="bury",
+            self._call_anki(action="bury",
                               cards=to_bury)
             return True
         else:
@@ -1483,7 +1483,7 @@ AnnA:")
                 filtered_deck_name = f"{self.deckname} - AnnA Optideck"
             self.filtered_deck_name = filtered_deck_name
 
-            while filtered_deck_name in self._ankiconnect(action="deckNames"):
+            while filtered_deck_name in self._call_anki(action="deckNames"):
                 red(f"\nFound existing filtered deck: {filtered_deck_name} \
 You have to delete it manually, the cards will be returned to their original \
 deck.")
@@ -1502,7 +1502,7 @@ deck.")
                     for c in sub_card_list:
                         if keys == ["due"]:
                             newValues = [-100000 + card_list.index(c)]
-                        self._ankiconnect(action="setSpecificValueOfCard",
+                        self._call_anki(action="setSpecificValueOfCard",
                                           card=int(c),
                                           keys=keys,
                                           newValues=newValues)
@@ -1537,7 +1537,7 @@ deck.")
         whi(f"Creating deck containing the cards to review: \
 {filtered_deck_name}")
         query = "is:due -rated:1 cid:" + ','.join([str(x) for x in self.opti_rev_order])
-        self._ankiconnect(action="createFilteredDeck",
+        self._call_anki(action="createFilteredDeck",
                           newDeckName=filtered_deck_name,
                           searchQuery=query,
                           gatherCount=len(self.opti_rev_order)+1,
@@ -1547,7 +1547,7 @@ deck.")
 
         print("Checking that the content of filtered deck name is the same as \
  the order inferred by AnnA...", end="")
-        cur_in_deck = self._ankiconnect(action="findCards",
+        cur_in_deck = self._call_anki(action="findCards",
                                         query=f"\"deck:{filtered_deck_name}\"")
         diff = [x for x in self.opti_rev_order + cur_in_deck
                 if x not in self.opti_rev_order or x not in cur_in_deck]
