@@ -26,13 +26,10 @@ from nltk.stem import PorterStemmer
 from transformers import AutoTokenizer
 tokenizer = AutoTokenizer.from_pretrained("bert-base-multilingual-uncased")
 
-from scipy import sparse
-from sklearn.feature_extraction.text import TfidfTransformer, TfidfVectorizer, CountVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import pairwise_distances
 from sklearn.decomposition import PCA, TruncatedSVD
-from sklearn.cluster import KMeans, DBSCAN, AgglomerativeClustering, MiniBatchKMeans
 from sklearn.preprocessing import normalize, StandardScaler
-import plotly.express as px
 
 # avoids annoying warning
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
@@ -152,8 +149,6 @@ class AnnA:
                  acronym_list=None,
 
                  # steps:
-                 clustering_enable=False,
-                 clustering_nb_clust="auto",
                  compute_opti_rev_order=True,
                  task="filter_review_cards",
                  # can be "filter_review_cards",
@@ -212,7 +207,6 @@ class AnnA:
         self.rated_last_X_days = rated_last_X_days
         self.due_threshold = due_threshold
         self.debug_card_limit = debug_card_limit
-        self.clustering_nb_clust = clustering_nb_clust
         self.highjack_due_query = highjack_due_query
         self.highjack_rated_query = highjack_rated_query
         self.score_adjustment_factor = score_adjustment_factor
@@ -360,8 +354,6 @@ values. {e}")
             self._format_card()
             self.show_acronyms()
             self._compute_card_vectors(import_thread=import_thread)
-            if clustering_enable:
-                self.compute_clusters(minibatchk_kwargs={"verbose": 0})
 
         elif task in ["bury_excess_learning_cards",
                       "bury_excess_review_cards"]:
@@ -377,8 +369,6 @@ values. {e}")
             self._format_card()
             self.show_acronyms()
             self._compute_card_vectors(import_thread=import_thread)
-            if clustering_enable:
-                self.compute_clusters(minibatchk_kwargs={"verbose": 0})
             self._compute_distance_matrix()
             self._compute_opti_rev_order()
             self.task_filtered_deck(task=task)
@@ -390,8 +380,6 @@ values. {e}")
             self._format_card()
             self.show_acronyms()
             self._compute_card_vectors(import_thread=import_thread)
-            if clustering_enable:
-                self.compute_clusters(minibatchk_kwargs={"verbose": 0})
             self._compute_distance_matrix()
             if compute_opti_rev_order:
                 self._compute_opti_rev_order()
@@ -1580,382 +1568,6 @@ as opti_rev_order!")
                                newValues=None)
         return True
 
-    def compute_clusters(self,
-                         algo="minibatch-kmeans",
-                         input_col="VEC",
-                         cluster_col="clusters",
-                         n_topics=5,
-                         minibatchk_kwargs=None,
-                         kmeans_kwargs=None,
-                         agglo_kwargs=None,
-                         dbscan_kwargs=None,
-                         add_as_tags=True,
-                         stem_topics=True):
-        """
-        finds cluster of cards and their respective topics
-        * this is not mandatory to create the filtered deck but it's rather
-            fast
-        * Several algorithm are supported for clustering: kmeans, DBSCAN,
-            agglomerative clustering
-        * n_topics is the number of topics (=word) to get for each cluster
-        * To find the topic of each cluster, ctf-idf is used
-        """
-        self._collect_memory()
-        df = self.df
-        if self.clustering_nb_clust is None or \
-                self.clustering_nb_clust == "auto":
-            self.clustering_nb_clust = len(df.index)//50
-            red(f"No number of clusters supplied, will try with \
-{self.clustering_nb_clust}.")
-        kmeans_kwargs_deploy = {"n_clusters": self.clustering_nb_clust}
-        dbscan_kwargs_deploy = {"eps": 0.75,
-                                "min_samples": 3,
-                                "n_jobs": -1}
-        agglo_kwargs_deploy = {"n_clusters": self.clustering_nb_clust,
-                               # "distance_threshold": 0.6,
-                               "affinity": "cosine",
-                               "memory": "/tmp/",
-                               "linkage": "average"}
-        minibatchk_kwargs_deploy = {"n_clusters": self.clustering_nb_clust,
-                                    "max_iter": 100,
-                                    "batch_size": 100,
-                                    "verbose": 1,
-                                    }
-        if minibatchk_kwargs is not None:
-            minibatchk_kwargs_deploy.update(minibatchk_kwargs)
-        if kmeans_kwargs is not None:
-            kmeans_kwargs_deploy.update(kmeans_kwargs)
-        if dbscan_kwargs is not None:
-            dbscan_kwargs_deploy.update(dbscan_kwargs)
-        if agglo_kwargs is not None:
-            agglo_kwargs_deploy.update(agglo_kwargs)
-
-        if algo.lower() in "minibatch-kmeans":
-            clust = MiniBatchKMeans(**minibatchk_kwargs_deploy)
-            algo = "minibatch-K-Means"
-        elif algo.lower() in "kmeans":
-            clust = KMeans(**kmeans_kwargs_deploy)
-            algo = "K-Means"
-        elif algo.lower() in "DBSCAN":
-            clust = DBSCAN(**dbscan_kwargs_deploy)
-            algo = "DBSCAN"
-        elif algo.lower() in "agglomerative":
-            clust = AgglomerativeClustering(**agglo_kwargs_deploy)
-            algo = "Agglomerative Clustering"
-        print(f"Clustering using {algo}...")
-
-        df[cluster_col] = clust.fit_predict([x[0:] for x in df[input_col]])
-
-        cluster_list = sorted(list(set(list(df[cluster_col]))))
-        cluster_nb = len(cluster_list)
-        print(f"Getting cluster topics for {cluster_nb} clusters...")
-
-        # reordering cluster number, as they are sometimes offset
-        for i, clust_nb in enumerate(cluster_list):
-            df.loc[df[cluster_col] == clust_nb, cluster_col] = i
-        cluster_list = sorted(list(set(list(df[cluster_col]))))
-        cluster_nb = len(cluster_list)
-
-        if stem_topics:
-            df["stemmed"] = df.apply(
-                    lambda row: " ".join([ps.stem(x) for x in row["text"].split()]),
-                    axis=1)
-            topics_col = "stemmed"
-        else:
-            topics_col = "text"
-
-        df_by_cluster = df.groupby([cluster_col],
-                                   as_index=False).agg({topics_col: ' '.join})
-        count = CountVectorizer().fit_transform(df_by_cluster[topics_col])
-        ctfidf = CTFIDFVectorizer().fit_transform(count,
-                                                  n_samples=len(
-                                                      df_by_cluster.index))
-        count_vectorizer = CountVectorizer().fit(df_by_cluster[topics_col])
-        count = count_vectorizer.transform(df_by_cluster[topics_col])
-        words = count_vectorizer.get_feature_names()
-        ctfidf = CTFIDFVectorizer().fit_transform(count,
-                                                  n_samples=len(
-                                                      df_by_cluster.index
-                                                      )).toarray()
-        try:
-            w_by_class = {str(clust): [
-                                       words[index]
-                                       for index in
-                                       ctfidf[ind].argsort()[-n_topics:]
-                                       ] for clust, ind in enumerate(
-                                           df_by_cluster.clusters)}
-            df["cluster_topic"] = ""
-            for i in df.index:
-                clst_tpc = " ".join([x
-                                     for x in w_by_class[str(
-                                         df.loc[i, cluster_col])]])
-                df.loc[i, "cluster_topic"] = clst_tpc
-
-            self.w_by_class = w_by_class
-            self.df = df.sort_index()
-
-            if add_as_tags:
-                # creates two threads, the first one removes old tags and the
-                # other one adds the new one
-                threads = []
-                full_note_list = list(set(df["note"].tolist()))
-                all_tags = df["tags"].tolist()
-                present_tags = []
-                self._ankiconnect(action="addTags", batchmode="open")
-                for t in all_tags:
-                    if " " in t:
-                        present_tags.extend(t.split(" "))
-                    else:
-                        present_tags.append(t)
-                present_tags = list(set(present_tags))
-                if "" in present_tags:
-                    present_tags.remove("")
-                to_remove = list(set([x for x in filter(
-                                      lambda x: "AnnA::cluster_topic::" in x,
-                                      present_tags)]))
-                if len(to_remove) != 0:
-                    def _threaded_remove_tags(tags, pbar_r):
-                        for tag in tags:
-                            self._ankiconnect(action="removeTags",
-                                              notes=full_note_list,
-                                              tags=str(tag),
-                                              batchmode="ongoing")
-                            pbar_r.update(1)
-                    pbar_r = tqdm(desc="Removing old cluster tags...",
-                                  unit="cluster",
-                                  position=1,
-                                  total=len(to_remove))
-                    thread = threading.Thread(target=_threaded_remove_tags,
-                                              args=(to_remove, pbar_r),
-                                              daemon=False)
-                    thread.start()
-                    threads.append(thread)
-
-                df["cluster_topic"] = df["cluster_topic"].str.replace(" ", "_")
-
-                def _threaded_add_cluster_tags(list_i, pbar_a):
-                    for i in list_i:
-                        cur_time = "_".join(
-                                time.asctime().split()[0:4]).replace(
-                                ":", "h")[0:-3]
-                        nb = df[df['clusters'] == i]['cluster_topic'].iloc[0]
-                        newTag = "AnnA::cluster_topic::"
-                        newTag += f"{cur_time}::cluster_#{str(i)}"
-                        newTag += f"::{nb}"
-                        note_list = list(set(
-                            df[df["clusters"] == i]["note"].tolist()))
-                        self._ankiconnect(action="addTags",
-                                          notes=note_list,
-                                          tags=newTag,
-                                          batchmode="ongoing")
-                        pbar_a.update(1)
-                    return True
-                pbar_a = tqdm(total=len(cluster_list),
-                              desc="Adding new cluster tags",
-                              position=0,
-                              unit="cluster")
-                thread = threading.Thread(
-                                    target=_threaded_add_cluster_tags,
-                                    daemon=False,
-                                    args=(cluster_list, pbar_a))
-                thread.start()
-                threads.append(thread)
-
-                [t.join() for t in threads]
-                pbar_a.close()
-                if len(to_remove) != 0:
-                    pbar_r.close()
-        except IndexError as e:
-            red(f"Index Error when finding cluster topic! {e}")
-        finally:
-            self._ankiconnect(action="addTags", batchmode="close")
-            self._ankiconnect(action="clearUnusedTags")
-        return True
-
-    def plot_latent_space(self,
-                          specific_index=None,
-                          reduce_dim="umap",
-                          color_col="tags",
-                          hover_cols=["cropped_text",
-                                      "tags",
-                                      "clusters",
-                                      "cluster_topic"],
-                          coordinate_col="VEC",
-                          disable_legend=True,
-                          umap_kwargs=None,
-                          plotly_kwargs=None,
-                          pca_kwargs=None,
-                          save_as_html=True,
-                          ):
-        """
-        open a browser tab with a 2D plot showing your cards and their
-        relations
-        """
-        df = self.df.copy()
-        pca_kwargs_deploy = {"n_components": 2, "random_state": 42}
-        umap_kwargs_deploy = {"n_jobs": -1,
-                              "verbose": 1,
-                              "n_components": 2,
-                              "metric": "cosine",
-                              "init": 'spectral',
-                              "random_state": 42,
-                              "transform_seed": 42,
-                              "n_neighbors": 50,
-                              "min_dist": 0.1}
-        plotly_kwargs_deploy = {"data_frame": df,
-                                "title": "AnnA Anki neuronal Appendix",
-                                "x": "X",
-                                "y": "Y",
-                                "hover_data": hover_cols,
-                                "color": color_col}
-        if umap_kwargs is not None:
-            umap_kwargs_deploy.update(umap_kwargs)
-        if plotly_kwargs is not None:
-            plotly_kwargs_deploy.update(plotly_kwargs)
-        if pca_kwargs is not None:
-            pca_kwargs_deploy.update(pca_kwargs)
-
-        if reduce_dim is not None:
-            if specific_index is not None:
-                data = [x[0:] for x in df.loc[specific_index, coordinate_col]]
-            else:
-                data = [x[0:] for x in df[coordinate_col]]
-            print(f"Reduce to 2 dimensions using {reduce_dim} before \
-plotting...")
-        if reduce_dim.lower() in "pca":
-            pca_2D = PCA(**pca_kwargs_deploy)
-            res = pca_2D.fit_transform(data).T
-            x_coor = res[0]
-            y_coor = res[1]
-        elif reduce_dim.lower() in "umap":
-            import umap.umap_
-            res = umap.UMAP(**umap_kwargs_deploy).fit_transform(data).T
-            x_coor = res[0]
-            y_coor = res[1]
-        elif reduce_dim is None:
-            x_coor = [x[0] for x in df[coordinate_col]],
-            x_coor = list(x_coor)[0]
-            y_coor = [x[1] for x in df[coordinate_col]],
-            y_coor = list(y_coor)[0]
-
-        df["X"] = x_coor
-        df["Y"] = y_coor
-        print("Plotting results...")
-        df["cropped_text"] = df["text"].str[0:75]
-        if "clusters" not in df.columns:
-            df["clusters"] = 0
-        if "cluster_topic" not in df.columns:
-            df["cluster_topic"] = 0
-        fig = px.scatter(**plotly_kwargs_deploy)
-        if disable_legend:
-            fig = fig.update_layout(showlegend=False)
-        if save_as_html:
-            fig.write_html(f"plotly_graph_{self.deckname}.html")
-            print(f"Saved plot as 'plotly_graph_{self.deckname}.html'")
-        print("Opening graph in browser...")
-        fig.show()
-        return True
-
-    @classmethod
-    def search_for_notes(self,
-                         user_input,
-                         nlimit=10,
-                         user_col="VEC_FULL",
-                         do_format_input=False,
-                         anki_or_print="anki",
-                         reverse=False,
-                         fastText_lang="fr",
-                         offline=False):
-        """
-        given a text input, find notes with highest cosine similarity
-        * note that you cannot use the pca version of the fastText vectors
-            otherwise you'd have to re run the whole PCA, so it's quicker
-            to just use the full vectors
-        * note that if the results are displayed in the browser, the order
-            cannot be maintained. So you will get the nlimit best match
-            randomly displayed, then the nlimit+1 to 2*nlimit best match
-            randomly displayed etc
-        * note that this obviously only works using fastText vectors and not TFIDF
-            (they would have to be recomputed each time)
-        """
-        pd.set_option('display.max_colwidth', None)
-        if offline:
-            fastText_cachefile = Path("./cached_vectors.pickle")
-            if fastText_cachefile.exists():
-                df = pd.read_pickle(fastText_cachefile)
-            else:
-                red("cached vectors not found.")
-                return False
-
-            red("Loading fastText model")
-            import fastText
-            import fastText.util
-            try:
-                fastText.util.download_model(fastText_lang, if_exists='ignore')
-                ft = fastText.load_model(f"cc.{fastText_lang}.300.bin")
-            except Exception as e:
-                red(f"Couldn't load fastText model: {e}")
-                raise SystemExit()
-
-            from sklearn.metrics import pairwise_distances
-
-            anki_or_print = "print"
-            user_col = "VEC"
-
-        elif self.vectorizer == "TFIDF":
-            red("Cannot search for note using TFIDF vectors, only fastText can \
-be used.")
-            return False
-
-        else:
-            df = self.df.copy()
-
-        if do_format_input:
-            user_input = self._format_text(user_input)
-
-        embed = np.max([ft.get_word_vector(x) for x in user_input.split(" ")], axis=0)
-
-        print("")
-        tqdm.pandas(desc="Searching")
-        try:
-            df["distance"] = 0.0
-            df["distance"] = df["distance"].astype(np.float32)
-            df["distance"] = df[user_col].progress_apply(
-                    lambda x: pairwise_distances(embed.reshape(1, -1),
-                                                 x.reshape(1, -1),
-                                                 metric="cosine"))
-        except ValueError as e:
-            red(f"Error {e}: did you select column 'VEC' instead of \
-'VEC_FULL'?")
-            return False
-        index = df.index
-        good_order = sorted(index,
-                            key=lambda row: df.loc[row, "distance"],
-                            reverse=reverse)
-        cnt = 0
-        ans = "y"
-        while True:
-            cnt += 1
-            if ans != "n":
-                if anki_or_print == "print":
-                    print(df.loc[
-                                 good_order[
-                                     nlimit*cnt:nlimit*(cnt+1)
-                                     ], ["text", "distance"]])
-                elif anki_or_print == "anki":
-                    query = "cid:" + ",".join(
-                            [str(x)
-                                for x in good_order[
-                                    nlimit*cnt:nlimit*(cnt+1)]]
-                            )
-                    self._ankiconnect(
-                            action="guiBrowse",
-                            query=query)
-            else:
-                break
-            ans = input("Show more?\n(y/n)>")
-        pd.reset_option('display.max_colwidth')
-        return True
 
     def save_df(self, df=None, out_name=None):
         """
@@ -2009,32 +1621,6 @@ the data in `acronym_list`.")
             pprint(random.choices(matched, k=min(5, len(matched))))
         print("")
         return True
-
-
-class CTFIDFVectorizer(TfidfTransformer):
-    """
-    this class is just used to allow class Tf-idf, I took it from:
-    https://towardsdatascience.com/creating-a-class-based-tf-idf-with-scikit-learn-caea7b15b858
-    """
-    def __init__(self, *args, **kwargs):
-        super(CTFIDFVectorizer, self).__init__(*args, **kwargs)
-
-    def fit(self, X: sparse.csr_matrix, n_samples: int):
-        """Learn the idf vector (global term weights) """
-        _, n_features = X.shape
-        df = np.squeeze(np.asarray(X.sum(axis=0)))
-        idf = np.log(n_samples / df)
-        self._idf_diag = sparse.diags(idf, offsets=0,
-                                  shape=(n_features, n_features),
-                                  format='csr',
-                                  dtype=np.float32)
-        return self
-
-    def transform(self, X: sparse.csr_matrix) -> sparse.csr_matrix:
-        """Transform a count-based matrix to c-TF-IDF """
-        X = X * self._idf_diag
-        X = normalize(X, axis=1, norm='l2', copy=False)
-        return X
 
 
 # from https://gist.github.com/beniwohli/765262

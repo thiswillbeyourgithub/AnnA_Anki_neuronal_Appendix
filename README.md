@@ -30,13 +30,11 @@ Here are different ways of looking at what AnnA can do for you in a few words:
 7. I am using the V2 scheduler.
 
 ## Other features
-* Keeps the OCR data of pictures in your cards, if you analyzed them beforehand using [AnkiOCR](https://github.com/cfculhane/AnkiOCR/).
-* Group your cards by semantic cluster using various algorithms (k-means, minibatch k-means, DBSCAN, agglomerative clustering). The topic of each cluster can then be added as tag to your cards. Here's an example on my med school cards:
-    <img title="Cluster tags" src="screenshots/cluster_tags.png" width="600" height="300"/>
-* Create a plot showing clusters of semantic meanings from your anki collection. As you can see on this picture (click to see it in big):
-    <img title="Colored by tags" src="screenshots/by_tags.png" width="250" height="250"/> <img title="Colored by clusters" src="screenshots/by_clusters.png" width="250" height="250"/>
 * Code is PEP8 compliant, dynamically typed, all the functions have a detailed docstrings. Contributions are welcome, opening issues is encouraged and appreciated.
-* Search for cards in your collection using semantic queries (i.e. typing something with a close `meaning` to a card will find it even if no words are in common). I don't expect this to be really useful, I just don't really need to remove it.
+* Keeps the OCR data of pictures in your cards, if you analyzed them beforehand using [AnkiOCR](https://github.com/cfculhane/AnkiOCR/).
+* Can automatically replace acronyms in your cards (e.g. 'PNO' can be replaced to "pneumothorax" if you tell it to), regexp are supported
+* Can attribute more importance to some fields of some cards if needed.
+* Previous feature like clustering, plotting, searching have been removed as I don't expect them to be useful to users.
 
 ## FAQ
 * **How does it work? (Layman version)** It uses a vectorizer to assign numbers (vectors) to each cards. If the numbers of two cards are very close, then the cards have similar content and should not be reviewed too close to each other.
@@ -47,7 +45,7 @@ Here are different ways of looking at what AnnA can do for you in a few words:
 * **Does this only work for english cards?** No! TF_IDF use a multilingual BERT uncased tokenization so should work on most languages (even if you have several different languages in the same deck). fastText exists in 294 languages but apparently only one at a time, though it will still work even if you provide the wrong language as it uses subword tokenization.
 * **Can I use this if I don't know python?** Yes! Installing the thing might not be easy but it's absolutely doable. And you don't need to know python to *run* AnnA. I tried my best to make it accessible and help is welcome.
 * **What do you call "optimal review order"?** The order that minimizes the chance of reviewing similar cards in a day. You see, Anki has no knowledge of the content of cards and only cares about their interval and ease. Its built-in system of "siblings" is useful but I think we can do better. AnnA was made to create filtered decks sorted by "relative_overdueness" (or other) BUT in a way that keeps *semantic* siblings far from each other.
-* **When should I use this?** It seems good for dealing with the huge backlog you get in medical school, or just everyday to reduce the workload. If you have 2 000 reviews to do, but can only do 500 in a day: AnnA is making sure that you will get the most out of those 500. I don't expect the plotting and clustering features to be really used but I had to code them to make sure AnnA was working fine so I might as well leave it :)
+* **When should I use this?** It seems good for dealing with the huge backlog you get in medical school, or just everyday to reduce the workload. If you have 2 000 reviews to do, but can only do 500 in a day: AnnA is making sure that you will get the most out of those 500.
 * **How do you use this?** I described my routine in a separate file called `authors_routine.md`.
 
 * **What are the power requirements to run this?** I wanted to make it as efficient as possible but am still improving the code. Computing the distance matrix can be long if you do this on very large amount of cards but this step is done in parallel on all cores so should not be the bottleneck. Let me know if some steps are unusually slow and I will try to optimize it. With one argument you can use SVD, PCA or UMAP to do a dimension reduction on your cards, making the rest of the script faster, at the cost of precision. If you want to use AnnA on a very slow device, TF_IDF is probably faster. Computing fastText should not be an issue because I implemented a cache and use a memoize function but needs a lot of RAM and might become very slow if your computer starts swapping.
@@ -104,8 +102,6 @@ AnnA was made with usability in mind. With the right arguments, you can have to 
  * `acronym_file` a python file containing dictionaries that themselves contain acronyms to extend in the text of cards. For example `CRC` can be extended to `CRC (colorectal cancer)`. (The parenthesis are automatically added.) Default is `"acronym_file.py"`. The matching is case sensitive only if the key contains uppercase characters. The ".py" file extension is not mandatory.
  * `acronym_list` a list of name of dictionaries found in the file from `acronym_file` to use to extend text. For example `["AI_machine_learning", "medical_terms"]` from `example_file/acronym_file.py`. Default to None.
 
- * `clustering_enable` whether to enable clustering or not. Default is `True`.
- * `clustering_nb_clust` number specifying the number of clusters to look for. Only relevant for some clustering algorithms. Default is `"auto"`, this will look for one cluster every 20 cards.
  * `compute_opti_rev_order` if `False`, won't compute optimal review order and will set `to_anki` to False. Default is `True`.
  * `check_database` at the end of execution, ask anki to check the database or not. Default is `False`.
 
@@ -125,21 +121,15 @@ AnnA was made with usability in mind. With the right arguments, you can have to 
  * `debug_card_limit` limit the number of due cards to take into account. It is used for debugging as it allows to run the script quickly. Default is `None`.
  * `save_instance_as_pickle` Saving the instance in a pickle file called "last_run.pickle". Default is `False`.
 
-AnnA has a number of other built-in methods you can run after instantiating the class. They are especially useful if "to_anki" is set to `False`. Note that methods beginning with a "_" are not supposed to be called by the user and are reserved for backend use. Here's a list of useful methods:
+AnnA has a number of other built-in methods you can run after instantiating the class. Note that methods beginning with a "_" are not supposed to be called by the user and are reserved for backend use. Here's a list of useful methods:
 
-* `compute_clusters` can be used to group the cards by semantic clusters. Several algorithms are implemented: kmeans, minibatch-kmeans, agglomerative clustering, DBSCAN. I can add more if needed.
-* `plot_latent_space` can be used to display a 2D projection of your cards using plotly. This opens a new tab in your browser and loads an interactive interface in it. You can color it using tags, clusters, etc. If you have a blank plot without any points, call the method again. I don't understand this issue with plotly yet and help is appreciated :/
-* `search_for_notes` will look for cards that are similar to your input. That means that you can type in "localisation of pain in case of kidney stones" and it should find the cards dealing with those concepts even if they don't contain any of those words. This depends on how good fastText performs on your topic. You can use `offline=True` to search directly in the cached vectors file.
-* `display_best_review_order` used as a debugging tool. Allows to check if the order seems correct without having to create a filtered deck.
+* `display_best_review_order` used as a debugging tool : only display order. Allows to check if the order seems correct without having to create a filtered deck.
 * `save_df` saves the dataframe containing the cards and all other infos needed by AnnA as a pickle file. Used mainly for debugging. Files will be saved to the folder `DF_backups`
 * `show_acronyms` shows the acronym present in your deck that were not extended. Useful if you want to adjust your acronym list.
 
 ## TODO
 *More or less by order of urgency*
 * remove fastText
-* remove plotting
-* remove clustering
-* add to FAQ that you're removing those features
 * add a "deck_settings" mode that fetches the number of max reviews per day and use it as "target_deck_size", make it the default
 * check that docstrings are up to date, make them way more extensive
 * relative overdueness v2 : either square or take square root of interval
