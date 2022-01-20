@@ -37,5 +37,4 @@ AnnA(deckname="Some_OtherDeck::subdeck#2",
         target_deck_size="50",
         acronym_list=None,
         rated_last_X_days=3,
-        check_database=True  # ask anki to refresh the database at the end (not really necessary)
         )

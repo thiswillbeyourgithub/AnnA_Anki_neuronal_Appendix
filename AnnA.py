@@ -156,7 +156,6 @@ class AnnA:
                  # "bury_excess_learning_cards",
                  # "index"
                  deck_template=None,
-                 check_database=False,
 
                  # vectorization:
                  stopwords_lang=["english", "french"],
@@ -400,10 +399,6 @@ execute the code using:\n'import pickle ; a = pickle.load(open(\"last_run.pickle
 \", \"rb\"))'")
                 except TypeError as e:
                     red(f"Error when saving instance as pickle file: {e}")
-
-        if check_database:
-            whi("Re-optimizing Anki database")
-            self._ankiconnect(action="guiCheckDatabase")
 
         yel(f"Done with '{self.task}' on deck {self.deckname}")
 

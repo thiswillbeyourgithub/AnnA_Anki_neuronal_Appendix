@@ -103,7 +103,6 @@ AnnA was made with usability in mind. With the right arguments, you can have to 
  * `acronym_list` a list of name of dictionaries found in the file from `acronym_file` to use to extend text. For example `["AI_machine_learning", "medical_terms"]` from `example_file/acronym_file.py`. Default to None.
 
  * `compute_opti_rev_order` if `False`, won't compute optimal review order and will set `to_anki` to False. Default is `True`.
- * `check_database` at the end of execution, ask anki to check the database or not. Default is `False`.
 
  * `task` can be "filter_review_cards", "bury_excess_learning_cards", "bury_excess_review_cards" or "index". Respectively to create a filtered deck with the cards, or bury only the similar learning cards (among other learning cards), or bury only the similar cards in review (among other review cards), or to add all the fastText vectors in the cache file (to speed up later runs). Default is "`filter_review_cards`".
  * `deck_template` name template of the filtered deck to create. Only available if task is set to "filter_review_cards". Default is `None`.
