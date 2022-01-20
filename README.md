@@ -128,18 +128,19 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 
 ## TODO
 *More or less by order of urgency*
-* add a "deck_settings" mode that fetches the number of max reviews per day and use it as "target_deck_size", make it the default
+* update docstrings and make them comprehensive
+
 * add a "all" feature to field_mapping
-* check that docstrings are up to date, make them way more extensive
+* warn LW
+
+* add a "deck_settings" mode that fetches the number of max reviews per day and use it as "target_deck_size", make it the default
 * relative overdueness v2 : either square or take square root of interval
 * create a gui : mainly by clicking on the gear of deck settings : AnnA > run AnnA with preset > each preset / run all active presets / About / configuration > acronym editor | field mappings | presets
-
 * implement task "optimize_filtered_deck" to optimize the order of an already existing filtered deck without burying anything
 * implement autonomous mode : mean distance across the queue probably follows an elbow curve with diminishing returns, this should help do only most important reviews
 
 * look into sentence mining methods from sbert, that might contain useful ideas
 * take a look at topic modelling techniques that might be cleaner to invoke than the current ctf-idf implementation
-* warn LW
 * re read this article for inspiration : http://mccormickml.com/2021/05/27/question-answering-system-tf-idf/
 * automatically create a phylogeny of cards based on a distance matrix and see if it's an appropriate mind map, plotly is suitable for this kind of tree
 * investigate crazy ideas list
