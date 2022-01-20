@@ -14,7 +14,7 @@ field_dic = {
                            "More"],
              # shameless plug: clozolkor is my own template,
              # more info: https://github.com/thiswillbeyourgithub/Clozolkor
-             "image occlusion enhanced": ["Header", "Header", "Header", "Header", "Header",
+             "image occlusion enhanced": ["Header", "Header",
                                           "Footer", "Footer",
                                           "Remarks", "Remarks",
                                           "Extra 1", "Extra 1",

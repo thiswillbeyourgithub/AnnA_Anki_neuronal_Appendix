@@ -1,0 +1,9 @@
+{
+    "apiKey": null,
+    "apiLogPath": null,
+    "webBindAddress": "127.0.0.1",
+    "webBindPort": 8775,
+    "webCorsOriginList": ["http://localhost"],
+    "ignoreOriginList": []
+}
+
