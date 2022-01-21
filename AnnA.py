@@ -358,7 +358,7 @@ values. {e}")
             self._compute_card_vectors(import_thread=import_thread)
             self._compute_distance_matrix()
             self._compute_opti_rev_order()
-            self.task_filtered_deck(task=task)
+            self.bury_or_create_filtered(task=task)
         else:
             yel("Task : created filtered deck containing review cards")
             self._init_dataFrame()
@@ -370,7 +370,7 @@ values. {e}")
             self._compute_distance_matrix()
             self._compute_opti_rev_order()
             if task == "filter_review_cards":
-                self.task_filtered_deck()
+                self.bury_or_create_filtered()
 
         yel(f"Done with '{self.task}' on deck {self.deckname}")
         gc.collect()
@@ -1381,11 +1381,12 @@ AnnA:")
         print(self.df.loc[order, "text"])
         return True
 
-    def task_filtered_deck(self,
+    def bury_or_create_filtered(self,
                            fdeckname_template=None,
                            task=None):
         """
-        create a filtered deck containing the cards to review in optimal order
+        Either bury cards that are not in the optimal queue or create a
+            filtered deck containing the cards to review in optimal order.
 
         * The filtered deck is created with setting 'sortOrder = 0', meaning
             ("oldest seen first"). This function then changes the review order
