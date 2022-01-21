@@ -400,71 +400,67 @@ values. {e}")
         return response['result']
 
     def _get_cards_info_from_card_id(self, card_id):
-        """
-        get all information from a card using its card id, works with
-        either int of list of int
+        """ get all information from a card from its card id
 
         * Due to the time it takes to get thousands of cards, I decided
-            to used Threading extensively to speed it up.
+            to used Threading extensively if requesting data for more than 50
+            cards
         """
-        if isinstance(card_id, list):
-            if len(card_id) < 50:
-                r_list = []
-                for card in tqdm(card_id):
-                    r_list.extend(self._call_anki(action="cardsInfo",
-                                  cards=[card]))
-                return r_list
+        if isinstance(card_id, int):
+            card_id = [card_id]
+        if len(card_id) < 50:
+            r_list = []
+            for card in tqdm(card_id):
+                r_list.extend(self._call_anki(action="cardsInfo",
+                              cards=[card]))
+            return r_list
 
-            else:
-                lock = threading.Lock()
-                threads = []
-                cnt = 0
-                r_list = []
-                target_thread_n = 5
-                batchsize = len(card_id) // target_thread_n + 3
-                whi(f"(Large number of cards to retrieve: creating 10 \
+        else:
+            lock = threading.Lock()
+            threads = []
+            cnt = 0
+            r_list = []
+            target_thread_n = 5
+            batchsize = len(card_id) // target_thread_n + 3
+            whi(f"(Large number of cards to retrieve: creating 10 \
 threads of size {batchsize})")
 
-                def retrieve_cards(card_list, lock, cnt, r_list):
-                    "for multithreaded card retrieval"
-                    out_list = self._call_anki(action="cardsInfo",
-                                                        cards=card_list)
-                    with lock:
-                        r_list.extend(out_list)
-                        pbar.update(1)
-                    return True
+            def retrieve_cards(card_list, lock, cnt, r_list):
+                "for multithreaded card retrieval"
+                out_list = self._call_anki(action="cardsInfo",
+                                                    cards=card_list)
+                with lock:
+                    r_list.extend(out_list)
+                    pbar.update(1)
+                return True
 
-                with tqdm(total=target_thread_n,
-                          unit="thread",
-                          dynamic_ncols=True,
-                          desc="Done threads",
-                          delay=2,
-                          smoothing=0) as pbar:
-                    for nb in range(0, len(card_id), batchsize):
-                        cnt += 1
-                        temp_card_id = card_id[nb: nb + batchsize]
-                        thread = threading.Thread(target=retrieve_cards,
-                                                  args=(temp_card_id,
-                                                        lock,
-                                                        cnt,
-                                                        r_list),
-                                                  daemon=False)
-                        thread.start()
-                        threads.append(thread)
-                        time.sleep(0.1)
-                        while sum([t.is_alive() for t in threads]) >= 15:
-                            time.sleep(0.5)
-                    print("")
-                    [t.join() for t in threads]
-                assert len(r_list) == len(card_id)
-                r_list = sorted(r_list,
-                                key=lambda x: x["cardId"],
-                                reverse=False)
-                return r_list
-
-        if isinstance(card_id, int):
-            return self._call_anki(action="cardsInfo",
-                                            cards=[card_id])
+            with tqdm(total=target_thread_n,
+                      unit="thread",
+                      dynamic_ncols=True,
+                      desc="Done threads",
+                      delay=2,
+                      smoothing=0) as pbar:
+                for nb in range(0, len(card_id), batchsize):
+                    cnt += 1
+                    temp_card_id = card_id[nb: nb + batchsize]
+                    thread = threading.Thread(target=retrieve_cards,
+                                              args=(temp_card_id,
+                                                    lock,
+                                                    cnt,
+                                                    r_list),
+                                              daemon=False)
+                    thread.start()
+                    threads.append(thread)
+                    time.sleep(0.1)
+                    while sum([t.is_alive() for t in threads]) >= 15:
+                        time.sleep(0.5)
+                print("")
+                [t.join() for t in threads]
+            assert len(r_list) == len(card_id)
+            r_list = sorted(r_list,
+                            key=lambda x: x["cardId"],
+                            reverse=False)
+            return r_list
 
     def _check_deck(self, deckname, import_thread):
         """
