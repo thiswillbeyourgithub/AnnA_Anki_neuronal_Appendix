@@ -995,17 +995,12 @@ as fallback: {e}")
                 def tknzer(x):
                     return x
 
-            n_features = len(" ".join([x for x in df["text"]]).split(" ")) // 100
-            n_features = max(n_features, 500)
-            n_features = min(n_features, 10_000)
-            red(f"Max number of features for TF_IDF: {n_features}")
-
             vectorizer = TfidfVectorizer(strip_accents="ascii",
                                          lowercase=True,
                                          tokenizer=tknzer,
                                          stop_words=None,
                                          ngram_range=(1, 10),
-                                         max_features=n_features,
+                                         max_features=10_000,
                                          norm="l2")
             # stop words have already been removed
             t_vec = vectorizer.fit_transform(tqdm(df["text"],
