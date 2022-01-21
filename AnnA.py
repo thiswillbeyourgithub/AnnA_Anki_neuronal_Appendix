@@ -372,9 +372,6 @@ values. {e}")
 
         yel(f"Done with '{self.task}' on deck {self.deckname}")
 
-    def _collect_memory(self):
-        gc.collect()
-
     @classmethod
     def _call_anki(self, action, **params):
         """
@@ -498,7 +495,7 @@ threads of size {batchsize})")
         create a pandas DataFrame, fill it with the information gathered from
         anki connect like card content, intervals, etc
         """
-        self._collect_memory()
+        gc.collect()
 
         if self.highjack_due_query is not None:
             red("Highjacking due card list:")
@@ -719,7 +716,7 @@ less than threshold ({self.lowlimit_due}).\nStopping.")
         which can be found at the top of the file. If not relevant field are
         found then only the first field is kept.
         """
-        self._collect_memory()
+        gc.collect()
         def _threaded_field_filter(df, index_list, lock, pbar, stopw_compiled):
             """
             threaded implementation to speed up execution
@@ -888,7 +885,7 @@ adjust formating issues:")
         df["VEC"] contains either all the vectors or less if you
             enabled dimensionality reduction
         """
-        self._collect_memory()
+        gc.collect()
         if df is None:
             df = self.df
 
@@ -1079,7 +1076,7 @@ retrying until above 80% or 2000 dimensions)")
         * the distance matrix can be parallelised by scikit learn so I didn't
             bother saving and reusing the matrix
         """
-        self._collect_memory()
+        gc.collect()
         df = self.df
 
         print("\nComputing distance matrix on all available cores...")
@@ -1167,7 +1164,7 @@ retrying until above 80% or 2000 dimensions)")
         CAREFUL: this docstring might not be up to date as I am constantly
             trying to improve the code
         """
-        self._collect_memory()
+        gc.collect()
         # getting args etc
         reference_order = self.reference_order
         df = self.df
@@ -1398,7 +1395,7 @@ AnnA:")
         display the cards in the best optimal order. Useful to see if something
         went wrong before creating the filtered deck
         """
-        self._collect_memory()
+        gc.collect()
         order = self.opti_rev_order[:display_limit]
         print(self.df.loc[order, "text"])
         return True
@@ -1424,7 +1421,7 @@ AnnA:")
             deck will be created and AnnA will just bury the cards that are
             too similar
         """
-        self._collect_memory()
+        gc.collect()
         if task in ["bury_excess_learning_cards", "bury_excess_review_cards"]:
             to_keep = self.opti_rev_order
             to_bury = [x for x in self.due_cards if x not in to_keep]
