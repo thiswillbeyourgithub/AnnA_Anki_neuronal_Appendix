@@ -572,13 +572,6 @@ less than threshold ({self.lowlimit_due}).\nStopping.")
         whi(f"Got all infos in {int(time.time()-start)} seconds.\n")
 
         for i, card in enumerate(list_cardInfo):
-            # removing useless fields:
-            for rem in ["question", "answer", "css"]:
-                try:
-                    if rem in list_cardInfo[i]:
-                        list_cardInfo[i].pop(rem)
-                except KeyError as e:
-                    pass
             list_cardInfo[i]["fields"] = dict(
                 (k.lower(), v)
                 for k, v in list_cardInfo[i]["fields"].items())
