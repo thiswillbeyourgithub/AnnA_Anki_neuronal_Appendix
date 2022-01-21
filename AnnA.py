@@ -324,7 +324,7 @@ values. {e}")
             self.stops = None
 
         # actual execution
-        self.deckname = self._check_deck(deckname, import_thread)
+        self.deckname = self._deckname_check(deckname, import_thread)
         yel(f"Selected deck: {self.deckname}\n")
         self.deck_config = self._call_anki(action="getDeckConfig",
                                              deck=self.deckname)
@@ -462,7 +462,7 @@ threads of size {batchsize})")
                             reverse=False)
             return r_list
 
-    def _check_deck(self, deckname, import_thread):
+    def _deckname_check(self, deckname, import_thread):
         """
         used to check if the deckname is correct
         if incorrect, user is asked to enter the name, using autocompletion
