@@ -133,15 +133,14 @@ class AnnA:
                  # main settings
                  deckname=None,
                  reference_order="relative_overdueness",
-                 # can be "lowest_interval", "relative overdueness",
-                 # "order_added"
-                 target_deck_size="80%",
+                 # can be "lowest_interval", "relative overdueness", "order_added"
+                 target_deck_size="80%",  # 80%, 0.8, "all"
                  rated_last_X_days=4,
                  due_threshold=30,
                  highjack_due_query=None,
                  highjack_rated_query=None,
                  score_adjustment_factor=(1, 5),
-                 log_level=2,
+                 log_level=2,  # 0, 1, 2
                  replace_greek=True,
                  keep_ocr=True,
                  field_mappings="field_mappings.py",
@@ -151,10 +150,8 @@ class AnnA:
                  # steps:
                  compute_opti_rev_order=True,
                  task="filter_review_cards",
-                 # can be "filter_review_cards",
-                 # "bury_excess_review_cards",
-                 # "bury_excess_learning_cards",
-                 # "index"
+                 # can be "filter_review_cards", "bury_excess_review_cards",
+                 # "bury_excess_learning_cards", "index"
                  deck_template=None,
 
                  # vectorization:
