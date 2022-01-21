@@ -1368,7 +1368,7 @@ AnnA:")
         except Exception as e:
             red(f"\nException: {e}")
 
-        self.opti_rev_order = queue
+        self.opti_rev_order = [int(x) for x in queue]
         self.df = df
         return True
 
