@@ -1186,11 +1186,11 @@ retrying until above 80% or 2000 dimensions)")
                     df.at[i, "ref_due"] -= anki_col_time
                     df.at[i, "ref_due"] /= 86400
                 assert df.at[i, "ref_due"] > 0
-            overdue = (df.loc[due, "ref_due"] - time_offset).to_numpy().reshape(-1, 1)
+            overdue = df.loc[due, "ref_due"] - time_offset
             df.drop("ref_due", axis=1, inplace=True)
 
-            ro = -1 * (df.loc[due, "interval"].values + 0.5) / (overdue.T + 0.5)
-            ro_cs = StandardScaler().fit_transform(ro.T)
+            ro = -1 * (df.loc[due, "interval"].values + 0.5) / (overdue + 0.5)
+            ro_cs = StandardScaler().fit_transform(ro.values.reshape(-1, 1))
             df.loc[due, "ref"] = ro_cs
 
         assert len([x for x in rated if df.loc[x, "status"] != "rated"]) == 0
