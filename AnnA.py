@@ -150,7 +150,7 @@ class AnnA:
                  task="filter_review_cards",
                  # can be "filter_review_cards", "bury_excess_review_cards",
                  # "bury_excess_learning_cards", "index"
-                 deckname_template=None,
+                 fdeckname_template=None,
 
                  # vectorization:
                  stopwords_lang=["english", "french"],
@@ -212,7 +212,7 @@ class AnnA:
         self.TFIDF_stem = TFIDF_stem
         self.TFIDF_tokenize = TFIDF_tokenize
         self.task = task
-        self.deckname_template = deckname_template
+        self.fdeckname_template = fdeckname_template
 
         # args sanity checks
         if isinstance(self.target_deck_size, int):
@@ -225,8 +225,8 @@ class AnnA:
                         "bury_excess_review_cards"]
         assert vectorizer in ["TFIDF", "fastText"]
         assert self.fastText_dim_algo in ["PCA", "UMAP", None]
-        if task != "filter_review_cards" and self.deckname_template is not None:
-            red("Ignoring argument 'deckname_template' because 'task' is not \
+        if task != "filter_review_cards" and self.fdeckname_template is not None:
+            red("Ignoring argument 'fdeckname_template' because 'task' is not \
 set to 'filter_review_cards'.")
 
         if self.acronym_file is not None and self.acronym_list is not None:
@@ -1404,7 +1404,7 @@ AnnA:")
         return True
 
     def task_filtered_deck(self,
-                           deckname_template=None,
+                           fdeckname_template=None,
                            task=None):
         """
         create a filtered deck containing the cards to review in optimal order
@@ -1412,7 +1412,7 @@ AnnA:")
         * When first creating the filtered deck, I chose 'sortOrder = 0'
             ("oldest seen first") this way I will notice if the deck
             somehow got rebuild and lost the right order
-        * deckname_template can be used to group your filtered decks together.
+        * fdeckname_template can be used to group your filtered decks together.
             Leaving it to None will make the filtered deck appear alongside
             the original deck
         * To speed up the process, I decided to create a threaded function call
@@ -1435,10 +1435,10 @@ AnnA:")
                               cards=to_bury)
             return True
         else:
-            if self.deckname_template is not None:
-                deckname_template = self.deckname_template
-            if deckname_template is not None:
-                filtered_deck_name = str(deckname_template + f" - {self.deckname}")
+            if self.fdeckname_template is not None:
+                fdeckname_template = self.fdeckname_template
+            if fdeckname_template is not None:
+                filtered_deck_name = str(fdeckname_template + f" - {self.deckname}")
                 filtered_deck_name = filtered_deck_name.replace("::", "_")
             else:
                 filtered_deck_name = f"{self.deckname} - AnnA Optideck"

@@ -101,7 +101,7 @@ AnnA was made with usability in mind. With the right arguments, you can have to 
  * `acronym_list` a list of name of dictionaries found in the file from `acronym_file` to use to extend text. For example `["AI_machine_learning", "medical_terms"]` from `example_file/acronym_file.py`. Default to None.
 
  * `task` can be "filter_review_cards", "bury_excess_learning_cards", "bury_excess_review_cards" or "index". Respectively to create a filtered deck with the cards, or bury only the similar learning cards (among other learning cards), or bury only the similar cards in review (among other review cards), or to add all the fastText vectors in the cache file (to speed up later runs). Default is "`filter_review_cards`".
- * `deckname_template` name template of the filtered deck to create. Only available if task is set to "filter_review_cards". Default is `None`.
+ * `fdeckname_template` name template of the filtered deck to create. Only available if task is set to "filter_review_cards". Default is `None`.
 
  * `stopwords_lang` a list of languages used to construct a list of stop words (i.e. words that will be ignored, like "I" or "be" in English). Default is `["english", "french"]`.
  * `vectorizer` can be either "TFIDF" or "fastText". Default is "TFIDF".
