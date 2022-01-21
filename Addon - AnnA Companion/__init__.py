@@ -487,7 +487,7 @@ class AnkiConnect:
         for cid in cards:
             try:
                 card = self.getCard(cid)
-                model = card.model()
+                model = card.note_type()
                 note = card.note()
                 fields = {}
 
