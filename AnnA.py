@@ -875,7 +875,6 @@ adjust formating issues:")
 
     def _compute_card_vectors(self,
                               df=None,
-                              store_vectors=False,
                               import_thread=None):
         """
         Assigne vectors to each card's 'comb_text', using either fastText or
@@ -991,28 +990,6 @@ as fallback: {e}")
                             red(f"Error when computing PCA reduction, using all vectors: {e}")
                             df["VEC"] = [x for x in ft_vec]
                         df["VEC_FULL"] = [x for x in ft_vec]
-
-            if store_vectors:
-                def storing_vectors(df):
-                    yel("Storing computed vectors")
-                    fastText_store = Path("./stored_vectors.pickle")
-                    if not fastText_store.exists():
-                        df_store = pd.DataFrame(columns=["cardId", "mod", "text", "VEC_FULL"]).set_index("cardId")
-                    else:
-                        df_store = pd.read_pickle(fastText_store)
-                    for i in df.index:
-                        df_store.loc[i, :] = df.loc[i, ["mod", "text", "VEC_FULL"]]
-                    df_store.to_pickle("stored_vectors.pickle_temp")
-                    if fastText_store.exists():
-                        fastText_store.unlink()
-                    Path("stored_vectors.pickle_temp").rename("stored_vectors.pickle")
-                    yel("Finished storing computed vectors")
-                stored_df = df.copy()
-                thread = threading.Thread(target=storing_vectors,
-                                          args=(stored_df,),
-                                          daemon=True)
-                thread.start()
-
 
         elif self.vectorizer == "TFIDF":
             if self.TFIDF_tokenize:
