@@ -534,8 +534,7 @@ threads of size {batchsize})")
             yel(f"Getting cards that where rated in the last {self.rated_last_X_days} days...")
             query = f"\"deck:{self.deckname}\" rated:{self.rated_last_X_days} -is:suspended -is:buried"
             whi(" >  '" + query + "'")
-            rated_cards = self._call_anki(action="findCards",
-                                            query=query)
+            rated_cards = self._call_anki(action="findCards", query=query)
             whi(f"Found {len(rated_cards)} cards...\n")
         else:
             yel("Will not look for cards rated in past days.")
@@ -809,7 +808,6 @@ less than threshold ({self.lowlimit_due}).\nStopping.")
                   desc="Combining relevant fields",
                   smoothing=0,
                   unit=" card") as pbar:
-
             for nb in range(0, n, batchsize):
                 sub_card_list = self.df.index[nb: nb + batchsize]
                 thread = threading.Thread(target=_threaded_field_filter,
@@ -1017,8 +1015,6 @@ as fallback: {e}")
                                           args=(stored_df,),
                                           daemon=True)
                 thread.start()
-
-
 
 
         elif self.vectorizer == "TFIDF":
@@ -1470,9 +1466,9 @@ deck.")
                         if keys == ["due"]:
                             newValues = [-100000 + card_list.index(c)]
                         self._call_anki(action="setSpecificValueOfCard",
-                                          card=int(c),
-                                          keys=keys,
-                                          newValues=newValues)
+                                        card=int(c),
+                                        keys=keys,
+                                        newValues=newValues)
                         pbar.update(1)
                     return True
 
@@ -1483,9 +1479,9 @@ deck.")
                           smoothing=0) as pbar:
                     lock = threading.Lock()
                     threads = []
-                    batchsize = len(card_list)//3+1
+                    batchsize = len(card_list) // 3 + 1
                     for nb in range(0, len(card_list), batchsize):
-                        sub_card_list = card_list[nb: nb+batchsize]
+                        sub_card_list = card_list[nb: nb + batchsize]
                         thread = threading.Thread(target=do_action,
                                                   args=(card_list,
                                                         sub_card_list,
@@ -1503,19 +1499,20 @@ deck.")
 
         whi(f"Creating deck containing the cards to review: \
 {filtered_deck_name}")
-        query = "is:due -rated:1 cid:" + ','.join([str(x) for x in self.opti_rev_order])
+        query = "is:due -rated:1 cid:" + ','.join(
+                [str(x) for x in self.opti_rev_order])
         self._call_anki(action="createFilteredDeck",
-                          newDeckName=filtered_deck_name,
-                          searchQuery=query,
-                          gatherCount=len(self.opti_rev_order)+1,
-                          reschedule=True,
-                          sortOrder=0,
-                          createEmpty=False)
+                        newDeckName=filtered_deck_name,
+                        searchQuery=query,
+                        gatherCount=len(self.opti_rev_order) + 1,
+                        reschedule=True,
+                        sortOrder=0,
+                        createEmpty=False)
 
         print("Checking that the content of filtered deck name is the same as \
  the order inferred by AnnA...", end="")
         cur_in_deck = self._call_anki(action="findCards",
-                                        query=f"\"deck:{filtered_deck_name}\"")
+                                      query=f"\"deck:{filtered_deck_name}\"")
         diff = [x for x in self.opti_rev_order + cur_in_deck
                 if x not in self.opti_rev_order or x not in cur_in_deck]
         if len(diff) != 0:
@@ -1530,7 +1527,6 @@ as opti_rev_order!")
                                newValues=None)
         return True
 
-
     def save_df(self, df=None, out_name=None):
         """
         export dataframe as pickle format in the folder DF_backups/
@@ -1539,8 +1535,8 @@ as opti_rev_order!")
             df = self.df.copy()
         if out_name is None:
             out_name = "AnnA_Saved_DataFrame"
-        cur_time = "_".join(time.asctime().split()[0:4]).replace(
-                ":", "h")[0:-3]
+        cur_time = "_".join(time.asctime().split()[0:4]).replace(":",
+                                                                 "h")[0:-3]
         name = f"{out_name}_{self.deckname}_{cur_time}.pickle"
         df.to_pickle("./.DataFrame_backups/" + name)
         print(f"Dataframe exported to {name}.")
