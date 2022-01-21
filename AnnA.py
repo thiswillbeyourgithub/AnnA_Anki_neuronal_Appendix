@@ -1373,20 +1373,23 @@ AnnA:")
         """
         create a filtered deck containing the cards to review in optimal order
 
-        * When first creating the filtered deck, I chose 'sortOrder = 0'
-            ("oldest seen first") this way I will notice if the deck
-            somehow got rebuild and lost the right order
-        * fdeckname_template can be used to group your filtered decks together.
-            Leaving it to None will make the filtered deck appear alongside
-            the original deck
-        * To speed up the process, I decided to create a threaded function call
+        * The filtered deck is created with setting 'sortOrder = 0', meaning
+            ("oldest seen first"). This function then changes the review order
+            inside this deck. That's why rebuilding this deck will keep the
+            cards but lose the order.
+        * fdeckname_template can be used to automatically put the filtered
+            decks to a specific location in your deck hierarchy. Leaving it
+            to None will make the filtered deck appear alongside the
+            original deck
+        * This uses a threaded call to increase speed.
         * I do a few sanity check to see if the filtered deck
             does indeed contain the right number of cards and the right cards
         * -100 000 seems to be the starting value for due order in filtered
-            decks
-        * if task is set to bury_excess_learning_cards ot bury_excess_review_cards, then no filtered
-            deck will be created and AnnA will just bury the cards that are
-            too similar
+            decks by anki : cards are review from lowest to highest "due_order".
+        * if task is set to 'bury_excess_learning_cards' or
+            'bury_excess_review_cards', then no filtered deck will be created
+            and AnnA will just bury some cards that are too similar to cards
+            that you will review.
         """
         if task in ["bury_excess_learning_cards", "bury_excess_review_cards"]:
             to_keep = self.opti_rev_order
