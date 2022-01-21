@@ -405,6 +405,9 @@ values. {e}")
         * Due to the time it takes to get thousands of cards, I decided
             to used Threading extensively if requesting data for more than 50
             cards
+        * There doesn't seem to be a way to display progress during loading,
+            so I hacked a workaround by displaying one bar for each batch
+            but it's minimally informative
         """
         if isinstance(card_id, int):
             card_id = [card_id]
@@ -464,8 +467,8 @@ threads of size {batchsize})")
 
     def _deckname_check(self, deckname, import_thread):
         """
-        used to check if the deckname is correct
-        if incorrect, user is asked to enter the name, using autocompletion
+        check if the deck you're calling AnnA exists or not
+        if not, user is asked to enter the name, suggesting autocompletion
         """
         decklist = self._call_anki(action="deckNames") + ["*"]
         if deckname is not None:
@@ -487,8 +490,8 @@ threads of size {batchsize})")
 
     def _init_dataFrame(self):
         """
-        create a pandas DataFrame, fill it with the information gathered from
-        anki connect like card content, intervals, etc
+        create a pandas DataFrame with the information gathered from
+        anki (via the bridge addon) such as card fields, tags, intervals, etc
         """
         gc.collect()
 
@@ -607,8 +610,8 @@ less than threshold ({self.lowlimit_due}).\nStopping.")
 
     def _smart_acronym_replacer(self, string, compiled, new_w):
         """
-        acronym replacement using regex needs this function to replace
-            match groups. For example: replacing 'IL(\\d+)' by "Interleukin 2"
+        this function is needed to replace acronym containing match groups
+        For example: replacing 'IL(\\d+)' by "Interleukin 2"
         """
         if len(string.groups()):
             for i in range(len(string.groups())):
@@ -620,10 +623,11 @@ less than threshold ({self.lowlimit_due}).\nStopping.")
 
     def _format_text(self, text):
         """
-        take text and output processed and formatted text
-        Acronyms will be replaced if the corresponding arguments is passed
-            when instantiating AnnA
-        Greek letters can also be replaced on the fly
+        process and formats each card's text, including :
+        * html removal
+        * acronym replacement
+        * greek replacement
+        * OCR text extractor
         """
         text = text.replace("&amp;", "&"
                             ).replace("/", " / "
@@ -706,15 +710,22 @@ less than threshold ({self.lowlimit_due}).\nStopping.")
 
     def _format_card(self):
         """
-        filter the fields of each card and keep only the relevant fields
-        a "relevant field" is one that is mentioned in the variable field_dic
-        which can be found at the top of the file. If not relevant field are
-        found then only the first field is kept.
+        goes through each cards and keep only fields deemed useful in
+        the file from argument 'field_mapping', then adds the field to
+        a single text per card in column 'comb_text'
+
+        * If no relevant fields are found, only the first one is kept
+        * 2 lowest level tags will be appended at the end of the text
+        * Threading is used to speed things up
+        * Mentionning several times a field for a specific note_type
+            in field_mapping results in the field taking more importance.
+            For example you can give more importance to field "Body" of a
+            cloze than to the field "More"
         """
         gc.collect()
         def _threaded_field_filter(df, index_list, lock, pbar, stopw_compiled):
             """
-            threaded implementation to speed up execution
+            threaded call to speed up execution
             """
             for index in index_list:
                 card_model = df.loc[index, "modelName"]
@@ -875,10 +886,11 @@ adjust formating issues:")
                               store_vectors=False,
                               import_thread=None):
         """
-        Assigne fastText vectors to each card
-        df["VEC_FULL"], contains the vectors
-        df["VEC"] contains either all the vectors or less if you
-            enabled dimensionality reduction
+        Assigne vectors to each card's 'comb_text', using either fastText or
+            TFIDF as vectorizer.
+
+        After calling this function df["VEC"] contains either all the vectors
+            or less if you enabled dimensionality reduction
         """
         gc.collect()
         if df is None:
@@ -896,14 +908,14 @@ adjust formating issues:")
                 prepare string of text to be vectorized by fastText
                 * makes lowercase
                 * replaces all non letters by a space
-                * outputs the sentence as a list of words
+                * outputs preprocessed comb_text as a list of words
                 """
                 return re.sub(alphanum, " ", string.lower()).split()
 
             def memoize(f):
                 """
                 store previous value to speed up vector retrieval
-                (sped up by about x40)
+                (40x speed up)
                 """
                 memo = {}
 
@@ -916,6 +928,11 @@ adjust formating issues:")
             memoized_vec = memoize(ft.get_word_vector)
 
             def vec(string):
+                """
+                find the vector of each word of the sentence, then sum all
+                    vectors
+                output is 1 vector per comb_text
+                """
                 return np.sum([memoized_vec(x)
                                for x in preprocessor(string)
                                if x != ""
@@ -1067,9 +1084,9 @@ retrying until above 80% or 2000 dimensions)")
 
     def _compute_distance_matrix(self, input_col="VEC"):
         """
-        compute distance matrix between all the cards
-        * the distance matrix can be parallelised by scikit learn so I didn't
-            bother saving and reusing the matrix
+        compute distance matrix : a huge matrix containing the
+            cosine distance between the vectors of each cards.
+        * scikit learn allows a parallelized computation
         """
         gc.collect()
         df = self.df
@@ -1387,8 +1404,9 @@ AnnA:")
 
     def display_opti_rev_order(self, display_limit=50):
         """
-        display the cards in the best optimal order. Useful to see if something
-        went wrong before creating the filtered deck
+        instead of creating a deck or buring cards, prints the content
+        of cards in the order AnnA though was best.
+        Only used for debugging.
         """
         gc.collect()
         order = self.opti_rev_order[:display_limit]
@@ -1444,7 +1462,7 @@ deck.")
 
             def _threaded_value_setter(card_list, tqdm_desc, keys, newValues):
                 """
-                create threads to edit card values quickly
+                threaded call to speed things up
                 """
                 def do_action(card_list,
                               sub_card_list,
@@ -1519,7 +1537,7 @@ as opti_rev_order!")
 
     def save_df(self, df=None, out_name=None):
         """
-        export dataframe as pickle format a DF_backups
+        export dataframe as pickle format in the folder DF_backups/
         """
         if df is None:
             df = self.df.copy()
@@ -1534,9 +1552,12 @@ as opti_rev_order!")
 
     def show_acronyms(self, exclude_OCR_text=True):
         """
-        shows acronym present in your collection that were not found in
-        the file supplied by the argument `acronym_file`
-        * acronyms found in OCR caption are removed by default
+        Shows acronym present in your collection that were not found in
+            the file supplied by the argument `acronym_file`.
+            This is used to know when you forgot the specify an acronym to
+            replace.
+        * acronyms found in OCR text are removed by default, as it often
+            creates too many false positive.
         """
         if not len(self.acronym_dict.keys()):
             return True
