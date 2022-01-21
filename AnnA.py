@@ -618,11 +618,17 @@ less than threshold ({self.lowlimit_due}).\nStopping.")
         * OCR text extractor
         """
         text = text.replace("&amp;", "&"
-                            ).replace("/", " / "
-                                      ).replace("+++", " important "
-                                                ).replace("&nbsp", " "
-                                                          ).replace("\u001F",
-                                                                    " ")
+                    ).replace("/", " / "
+                    ).replace("+++", " important "
+                    ).replace("&nbsp", " "
+                    ).replace("\u001F", " "
+                    ).replace("é", "e"
+                    ).replace("è", "e"
+                    ).replace("ê", "e"
+                    ).replace("ô", "o"
+                    ).replace("à", "a"
+                    ).replace("ç", "c"
+                    )
         # remove weird clozes
         text = re.sub(r"}}{{c\d+::", "", text)
 
