@@ -418,7 +418,7 @@ values. {e}")
             r_list = []
             for card in tqdm(card_id):
                 r_list.extend(self._call_anki(action="cardsInfo",
-                              cards=[card]))
+                                              cards=[card]))
             return r_list
 
         else:
@@ -434,7 +434,7 @@ threads of size {batchsize})")
             def retrieve_cards(card_list, lock, cnt, r_list):
                 "for multithreaded card retrieval"
                 out_list = self._call_anki(action="cardsInfo",
-                                                    cards=card_list)
+                                           cards=card_list)
                 with lock:
                     r_list.extend(out_list)
                     pbar.update(1)
