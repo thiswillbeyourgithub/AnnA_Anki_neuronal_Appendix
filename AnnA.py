@@ -374,9 +374,8 @@ values. {e}")
 
     @classmethod
     def _call_anki(self, action, **params):
-        """
-        used to send request to anki using the addon anki-connect
-        """
+        """ bridge between local python libraries and AnnA Companion addon
+        (a fork from anki-connect) """
         def request_wrapper(action, **params):
             return {'action': action, 'params': params, 'version': 6}
 
