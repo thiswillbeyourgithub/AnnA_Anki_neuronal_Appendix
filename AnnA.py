@@ -399,7 +399,7 @@ values. {e}")
             raise Exception(response['error'])
         return response['result']
 
-    def _get_cards_info_from_card_id(self, card_id):
+    def _getCardsInfo(self, card_id):
         """ get all information from a card from its card id
 
         * Due to the time it takes to get thousands of cards, I decided
@@ -568,7 +568,7 @@ less than threshold ({self.lowlimit_due}).\nStopping.")
         yel(f"Asking Anki for information about {n} cards...")
         start = time.time()
         list_cardInfo.extend(
-            self._get_cards_info_from_card_id(
+            self._getCardsInfo(
                 card_id=combined_card_list))
         whi(f"Got all infos in {int(time.time()-start)} seconds.\n")
 
