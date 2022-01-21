@@ -707,7 +707,8 @@ less than threshold ({self.lowlimit_due}).\nStopping.")
         the file from argument 'field_mapping', then adds the field to
         a single text per card in column 'comb_text'
 
-        * If no relevant fields are found, only the first one is kept
+        * If no corresponding fields are found, only the first one is kept
+        * If no corresponding notetype are found, taking the closest name
         * 2 lowest level tags will be appended at the end of the text
         * Threading is used to speed things up
         * Mentionning several times a field for a specific note_type
