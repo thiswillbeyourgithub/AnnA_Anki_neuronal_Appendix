@@ -602,7 +602,7 @@ less than threshold ({self.lowlimit_due}).\nStopping.")
         self.df["interval"] = self.df["interval"].astype(np.float32)
         return True
 
-    def _smart_acronym_replacer(self, string, compiled, new_w):
+    def _regexp_acronym_replacer(self, string, compiled, new_w):
         """
         this function is needed to replace acronym containing match groups
         For example: replacing 'IL(\\d+)' by "Interleukin 2"
@@ -686,9 +686,9 @@ less than threshold ({self.lowlimit_due}).\nStopping.")
             for compiled, new_word in self.acronym_dict.items():
                 text = re.sub(compiled,
                               lambda string:
-                              self._smart_acronym_replacer(string,
-                                                           compiled,
-                                                           new_word),
+                              self._regexp_acronym_replacer(string,
+                                                            compiled,
+                                                            new_word),
                               text)
 
         # misc
