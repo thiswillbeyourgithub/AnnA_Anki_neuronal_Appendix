@@ -20,21 +20,19 @@ Here are different ways of looking at what AnnA can do for you in a few words:
 * AnnA allows to reduce the number of daily reviews while increasing (and not keeping the same) retention.
 
 ## Note to readers
-0. The [dev branch](https://github.com/thiswillbeyourgithub/AnnA_Anki_neuronal_Appendix/tree/dev) is way more up to date than the main branch.
+0. The [dev branch](https://github.com/thiswillbeyourgithub/AnnA_Anki_neuronal_Appendix/tree/dev) is usually less outdated than the main branch.
 1. I would really like to integrate this into anki somehow but am not knowledgeable enough about how to do it, how to manage anki versions, how to handle different platforms etc. All help is much appreciated!
 2. This project communicates with anki using a fork of the addon [AnkiConnect](https://github.com/FooSoft/anki-connect) called [AnnA-companion](https://ankiweb.net/shared/info/447942356). Note that AnnA-companion was tested from anki 2.1.44 to 2.1.49 only.
 3. Although I've been using it daily for months, I am still changing the code base almost every day, if you tried AnnA and were disappointed, maybe try it another time later. Major improvements are regularly made.
-4. This project is still very early and I don't recommend you start using it if you're not skilled enough to do damage control. I have lost a lot of my tags several times (recovered them all afterwards) and some issue can still happen. Use at your own risks :)
-5. I implemented two vectorization methods, either [fastText](https://en.wikipedia.org/wiki/FastText) or [subword TF_IDF](https://en.wikipedia.org/wiki/Tf%E2%80%93idf). TF_IDF is known to be reliable, fast, very general (it does not assume anything about your cards and will work for just about any language, format, phrasing etc). TF_IDF works very well if you have large number of cards. fastText is still experimental and needs lots of RAM but should provide very good results, even with just a few cards as it assigns vectors that have a meaning. Note that semantic searching is currently only possible using fastText.
-6. If you want to know how I'm using this, take a look at [authors_routine.md](./authors_routine.md)
-7. I am using the V2 scheduler.
+4. I implemented two vectorization methods, either [fastText](https://en.wikipedia.org/wiki/FastText) or [subword TF_IDF](https://en.wikipedia.org/wiki/Tf%E2%80%93idf). TF_IDF is known to be reliable, fast, very general (it does not assume anything about your cards and will work for just about any language, format, phrasing etc). TF_IDF works very well if you have large number of cards. fastText is still experimental and needs lots of RAM but should provide very good results, even with just a few cards as it assigns vectors that have a meaning. Note that semantic searching is currently only possible using fastText.
+5. If you want to know how I'm using this, take a look at [authors_routine.md](./authors_routine.md)
 
 ## Other features
 * Code is PEP8 compliant, dynamically typed, all the functions have a detailed docstrings. Contributions are welcome, opening issues is encouraged and appreciated.
 * Keeps the OCR data of pictures in your cards, if you analyzed them beforehand using [AnkiOCR](https://github.com/cfculhane/AnkiOCR/).
 * Can automatically replace acronyms in your cards (e.g. 'PNO' can be replaced to "pneumothorax" if you tell it to), regexp are supported
 * Can attribute more importance to some fields of some cards if needed.
-* Previous feature like clustering, plotting, searching have been removed as I don't expect them to be useful to users.
+* Previous feature like clustering, plotting, searching have been removed as I don't expect them to be useful to users. But the code was clean so if you need it for some reason don't hesitate to open an issue.
 
 ## FAQ
 * **How does it work? (Layman version)** AnnA connects to its companion addon to access your anki collection. This allows to use any python library without having to go through the trouble how packaging those libraries into an addon. It uses a vectorizer to assign numbers (vectors) to each cards. If the numbers of two cards are very close, then the cards have similar content and should not be reviewed too close to each other.

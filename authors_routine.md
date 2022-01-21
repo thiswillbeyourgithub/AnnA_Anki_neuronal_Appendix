@@ -2,9 +2,10 @@
 This page shows one way AnnA can be used.
 
 ## A few notes:
-*  I am a medschool student and my steps are over multiple days (something like 12h 2d 4d then 7 day graduation)
-*  My True Retention rate is above 90% (but that might be because I have long learning steps so hard cards can spend weeks in learning).
-*  I created AnnA recently so my usage will probably vary. Don't hesitate to open an issue if you want to give my your opinion.
+* I am a medschool student and my steps are over multiple days (something like 12h 2d 4d then 7 day graduation)
+* My True Retention rate is above 90% (but that might be because I have long learning steps so hard cards can spend weeks in learning).
+* I created AnnA recently so my usage will probably vary. Don't hesitate to open an issue if you want to give my your opinion.
+* I am using the V2 scheduler
 
 ## Current routine:
 * Every morning, I open anki and take a look at my medschool decks:
