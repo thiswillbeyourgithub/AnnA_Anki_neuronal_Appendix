@@ -168,6 +168,8 @@ class AnnA:
             red(pyfiglet.figlet_format("AnnA"))
             red("(Anki neuronal Appendix)\n\n")
 
+        gc.collect()
+
         # miscellaneous
         if log_level == 0:
             log.setLevel(logging.ERROR)
@@ -371,6 +373,7 @@ values. {e}")
                 self.task_filtered_deck()
 
         yel(f"Done with '{self.task}' on deck {self.deckname}")
+        gc.collect()
 
     @classmethod
     def _call_anki(self, action, **params):
@@ -493,8 +496,6 @@ threads of size {batchsize})")
         create a pandas DataFrame with the information gathered from
         anki (via the bridge addon) such as card fields, tags, intervals, etc
         """
-        gc.collect()
-
         if self.highjack_due_query is not None:
             red("Highjacking due card list:")
             query = self.highjack_due_query
@@ -715,7 +716,6 @@ less than threshold ({self.lowlimit_due}).\nStopping.")
             For example you can give more importance to field "Body" of a
             cloze than to the field "More"
         """
-        gc.collect()
         def _threaded_field_filter(df, index_list, lock, pbar, stopw_compiled):
             """
             threaded call to speed up execution
@@ -884,7 +884,6 @@ adjust formating issues:")
         After calling this function df["VEC"] contains either all the vectors
             or less if you enabled dimensionality reduction
         """
-        gc.collect()
         if df is None:
             df = self.df
 
@@ -1078,7 +1077,6 @@ retrying until above 80% or 2000 dimensions)")
             cosine distance between the vectors of each cards.
         * scikit learn allows a parallelized computation
         """
-        gc.collect()
         df = self.df
 
         print("\nComputing distance matrix on all available cores...")
@@ -1164,7 +1162,6 @@ retrying until above 80% or 2000 dimensions)")
         CAREFUL: this docstring might not be up to date as I am constantly
             trying to improve the code
         """
-        gc.collect()
         # getting args etc
         reference_order = self.reference_order
         df = self.df
@@ -1396,7 +1393,6 @@ AnnA:")
         of cards in the order AnnA though was best.
         Only used for debugging.
         """
-        gc.collect()
         order = self.opti_rev_order[:display_limit]
         print(self.df.loc[order, "text"])
         return True
@@ -1422,7 +1418,6 @@ AnnA:")
             deck will be created and AnnA will just bury the cards that are
             too similar
         """
-        gc.collect()
         if task in ["bury_excess_learning_cards", "bury_excess_review_cards"]:
             to_keep = self.opti_rev_order
             to_bury = [x for x in self.due_cards if x not in to_keep]
