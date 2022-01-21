@@ -147,8 +147,6 @@ class AnnA:
                  acronym_file="acronym_file.py",
                  acronym_list=None,
 
-                 # steps:
-                 compute_opti_rev_order=True,
                  task="filter_review_cards",
                  # can be "filter_review_cards", "bury_excess_review_cards",
                  # "bury_excess_learning_cards", "index"
@@ -161,14 +159,9 @@ class AnnA:
                  fastText_dim_algo="PCA", # can be "PCA" or "UMAP" or None
                  fastText_model_name=None,  # if you want to force a specific model
                  fastText_lang="en",
-                 fastText_correction_vector=None,  # for example "medical"
                  TFIDF_dim=100,
                  TFIDF_stem=False,
                  TFIDF_tokenize=True,
-
-                 # misc:
-                 debug_card_limit=None,
-                 save_instance_as_pickle=False,
                  ):
 
         if show_banner:
@@ -202,7 +195,6 @@ class AnnA:
         self.target_deck_size = target_deck_size
         self.rated_last_X_days = rated_last_X_days
         self.lowlimit_due = lowlimit_due
-        self.debug_card_limit = debug_card_limit
         self.highjack_due_query = highjack_due_query
         self.highjack_rated_query = highjack_rated_query
         self.score_adjustment_factor = score_adjustment_factor
@@ -215,14 +207,12 @@ class AnnA:
         self.fastText_dim = fastText_dim
         self.fastText_dim_algo = fastText_dim_algo.upper()
         self.fastText_model_name = fastText_model_name
-        self.fastText_correction_vector = fastText_correction_vector
         self.TFIDF_dim = TFIDF_dim
         self.stopwords_lang = stopwords_lang
         self.TFIDF_stem = TFIDF_stem
         self.TFIDF_tokenize = TFIDF_tokenize
         self.task = task
         self.deck_template = deck_template
-        self.save_instance_as_pickle = save_instance_as_pickle
 
         # args sanity checks
         if isinstance(self.target_deck_size, int):
@@ -377,25 +367,9 @@ values. {e}")
             self.show_acronyms()
             self._compute_card_vectors(import_thread=import_thread)
             self._compute_distance_matrix()
-            if compute_opti_rev_order:
-                self._compute_opti_rev_order()
-                if task == "filter_review_cards":
-                    self.task_filtered_deck()
-
-        # pickle itself
-        self._collect_memory()
-        if save_instance_as_pickle:
-            yel("\nSaving instance as 'last_run.pickle'...")
-            if Path("./last_run.pickle").exists():
-                Path("./last_run.pickle").unlink()
-            with open("last_run.pickle", "wb") as f:
-                try:
-                    pickle.dump(self, f)
-                    whi("Done! You can now restore this instance of AnnA without having to \
-execute the code using:\n'import pickle ; a = pickle.load(open(\"last_run.pickle\
-\", \"rb\"))'")
-                except TypeError as e:
-                    red(f"Error when saving instance as pickle file: {e}")
+            self._compute_opti_rev_order()
+            if task == "filter_review_cards":
+                self.task_filtered_deck()
 
         yel(f"Done with '{self.task}' on deck {self.deckname}")
 
@@ -962,14 +936,6 @@ adjust formating issues:")
                     tqdm(df.index, desc="Vectorizing using fastText")):
                 ft_vec[i] = vec(str(df.loc[x, "text"]))
             ft_vec = normalize(ft_vec, norm='l2')
-
-            if self.fastText_correction_vector:
-                red(f"Temporarily disabled the feature 'correction vecto' as \
-is it not yet fully implemented.")
-#                norm_vec = vec(self.fastText_correction_vector)
-#                norm_vec = normalize(norm_vec.reshape(-1, 1),
-#                                     norm='l1').reshape(1, -1)
-#                ft_vec = ft_vec + norm_vec
 
             # multiplying the median of each dimension by each row's
             # corresponding dimension. The idea is to avoid penalizing

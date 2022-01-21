@@ -100,8 +100,6 @@ AnnA was made with usability in mind. With the right arguments, you can have to 
  * `acronym_file` a python file containing dictionaries that themselves contain acronyms to extend in the text of cards. For example `CRC` can be extended to `CRC (colorectal cancer)`. (The parenthesis are automatically added.) Default is `"acronym_file.py"`. The matching is case sensitive only if the key contains uppercase characters. The ".py" file extension is not mandatory.
  * `acronym_list` a list of name of dictionaries found in the file from `acronym_file` to use to extend text. For example `["AI_machine_learning", "medical_terms"]` from `example_file/acronym_file.py`. Default to None.
 
- * `compute_opti_rev_order` if `False`, won't compute optimal review order and will set `to_anki` to False. Default is `True`.
-
  * `task` can be "filter_review_cards", "bury_excess_learning_cards", "bury_excess_review_cards" or "index". Respectively to create a filtered deck with the cards, or bury only the similar learning cards (among other learning cards), or bury only the similar cards in review (among other review cards), or to add all the fastText vectors in the cache file (to speed up later runs). Default is "`filter_review_cards`".
  * `deck_template` name template of the filtered deck to create. Only available if task is set to "filter_review_cards". Default is `None`.
 
@@ -111,12 +109,8 @@ AnnA was made with usability in mind. With the right arguments, you can have to 
  * `fastText_dim_algo` can be "PCA", "UMAP" or None. Specified the algorithm used for the optionnal dimension reduction. Note that UMAP usage is experimental and slow.
  * `fastText_lang` language of the fastText model to load or download. Default is `"en"`.
  * `fastText_model_name` name of a fastText model to load. Bypasses fastText_lang. Useful if you created a smaller fastText model. Default is `None`.
- * `fastText_correction_vector` can be any sentence or `None`. Default is `None`. Used to orient the fastText matrix somewhat. For example, for a medical anatomy deck, if you set it to "medical anatomy" AnnA will convert this sentence to a vector and add it to the vector of each card. This will reduce the noise by prioritizing these directions in the dataset to pick up cards that contain too many contextual words relative to medical anatomy words. Note that this is experimental. **This is currently disabled.**
  * `TFIDF_dim` the number of dimension to keep using [SVD](https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.TruncatedSVD.html). Default is `100`, you cannot disable dimension reduction for TF_IDF because that would result in a sparse matrix. AnnA will automatically try a higher number of dimension if needed, up to 2000.
  * `TFIDF_stem` default to `True`. Wether to enable stemming of words. Currently the PorterStemmer is used, and was made for English but can still be useful for some other languages. Keep in mind that this is the longest step when formatting text.
-
- * `debug_card_limit` limit the number of due cards to take into account. It is used for debugging as it allows to run the script quickly. Default is `None`.
- * `save_instance_as_pickle` Saving the instance in a pickle file called "last_run.pickle". Default is `False`.
 
 AnnA has a number of other built-in methods you can run after instantiating the class. Note that methods beginning with a "_" are not supposed to be called by the user and are reserved for backend use. Here's a list of useful methods:
 
