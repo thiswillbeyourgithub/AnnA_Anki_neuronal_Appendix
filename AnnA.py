@@ -1189,6 +1189,9 @@ retrying until above 80% or 2000 dimensions)")
             overdue = df.loc[due, "ref_due"] - time_offset
             df.drop("ref_due", axis=1, inplace=True)
 
+            # the code for relative overdueness is not exactly the same as
+            # in anki, as I was not able to replicate it.
+            # Here's a link to one of the implementation : https://github.com/ankitects/anki/blob/afff4fc437f523a742f617c6c4ad973a4d477c15/rslib/src/storage/card/filtered.rs
             ro = -1 * (df.loc[due, "interval"].values + 0.5) / (overdue + 0.5)
             ro_cs = StandardScaler().fit_transform(ro.values.reshape(-1, 1))
             df.loc[due, "ref"] = ro_cs
