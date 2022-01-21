@@ -50,8 +50,8 @@ log.setLevel(logging.INFO)
 
 def set_global_logging_level(level=logging.ERROR, prefices=[""]):
     """
-    https://github.com/huggingface/transformers/issues/3050#issuecomment-682167272
     To control logging level for various modules used in the application:
+    https://github.com/huggingface/transformers/issues/3050#issuecomment-682167272
     """
     prefix_re = re.compile(fr'^(?:{ "|".join(prefices) })')
     for name in logging.root.manager.loggerDict:
@@ -60,6 +60,7 @@ def set_global_logging_level(level=logging.ERROR, prefices=[""]):
 
 
 def coloured_log(color_asked):
+    """used to print color coded logs"""
     col_red = "\033[91m"
     col_yel = "\033[93m"
     col_rst = "\033[0m"
@@ -125,9 +126,8 @@ def asynchronous_importer(vectorizer, task, fastText_lang, fastText_model_name):
 
 class AnnA:
     """
-    main class: used to centralize everything
-    just instantiating the class does most of the job, as you can see
-    in self.__init__
+    just instantiating the class does the job, as you can see in the
+    __init__ function
     """
     def __init__(self, show_banner=True,
                  # main settings
