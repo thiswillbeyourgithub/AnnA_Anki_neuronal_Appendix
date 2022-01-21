@@ -531,7 +531,7 @@ threads of size {batchsize})")
             red(" >  '" + query + "'")
             rated_cards = self._call_anki(action="findCards", query=query)
             red(f"Found {len(rated_cards)} cards...\n")
-        elif self.rated_last_X_days != 0:
+        elif self.rated_last_X_days not in [0, None]:
             yel(f"Getting cards that where rated in the last {self.rated_last_X_days} days...")
             query = f"\"deck:{self.deckname}\" rated:{self.rated_last_X_days} -is:suspended -is:buried"
             whi(" >  '" + query + "'")
