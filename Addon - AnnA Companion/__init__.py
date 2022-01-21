@@ -429,35 +429,18 @@ class AnkiConnect:
         return did
 
     @util.api()
-    def setSpecificValueOfCard(self, card, keys,
-                               newValues, warning_check=False):
-        if isinstance(card, list):
-            print("card has to be int, not list")
-            return False
-
-        if not isinstance(keys, list) or not isinstance(newValues, list):
-            print("keys and newValues have to be lists.")
-            return False
-
-        if len(newValues) != len(keys):
-            print("Invalid list lengths.")
-            return False
-
-        for key in keys:
-            if key in ["did", "id", "ivl", "lapses", "left", "mod", "nid",
-                       "odid", "odue", "ord", "queue", "reps", "type", "usn"]:
-                if warning_check is False:
-                    return False
-
+    def setDueOrderOfFiltered(self, cards):
         result = []
-        try:
-            ankiCard = self.getCard(card)
-            for i, key in enumerate(keys):
-                setattr(ankiCard, key, newValues[i])
-            ankiCard.flush()
-            result.append(True)
-        except Exception as e:
-            result.append([False, str(e)])
+        order = -100_000
+        for card in cards:
+            order += 1
+            try:
+                ankiCard = self.getCard(card)
+                ankiCard.due = order
+                ankiCard.flush()
+                result.append([True])
+            except Exception as e:
+                result.append([False, e])
         return result
 
     @util.api()
@@ -499,104 +482,38 @@ class AnkiConnect:
         return buried
 
     @util.api()
-    def cardsInfo(self, cards, select="all"):
+    def cardsInfo(self, cards):
         result = []
-        if select == "all":
-            for cid in cards:
-                try:
-                    card = self.getCard(cid)
-                    model = card.model()
-                    note = card.note()
-                    fields = {}
+        for cid in cards:
+            try:
+                card = self.getCard(cid)
+                model = card.model()
+                note = card.note()
+                fields = {}
 
-                    for info in model['flds']:
-                        order = info['ord']
-                        name = info['name']
-                        fields[name] = {'value': note.fields[order], 'order': order}
+                for info in model['flds']:
+                    fields[info['name']] = {'value': note.fields[info['ord']],
+                                            'order': info['ord']}
 
-
-                    result.append({
-                        'cardId': card.id,
-                        'fields': fields,
-                        'fieldOrder': card.ord,
-                        'question': util.cardQuestion(card),
-                        'answer': util.cardAnswer(card),
-                        'modelName': model['name'],
-                        'ord': card.ord,
-                        'deckName': self.deckNameFromId(card.did),
-                        'css': model['css'],
-                        'tags': note.tags,
-                        'factor': card.factor,
-                        #This factor is 10 times the ease percentage,
-                        # so an ease of 310% would be reported as 3100
-                        'interval': card.ivl,
-                        'note': card.nid,
-                        'type': card.type,
-                        'queue': card.queue,
-                        'due': card.due,
-                        'odue': card.odue,
-                        'reps': card.reps,
-                        'lapses': card.lapses,
-                        'left': card.left,
-                        'mod': card.mod,
-                    })
-                except NotFoundError:
-                    # Anki will give a NotFoundError if the card ID does not exist.
-                    # Best behavior is probably to add an 'empty card' to the
-                    # returned result, so that the items of the input and return
-                    # lists correspond.
-                    result.append({})
-        else:
-            for cid in cards:
-                try:
-                    card = self.getCard(cid)
-                    dic = {"cardId": card.id}
-
-                    if "tags" in select or "miscelaneaous" in select or "fields" in select:
-                        note = card.note()
-
-                    if "questionAndAnswer" in select:
-                        dic["question"] = util.cardQuestion(card)
-                        dic["answer"] = util.cardAnswer(card)
-                    if "deckName" in select:
-                        dic["deckName"] = self.deckNameFromId(card.did)
-                    if "tags" in select:
-                        dic["tags"] = note.tags
-                    if "factor" in select:
-                        dic["factor"] = card.factor
-                    if "interval" in select:
-                        dic["interval"] = card.ivl
-
-                    if "miscelaneaous" in select:
-                        dic.update({'ord': card.ord,
-                                    'note': card.nid,
-                                    'type': card.type,
-                                    'queue': card.queue,
-                                    'due': card.due,
-                                    'odue': card.odue,
-                                    'reps': card.reps,
-                                    'lapses': card.lapses,
-                                    'left': card.left,
-                                    'mod': card.mod})
-
-                    if "css" in select or "modelName" in select or "fields" in select:
-                        model = card.model()
-                        if "css" in select:
-                            dic["css"] = model["css"]
-
-                        if "modelName" in select:
-                            dic["modelName"] = model["name"]
-                        if "fields" in select:
-                            fields = {}
-                            for info in model['flds']:
-                                order = info['ord']
-                                name = info['name']
-                                fields[name] = {'value': note.fields[order], 'order': order}
-                            dic["fields"] = fields
-                            dic["fieldsOrder"] = card.ord
-                    result.append(dic)
-                except NotFoundError:
-                    result.append({})
+                result.append({
+                    'cardId': card.id,
+                    'fields': fields,
+                    'modelName': model['name'],
+                    'tags': note.tags,
+                    'interval': card.ivl,
+                    'note': card.nid,
+                    'type': card.type,
+                    'queue': card.queue,
+                    'due': card.due,
+                    'odue': card.odue,
+                    'left': card.left,
+                })
+            except NotFoundError:
+                # Anki will give a NotFoundError if the card ID does not exist.
+                # Best behavior is probably to add an 'empty card' to the
+                # returned result, so that the items of the input and return
+                # lists correspond.
+                result.append({})
         return result
 
     @util.api()

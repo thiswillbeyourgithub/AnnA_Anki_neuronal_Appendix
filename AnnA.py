@@ -50,8 +50,8 @@ log.setLevel(logging.INFO)
 
 def set_global_logging_level(level=logging.ERROR, prefices=[""]):
     """
-    https://github.com/huggingface/transformers/issues/3050#issuecomment-682167272
     To control logging level for various modules used in the application:
+    https://github.com/huggingface/transformers/issues/3050#issuecomment-682167272
     """
     prefix_re = re.compile(fr'^(?:{ "|".join(prefices) })')
     for name in logging.root.manager.loggerDict:
@@ -60,25 +60,23 @@ def set_global_logging_level(level=logging.ERROR, prefices=[""]):
 
 
 def coloured_log(color_asked):
+    """used to print color coded logs"""
     col_red = "\033[91m"
     col_yel = "\033[93m"
     col_rst = "\033[0m"
 
     if color_asked == "white":
-        def printer(string):
-            string = str(string)
+        def printer(string, **args):
             log.info(string)
-            tqdm.write(col_rst + string + col_rst)
+            tqdm.write(col_rst + string + col_rst, **args)
     elif color_asked == "yellow":
-        def printer(string):
-            string = str(string)
+        def printer(string, **args):
             log.warn(string)
-            tqdm.write(col_yel + string + col_rst)
+            tqdm.write(col_yel + string + col_rst, **args)
     elif color_asked == "red":
-        def printer(string):
-            string = str(string)
+        def printer(string, **args):
             log.error(string)
-            tqdm.write(col_red + string + col_rst)
+            tqdm.write(col_red + string + col_rst, **args)
     return printer
 
 
@@ -125,37 +123,31 @@ def asynchronous_importer(vectorizer, task, fastText_lang, fastText_model_name):
 
 class AnnA:
     """
-    main class: used to centralize everything
-    just instantiating the class does most of the job, as you can see
-    in self.__init__
+    just instantiating the class does the job, as you can see in the
+    __init__ function
     """
     def __init__(self, show_banner=True,
                  # main settings
                  deckname=None,
                  reference_order="relative_overdueness",
-                 # can be "lowest_interval", "relative overdueness",
-                 # "order_added"
-                 target_deck_size="80%",
+                 # can be "lowest_interval", "relative overdueness", "order_added"
+                 target_deck_size="80%",  # 80%, 0.8, "all"
                  rated_last_X_days=4,
-                 due_threshold=30,
+                 lowlimit_due=30,
                  highjack_due_query=None,
                  highjack_rated_query=None,
                  score_adjustment_factor=(1, 5),
-                 log_level=2,
+                 log_level=2,  # 0, 1, 2
                  replace_greek=True,
                  keep_ocr=True,
                  field_mappings="field_mappings.py",
                  acronym_file="acronym_file.py",
                  acronym_list=None,
 
-                 # steps:
-                 compute_opti_rev_order=True,
                  task="filter_review_cards",
-                 # can be "filter_review_cards",
-                 # "bury_excess_review_cards",
-                 # "bury_excess_learning_cards",
-                 # "index"
-                 deck_template=None,
+                 # can be "filter_review_cards", "bury_excess_review_cards",
+                 # "bury_excess_learning_cards", "index"
+                 fdeckname_template=None,
 
                  # vectorization:
                  stopwords_lang=["english", "french"],
@@ -164,19 +156,16 @@ class AnnA:
                  fastText_dim_algo="PCA", # can be "PCA" or "UMAP" or None
                  fastText_model_name=None,  # if you want to force a specific model
                  fastText_lang="en",
-                 fastText_correction_vector=None,  # for example "medical"
                  TFIDF_dim=100,
                  TFIDF_stem=False,
                  TFIDF_tokenize=True,
-
-                 # misc:
-                 debug_card_limit=None,
-                 save_instance_as_pickle=False,
                  ):
 
         if show_banner:
             red(pyfiglet.figlet_format("AnnA"))
             red("(Anki neuronal Appendix)\n\n")
+
+        gc.collect()
 
         # miscellaneous
         if log_level == 0:
@@ -204,8 +193,7 @@ class AnnA:
         self.keep_ocr = keep_ocr
         self.target_deck_size = target_deck_size
         self.rated_last_X_days = rated_last_X_days
-        self.due_threshold = due_threshold
-        self.debug_card_limit = debug_card_limit
+        self.lowlimit_due = lowlimit_due
         self.highjack_due_query = highjack_due_query
         self.highjack_rated_query = highjack_rated_query
         self.score_adjustment_factor = score_adjustment_factor
@@ -218,14 +206,12 @@ class AnnA:
         self.fastText_dim = fastText_dim
         self.fastText_dim_algo = fastText_dim_algo.upper()
         self.fastText_model_name = fastText_model_name
-        self.fastText_correction_vector = fastText_correction_vector
         self.TFIDF_dim = TFIDF_dim
         self.stopwords_lang = stopwords_lang
         self.TFIDF_stem = TFIDF_stem
         self.TFIDF_tokenize = TFIDF_tokenize
         self.task = task
-        self.deck_template = deck_template
-        self.save_instance_as_pickle = save_instance_as_pickle
+        self.fdeckname_template = fdeckname_template
 
         # args sanity checks
         if isinstance(self.target_deck_size, int):
@@ -238,9 +224,8 @@ class AnnA:
                         "bury_excess_review_cards"]
         assert vectorizer in ["TFIDF", "fastText"]
         assert self.fastText_dim_algo in ["PCA", "UMAP", None]
-        if task != "filter_review_cards":
-            if self.deck_template is not None:
-                red("Ignoring argument 'deck_template' because 'task' is not \
+        if task != "filter_review_cards" and self.fdeckname_template is not None:
+            red("Ignoring argument 'fdeckname_template' because 'task' is not \
 set to 'filter_review_cards'.")
 
         if self.acronym_file is not None and self.acronym_list is not None:
@@ -338,7 +323,7 @@ values. {e}")
             self.stops = None
 
         # actual execution
-        self.deckname = self._check_deck(deckname, import_thread)
+        self.deckname = self._deckname_check(deckname, import_thread)
         yel(f"Selected deck: {self.deckname}\n")
         self.deck_config = self._call_anki(action="getDeckConfig",
                                              deck=self.deckname)
@@ -347,7 +332,7 @@ values. {e}")
             self.vectorizer = "fastText"
             self.fastText_dim = None
             self.rated_last_X_days = 0
-            self._create_and_fill_df()
+            self._init_dataFrame()
             if self.not_enough_cards is True:
                 return
             self._format_card()
@@ -362,7 +347,7 @@ values. {e}")
                 yel("Task : bury some learning cards")
             elif task == "bury_excess_review_cards":
                 yel("Task : bury some reviews\n")
-            self._create_and_fill_df()
+            self._init_dataFrame()
             if self.not_enough_cards is True:
                 return
             self._format_card()
@@ -370,46 +355,27 @@ values. {e}")
             self._compute_card_vectors(import_thread=import_thread)
             self._compute_distance_matrix()
             self._compute_opti_rev_order()
-            self.task_filtered_deck(task=task)
+            self.bury_or_create_filtered(task=task)
         else:
             yel("Task : created filtered deck containing review cards")
-            self._create_and_fill_df()
+            self._init_dataFrame()
             if self.not_enough_cards is True:
                 return
             self._format_card()
             self.show_acronyms()
             self._compute_card_vectors(import_thread=import_thread)
             self._compute_distance_matrix()
-            if compute_opti_rev_order:
-                self._compute_opti_rev_order()
-                if task == "filter_review_cards":
-                    self.task_filtered_deck()
+            self._compute_opti_rev_order()
+            if task == "filter_review_cards":
+                self.bury_or_create_filtered()
 
-        # pickle itself
-        self._collect_memory()
-        if save_instance_as_pickle:
-            yel("\nSaving instance as 'last_run.pickle'...")
-            if Path("./last_run.pickle").exists():
-                Path("./last_run.pickle").unlink()
-            with open("last_run.pickle", "wb") as f:
-                try:
-                    pickle.dump(self, f)
-                    whi("Done! You can now restore this instance of AnnA without having to \
-execute the code using:\n'import pickle ; a = pickle.load(open(\"last_run.pickle\
-\", \"rb\"))'")
-                except TypeError as e:
-                    red(f"Error when saving instance as pickle file: {e}")
-
-        yel(f"Done with '{self.task}' on deck {self.deckname}")
-
-    def _collect_memory(self):
+        red(f"\nDone with task '{self.task}' on deck '{self.deckname}'")
         gc.collect()
 
     @classmethod
     def _call_anki(self, action, **params):
-        """
-        used to send request to anki using the addon anki-connect
-        """
+        """ bridge between local python libraries and AnnA Companion addon
+        (a fork from anki-connect) """
         def request_wrapper(action, **params):
             return {'action': action, 'params': params, 'version': 6}
 
@@ -433,77 +399,76 @@ execute the code using:\n'import pickle ; a = pickle.load(open(\"last_run.pickle
             raise Exception(response['error'])
         return response['result']
 
-    def _get_cards_info_from_card_id(self, card_id):
-        """
-        get all information from a card using its card id, works with
-        either int of list of int
+    def _getCardsInfo(self, card_id):
+        """ get all information from a card from its card id
 
         * Due to the time it takes to get thousands of cards, I decided
-            to used Threading extensively to speed it up.
+            to used Threading extensively if requesting data for more than 50
+            cards
+        * There doesn't seem to be a way to display progress during loading,
+            so I hacked a workaround by displaying one bar for each batch
+            but it's minimally informative
         """
-        if isinstance(card_id, list):
-            if len(card_id) < 50:
-                r_list = []
-                for card in tqdm(card_id):
-                    r_list.extend(self._call_anki(action="cardsInfo",
-                                  cards=[card]))
-                return r_list
+        if isinstance(card_id, int):
+            card_id = [card_id]
+        if len(card_id) < 50:
+            r_list = []
+            for card in tqdm(card_id):
+                r_list.extend(self._call_anki(action="cardsInfo",
+                                              cards=[card]))
+            return r_list
 
-            else:
-                lock = threading.Lock()
-                threads = []
-                cnt = 0
-                r_list = []
-                target_thread_n = 5
-                batchsize = len(card_id) // target_thread_n + 3
-                whi(f"(Large number of cards to retrieve: creating 10 \
+        else:
+            lock = threading.Lock()
+            threads = []
+            cnt = 0
+            r_list = []
+            target_thread_n = 5
+            batchsize = len(card_id) // target_thread_n + 3
+            whi(f"(Large number of cards to retrieve: creating 10 \
 threads of size {batchsize})")
 
-                def retrieve_cards(card_list, lock, cnt, r_list):
-                    "for multithreaded card retrieval"
-                    out_list = self._call_anki(action="cardsInfo",
-                                                        cards=card_list)
-                    with lock:
-                        r_list.extend(out_list)
-                        pbar.update(1)
-                    return True
+            def retrieve_cards(card_list, lock, cnt, r_list):
+                "for multithreaded card retrieval"
+                out_list = self._call_anki(action="cardsInfo",
+                                           cards=card_list)
+                with lock:
+                    r_list.extend(out_list)
+                    pbar.update(1)
+                return True
 
-                with tqdm(total=target_thread_n,
-                          unit="thread",
-                          dynamic_ncols=True,
-                          desc="Done threads",
-                          delay=2,
-                          smoothing=0) as pbar:
-                    for nb in range(0, len(card_id), batchsize):
-                        cnt += 1
-                        temp_card_id = card_id[nb: nb + batchsize]
-                        thread = threading.Thread(target=retrieve_cards,
-                                                  args=(temp_card_id,
-                                                        lock,
-                                                        cnt,
-                                                        r_list),
-                                                  daemon=False)
-                        thread.start()
-                        threads.append(thread)
-                        time.sleep(0.1)
-                        while sum([t.is_alive() for t in threads]) >= 15:
-                            time.sleep(0.5)
-                    print("")
-                    [t.join() for t in threads]
-                assert len(r_list) == len(card_id)
-                r_list = sorted(r_list,
-                                key=lambda x: x["cardId"],
-                                reverse=False)
-                return r_list
+            with tqdm(total=target_thread_n,
+                      unit="thread",
+                      dynamic_ncols=True,
+                      desc="Done threads",
+                      delay=2,
+                      smoothing=0) as pbar:
+                for nb in range(0, len(card_id), batchsize):
+                    cnt += 1
+                    temp_card_id = card_id[nb: nb + batchsize]
+                    thread = threading.Thread(target=retrieve_cards,
+                                              args=(temp_card_id,
+                                                    lock,
+                                                    cnt,
+                                                    r_list),
+                                              daemon=False)
+                    thread.start()
+                    threads.append(thread)
+                    time.sleep(0.1)
+                    while sum([t.is_alive() for t in threads]) >= 15:
+                        time.sleep(0.5)
+                print("")
+                [t.join() for t in threads]
+            assert len(r_list) == len(card_id)
+            r_list = sorted(r_list,
+                            key=lambda x: x["cardId"],
+                            reverse=False)
+            return r_list
 
-        if isinstance(card_id, int):
-            return self._call_anki(action="cardsInfo",
-                                            cards=[card_id])
-
-    def _check_deck(self, deckname, import_thread):
+    def _deckname_check(self, deckname, import_thread):
         """
-        used to check if the deckname is correct
-        if incorrect, user is asked to enter the name, using autocompletion
+        check if the deck you're calling AnnA exists or not
+        if not, user is asked to enter the name, suggesting autocompletion
         """
         decklist = self._call_anki(action="deckNames") + ["*"]
         if deckname is not None:
@@ -523,13 +488,11 @@ threads of size {batchsize})")
                                   completer=auto_complete)
         return deckname
 
-    def _create_and_fill_df(self):
+    def _init_dataFrame(self):
         """
-        create a pandas DataFrame, fill it with the information gathered from
-        anki connect like card content, intervals, etc
+        create a pandas DataFrame with the information gathered from
+        anki (via the bridge addon) such as card fields, tags, intervals, etc
         """
-        self._collect_memory()
-
         if self.highjack_due_query is not None:
             red("Highjacking due card list:")
             query = self.highjack_due_query
@@ -539,16 +502,14 @@ threads of size {batchsize})")
 
         elif self.task in ["filter_review_cards", "bury_excess_review_cards"]:
             yel("Getting due card list...")
-            query = f"\"deck:{self.deckname}\" is:due is:review -is:learn \
--is:suspended -is:buried -is:new -rated:1"
+            query = f"\"deck:{self.deckname}\" is:due is:review -is:learn -is:suspended -is:buried -is:new -rated:1"
             whi(" >  '" + query + "'")
             due_cards = self._call_anki(action="findCards", query=query)
             whi(f"Found {len(due_cards)} reviews...\n")
 
         elif self.task == "bury_excess_learning_cards":
             yel("Getting is:learn card list...")
-            query = f"\"deck:{self.deckname}\" is:due is:learn -is:suspended \
--rated:1 -rated:2:1 -rated:2:2"
+            query = f"\"deck:{self.deckname}\" is:due is:learn -is:suspended -rated:1 -rated:2:1 -rated:2:2"
             whi(" >  '" + query + "'")
             due_cards = self._call_anki(action="findCards", query=query)
             whi(f"Found {len(due_cards)} learning cards...\n")
@@ -567,14 +528,11 @@ threads of size {batchsize})")
             red(" >  '" + query + "'")
             rated_cards = self._call_anki(action="findCards", query=query)
             red(f"Found {len(rated_cards)} cards...\n")
-        elif self.rated_last_X_days != 0:
-            yel(f"Getting cards that where rated in the last \
-{self.rated_last_X_days} days...")
-            query = f"\"deck:{self.deckname}\" rated:{self.rated_last_X_days} \
--is:suspended -is:buried"
+        elif self.rated_last_X_days not in [0, None]:
+            yel(f"Getting cards that where rated in the last {self.rated_last_X_days} days...")
+            query = f"\"deck:{self.deckname}\" rated:{self.rated_last_X_days} -is:suspended -is:buried"
             whi(" >  '" + query + "'")
-            rated_cards = self._call_anki(action="findCards",
-                                            query=query)
+            rated_cards = self._call_anki(action="findCards", query=query)
             whi(f"Found {len(rated_cards)} cards...\n")
         else:
             yel("Will not look for cards rated in past days.")
@@ -590,16 +548,15 @@ threads of size {batchsize})")
         self.due_cards = due_cards
         self.rated_cards = rated_cards
 
-        if len(self.due_cards) < self.due_threshold:
+        if len(self.due_cards) < self.lowlimit_due:
             red(f"Number of due cards is {len(self.due_cards)} which is \
-less than threshold ({self.due_threshold}).\nStopping.")
+less than threshold ({self.lowlimit_due}).\nStopping.")
             self.not_enough_cards = True
             return
         else:
             self.not_enough_cards = False
 
-        limit = self.debug_card_limit if self.debug_card_limit else None
-        combined_card_list = list(rated_cards + due_cards)[:limit]
+        combined_card_list = list(rated_cards + due_cards)
 
         list_cardInfo = []
 
@@ -607,19 +564,11 @@ less than threshold ({self.due_threshold}).\nStopping.")
         yel(f"Asking Anki for information about {n} cards...")
         start = time.time()
         list_cardInfo.extend(
-            self._get_cards_info_from_card_id(
+            self._getCardsInfo(
                 card_id=combined_card_list))
         whi(f"Got all infos in {int(time.time()-start)} seconds.\n")
 
         for i, card in enumerate(list_cardInfo):
-            # removing large fields:
-            try:
-                list_cardInfo[i].pop("question")
-                list_cardInfo[i].pop("answer")
-                list_cardInfo[i].pop("css")
-                list_cardInfo[i].pop("fields_no_html")
-            except KeyError as e:
-                pass
             list_cardInfo[i]["fields"] = dict(
                 (k.lower(), v)
                 for k, v in list_cardInfo[i]["fields"].items())
@@ -644,10 +593,10 @@ less than threshold ({self.due_threshold}).\nStopping.")
         self.df["interval"] = self.df["interval"].astype(np.float32)
         return True
 
-    def _smart_acronym_replacer(self, string, compiled, new_w):
+    def _regexp_acronym_replacer(self, string, compiled, new_w):
         """
-        acronym replacement using regex needs this function to replace
-            match groups. For example: replacing 'IL(\\d+)' by "Interleukin 2"
+        this function is needed to replace acronym containing match groups
+        For example: replacing 'IL(\\d+)' by "Interleukin 2"
         """
         if len(string.groups()):
             for i in range(len(string.groups())):
@@ -657,19 +606,26 @@ less than threshold ({self.due_threshold}).\nStopping.")
         out = string.group(0) + f" ({new_w})"
         return out
 
-    def _format_text(self, text):
+    def _text_formatter(self, text):
         """
-        take text and output processed and formatted text
-        Acronyms will be replaced if the corresponding arguments is passed
-            when instantiating AnnA
-        Greek letters can also be replaced on the fly
+        process and formats each card's text, including :
+        * html removal
+        * acronym replacement
+        * greek replacement
+        * OCR text extractor
         """
         text = text.replace("&amp;", "&"
-                            ).replace("/", " / "
-                                      ).replace("+++", " important "
-                                                ).replace("&nbsp", " "
-                                                          ).replace("\u001F",
-                                                                    " ")
+                    ).replace("/", " / "
+                    ).replace("+++", " important "
+                    ).replace("&nbsp", " "
+                    ).replace("\u001F", " "
+                    ).replace("é", "e"
+                    ).replace("è", "e"
+                    ).replace("ê", "e"
+                    ).replace("ô", "o"
+                    ).replace("à", "a"
+                    ).replace("ç", "c"
+                    )
         # remove weird clozes
         text = re.sub(r"}}{{c\d+::", "", text)
 
@@ -714,7 +670,6 @@ less than threshold ({self.due_threshold}).\nStopping.")
         text = re.sub(r"\[\d*\]", "", text)  # wiki style citation
 
         text = re.sub("<.*?>", "", text)  # remaining html tags
-        #text = re.sub(r"\b\w{1,5}>", " ", text)  # missed html tags?
         text = re.sub("&gt;|&lt;|<|>", "", text)
 
         # replace greek letter
@@ -727,9 +682,9 @@ less than threshold ({self.due_threshold}).\nStopping.")
             for compiled, new_word in self.acronym_dict.items():
                 text = re.sub(compiled,
                               lambda string:
-                              self._smart_acronym_replacer(string,
-                                                           compiled,
-                                                           new_word),
+                              self._regexp_acronym_replacer(string,
+                                                            compiled,
+                                                            new_word),
                               text)
 
         # misc
@@ -745,15 +700,22 @@ less than threshold ({self.due_threshold}).\nStopping.")
 
     def _format_card(self):
         """
-        filter the fields of each card and keep only the relevant fields
-        a "relevant field" is one that is mentioned in the variable field_dic
-        which can be found at the top of the file. If not relevant field are
-        found then only the first field is kept.
+        goes through each cards and keep only fields deemed useful in
+        the file from argument 'field_mapping', then adds the field to
+        a single text per card in column 'comb_text'
+
+        * If no corresponding fields are found, only the first one is kept
+        * If no corresponding notetype are found, taking the closest name
+        * 2 lowest level tags will be appended at the end of the text
+        * Threading is used to speed things up
+        * Mentionning several times a field for a specific note_type
+            in field_mapping results in the field taking more importance.
+            For example you can give more importance to field "Body" of a
+            cloze than to the field "More"
         """
-        self._collect_memory()
         def _threaded_field_filter(df, index_list, lock, pbar, stopw_compiled):
             """
-            threaded implementation to speed up execution
+            threaded call to speed up execution
             """
             for index in index_list:
                 card_model = df.loc[index, "modelName"]
@@ -777,7 +739,7 @@ less than threshold ({self.due_threshold}).\nStopping.")
                     fields_to_keep = field_dic[target_model[0]]
                     with lock:
                         to_notify.append(f"Several notetypes match \
-{card_model}. Chose to notetype {target_model[0]}")
+'{card_model}'. Selecting '{target_model[0]}'")
 
                 # concatenates the corresponding fields into one string:
                 if fields_to_keep == "take_first_fields":
@@ -841,7 +803,6 @@ less than threshold ({self.due_threshold}).\nStopping.")
                   desc="Combining relevant fields",
                   smoothing=0,
                   unit=" card") as pbar:
-
             for nb in range(0, n, batchsize):
                 sub_card_list = self.df.index[nb: nb + batchsize]
                 thread = threading.Thread(target=_threaded_field_filter,
@@ -882,7 +843,7 @@ less than threshold ({self.due_threshold}).\nStopping.")
             red(notification)
 
         tqdm.pandas(desc="Formating text", smoothing=0, unit=" card")
-        self.df["text"] = self.df["comb_text"].progress_apply(lambda x: self._format_text(x))
+        self.df["text"] = self.df["comb_text"].progress_apply(lambda x: self._text_formatter(x))
 
         ind_short = []
         for ind in self.df.index:
@@ -911,15 +872,14 @@ adjust formating issues:")
 
     def _compute_card_vectors(self,
                               df=None,
-                              store_vectors=False,
                               import_thread=None):
         """
-        Assigne fastText vectors to each card
-        df["VEC_FULL"], contains the vectors
-        df["VEC"] contains either all the vectors or less if you
-            enabled dimensionality reduction
+        Assigne vectors to each card's 'comb_text', using either fastText or
+            TFIDF as vectorizer.
+
+        After calling this function df["VEC"] contains either all the vectors
+            or less if you enabled dimensionality reduction
         """
-        self._collect_memory()
         if df is None:
             df = self.df
 
@@ -935,14 +895,14 @@ adjust formating issues:")
                 prepare string of text to be vectorized by fastText
                 * makes lowercase
                 * replaces all non letters by a space
-                * outputs the sentence as a list of words
+                * outputs preprocessed comb_text as a list of words
                 """
                 return re.sub(alphanum, " ", string.lower()).split()
 
             def memoize(f):
                 """
                 store previous value to speed up vector retrieval
-                (sped up by about x40)
+                (40x speed up)
                 """
                 memo = {}
 
@@ -955,6 +915,11 @@ adjust formating issues:")
             memoized_vec = memoize(ft.get_word_vector)
 
             def vec(string):
+                """
+                find the vector of each word of the sentence, then sum all
+                    vectors
+                output is 1 vector per comb_text
+                """
                 return np.sum([memoized_vec(x)
                                for x in preprocessor(string)
                                if x != ""
@@ -966,14 +931,6 @@ adjust formating issues:")
                     tqdm(df.index, desc="Vectorizing using fastText")):
                 ft_vec[i] = vec(str(df.loc[x, "text"]))
             ft_vec = normalize(ft_vec, norm='l2')
-
-            if self.fastText_correction_vector:
-                red(f"Temporarily disabled the feature 'correction vecto' as \
-is it not yet fully implemented.")
-#                norm_vec = vec(self.fastText_correction_vector)
-#                norm_vec = normalize(norm_vec.reshape(-1, 1),
-#                                     norm='l1').reshape(1, -1)
-#                ft_vec = ft_vec + norm_vec
 
             # multiplying the median of each dimension by each row's
             # corresponding dimension. The idea is to avoid penalizing
@@ -988,7 +945,6 @@ is it not yet fully implemented.")
             if self.fastText_dim is None or self.fastText_dim_algo is None:
                 yel("Not applying dimension reduction.")
                 df["VEC"] = [x for x in ft_vec]
-                df["VEC_FULL"] = [x for x in ft_vec]
             else:
                 if self.fastText_dim_algo == "UMAP":
                     print(f"Reducing dimensions to {self.fastText_dim} using UMAP")
@@ -1007,7 +963,6 @@ is it not yet fully implemented.")
                                        "min_dist": 0.01}
                         ft_vec_red = umap.UMAP(**umap_kwargs).fit_transform(ft_vec)
                         df["VEC"] = [x for x in ft_vec_red]
-                        df["VEC_FULL"] = [x for x in ft_vec]
                     except Exception as e:
                         red(f"Error when computing UMAP reduction, using PCA \
 as fallback: {e}")
@@ -1018,7 +973,6 @@ as fallback: {e}")
                     if self.fastText_dim > ft_vec.shape[1]:
                         red(f"Not enough dimensions: {ft_vec.shape[1]} < {self.fastText_dim}")
                         df["VEC"] = [x for x in ft_vec]
-                        df["VEC_FULL"] = [x for x in ft_vec]
                     else:
                         try:
                             pca = PCA(n_components=self.fastText_dim, random_state=42)
@@ -1029,28 +983,6 @@ as fallback: {e}")
                         except Exception as e:
                             red(f"Error when computing PCA reduction, using all vectors: {e}")
                             df["VEC"] = [x for x in ft_vec]
-                        df["VEC_FULL"] = [x for x in ft_vec]
-
-            if store_vectors:
-                def storing_vectors(df):
-                    yel("Storing computed vectors")
-                    fastText_store = Path("./stored_vectors.pickle")
-                    if not fastText_store.exists():
-                        df_store = pd.DataFrame(columns=["cardId", "mod", "text", "VEC_FULL"]).set_index("cardId")
-                    else:
-                        df_store = pd.read_pickle(fastText_store)
-                    for i in df.index:
-                        df_store.loc[i, :] = df.loc[i, ["mod", "text", "VEC_FULL"]]
-                    df_store.to_pickle("stored_vectors.pickle_temp")
-                    if fastText_store.exists():
-                        fastText_store.unlink()
-                    Path("stored_vectors.pickle_temp").rename("stored_vectors.pickle")
-                    yel("Finished storing computed vectors")
-                stored_df = df.copy()
-                thread = threading.Thread(target=storing_vectors,
-                                          args=(stored_df,),
-                                          daemon=True)
-                thread.start()
 
         elif self.vectorizer == "TFIDF":
             if self.TFIDF_tokenize:
@@ -1060,24 +992,18 @@ as fallback: {e}")
                 def tknzer(x):
                     return x
 
-            n_features = len(" ".join([x for x in df["text"]]).split(" ")) // 100
-            n_features = max(n_features, 500)
-            n_features = min(n_features, 10_000)
-            red(f"Max number of features for TF_IDF: {n_features}")
-
             vectorizer = TfidfVectorizer(strip_accents="ascii",
                                          lowercase=True,
                                          tokenizer=tknzer,
                                          stop_words=None,
                                          ngram_range=(1, 10),
-                                         max_features=n_features,
+                                         max_features=10_000,
                                          norm="l2")
             # stop words have already been removed
             t_vec = vectorizer.fit_transform(tqdm(df["text"],
                                              desc="Vectorizing text using \
 TFIDF"))
             if self.TFIDF_dim is None:
-                df["VEC_FULL"] = [x for x in t_vec]
                 df["VEC"] = [x for x in t_vec]
             else:
                 while True:
@@ -1103,7 +1029,6 @@ retrying until above 80% or 2000 dimensions)")
                         continue
                 whi(f"Explained variance ratio after SVD on Tf_idf: {evr}%")
 
-                df["VEC_FULL"] = [x for x in t_vec]
                 df["VEC"] = [x for x in t_red]
 
         self.df = df
@@ -1111,11 +1036,10 @@ retrying until above 80% or 2000 dimensions)")
 
     def _compute_distance_matrix(self, input_col="VEC"):
         """
-        compute distance matrix between all the cards
-        * the distance matrix can be parallelised by scikit learn so I didn't
-            bother saving and reusing the matrix
+        compute distance matrix : a huge matrix containing the
+            cosine distance between the vectors of each cards.
+        * scikit learn allows a parallelized computation
         """
-        self._collect_memory()
         df = self.df
 
         print("\nComputing distance matrix on all available cores...")
@@ -1132,8 +1056,6 @@ retrying until above 80% or 2000 dimensions)")
         mean_dist = np.nanmean(self.df_dist[self.df_dist != 0])
         std_dist = np.nanstd(self.df_dist[self.df_dist != 0])
         yel(f"Mean distance: {mean_dist}, std: {std_dist}\n")
-#        self.df_dist -= mean_dist
-#        self.df_dist /= std_dist
 
         # showing to user which cards are similar and different,
         # for troubleshooting
@@ -1177,33 +1099,34 @@ retrying until above 80% or 2000 dimensions)")
 
     def _compute_opti_rev_order(self):
         """
-        a loop that assigns a score to each card, the lowest score at each
-            turn is added to the queue, each new turn compares the cards to
-            the present queue
-
-        * this score reflects the order in which they should be reviewed
-        * the intuition is that anki doesn't know before hand if some cards
-            are semantically close and can have you review them the same day
-
-        # TODO: this a changed a lot:
-        * The score is computed according to the formula:
-           score = ref - min of (similarity to each card of the big_queue)
-           (big_queue here referes to the recently rated cards concatenated
-            with the queue cards)
-        * ref is either the interval or the negative relative overdueness),
-            it is centered and scaled. In both case, a lower ref is indicating
-            that reviewing the card is urgent.
-        * the_chosen_one is the card with the lowest score at each round
-        * the queue starts empty. At the end of each turn, the_chosen_one is
-            added to it
-        * Index score: combining two scores was hard (they had really different
-            distribution, so I added this flag to tell wether to use the scores
-            or the argsort of the scores as score
-
-        CAREFUL: this docstring might not be up to date as I am constantly
-            trying to improve the code
+        1. calculates the 'ref' column. The lowest the 'ref', the more urgent
+            the card needs to be reviewed. The computation used depends on
+            argument 'reference_order', hence picking a card according to its
+            'ref' only can be the same as using a regular filtered deck with
+            'reference_order' set to 'relative_overdueness'
+        2. remove siblings of the due list of found (except if the queue
+            is meant to contain a lot of cards, then siblings are not removed)
+        3. prints a few stats about 'ref' distribution in your deck as well
+            as 'distance' distribution
+        4. assigns a score to each card, the lowest score at each turn is
+            added to the queue, each new turn compares the cards to
+            the present queue. The algorithm is described in more details in
+            the docstring of function 'combinator'.
+            Here's the gist:
+            At each turn, the card from indTODO with the lowest score is
+                removed from indTODO and added to indQUEUE
+            The score is computed according to the formula:
+               score of indTODO =
+               ref -
+                     [
+                       0.9 * min(similarity to each card of indQUEUE)
+                       +
+                       0.1 * mean(similarity to each card of indQUEUE)
+                      ]
+               (indQUEUE = recently rated cards + queue)
+        5. displays improvement_ratio, a number supposed to indicate how much
+            better the new queue is compared to the original queue.
         """
-        self._collect_memory()
         # getting args etc
         reference_order = self.reference_order
         df = self.df
@@ -1215,7 +1138,6 @@ retrying until above 80% or 2000 dimensions)")
 
         # settings
         display_stats = True
-        use_index_of_score = False
 
         # setting interval to correct value for learning and relearnings:
         steps_L = [x / 1440 for x in self.deck_config["new"]["delays"]]
@@ -1244,8 +1166,7 @@ retrying until above 80% or 2000 dimensions)")
             df.loc[due, "ref"] = interval_cs
 
         elif reference_order == "order_added":
-            due_order = np.argsort(due).reshape(-1, 1)
-            df[due, "ref"] = StandardScaler().fit_transform(due_order)
+            df.loc[due, "ref"] = StandardScaler().fit_transform(np.array(due).reshape(-1, 1))
 
         elif reference_order == "relative_overdueness":
             print("Computing relative overdueness...")
@@ -1262,11 +1183,14 @@ retrying until above 80% or 2000 dimensions)")
                     df.at[i, "ref_due"] -= anki_col_time
                     df.at[i, "ref_due"] /= 86400
                 assert df.at[i, "ref_due"] > 0
-            overdue = (df.loc[due, "ref_due"] - time_offset).to_numpy().reshape(-1, 1)
+            overdue = df.loc[due, "ref_due"] - time_offset
             df.drop("ref_due", axis=1, inplace=True)
 
-            ro = -1 * (df.loc[due, "interval"].values + 0.5) / (overdue.T + 0.5)
-            ro_cs = StandardScaler().fit_transform(ro.T)
+            # the code for relative overdueness is not exactly the same as
+            # in anki, as I was not able to replicate it.
+            # Here's a link to one of the implementation : https://github.com/ankitects/anki/blob/afff4fc437f523a742f617c6c4ad973a4d477c15/rslib/src/storage/card/filtered.rs
+            ro = -1 * (df.loc[due, "interval"].values + 0.5) / (overdue + 0.5)
+            ro_cs = StandardScaler().fit_transform(ro.values.reshape(-1, 1))
             df.loc[due, "ref"] = ro_cs
 
         assert len([x for x in rated if df.loc[x, "status"] != "rated"]) == 0
@@ -1367,15 +1291,34 @@ set its adjustment weight to 0")
             assert np.sum(np.isnan(df.loc[rated, x].values)) == len(rated)
             assert np.sum(np.isnan(df.loc[due, x].values)) == 0
 
-        if use_index_of_score:
-            df.loc[indTODO, "index_ref"] = df.loc[indTODO, "ref"].values.argsort()
-            col_ref = "index_ref"
-            def combinator(array):
-                return 0.9 * np.min(array, axis=0).argsort() + 0.1 * np.mean(array, axis=0).argsort()
-        else:
-            col_ref = "ref"
-            def combinator(array):
-                return 0.9 * np.min(array, axis=0) + 0.1 * np.mean(array, axis=0)
+        def combinator(array):
+            """
+            'array' represents:
+                * columns : the cards of indTODO
+                * rows : the cards of indQUEUE
+                * the content of each cell is the similarity between them
+                    (lower value means very similar)
+            Hence, for a given array:
+            * if a cell of np.min is high, then the corresponding card of
+                indTODO is not similar to any card of indQUEUE (i.e. its
+                closest card in indQUEUE is quite different). This card is a
+                good candidate to add to indQEUE.
+            * if a cell of np.mean is high, then the corresponding card of
+                indTODO is different from most cards of indQUEUE (i.e. it is
+                quite different from most cards of indQUEUE). This cas is
+                a good candidate to add to indQUEUE
+            * Naturally, np.min is given more importance than np.mean
+
+            Best candidates are cards with high combinator output.
+            The outut is added to the 'ref' of each indTODO card.
+
+            Hence, at each turn, the card from indTODO with the lowest
+                'w1*ref - w2*combinator' is removed from indTODO and added
+                to indQUEUE.
+
+            The content of 'queue' is the list of card_id in best review order.
+            """
+            return 0.9 * np.min(array, axis=1) + 0.1 * np.mean(array, axis=1)
 
         with tqdm(desc="Computing optimal review order",
                   unit=" card",
@@ -1384,8 +1327,8 @@ set its adjustment weight to 0")
                   total=queue_size_goal + len(rated)) as pbar:
             while len(queue) < queue_size_goal:
                 queue.append(indTODO[
-                        (w1*df.loc[indTODO, col_ref].values -\
-                         w2*combinator(self.df_dist.loc[indQUEUE, indTODO].values)
+                        (w1*df.loc[indTODO, "ref"].values -\
+                         w2*combinator(self.df_dist.loc[indTODO, indQUEUE].values)
                          ).argmin()])
                 indQUEUE.append(indTODO.pop(indTODO.index(queue[-1])))
                 pbar.update(1)
@@ -1425,42 +1368,45 @@ AnnA:")
         except Exception as e:
             red(f"\nException: {e}")
 
-        self.opti_rev_order = queue
+        self.opti_rev_order = [int(x) for x in queue]
         self.df = df
         return True
 
     def display_opti_rev_order(self, display_limit=50):
         """
-        display the cards in the best optimal order. Useful to see if something
-        went wrong before creating the filtered deck
+        instead of creating a deck or buring cards, prints the content
+        of cards in the order AnnA though was best.
+        Only used for debugging.
         """
-        self._collect_memory()
         order = self.opti_rev_order[:display_limit]
         print(self.df.loc[order, "text"])
         return True
 
-    def task_filtered_deck(self,
-                           deck_template=None,
+    def bury_or_create_filtered(self,
+                           fdeckname_template=None,
                            task=None):
         """
-        create a filtered deck containing the cards to review in optimal order
+        Either bury cards that are not in the optimal queue or create a
+            filtered deck containing the cards to review in optimal order.
 
-        * When first creating the filtered deck, I chose 'sortOrder = 0'
-            ("oldest seen first") this way I will notice if the deck
-            somehow got rebuild and lost the right order
-        * deck_template can be used to group your filtered decks together.
-            Leaving it to None will make the filtered deck appear alongside
-            the original deck
-        * To speed up the process, I decided to create a threaded function call
+        * The filtered deck is created with setting 'sortOrder = 0', meaning
+            ("oldest seen first"). This function then changes the review order
+            inside this deck. That's why rebuilding this deck will keep the
+            cards but lose the order.
+        * fdeckname_template can be used to automatically put the filtered
+            decks to a specific location in your deck hierarchy. Leaving it
+            to None will make the filtered deck appear alongside the
+            original deck
+        * This uses a threaded call to increase speed.
         * I do a few sanity check to see if the filtered deck
             does indeed contain the right number of cards and the right cards
         * -100 000 seems to be the starting value for due order in filtered
-            decks
-        * if task is set to bury_excess_learning_cards ot bury_excess_review_cards, then no filtered
-            deck will be created and AnnA will just bury the cards that are
-            too similar
+            decks by anki : cards are review from lowest to highest "due_order".
+        * if task is set to 'bury_excess_learning_cards' or
+            'bury_excess_review_cards', then no filtered deck will be created
+            and AnnA will just bury some cards that are too similar to cards
+            that you will review.
         """
-        self._collect_memory()
         if task in ["bury_excess_learning_cards", "bury_excess_review_cards"]:
             to_keep = self.opti_rev_order
             to_bury = [x for x in self.due_cards if x not in to_keep]
@@ -1471,10 +1417,10 @@ AnnA:")
                               cards=to_bury)
             return True
         else:
-            if self.deck_template is not None:
-                deck_template = self.deck_template
-            if deck_template is not None:
-                filtered_deck_name = str(deck_template + f" - {self.deckname}")
+            if self.fdeckname_template is not None:
+                fdeckname_template = self.fdeckname_template
+            if fdeckname_template is not None:
+                filtered_deck_name = str(fdeckname_template + f" - {self.deckname}")
                 filtered_deck_name = filtered_deck_name.replace("::", "_")
             else:
                 filtered_deck_name = f"{self.deckname} - AnnA Optideck"
@@ -1486,66 +1432,22 @@ You have to delete it manually, the cards will be returned to their original \
 deck.")
                 input("Done? >")
 
-            def _threaded_value_setter(card_list, tqdm_desc, keys, newValues):
-                """
-                create threads to edit card values quickly
-                """
-                def do_action(card_list,
-                              sub_card_list,
-                              keys,
-                              newValues,
-                              lock,
-                              pbar):
-                    for c in sub_card_list:
-                        if keys == ["due"]:
-                            newValues = [-100000 + card_list.index(c)]
-                        self._call_anki(action="setSpecificValueOfCard",
-                                          card=int(c),
-                                          keys=keys,
-                                          newValues=newValues)
-                        pbar.update(1)
-                    return True
-
-                with tqdm(desc=tqdm_desc,
-                          unit=" card",
-                          total=len(card_list),
-                          dynamic_ncols=True,
-                          smoothing=0) as pbar:
-                    lock = threading.Lock()
-                    threads = []
-                    batchsize = len(card_list)//3+1
-                    for nb in range(0, len(card_list), batchsize):
-                        sub_card_list = card_list[nb: nb+batchsize]
-                        thread = threading.Thread(target=do_action,
-                                                  args=(card_list,
-                                                        sub_card_list,
-                                                        keys,
-                                                        newValues,
-                                                        lock,
-                                                        pbar),
-                                                  daemon=False)
-                        thread.start()
-                        threads.append(thread)
-                        while sum([t.is_alive() for t in threads]) >= 5:
-                            time.sleep(0.5)
-                    [t.join() for t in threads]
-                return True
-
         whi(f"Creating deck containing the cards to review: \
 {filtered_deck_name}")
-        query = "is:due -rated:1 cid:" + ','.join([str(x) for x in self.opti_rev_order])
+        query = "is:due -rated:1 cid:" + ','.join(
+                [str(x) for x in self.opti_rev_order])
         self._call_anki(action="createFilteredDeck",
-                          newDeckName=filtered_deck_name,
-                          searchQuery=query,
-                          gatherCount=len(self.opti_rev_order)+1,
-                          reschedule=True,
-                          sortOrder=0,
-                          createEmpty=False)
+                        newDeckName=filtered_deck_name,
+                        searchQuery=query,
+                        gatherCount=len(self.opti_rev_order) + 1,
+                        reschedule=True,
+                        sortOrder=0,
+                        createEmpty=False)
 
         print("Checking that the content of filtered deck name is the same as \
  the order inferred by AnnA...", end="")
         cur_in_deck = self._call_anki(action="findCards",
-                                        query=f"\"deck:{filtered_deck_name}\"")
+                                      query=f"\"deck:{filtered_deck_name}\"")
         diff = [x for x in self.opti_rev_order + cur_in_deck
                 if x not in self.opti_rev_order or x not in cur_in_deck]
         if len(diff) != 0:
@@ -1554,23 +1456,27 @@ as opti_rev_order!")
             pprint(diff)
             red(f"\nNumber of inconsistent cards: {len(diff)}")
 
-        _threaded_value_setter(card_list=self.opti_rev_order,
-                               tqdm_desc="Altering due order",
-                               keys=["due"],
-                               newValues=None)
-        return True
-
+        yel("\nAsking anki to alter the filtered deck's due order...", end="")
+        res = self._call_anki(action="setDueOrderOfFiltered",
+                              cards=self.opti_rev_order)
+        err = [x[1] for x in res if x[0] is False]
+        if err:
+            print("")
+            raise(f"Error when setting due order : {err}")
+        else:
+            yel(" Done!")
+            return True
 
     def save_df(self, df=None, out_name=None):
         """
-        export dataframe as pickle format a DF_backups
+        export dataframe as pickle format in the folder DF_backups/
         """
         if df is None:
             df = self.df.copy()
         if out_name is None:
             out_name = "AnnA_Saved_DataFrame"
-        cur_time = "_".join(time.asctime().split()[0:4]).replace(
-                ":", "h")[0:-3]
+        cur_time = "_".join(time.asctime().split()[0:4]).replace(":",
+                                                                 "h")[0:-3]
         name = f"{out_name}_{self.deckname}_{cur_time}.pickle"
         df.to_pickle("./.DataFrame_backups/" + name)
         print(f"Dataframe exported to {name}.")
@@ -1578,9 +1484,12 @@ as opti_rev_order!")
 
     def show_acronyms(self, exclude_OCR_text=True):
         """
-        shows acronym present in your collection that were not found in
-        the file supplied by the argument `acronym_file`
-        * acronyms found in OCR caption are removed by default
+        Shows acronym present in your collection that were not found in
+            the file supplied by the argument `acronym_file`.
+            This is used to know when you forgot the specify an acronym to
+            replace.
+        * acronyms found in OCR text are removed by default, as it often
+            creates too many false positive.
         """
         if not len(self.acronym_dict.keys()):
             return True

@@ -20,21 +20,19 @@ Here are different ways of looking at what AnnA can do for you in a few words:
 * AnnA allows to reduce the number of daily reviews while increasing (and not keeping the same) retention.
 
 ## Note to readers
-0. The [dev branch](https://github.com/thiswillbeyourgithub/AnnA_Anki_neuronal_Appendix/tree/dev) is way more up to date than the main branch.
+0. The [dev branch](https://github.com/thiswillbeyourgithub/AnnA_Anki_neuronal_Appendix/tree/dev) is usually less outdated than the main branch.
 1. I would really like to integrate this into anki somehow but am not knowledgeable enough about how to do it, how to manage anki versions, how to handle different platforms etc. All help is much appreciated!
 2. This project communicates with anki using a fork of the addon [AnkiConnect](https://github.com/FooSoft/anki-connect) called [AnnA-companion](https://ankiweb.net/shared/info/447942356). Note that AnnA-companion was tested from anki 2.1.44 to 2.1.49 only.
 3. Although I've been using it daily for months, I am still changing the code base almost every day, if you tried AnnA and were disappointed, maybe try it another time later. Major improvements are regularly made.
-4. This project is still very early and I don't recommend you start using it if you're not skilled enough to do damage control. I have lost a lot of my tags several times (recovered them all afterwards) and some issue can still happen. Use at your own risks :)
-5. I implemented two vectorization methods, either [fastText](https://en.wikipedia.org/wiki/FastText) or [subword TF_IDF](https://en.wikipedia.org/wiki/Tf%E2%80%93idf). TF_IDF is known to be reliable, fast, very general (it does not assume anything about your cards and will work for just about any language, format, phrasing etc). TF_IDF works very well if you have large number of cards. fastText is still experimental and needs lots of RAM but should provide very good results, even with just a few cards as it assigns vectors that have a meaning. Note that semantic searching is currently only possible using fastText.
-6. If you want to know how I'm using this, take a look at [authors_routine.md](./authors_routine.md)
-7. I am using the V2 scheduler.
+4. I implemented two vectorization methods, either [fastText](https://en.wikipedia.org/wiki/FastText) or [subword TF_IDF](https://en.wikipedia.org/wiki/Tf%E2%80%93idf). TF_IDF is known to be reliable, fast, very general (it does not assume anything about your cards and will work for just about any language, format, phrasing etc). TF_IDF works very well if you have large number of cards. fastText is still experimental and needs lots of RAM but should provide very good results, even with just a few cards as it assigns vectors that have a meaning. Note that semantic searching is currently only possible using fastText.
+5. If you want to know how I'm using this, take a look at [authors_routine.md](./authors_routine.md)
 
 ## Other features
 * Code is PEP8 compliant, dynamically typed, all the functions have a detailed docstrings. Contributions are welcome, opening issues is encouraged and appreciated.
 * Keeps the OCR data of pictures in your cards, if you analyzed them beforehand using [AnkiOCR](https://github.com/cfculhane/AnkiOCR/).
 * Can automatically replace acronyms in your cards (e.g. 'PNO' can be replaced to "pneumothorax" if you tell it to), regexp are supported
 * Can attribute more importance to some fields of some cards if needed.
-* Previous feature like clustering, plotting, searching have been removed as I don't expect them to be useful to users.
+* Previous feature like clustering, plotting, searching have been removed as I don't expect them to be useful to users. But the code was clean so if you need it for some reason don't hesitate to open an issue.
 
 ## FAQ
 * **How does it work? (Layman version)** AnnA connects to its companion addon to access your anki collection. This allows to use any python library without having to go through the trouble how packaging those libraries into an addon. It uses a vectorizer to assign numbers (vectors) to each cards. If the numbers of two cards are very close, then the cards have similar content and should not be reviewed too close to each other.
@@ -88,10 +86,10 @@ AnnA was made with usability in mind. With the right arguments, you can have to 
 
  * `show_banner` used to display a nice banner when instantiating the collection. Default is `True`.
  * `deckname` the deck containing the cards you want to review. If you don't supply this value or make a mistake, AnnA will ask you to type in the deckname, with autocompletion enabled (use `<TAB>`). Default is `None`.
- * `reference_order` either "relative_overdueness" or "lowest_interval". It is the reference used to sort the card before adjusting them using the similarity scores. Default is `"relative_overdueness"`. Keep in mind that my relative_overdueness is a reimplementation of the default overdueness of anki and is not absolutely exactly the same but should be a very close approximation. If you find edge cases, please open an issue.
+ * `reference_order` either "relative_overdueness" or "lowest_interval". It is the reference used to sort the card before adjusting them using the similarity scores. Default is `"relative_overdueness"`. Keep in mind that my relative_overdueness is a reimplementation of the default overdueness of anki and is not absolutely exactly the same but should be a close approximation. If you find edge cases or have any idea, please open an issue.
  * `target_deck_size` indicates the size of the filtered deck to create. Can be the number of cards (500), a proportion of due cards ("80%" or 0.80) or the word "all". Default is `"80%"`.
  * `rated_last_X_days` indicates the number of passed days to take into account when fetching past anki sessions. If you rated 500 cards yesterday, then you don't want your today cards to be too close to what you viewed yesterday, so AnnA will find the 500 cards you reviewed yesterday, and all the cards you rated before that, up to the number of days in rated_last_X_days value. Default is `4` (meaning rated today, and in the 3 days before today). A value of 0 or None will disable fetching those cards. A value of 1 will only fetch cards that were rated today. Not that this will include cards rated in the last X days, no matter if they are reviews or learnings. you can change this using "highjack_rated_query" argument.
- * `due_threshold` stops AnnA if the number of due cards is inferior to this value. Default is `30`.
+ * `lowlimit_due` stops AnnA if the number of due cards is inferior to this value. Default is `30`.
  * `highjack_due_query` bypasses the query used to fetch due cards in anki. Default is `None`.
  * `highjack_rated_query` bypasses the query used to fetch rated cards in anki. Default is `None`.
  * `score_adjustment_factor` a tuple used to adjust the value of the reference order compared to how similar the cards are. Default is `(1, 5)`. For example: (1, 1.3) means that the algorithm will spread the similar cards farther apart.
@@ -102,10 +100,8 @@ AnnA was made with usability in mind. With the right arguments, you can have to 
  * `acronym_file` a python file containing dictionaries that themselves contain acronyms to extend in the text of cards. For example `CRC` can be extended to `CRC (colorectal cancer)`. (The parenthesis are automatically added.) Default is `"acronym_file.py"`. The matching is case sensitive only if the key contains uppercase characters. The ".py" file extension is not mandatory.
  * `acronym_list` a list of name of dictionaries found in the file from `acronym_file` to use to extend text. For example `["AI_machine_learning", "medical_terms"]` from `example_file/acronym_file.py`. Default to None.
 
- * `compute_opti_rev_order` if `False`, won't compute optimal review order and will set `to_anki` to False. Default is `True`.
-
  * `task` can be "filter_review_cards", "bury_excess_learning_cards", "bury_excess_review_cards" or "index". Respectively to create a filtered deck with the cards, or bury only the similar learning cards (among other learning cards), or bury only the similar cards in review (among other review cards), or to add all the fastText vectors in the cache file (to speed up later runs). Default is "`filter_review_cards`".
- * `deck_template` name template of the filtered deck to create. Only available if task is set to "filter_review_cards". Default is `None`.
+ * `fdeckname_template` name template of the filtered deck to create. Only available if task is set to "filter_review_cards". Default is `None`.
 
  * `stopwords_lang` a list of languages used to construct a list of stop words (i.e. words that will be ignored, like "I" or "be" in English). Default is `["english", "french"]`.
  * `vectorizer` can be either "TFIDF" or "fastText". Default is "TFIDF".
@@ -113,12 +109,8 @@ AnnA was made with usability in mind. With the right arguments, you can have to 
  * `fastText_dim_algo` can be "PCA", "UMAP" or None. Specified the algorithm used for the optionnal dimension reduction. Note that UMAP usage is experimental and slow.
  * `fastText_lang` language of the fastText model to load or download. Default is `"en"`.
  * `fastText_model_name` name of a fastText model to load. Bypasses fastText_lang. Useful if you created a smaller fastText model. Default is `None`.
- * `fastText_correction_vector` can be any sentence or `None`. Default is `None`. Used to orient the fastText matrix somewhat. For example, for a medical anatomy deck, if you set it to "medical anatomy" AnnA will convert this sentence to a vector and add it to the vector of each card. This will reduce the noise by prioritizing these directions in the dataset to pick up cards that contain too many contextual words relative to medical anatomy words. Note that this is experimental. **This is currently disabled.**
  * `TFIDF_dim` the number of dimension to keep using [SVD](https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.TruncatedSVD.html). Default is `100`, you cannot disable dimension reduction for TF_IDF because that would result in a sparse matrix. AnnA will automatically try a higher number of dimension if needed, up to 2000.
  * `TFIDF_stem` default to `True`. Wether to enable stemming of words. Currently the PorterStemmer is used, and was made for English but can still be useful for some other languages. Keep in mind that this is the longest step when formatting text.
-
- * `debug_card_limit` limit the number of due cards to take into account. It is used for debugging as it allows to run the script quickly. Default is `None`.
- * `save_instance_as_pickle` Saving the instance in a pickle file called "last_run.pickle". Default is `False`.
 
 AnnA has a number of other built-in methods you can run after instantiating the class. Note that methods beginning with a "_" are not supposed to be called by the user and are reserved for backend use. Here's a list of useful methods:
 
