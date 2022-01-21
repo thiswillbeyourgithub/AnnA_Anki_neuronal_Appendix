@@ -941,7 +941,6 @@ adjust formating issues:")
             if self.fastText_dim is None or self.fastText_dim_algo is None:
                 yel("Not applying dimension reduction.")
                 df["VEC"] = [x for x in ft_vec]
-                df["VEC_FULL"] = [x for x in ft_vec]
             else:
                 if self.fastText_dim_algo == "UMAP":
                     print(f"Reducing dimensions to {self.fastText_dim} using UMAP")
@@ -960,7 +959,6 @@ adjust formating issues:")
                                        "min_dist": 0.01}
                         ft_vec_red = umap.UMAP(**umap_kwargs).fit_transform(ft_vec)
                         df["VEC"] = [x for x in ft_vec_red]
-                        df["VEC_FULL"] = [x for x in ft_vec]
                     except Exception as e:
                         red(f"Error when computing UMAP reduction, using PCA \
 as fallback: {e}")
@@ -971,7 +969,6 @@ as fallback: {e}")
                     if self.fastText_dim > ft_vec.shape[1]:
                         red(f"Not enough dimensions: {ft_vec.shape[1]} < {self.fastText_dim}")
                         df["VEC"] = [x for x in ft_vec]
-                        df["VEC_FULL"] = [x for x in ft_vec]
                     else:
                         try:
                             pca = PCA(n_components=self.fastText_dim, random_state=42)
@@ -982,7 +979,6 @@ as fallback: {e}")
                         except Exception as e:
                             red(f"Error when computing PCA reduction, using all vectors: {e}")
                             df["VEC"] = [x for x in ft_vec]
-                        df["VEC_FULL"] = [x for x in ft_vec]
 
         elif self.vectorizer == "TFIDF":
             if self.TFIDF_tokenize:
@@ -1009,7 +1005,6 @@ as fallback: {e}")
                                              desc="Vectorizing text using \
 TFIDF"))
             if self.TFIDF_dim is None:
-                df["VEC_FULL"] = [x for x in t_vec]
                 df["VEC"] = [x for x in t_vec]
             else:
                 while True:
@@ -1035,7 +1030,6 @@ retrying until above 80% or 2000 dimensions)")
                         continue
                 whi(f"Explained variance ratio after SVD on Tf_idf: {evr}%")
 
-                df["VEC_FULL"] = [x for x in t_vec]
                 df["VEC"] = [x for x in t_red]
 
         self.df = df
