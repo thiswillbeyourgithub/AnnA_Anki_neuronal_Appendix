@@ -333,7 +333,7 @@ values. {e}")
             self.vectorizer = "fastText"
             self.fastText_dim = None
             self.rated_last_X_days = 0
-            self._create_and_fill_df()
+            self._init_dataFrame()
             if self.not_enough_cards is True:
                 return
             self._format_card()
@@ -348,7 +348,7 @@ values. {e}")
                 yel("Task : bury some learning cards")
             elif task == "bury_excess_review_cards":
                 yel("Task : bury some reviews\n")
-            self._create_and_fill_df()
+            self._init_dataFrame()
             if self.not_enough_cards is True:
                 return
             self._format_card()
@@ -359,7 +359,7 @@ values. {e}")
             self.task_filtered_deck(task=task)
         else:
             yel("Task : created filtered deck containing review cards")
-            self._create_and_fill_df()
+            self._init_dataFrame()
             if self.not_enough_cards is True:
                 return
             self._format_card()
@@ -485,7 +485,7 @@ threads of size {batchsize})")
                                   completer=auto_complete)
         return deckname
 
-    def _create_and_fill_df(self):
+    def _init_dataFrame(self):
         """
         create a pandas DataFrame, fill it with the information gathered from
         anki connect like card content, intervals, etc
