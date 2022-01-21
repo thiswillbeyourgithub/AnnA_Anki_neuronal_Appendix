@@ -1169,8 +1169,7 @@ retrying until above 80% or 2000 dimensions)")
             df.loc[due, "ref"] = interval_cs
 
         elif reference_order == "order_added":
-            due_order = np.argsort(due).reshape(-1, 1)
-            df[due, "ref"] = StandardScaler().fit_transform(due_order)
+            df.loc[due, "ref"] = StandardScaler().fit_transform(np.array(due).reshape(-1, 1))
 
         elif reference_order == "relative_overdueness":
             print("Computing relative overdueness...")
