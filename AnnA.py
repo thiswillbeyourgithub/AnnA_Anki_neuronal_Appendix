@@ -1321,7 +1321,7 @@ set its adjustment weight to 0")
 
             The content of 'queue' is the list of card_id in best review order.
             """
-            return 0.9 * np.min(array, axis=0) + 0.1 * np.mean(array, axis=0)
+            return 0.9 * np.min(array, axis=1) + 0.1 * np.mean(array, axis=1)
 
         with tqdm(desc="Computing optimal review order",
                   unit=" card",
@@ -1331,7 +1331,7 @@ set its adjustment weight to 0")
             while len(queue) < queue_size_goal:
                 queue.append(indTODO[
                         (w1*df.loc[indTODO, "ref"].values -\
-                         w2*combinator(self.df_dist.loc[indQUEUE, indTODO].values)
+                         w2*combinator(self.df_dist.loc[indTODO, indQUEUE].values)
                          ).argmin()])
                 indQUEUE.append(indTODO.pop(indTODO.index(queue[-1])))
                 pbar.update(1)
