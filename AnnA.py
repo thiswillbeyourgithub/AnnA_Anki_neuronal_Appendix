@@ -1095,8 +1095,6 @@ retrying until above 80% or 2000 dimensions)")
         mean_dist = np.nanmean(self.df_dist[self.df_dist != 0])
         std_dist = np.nanstd(self.df_dist[self.df_dist != 0])
         yel(f"Mean distance: {mean_dist}, std: {std_dist}\n")
-#        self.df_dist -= mean_dist
-#        self.df_dist /= std_dist
 
         # showing to user which cards are similar and different,
         # for troubleshooting
