@@ -504,16 +504,14 @@ threads of size {batchsize})")
 
         elif self.task in ["filter_review_cards", "bury_excess_review_cards"]:
             yel("Getting due card list...")
-            query = f"\"deck:{self.deckname}\" is:due is:review -is:learn \
--is:suspended -is:buried -is:new -rated:1"
+            query = f"\"deck:{self.deckname}\" is:due is:review -is:learn -is:suspended -is:buried -is:new -rated:1"
             whi(" >  '" + query + "'")
             due_cards = self._call_anki(action="findCards", query=query)
             whi(f"Found {len(due_cards)} reviews...\n")
 
         elif self.task == "bury_excess_learning_cards":
             yel("Getting is:learn card list...")
-            query = f"\"deck:{self.deckname}\" is:due is:learn -is:suspended \
--rated:1 -rated:2:1 -rated:2:2"
+            query = f"\"deck:{self.deckname}\" is:due is:learn -is:suspended -rated:1 -rated:2:1 -rated:2:2"
             whi(" >  '" + query + "'")
             due_cards = self._call_anki(action="findCards", query=query)
             whi(f"Found {len(due_cards)} learning cards...\n")
@@ -533,10 +531,8 @@ threads of size {batchsize})")
             rated_cards = self._call_anki(action="findCards", query=query)
             red(f"Found {len(rated_cards)} cards...\n")
         elif self.rated_last_X_days != 0:
-            yel(f"Getting cards that where rated in the last \
-{self.rated_last_X_days} days...")
-            query = f"\"deck:{self.deckname}\" rated:{self.rated_last_X_days} \
--is:suspended -is:buried"
+            yel(f"Getting cards that where rated in the last {self.rated_last_X_days} days...")
+            query = f"\"deck:{self.deckname}\" rated:{self.rated_last_X_days} -is:suspended -is:buried"
             whi(" >  '" + query + "'")
             rated_cards = self._call_anki(action="findCards",
                                             query=query)
