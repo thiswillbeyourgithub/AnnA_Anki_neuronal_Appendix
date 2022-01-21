@@ -1435,51 +1435,6 @@ You have to delete it manually, the cards will be returned to their original \
 deck.")
                 input("Done? >")
 
-            def _threaded_value_setter(card_list, tqdm_desc, keys, newValues):
-                """
-                threaded call to speed things up
-                """
-                def do_action(card_list,
-                              sub_card_list,
-                              keys,
-                              newValues,
-                              lock,
-                              pbar):
-                    for c in sub_card_list:
-                        if keys == ["due"]:
-                            newValues = [-100000 + card_list.index(c)]
-                        self._call_anki(action="setSpecificValueOfCard",
-                                        card=int(c),
-                                        keys=keys,
-                                        newValues=newValues)
-                        pbar.update(1)
-                    return True
-
-                with tqdm(desc=tqdm_desc,
-                          unit=" card",
-                          total=len(card_list),
-                          dynamic_ncols=True,
-                          smoothing=0) as pbar:
-                    lock = threading.Lock()
-                    threads = []
-                    batchsize = len(card_list) // 3 + 1
-                    for nb in range(0, len(card_list), batchsize):
-                        sub_card_list = card_list[nb: nb + batchsize]
-                        thread = threading.Thread(target=do_action,
-                                                  args=(card_list,
-                                                        sub_card_list,
-                                                        keys,
-                                                        newValues,
-                                                        lock,
-                                                        pbar),
-                                                  daemon=False)
-                        thread.start()
-                        threads.append(thread)
-                        while sum([t.is_alive() for t in threads]) >= 5:
-                            time.sleep(0.5)
-                    [t.join() for t in threads]
-                return True
-
         whi(f"Creating deck containing the cards to review: \
 {filtered_deck_name}")
         query = "is:due -rated:1 cid:" + ','.join(
@@ -1504,11 +1459,16 @@ as opti_rev_order!")
             pprint(diff)
             red(f"\nNumber of inconsistent cards: {len(diff)}")
 
-        _threaded_value_setter(card_list=self.opti_rev_order,
-                               tqdm_desc="Altering due order",
-                               keys=["due"],
-                               newValues=None)
-        return True
+        yel("\nAsking anki to alter the filtered deck's due order...", end="")
+        res = self._call_anki(action="setDueOrderOfFiltered",
+                              cards=self.opti_rev_order)
+        err = [x[1] for x in res if x[0] is False]
+        if err:
+            print("")
+            raise(f"Error when setting due order : {err}")
+        else:
+            yel(" Done!")
+            return True
 
     def save_df(self, df=None, out_name=None):
         """
