@@ -615,7 +615,7 @@ less than threshold ({self.lowlimit_due}).\nStopping.")
         out = string.group(0) + f" ({new_w})"
         return out
 
-    def _format_text(self, text):
+    def _text_formatter(self, text):
         """
         process and formats each card's text, including :
         * html removal
@@ -847,7 +847,7 @@ less than threshold ({self.lowlimit_due}).\nStopping.")
             red(notification)
 
         tqdm.pandas(desc="Formating text", smoothing=0, unit=" card")
-        self.df["text"] = self.df["comb_text"].progress_apply(lambda x: self._format_text(x))
+        self.df["text"] = self.df["comb_text"].progress_apply(lambda x: self._text_formatter(x))
 
         ind_short = []
         for ind in self.df.index:
