@@ -742,7 +742,7 @@ less than threshold ({self.lowlimit_due}).\nStopping.")
                     fields_to_keep = field_dic[target_model[0]]
                     with lock:
                         to_notify.append(f"Several notetypes match \
-{card_model}. Chose to notetype {target_model[0]}")
+'{card_model}'. Selecting '{target_model[0]}'")
 
                 # concatenates the corresponding fields into one string:
                 if fields_to_keep == "take_first_fields":
