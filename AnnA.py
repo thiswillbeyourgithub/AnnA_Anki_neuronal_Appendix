@@ -1100,31 +1100,33 @@ retrying until above 80% or 2000 dimensions)")
 
     def _compute_opti_rev_order(self):
         """
-        a loop that assigns a score to each card, the lowest score at each
-            turn is added to the queue, each new turn compares the cards to
-            the present queue
-
-        * this score reflects the order in which they should be reviewed
-        * the intuition is that anki doesn't know before hand if some cards
-            are semantically close and can have you review them the same day
-
-        # TODO: this a changed a lot:
-        * The score is computed according to the formula:
-           score = ref - min of (similarity to each card of the big_queue)
-           (big_queue here referes to the recently rated cards concatenated
-            with the queue cards)
-        * ref is either the interval or the negative relative overdueness),
-            it is centered and scaled. In both case, a lower ref is indicating
-            that reviewing the card is urgent.
-        * the_chosen_one is the card with the lowest score at each round
-        * the queue starts empty. At the end of each turn, the_chosen_one is
-            added to it
-        * Index score: combining two scores was hard (they had really different
-            distribution, so I added this flag to tell wether to use the scores
-            or the argsort of the scores as score
-
-        CAREFUL: this docstring might not be up to date as I am constantly
-            trying to improve the code
+        1. calculates the 'ref' column. The lowest the 'ref', the more urgent
+            the card needs to be reviewed. The computation used depends on
+            argument 'reference_order', hence picking a card according to its
+            'ref' only can be the same as using a regular filtered deck with
+            'reference_order' set to 'relative_overdueness'
+        2. remove siblings of the due list of found (except if the queue
+            is meant to contain a lot of cards, then siblings are not removed)
+        3. prints a few stats about 'ref' distribution in your deck as well
+            as 'distance' distribution
+        4. assigns a score to each card, the lowest score at each turn is
+            added to the queue, each new turn compares the cards to
+            the present queue. The algorithm is described in more details in
+            the docstring of function 'combinator'.
+            Here's the gist:
+            At each turn, the card from indTODO with the lowest score is
+                removed from indTODO and added to indQUEUE
+            The score is computed according to the formula:
+               score of indTODO =
+               ref -
+                     [
+                       0.9 * min(similarity to each card of indQUEUE)
+                       +
+                       0.1 * mean(similarity to each card of indQUEUE)
+                      ]
+               (indQUEUE = recently rated cards + queue)
+        5. displays improvement_ratio, a number supposed to indicate how much
+            better the new queue is compared to the original queue.
         """
         # getting args etc
         reference_order = self.reference_order
@@ -1137,7 +1139,6 @@ retrying until above 80% or 2000 dimensions)")
 
         # settings
         display_stats = True
-        use_index_of_score = False
 
         # setting interval to correct value for learning and relearnings:
         steps_L = [x / 1440 for x in self.deck_config["new"]["delays"]]
@@ -1289,15 +1290,34 @@ set its adjustment weight to 0")
             assert np.sum(np.isnan(df.loc[rated, x].values)) == len(rated)
             assert np.sum(np.isnan(df.loc[due, x].values)) == 0
 
-        if use_index_of_score:
-            df.loc[indTODO, "index_ref"] = df.loc[indTODO, "ref"].values.argsort()
-            col_ref = "index_ref"
-            def combinator(array):
-                return 0.9 * np.min(array, axis=0).argsort() + 0.1 * np.mean(array, axis=0).argsort()
-        else:
-            col_ref = "ref"
-            def combinator(array):
-                return 0.9 * np.min(array, axis=0) + 0.1 * np.mean(array, axis=0)
+        def combinator(array):
+            """
+            'array' represents:
+                * columns : the cards of indTODO
+                * rows : the cards of indQUEUE
+                * the content of each cell is the similarity between them
+                    (lower value means very similar)
+            Hence, for a given array:
+            * if a cell of np.min is high, then the corresponding card of
+                indTODO is not similar to any card of indQUEUE (i.e. its
+                closest card in indQUEUE is quite different). This card is a
+                good candidate to add to indQEUE.
+            * if a cell of np.mean is high, then the corresponding card of
+                indTODO is different from most cards of indQUEUE (i.e. it is
+                quite different from most cards of indQUEUE). This cas is
+                a good candidate to add to indQUEUE
+            * Naturally, np.min is given more importance than np.mean
+
+            Best candidates are cards with high combinator output.
+            The outut is added to the 'ref' of each indTODO card.
+
+            Hence, at each turn, the card from indTODO with the lowest
+                'w1*ref - w2*combinator' is removed from indTODO and added
+                to indQUEUE.
+
+            The content of 'queue' is the list of card_id in best review order.
+            """
+            return 0.9 * np.min(array, axis=0) + 0.1 * np.mean(array, axis=0)
 
         with tqdm(desc="Computing optimal review order",
                   unit=" card",
@@ -1306,7 +1326,7 @@ set its adjustment weight to 0")
                   total=queue_size_goal + len(rated)) as pbar:
             while len(queue) < queue_size_goal:
                 queue.append(indTODO[
-                        (w1*df.loc[indTODO, col_ref].values -\
+                        (w1*df.loc[indTODO, "ref"].values -\
                          w2*combinator(self.df_dist.loc[indQUEUE, indTODO].values)
                          ).argmin()])
                 indQUEUE.append(indTODO.pop(indTODO.index(queue[-1])))
