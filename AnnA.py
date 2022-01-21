@@ -369,7 +369,7 @@ values. {e}")
             if task == "filter_review_cards":
                 self.bury_or_create_filtered()
 
-        yel(f"Done with '{self.task}' on deck {self.deckname}")
+        red(f"\nDone with task '{self.task}' on deck '{self.deckname}'")
         gc.collect()
 
     @classmethod
