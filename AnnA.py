@@ -136,7 +136,7 @@ class AnnA:
                  # can be "lowest_interval", "relative overdueness", "order_added"
                  target_deck_size="80%",  # 80%, 0.8, "all"
                  rated_last_X_days=4,
-                 due_threshold=30,
+                 lowlimit_due=30,
                  highjack_due_query=None,
                  highjack_rated_query=None,
                  score_adjustment_factor=(1, 5),
@@ -201,7 +201,7 @@ class AnnA:
         self.keep_ocr = keep_ocr
         self.target_deck_size = target_deck_size
         self.rated_last_X_days = rated_last_X_days
-        self.due_threshold = due_threshold
+        self.lowlimit_due = lowlimit_due
         self.debug_card_limit = debug_card_limit
         self.highjack_due_query = highjack_due_query
         self.highjack_rated_query = highjack_rated_query
@@ -587,16 +587,15 @@ threads of size {batchsize})")
         self.due_cards = due_cards
         self.rated_cards = rated_cards
 
-        if len(self.due_cards) < self.due_threshold:
+        if len(self.due_cards) < self.lowlimit_due:
             red(f"Number of due cards is {len(self.due_cards)} which is \
-less than threshold ({self.due_threshold}).\nStopping.")
+less than threshold ({self.lowlimit_due}).\nStopping.")
             self.not_enough_cards = True
             return
         else:
             self.not_enough_cards = False
 
-        limit = self.debug_card_limit if self.debug_card_limit else None
-        combined_card_list = list(rated_cards + due_cards)[:limit]
+        combined_card_list = list(rated_cards + due_cards)
 
         list_cardInfo = []
 
