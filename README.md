@@ -73,7 +73,7 @@ Here are different ways of looking at what AnnA can do for you in a few words:
 * First, **read this page in its entirety, this is a complicated piece of software and you don't want to use it irresponsibly on your cards. The [usage section](#Usage-and-arguments) is especially useful.**
 * Make sure to install the addon [AnnA-compagnon](https://ankiweb.net/shared/info/447942356)
 * Clone / Download this repository (for example with `git clone https://github.com/thiswillbeyourgithub/AnnA_Anki_neuronal_Appendix`)
-* Use pip to install the necessary python libraries : `pip install -r requirements.txt`
+* Use pip to install the necessary python libraries : `pip install -r requirements.txt` (in case of issue, try using python 3.9)
 * Edit `field_mapping.py` and `example_files/acronym_file.py` to your liking
 * Edit the file `example_files/autorun.py` to suit your needs
 * Move the new example_files to the main folder
