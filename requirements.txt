@@ -1,5 +1,4 @@
 #misc:
-pdb
 prompt_toolkit == 3.0.14
 pyfiglet == 0.8.post1
 tqdm
