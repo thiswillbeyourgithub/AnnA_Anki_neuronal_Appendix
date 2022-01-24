@@ -928,7 +928,8 @@ retrying until above 80% or 2000 dimensions)")
             the card needs to be reviewed. The computation used depends on
             argument 'reference_order', hence picking a card according to its
             'ref' only can be the same as using a regular filtered deck with
-            'reference_order' set to 'relative_overdueness'
+            'reference_order' set to 'relative_overdueness' for example.
+            Some of the ref columns are centered and scaled.
         2. remove siblings of the due list of found (except if the queue
             is meant to contain a lot of cards, then siblings are not removed)
         3. prints a few stats about 'ref' distribution in your deck as well
@@ -1015,8 +1016,7 @@ retrying until above 80% or 2000 dimensions)")
             # in anki, as I was not able to replicate it.
             # Here's a link to one of the implementation : https://github.com/ankitects/anki/blob/afff4fc437f523a742f617c6c4ad973a4d477c15/rslib/src/storage/card/filtered.rs
             ro = -1 * (df.loc[due, "interval"].values + 0.5) / (overdue + 0.5)
-            ro_cs = StandardScaler().fit_transform(ro.values.reshape(-1, 1))
-            df.loc[due, "ref"] = ro_cs
+            df.loc[due, "ref"] = ro
 
         assert len([x for x in rated if df.loc[x, "status"] != "rated"]) == 0
         red(f"\nCards identified as rated in the past {self.rated_last_X_days} days: \
