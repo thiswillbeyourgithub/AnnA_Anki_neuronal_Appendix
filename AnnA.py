@@ -22,8 +22,7 @@ import numpy as np
 import Levenshtein as lev
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
-from transformers import AutoTokenizer
-tokenizer = AutoTokenizer.from_pretrained("bert-base-multilingual-uncased")
+from tokenizers import Tokenizer
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import pairwise_distances
@@ -176,6 +175,14 @@ class AnnA:
             red("Ignoring argument 'fdeckname_template' because 'task' is not \
 set to 'filter_review_cards'.")
 
+        if TFIDF_tokenize:
+            self.tokenizer = Tokenizer.from_file("./bert-base-multilingual-cased_tokenizer.json")
+            self.tokenizer.no_truncation()
+            self.tokenizer.no_padding()
+            self.tokenize = lambda x : [x for x in self.tokenizer.encode(x).tokens if x not in ["[CLS]", "[SEP]"]]
+        else:
+            self.tokenize = lambda x : x
+
         if self.acronym_file is not None and self.acronym_list is not None:
             file = Path(acronym_file)
             if not file.exists():
@@ -258,7 +265,7 @@ values. {e}")
                 stops += stopwords.words(lang)
             if self.TFIDF_tokenize:
                 temp = []
-                [temp.extend(tokenizer.tokenize(x)) for x in stops]
+                [temp.extend(self.tokenize(x)) for x in stops]
                 stops.extend(temp)
             elif self.TFIDF_stem:
                 global ps
@@ -809,16 +816,9 @@ adjust formating issues:")
         if df is None:
             df = self.df
 
-        if self.TFIDF_tokenize:
-            def tknzer(x):
-                return tokenizer.tokenize(x)
-        else:
-            def tknzer(x):
-                return x
-
         vectorizer = TfidfVectorizer(strip_accents="ascii",
                                      lowercase=True,
-                                     tokenizer=tknzer,
+                                     tokenizer=self.tokenize,
                                      stop_words=None,
                                      ngram_range=(1, 10),
                                      max_features=10_000,
