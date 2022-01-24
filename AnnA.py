@@ -176,6 +176,7 @@ class AnnA:
 set to 'filter_review_cards'.")
 
         if TFIDF_tokenize:
+            # from : https://huggingface.co/bert-base-multilingual-cased/
             self.tokenizer = Tokenizer.from_file("./bert-base-multilingual-cased_tokenizer.json")
             self.tokenizer.no_truncation()
             self.tokenizer.no_padding()
