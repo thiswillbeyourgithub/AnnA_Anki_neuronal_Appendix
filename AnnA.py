@@ -27,8 +27,8 @@ tokenizer = AutoTokenizer.from_pretrained("bert-base-multilingual-uncased")
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import pairwise_distances
-from sklearn.decomposition import PCA, TruncatedSVD
-from sklearn.preprocessing import normalize, StandardScaler
+from sklearn.decomposition import TruncatedSVD
+from sklearn.preprocessing import StandardScaler
 
 # avoids annoying warning
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
