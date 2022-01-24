@@ -85,39 +85,7 @@ red = coloured_log("red")
 
 set_global_logging_level(logging.ERROR,
                          ["transformers", "nlp", "torch",
-                          "tensorflow", "sklearn", "nltk",
-                          "fastText"])
-
-
-def asynchronous_importer(vectorizer, task, fastText_lang, fastText_model_name):
-    """
-    used to asynchronously import large modules, this way between
-    importing AnnA and creating the instance of the class, the language model
-    have some more time to load
-    """
-    if vectorizer == "fastText" or task == "index":
-        global fastText, ft
-        if "ft" in globals():
-            if ft.model_name in [fastText_model_name,
-                                 f"cc.{fastText_lang}.300.bin"]:
-                reload_ft = False
-            else:
-                reload_ft = True
-
-        if ("ft" not in globals()) or (reload_ft is True):
-            import fasttext as fastText
-            import fasttext.util
-            try:
-                fasttext.util.download_model(fastText_lang, if_exists='ignore')
-                if fastText_model_name is None:
-                    ft = fastText.load_model(f"cc.{fastText_lang}.300.bin")
-                    ft.model_name = f"cc.{fastText_lang}.300.bin"
-                else:
-                    ft = fastText.load_model(fastText_model_name)
-                    ft.model_name = fastText_model_name
-            except Exception as e:
-                red(f"Couldn't load fastText model: {e}")
-                raise SystemExit()
+                          "tensorflow", "sklearn", "nltk"])
 
 
 class AnnA:
@@ -145,16 +113,12 @@ class AnnA:
 
                  task="filter_review_cards",
                  # can be "filter_review_cards", "bury_excess_review_cards",
-                 # "bury_excess_learning_cards", "index"
+                 # "bury_excess_learning_cards"
                  fdeckname_template=None,
 
                  # vectorization:
                  stopwords_lang=["english", "french"],
-                 vectorizer="TFIDF",  # can be "TFIDF" or "fastText"
-                 fastText_dim=100,
-                 fastText_dim_algo="PCA", # can be "PCA" or "UMAP" or None
-                 fastText_model_name=None,  # if you want to force a specific model
-                 fastText_lang="en",
+                 vectorizer="TFIDF",  # can only be "TFIDF"
                  TFIDF_dim=100,
                  TFIDF_stem=False,
                  TFIDF_tokenize=True,
@@ -176,16 +140,7 @@ class AnnA:
         else:
             log.setLevel(logging.INFO)
 
-        if vectorizer == "fasttext":
-            vectorizer = "fastText"
-
-        # start importing large modules
-        import_thread = threading.Thread(target=asynchronous_importer,
-                                         args=(vectorizer,
-                                               task,
-                                               fastText_lang,
-                                               fastText_model_name))
-        import_thread.start()
+        assert vectorizer == "TFIDF"
 
         # loading args
         self.replace_greek = replace_greek
@@ -201,12 +156,8 @@ class AnnA:
         self.acronym_file = acronym_file
         self.acronym_list = acronym_list
         self.vectorizer = vectorizer
-        self.fastText_lang = fastText_lang
-        self.fastText_dim = fastText_dim
-        self.fastText_dim_algo = fastText_dim_algo.upper()
-        self.fastText_model_name = fastText_model_name
-        self.TFIDF_dim = TFIDF_dim
         self.stopwords_lang = stopwords_lang
+        self.TFIDF_dim = TFIDF_dim
         self.TFIDF_stem = TFIDF_stem
         self.TFIDF_tokenize = TFIDF_tokenize
         self.task = task
@@ -218,11 +169,9 @@ class AnnA:
         assert TFIDF_stem + TFIDF_tokenize != 2
         assert reference_order in ["lowest_interval", "relative_overdueness",
                                    "order_added"]
-        assert task in ["filter_review_cards", "index",
+        assert task in ["filter_review_cards",
                         "bury_excess_learning_cards",
                         "bury_excess_review_cards"]
-        assert vectorizer in ["TFIDF", "fastText"]
-        assert self.fastText_dim_algo in ["PCA", "UMAP", None]
         if task != "filter_review_cards" and self.fdeckname_template is not None:
             red("Ignoring argument 'fdeckname_template' because 'task' is not \
 set to 'filter_review_cards'.")
@@ -322,23 +271,11 @@ values. {e}")
             self.stops = None
 
         # actual execution
-        self.deckname = self._deckname_check(deckname, import_thread)
+        self.deckname = self._deckname_check(deckname)
         yel(f"Selected deck: {self.deckname}\n")
         self.deck_config = self._call_anki(action="getDeckConfig",
                                              deck=self.deckname)
-        if task == "index":
-            yel(f"Task : cache vectors of deck: {self.deckname}\n")
-            self.vectorizer = "fastText"
-            self.fastText_dim = None
-            self.rated_last_X_days = 0
-            self._init_dataFrame()
-            if self.not_enough_cards is True:
-                return
-            self._format_card()
-            self.show_acronyms()
-            self._compute_card_vectors(import_thread=import_thread)
-
-        elif task in ["bury_excess_learning_cards",
+        if task in ["bury_excess_learning_cards",
                       "bury_excess_review_cards"]:
             # bypasses most of the code to bury learning cards
             # directly in the deck without creating filtered decks
@@ -351,7 +288,7 @@ values. {e}")
                 return
             self._format_card()
             self.show_acronyms()
-            self._compute_card_vectors(import_thread=import_thread)
+            self._compute_card_vectors()
             self._compute_distance_matrix()
             self._compute_opti_rev_order()
             self.bury_or_create_filtered(task=task)
@@ -362,7 +299,7 @@ values. {e}")
                 return
             self._format_card()
             self.show_acronyms()
-            self._compute_card_vectors(import_thread=import_thread)
+            self._compute_card_vectors()
             self._compute_distance_matrix()
             self._compute_opti_rev_order()
             if task == "filter_review_cards":
@@ -464,7 +401,7 @@ threads of size {batchsize})")
                             reverse=False)
             return r_list
 
-    def _deckname_check(self, deckname, import_thread):
+    def _deckname_check(self, deckname):
         """
         check if the deck you're calling AnnA exists or not
         if not, user is asked to enter the name, suggesting autocompletion
@@ -479,7 +416,6 @@ threads of size {batchsize})")
                                           match_middle=True,
                                           ignore_case=True)
             deckname = ""
-            import_thread.join()  # otherwise some message can appear
             # in the middle of the prompt
             time.sleep(0.5)
             while deckname not in decklist:
@@ -512,13 +448,6 @@ threads of size {batchsize})")
             whi(" >  '" + query + "'")
             due_cards = self._call_anki(action="findCards", query=query)
             whi(f"Found {len(due_cards)} learning cards...\n")
-
-        elif self.task == "index":
-            yel("Getting all cards from deck...")
-            query = f"\"deck:{self.deckname}\" -is:suspended"
-            whi(" >  '" + query + "'")
-            due_cards = self._call_anki(action="findCards", query=query)
-            whi(f"Found {len(due_cards)} cards...\n")
 
         rated_cards = []
         if self.highjack_rated_query is not None:
@@ -870,11 +799,9 @@ adjust formating issues:")
         return True
 
     def _compute_card_vectors(self,
-                              df=None,
-                              import_thread=None):
+                              df=None):
         """
-        Assigne vectors to each card's 'comb_text', using either fastText or
-            TFIDF as vectorizer.
+        Assigne vectors to each card's 'comb_text', using TFIDF as vectorizer.
 
         After calling this function df["VEC"] contains either all the vectors
             or less if you enabled dimensionality reduction
@@ -882,153 +809,51 @@ adjust formating issues:")
         if df is None:
             df = self.df
 
-        if import_thread is not None:
-            import_thread.join()
-            time.sleep(0.5)
+        if self.TFIDF_tokenize:
+            def tknzer(x):
+                return tokenizer.tokenize(x)
+        else:
+            def tknzer(x):
+                return x
 
-        if self.vectorizer == "fastText":
-            alphanum = re.compile(r"[^ _\w]|\d|_|\b\w\b")
-
-            def preprocessor(string):
-                """
-                prepare string of text to be vectorized by fastText
-                * makes lowercase
-                * replaces all non letters by a space
-                * outputs preprocessed comb_text as a list of words
-                """
-                return re.sub(alphanum, " ", string.lower()).split()
-
-            def memoize(f):
-                """
-                store previous value to speed up vector retrieval
-                (40x speed up)
-                """
-                memo = {}
-
-                def helper(x):
-                    if x not in memo:
-                        memo[x] = f(x)
-                    return memo[x]
-                return helper
-
-            memoized_vec = memoize(ft.get_word_vector)
-
-            def vec(string):
-                """
-                find the vector of each word of the sentence, then sum all
-                    vectors
-                output is 1 vector per comb_text
-                """
-                return np.sum([memoized_vec(x)
-                               for x in preprocessor(string)
-                               if x != ""
-                               ], axis=0)
-
-            ft_vec = np.zeros(shape=(len(df.index), ft.get_dimension()),
-                              dtype=np.float32)
-            for i, x in enumerate(
-                    tqdm(df.index, desc="Vectorizing using fastText")):
-                ft_vec[i] = vec(str(df.loc[x, "text"]))
-            ft_vec = normalize(ft_vec, norm='l2')
-
-            # multiplying the median of each dimension by each row's
-            # corresponding dimension. The idea is to avoid penalizing
-            # cards that have few words dealing with the overall context
-            # of the deck for example "where is the superior colliculi ?"
-            # has one third of its words being "where", and only one word
-            # being strictly medical.
-            ft_vec = ft_vec * normalize(np.median(ft_vec, axis=0).reshape(1, -1), norm='l2')
-
-            ft_vec = normalize(ft_vec, norm='l2')
-
-            if self.fastText_dim is None or self.fastText_dim_algo is None:
-                yel("Not applying dimension reduction.")
-                df["VEC"] = [x for x in ft_vec]
-            else:
-                if self.fastText_dim_algo == "UMAP":
-                    print(f"Reducing dimensions to {self.fastText_dim} using UMAP")
-                    red("(WARNING: EXPERIMENTAL FEATURE)")
-                    try:
-                        import umap.umap_
-                        umap_kwargs = {"n_jobs": -1,
-                                       "verbose": 1,
-                                       "n_components": min(self.fastText_dim,
-                                                           len(df.index) - 1),
-                                       "metric": "cosine",
-                                       "init": 'spectral',
-                                       "random_state": 42,
-                                       "transform_seed": 42,
-                                       "n_neighbors": 5,
-                                       "min_dist": 0.01}
-                        ft_vec_red = umap.UMAP(**umap_kwargs).fit_transform(ft_vec)
-                        df["VEC"] = [x for x in ft_vec_red]
-                    except Exception as e:
-                        red(f"Error when computing UMAP reduction, using PCA \
-as fallback: {e}")
-                        self.fastText_dim_algo = "PCA"
-                
-                if self.fastText_dim_algo == "PCA":
-                    print(f"Reducing dimensions to {self.fastText_dim} using PCA")
-                    if self.fastText_dim > ft_vec.shape[1]:
-                        red(f"Not enough dimensions: {ft_vec.shape[1]} < {self.fastText_dim}")
-                        df["VEC"] = [x for x in ft_vec]
-                    else:
-                        try:
-                            pca = PCA(n_components=self.fastText_dim, random_state=42)
-                            ft_vec_red = pca.fit_transform(ft_vec)
-                            evr = round(sum(pca.explained_variance_ratio_) * 100, 1)
-                            whi(f"Explained variance ratio after PCA on fastText: {evr}%")
-                            df["VEC"] = [x for x in ft_vec_red]
-                        except Exception as e:
-                            red(f"Error when computing PCA reduction, using all vectors: {e}")
-                            df["VEC"] = [x for x in ft_vec]
-
-        elif self.vectorizer == "TFIDF":
-            if self.TFIDF_tokenize:
-                def tknzer(x):
-                    return tokenizer.tokenize(x)
-            else:
-                def tknzer(x):
-                    return x
-
-            vectorizer = TfidfVectorizer(strip_accents="ascii",
-                                         lowercase=True,
-                                         tokenizer=tknzer,
-                                         stop_words=None,
-                                         ngram_range=(1, 10),
-                                         max_features=10_000,
-                                         norm="l2")
-            # stop words have already been removed
-            t_vec = vectorizer.fit_transform(tqdm(df["text"],
-                                             desc="Vectorizing text using \
+        vectorizer = TfidfVectorizer(strip_accents="ascii",
+                                     lowercase=True,
+                                     tokenizer=tknzer,
+                                     stop_words=None,
+                                     ngram_range=(1, 10),
+                                     max_features=10_000,
+                                     norm="l2")
+        # stop words have already been removed
+        t_vec = vectorizer.fit_transform(tqdm(df["text"],
+                                         desc="Vectorizing text using \
 TFIDF"))
-            if self.TFIDF_dim is None:
-                df["VEC"] = [x for x in t_vec]
-            else:
-                while True:
-                    print(f"Reducing dimensions to {self.TFIDF_dim} using SVD")
-                    svd = TruncatedSVD(n_components=min(self.TFIDF_dim,
-                                                        t_vec.shape[1]))
-                    t_red = svd.fit_transform(t_vec)
-                    evr = round(sum(svd.explained_variance_ratio_) * 100, 1)
-                    if evr >= 80:
+        if self.TFIDF_dim is None:
+            df["VEC"] = [x for x in t_vec]
+        else:
+            while True:
+                print(f"Reducing dimensions to {self.TFIDF_dim} using SVD")
+                svd = TruncatedSVD(n_components=min(self.TFIDF_dim,
+                                                    t_vec.shape[1]))
+                t_red = svd.fit_transform(t_vec)
+                evr = round(sum(svd.explained_variance_ratio_) * 100, 1)
+                if evr >= 80:
+                    break
+                else:
+                    if self.TFIDF_dim >= 2000:
                         break
+                    if evr <= 40:
+                        self.TFIDF_dim *= 4
+                    elif evr <= 60:
+                        self.TFIDF_dim *= 2
                     else:
-                        if self.TFIDF_dim >= 2000:
-                            break
-                        if evr <= 40:
-                            self.TFIDF_dim *= 4
-                        elif evr <= 60:
-                            self.TFIDF_dim *= 2
-                        else:
-                            self.TFIDF_dim += int(self.TFIDF_dim * 0.5)
-                        self.TFIDF_dim = min(self.TFIDF_dim, 2000)
-                        yel(f"Explained variance ratio is only {evr}% (\
+                        self.TFIDF_dim += int(self.TFIDF_dim * 0.5)
+                    self.TFIDF_dim = min(self.TFIDF_dim, 2000)
+                    yel(f"Explained variance ratio is only {evr}% (\
 retrying until above 80% or 2000 dimensions)")
-                        continue
-                whi(f"Explained variance ratio after SVD on Tf_idf: {evr}%")
+                    continue
+            whi(f"Explained variance ratio after SVD on Tf_idf: {evr}%")
 
-                df["VEC"] = [x for x in t_red]
+            df["VEC"] = [x for x in t_red]
 
         self.df = df
         return True
