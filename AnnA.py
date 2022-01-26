@@ -295,7 +295,7 @@ values. {e}")
             if self.not_enough_cards is True:
                 return
             self._format_card()
-            self.show_acronyms()
+            self._show_acronyms()
             self._compute_card_vectors()
             self._compute_distance_matrix()
             self._compute_opti_rev_order()
@@ -306,7 +306,7 @@ values. {e}")
             if self.not_enough_cards is True:
                 return
             self._format_card()
-            self.show_acronyms()
+            self._show_acronyms()
             self._compute_card_vectors()
             self._compute_distance_matrix()
             self._compute_opti_rev_order()
@@ -1309,7 +1309,7 @@ as opti_rev_order!")
         print(f"Dataframe exported to {name}.")
         return True
 
-    def show_acronyms(self, exclude_OCR_text=True):
+    def _show_acronyms(self, exclude_OCR_text=True):
         """
         Shows acronym present in your collection that were not found in
             the file supplied by the argument `acronym_file`.

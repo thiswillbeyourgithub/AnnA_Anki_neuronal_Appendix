@@ -111,7 +111,6 @@ AnnA has a number of other built-in methods you can run after instantiating the 
 
 * `display_best_review_order` used as a debugging tool : only display order. Allows to check if the order seems correct without having to create a filtered deck.
 * `save_df` saves the dataframe containing the cards and all other infos needed by AnnA as a pickle file. Used mainly for debugging. Files will be saved to the folder `DF_backups`
-* `show_acronyms` shows the acronym present in your deck that were not extended. Useful if you want to adjust your acronym list.
 
 ## TODO
 *More or less by order of urgency*
