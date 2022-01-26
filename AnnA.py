@@ -806,8 +806,7 @@ adjust formating issues:")
         self.df = self.df.sort_index()
         return True
 
-    def _compute_card_vectors(self,
-                              df=None):
+    def _compute_card_vectors(self):
         """
         Assigne vectors to each card's 'comb_text', using TFIDF as vectorizer.
 
