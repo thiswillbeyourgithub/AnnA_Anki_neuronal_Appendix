@@ -295,7 +295,7 @@ values. {e}")
             if self.not_enough_cards is True:
                 return
             self._format_card()
-            self._show_acronyms()
+            self._print_acronyms()
             self._compute_card_vectors()
             self._compute_distance_matrix()
             self._compute_opti_rev_order()
@@ -306,7 +306,7 @@ values. {e}")
             if self.not_enough_cards is True:
                 return
             self._format_card()
-            self._show_acronyms()
+            self._print_acronyms()
             self._compute_card_vectors()
             self._compute_distance_matrix()
             self._compute_opti_rev_order()
@@ -1198,7 +1198,7 @@ AnnA:")
         self.df = df
         return True
 
-    def _show_acronyms(self, exclude_OCR_text=True):
+    def _print_acronyms(self, exclude_OCR_text=True):
         """
         Shows acronym present in your collection that were not found in
             the file supplied by the argument `acronym_file`.
@@ -1323,7 +1323,6 @@ as opti_rev_order!")
         else:
             yel(" Done!")
             return True
-
 
     def display_opti_rev_order(self, display_limit=50):
         """
