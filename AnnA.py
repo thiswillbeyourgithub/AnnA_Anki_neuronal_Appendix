@@ -827,7 +827,7 @@ adjust formating issues:")
                                      lowercase=True,
                                      tokenizer=self.tokenize,
                                      stop_words=None,
-                                     ngram_range=(1, 10),
+                                     ngram_range=(1, 5),
                                      max_features=10_000,
                                      norm="l2")
         # stop words have already been removed
