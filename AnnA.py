@@ -299,7 +299,7 @@ values. {e}")
             self._compute_card_vectors()
             self._compute_distance_matrix()
             self._compute_opti_rev_order()
-            self.bury_or_create_filtered(task=task)
+            self._bury_or_create_filtered(task=task)
         else:
             yel("Task : created filtered deck containing review cards")
             self._init_dataFrame()
@@ -311,7 +311,7 @@ values. {e}")
             self._compute_distance_matrix()
             self._compute_opti_rev_order()
             if task == "filter_review_cards":
-                self.bury_or_create_filtered()
+                self._bury_or_create_filtered()
 
         red(f"\nDone with task '{self.task}' on deck '{self.deckname}'")
         gc.collect()
@@ -1209,7 +1209,7 @@ AnnA:")
         print(self.df.loc[order, "text"])
         return True
 
-    def bury_or_create_filtered(self,
+    def _bury_or_create_filtered(self,
                            fdeckname_template=None,
                            task=None):
         """
