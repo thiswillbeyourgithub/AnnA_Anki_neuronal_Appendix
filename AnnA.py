@@ -813,8 +813,15 @@ adjust formating issues:")
         After calling this function df["VEC"] contains either all the vectors
             or less if you enabled dimensionality reduction
         """
-        if df is None:
-            df = self.df
+        df = self.df
+
+        # remove OCR markup
+        for ind in df.index:
+            if "Caption:___" in df.loc[ind, "text"]:
+                df.loc[ind, "text"] = re.sub("Caption:___(.*?)___",
+                                             r"\1",
+                                             df.loc[ind, "text"],
+                                             flags=re.MULTILINE | re.DOTALL)
 
         vectorizer = TfidfVectorizer(strip_accents="ascii",
                                      lowercase=True,
