@@ -1198,14 +1198,45 @@ AnnA:")
         self.df = df
         return True
 
-    def display_opti_rev_order(self, display_limit=50):
+    def _show_acronyms(self, exclude_OCR_text=True):
         """
-        instead of creating a deck or buring cards, prints the content
-        of cards in the order AnnA though was best.
-        Only used for debugging.
+        Shows acronym present in your collection that were not found in
+            the file supplied by the argument `acronym_file`.
+            This is used to know when you forgot the specify an acronym to
+            replace.
+        * acronyms found in OCR text are removed by default, as it often
+            creates too many false positive.
         """
-        order = self.opti_rev_order[:display_limit]
-        print(self.df.loc[order, "text"])
+        if not len(self.acronym_dict.keys()):
+            return True
+
+        full_text = " ".join(self.df["text"].tolist()).replace("'", " ")
+        if exclude_OCR_text:
+            full_text = re.sub(" Caption:___.*?___ ", " ", full_text,
+                               flags=re.MULTILINE | re.DOTALL)
+
+        matched = list({x for x in re.findall("[A-Z][A-Z0-9]{2,}", full_text)
+                        if x.lower() not in full_text})
+        # if exists as lowercase : probably just shouting for emphasis
+
+        if len(matched) == 0:
+            print("No acronym found in those cards.")
+            return True
+
+        for compiled in self.acronym_dict:
+            for acr in matched:
+                if re.match(compiled, acr) is not None:
+                    matched.remove(acr)
+
+        if not matched:
+            print("All found acronyms were already replaced using \
+the data in `acronym_list`.")
+        else:
+            print("List of some acronyms still found:")
+            if exclude_OCR_text:
+                print("(Excluding OCR text)")
+            pprint(random.choices(matched, k=min(5, len(matched))))
+        print("")
         return True
 
     def _bury_or_create_filtered(self,
@@ -1293,6 +1324,17 @@ as opti_rev_order!")
             yel(" Done!")
             return True
 
+
+    def display_opti_rev_order(self, display_limit=50):
+        """
+        instead of creating a deck or buring cards, prints the content
+        of cards in the order AnnA though was best.
+        Only used for debugging.
+        """
+        order = self.opti_rev_order[:display_limit]
+        print(self.df.loc[order, "text"])
+        return True
+
     def save_df(self, df=None, out_name=None):
         """
         export dataframe as pickle format in the folder DF_backups/
@@ -1306,47 +1348,6 @@ as opti_rev_order!")
         name = f"{out_name}_{self.deckname}_{cur_time}.pickle"
         df.to_pickle("./.DataFrame_backups/" + name)
         print(f"Dataframe exported to {name}.")
-        return True
-
-    def _show_acronyms(self, exclude_OCR_text=True):
-        """
-        Shows acronym present in your collection that were not found in
-            the file supplied by the argument `acronym_file`.
-            This is used to know when you forgot the specify an acronym to
-            replace.
-        * acronyms found in OCR text are removed by default, as it often
-            creates too many false positive.
-        """
-        if not len(self.acronym_dict.keys()):
-            return True
-
-        full_text = " ".join(self.df["text"].tolist()).replace("'", " ")
-        if exclude_OCR_text:
-            full_text = re.sub(" Caption:___.*?___ ", " ", full_text,
-                               flags=re.MULTILINE | re.DOTALL)
-
-        matched = list({x for x in re.findall("[A-Z][A-Z0-9]{2,}", full_text)
-                        if x.lower() not in full_text})
-        # if exists as lowercase : probably just shouting for emphasis
-
-        if len(matched) == 0:
-            print("No acronym found in those cards.")
-            return True
-
-        for compiled in self.acronym_dict:
-            for acr in matched:
-                if re.match(compiled, acr) is not None:
-                    matched.remove(acr)
-
-        if not matched:
-            print("All found acronyms were already replaced using \
-the data in `acronym_list`.")
-        else:
-            print("List of some acronyms still found:")
-            if exclude_OCR_text:
-                print("(Excluding OCR text)")
-            pprint(random.choices(matched, k=min(5, len(matched))))
-        print("")
         return True
 
 
