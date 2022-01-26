@@ -1200,12 +1200,12 @@ AnnA:")
 
     def _print_acronyms(self, exclude_OCR_text=True):
         """
-        Shows acronym present in your collection that were not found in
+        Shows acronym present in the collection that were not found in
             the file supplied by the argument `acronym_file`.
-            This is used to know when you forgot the specify an acronym to
-            replace.
-        * acronyms found in OCR text are removed by default, as it often
-            creates too many false positive.
+            This is used to know which acronym you forgot to specify in
+            `acronym_file`
+        * acronyms found in OCR text are ignored by default, because they
+            cause too many false positive.
         """
         if not len(self.acronym_dict.keys()):
             return True
