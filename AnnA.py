@@ -144,6 +144,8 @@ class AnnA:
         # loading args
         self.replace_greek = replace_greek
         self.keep_OCR = keep_OCR
+        if keep_OCR:
+            self.OCR_content = ""
         self.target_deck_size = target_deck_size
         self.rated_last_X_days = rated_last_X_days
         self.lowlimit_due = lowlimit_due
@@ -542,6 +544,11 @@ less than threshold ({self.lowlimit_due}).\nStopping.")
         out = string.group(0) + f" ({new_w})"
         return out
 
+    def _store_OCR(self, matched):
+        """storing OCR value to use later with self._print_acronyms"""
+        self.OCR_content += " " + matched.group(1)
+        return " " + matched.group(1) + " "
+
     def _text_formatter(self, text):
         """
         process and formats each card's text, including :
@@ -588,10 +595,10 @@ less than threshold ({self.lowlimit_due}).\nStopping.")
         # OCR
         if self.keep_OCR:
             # keep image title (usually OCR)
-            text = re.sub("title=(\".*?\")",
-                          "> Caption:___\\1___ <",
-                          text, flags=re.M | re.DOTALL)
-            text = text.replace('Caption:___""___', "")
+            text = re.sub("<img src=.*? title=\"(.*?)\".*?>",
+                          lambda string: self._store_OCR(string),
+                          text,
+                          flags=re.M | re.DOTALL)
 
         # cloze
         text = re.sub(r"{{c\d+?::|}}", "", text)  # remove cloze brackets
@@ -814,14 +821,6 @@ adjust formating issues:")
             or less if you enabled dimensionality reduction
         """
         df = self.df
-
-        # remove OCR markup
-        for ind in df.index:
-            if "Caption:___" in df.loc[ind, "text"]:
-                df.loc[ind, "text"] = re.sub("Caption:___(.*?)___",
-                                             r"\1",
-                                             df.loc[ind, "text"],
-                                             flags=re.MULTILINE | re.DOTALL)
 
         vectorizer = TfidfVectorizer(strip_accents="ascii",
                                      lowercase=True,
@@ -1219,12 +1218,23 @@ AnnA:")
 
         full_text = " ".join(self.df["text"].tolist()).replace("'", " ")
         if exclude_OCR_text:
-            full_text = re.sub(" Caption:___.*?___ ", " ", full_text,
-                               flags=re.MULTILINE | re.DOTALL)
+            ocr = re.findall("[A-Z][A-Z0-9]{2,}",
+                    string=self.OCR_content,
+                    flags=re.MULTILINE | re.DOTALL)
+        else:
+            ocr = []
 
-        matched = list({x for x in re.findall("[A-Z][A-Z0-9]{2,}", full_text)
-                        if x.lower() not in full_text})
-        # if exists as lowercase : probably just shouting for emphasis
+        def exclude(word):
+            """if exists as lowercase in text : probably just shouting for emphasis
+               if exists in ocr : ignore"""
+            if word.lower() in full_text or word in ocr:
+                return False
+            else:
+                return True
+
+        matched = list(set(
+            [x for x in re.findall("[A-Z][A-Z0-9]{2,}", full_text)
+             if exclude(x)]))
 
         if len(matched) == 0:
             print("No acronym found in those cards.")
