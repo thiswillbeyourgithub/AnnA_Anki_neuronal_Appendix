@@ -561,14 +561,8 @@ less than threshold ({self.lowlimit_due}).\nStopping.")
                     ).replace("/", " / "
                     ).replace("+++", " important "
                     ).replace("&nbsp", " "
-                    ).replace("\u001F", " "
-                    ).replace("é", "e"
-                    ).replace("è", "e"
-                    ).replace("ê", "e"
-                    ).replace("ô", "o"
-                    ).replace("à", "a"
-                    ).replace("ç", "c"
-                    )
+                    ).replace("\u001F", " ")
+
         # remove weird clozes
         text = re.sub(r"}}{{c\d+::", "", text)
 
