@@ -105,7 +105,7 @@ class AnnA:
                  score_adjustment_factor=(1, 5),
                  log_level=2,  # 0, 1, 2
                  replace_greek=True,
-                 keep_ocr=True,
+                 keep_OCR=True,
                  field_mappings="field_mappings.py",
                  acronym_file="acronym_file.py",
                  acronym_list=None,
@@ -143,7 +143,7 @@ class AnnA:
 
         # loading args
         self.replace_greek = replace_greek
-        self.keep_ocr = keep_ocr
+        self.keep_OCR = keep_OCR
         self.target_deck_size = target_deck_size
         self.rated_last_X_days = rated_last_X_days
         self.lowlimit_due = lowlimit_due
@@ -586,7 +586,7 @@ less than threshold ({self.lowlimit_due}).\nStopping.")
         text = re.sub('</?blockquote(.*?)>', " ", text)
 
         # OCR
-        if self.keep_ocr:
+        if self.keep_OCR:
             # keep image title (usually OCR)
             text = re.sub("title=(\".*?\")",
                           "> Caption:___\\1___ <",
