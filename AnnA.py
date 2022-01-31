@@ -1187,9 +1187,15 @@ all cards were included in the new queue.")
 AnnA:")
                     yel(str(spread_else))
 
-                    ratio = round(spread_queue / spread_else, 3)
+                    ratio = round(spread_queue / spread_else * 100 - 100, 3)
                     red("Improvement ratio:")
-                    red(pyfiglet.figlet_format(str(ratio)))
+                    if ratio > 0:
+                        sign = "+"
+                    elif ratio < 0:
+                        sign = "-"
+                    else:
+                        sign = ""
+                    red(pyfiglet.figlet_format(f"{sign}{ratio}%"))
 
         except Exception as e:
             red(f"\nException: {e}")
