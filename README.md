@@ -81,7 +81,7 @@ Here are different ways of looking at what AnnA can do for you in a few words:
 * Open an issue telling me your remarks and suggestion
 
 ### Usage and arguments
-AnnA was made with usability in mind. With the right arguments, you can have to enter only one command in the console to get your filtered decks. All the settings you might want to edit are in the agument of the AnnA Class. Here are the arguments with the relevant explanation:
+AnnA was made with customizability in mind. All the settings you might want to edit are arguments of the call of AnnA Class. Don't be frightened, many of those settings are rarely used and the default values should be good for almost anyone. The file `example_files/autorun.py` mention the most important arguments. Here are the arguments with the relevant explanation:
 
  * `show_banner` used to display a nice banner when instantiating the collection. Default is `True`.
  * `deckname` the deck containing the cards you want to review. If you don't supply this value or make a mistake, AnnA will ask you to type in the deckname, with autocompletion enabled (use `<TAB>`). Default is `None`.
