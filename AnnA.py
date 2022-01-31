@@ -726,7 +726,7 @@ less than threshold ({self.lowlimit_due}).\nStopping.")
                     comb_text = comb_text[:-2]
 
                 # add tags to comb_text
-                tags = self.df.loc[index, "tags"].str.replace(self.tags_separator, " ").split(" ")
+                tags = self.df.loc[index, "tags"].split(" ")
                 for t in tags:
                     if ("AnnA" not in t) and (t not in self.tags_to_ignore):
                         t = re.sub(spacers_compiled,  # replaces _ - and /
