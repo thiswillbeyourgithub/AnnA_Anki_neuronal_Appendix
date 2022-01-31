@@ -1067,7 +1067,7 @@ retrying until above 80% or 2000 dimensions)")
 {previous_len}.")
         else:
             yel("Not excluding siblings because AnnA assumes you want to keep \
-all the cards and study the deck over multipl days.")
+all the cards and study the deck over multiple days.")
 
         # can't start with an empty queue so picking 1 urgent card:
         if len(indQUEUE) == 0:
