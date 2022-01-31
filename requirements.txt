@@ -1,3 +1,4 @@
+tqdm == 4.62.3
 pyfiglet == 0.8.post1
 prompt_toolkit == 3.0.14
 python_Levenshtein == 0.12.2
