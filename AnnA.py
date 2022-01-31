@@ -110,6 +110,7 @@ class AnnA:
                  field_mappings="field_mappings.py",
                  acronym_file="acronym_file.py",
                  acronym_list=None,
+                 tags_to_ignore=None,
 
                  task="filter_review_cards",
                  # can be "filter_review_cards", "bury_excess_review_cards",
@@ -157,6 +158,7 @@ class AnnA:
         self.field_mappings = field_mappings
         self.acronym_file = acronym_file
         self.acronym_list = acronym_list
+        self.tags_to_ignore = tags_to_ignore
         self.vectorizer = vectorizer
         self.stopwords_lang = stopwords_lang
         self.TFIDF_dim = TFIDF_dim
@@ -174,6 +176,8 @@ class AnnA:
         assert task in ["filter_review_cards",
                         "bury_excess_learning_cards",
                         "bury_excess_review_cards"]
+        if self.tags_to_ignore is None:
+            self.tags_to_ignore = []
         if task != "filter_review_cards" and self.fdeckname_template is not None:
             red("Ignoring argument 'fdeckname_template' because 'task' is not \
 set to 'filter_review_cards'.")
@@ -722,7 +726,7 @@ less than threshold ({self.lowlimit_due}).\nStopping.")
                 tags = self.df.loc[index, "tags"].split(" ")
                 spacers_reg = re.compile("_|-|/")
                 for t in tags:
-                    if "AnnA" not in t:
+                    if ("AnnA" not in t) and (t not in self.tags_to_ignore):
                         t = re.sub(spacers_reg,  # replaces _ - and /
                                    " ",  # by a space
                                    " ".join(t.split("::")[-2:]))
