@@ -661,9 +661,13 @@ less than threshold ({self.lowlimit_due}).\nStopping.")
                 # in field_dic
                 field_dic = self.field_dic
                 target_model = []
-                for user_model in field_dic:
-                    if user_model.lower() in card_model.lower():
-                        target_model.append(user_model)
+                if card_model in field_dic:
+                    target_model = [card_model]
+                else:
+                    for user_model in field_dic:
+                        if user_model.lower() in card_model.lower():
+                            target_model.append(user_model)
+
                 if len(target_model) == 0:
                     fields_to_keep = "take_first_fields"
                 elif len(target_model) == 1:
