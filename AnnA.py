@@ -657,7 +657,8 @@ less than threshold ({self.lowlimit_due}).\nStopping.")
             For example you can give more importance to field "Body" of a
             cloze than to the field "More"
         """
-        def _threaded_field_filter(df, index_list, lock, pbar, stopw_compiled):
+        def _threaded_field_filter(df, index_list, lock, pbar,
+                                   stopw_compiled, spacers_compiled):
             """
             threaded call to speed up execution
             """
@@ -725,11 +726,10 @@ less than threshold ({self.lowlimit_due}).\nStopping.")
                     comb_text = comb_text[:-2]
 
                 # add tags to comb_text
-                tags = self.df.loc[index, "tags"].split(" ")
-                spacers_reg = re.compile("_|-|/")
+                tags = self.df.loc[index, "tags"].str.replace(self.tags_separator, " ").split(" ")
                 for t in tags:
                     if ("AnnA" not in t) and (t not in self.tags_to_ignore):
-                        t = re.sub(spacers_reg,  # replaces _ - and /
+                        t = re.sub(spacers_compiled,  # replaces _ - and /
                                    " ",  # by a space
                                    " ".join(t.split(self.tags_separator)[-2:]))
                         # and keep only the last 2 levels of each tags
@@ -747,6 +747,7 @@ less than threshold ({self.lowlimit_due}).\nStopping.")
         to_notify = []
         stopw_compiled = re.compile("\b" + "\b|\b".join(self.stops) + "\b",
                                     flags=re.MULTILINE | re.IGNORECASE | re.DOTALL)
+        spacers_compiled = re.compile("_|-|/")
 
         with tqdm(total=n,
                   desc="Combining relevant fields",
@@ -759,7 +760,8 @@ less than threshold ({self.lowlimit_due}).\nStopping.")
                                                 sub_card_list,
                                                 lock,
                                                 pbar,
-                                                stopw_compiled),
+                                                stopw_compiled,
+                                                spacers_compiled),
                                           daemon=False)
                 thread.start()
                 threads.append(thread)
