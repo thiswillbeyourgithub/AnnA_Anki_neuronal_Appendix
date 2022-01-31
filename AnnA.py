@@ -36,6 +36,7 @@ os.environ["TOKENIZERS_PARALLELISM"] = "true"
 signal.signal(signal.SIGINT, (lambda signal, frame: pdb.set_trace()))
 
 # adds logger, restrict it to 5000 lines
+Path("logs.txt").touch(exist_ok=True)
 Path("logs.txt").write_text(
     "\n".join(
         Path("logs.txt").read_text().split("\n")[-5000:]))
