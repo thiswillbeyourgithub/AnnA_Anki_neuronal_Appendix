@@ -111,6 +111,7 @@ class AnnA:
                  acronym_file="acronym_file.py",
                  acronym_list=None,
                  tags_to_ignore=None,
+                 tags_separator="::",
 
                  task="filter_review_cards",
                  # can be "filter_review_cards", "bury_excess_review_cards",
@@ -159,6 +160,7 @@ class AnnA:
         self.acronym_file = acronym_file
         self.acronym_list = acronym_list
         self.tags_to_ignore = tags_to_ignore
+        self.tags_separator = tags_separator
         self.vectorizer = vectorizer
         self.stopwords_lang = stopwords_lang
         self.TFIDF_dim = TFIDF_dim
@@ -729,7 +731,7 @@ less than threshold ({self.lowlimit_due}).\nStopping.")
                     if ("AnnA" not in t) and (t not in self.tags_to_ignore):
                         t = re.sub(spacers_reg,  # replaces _ - and /
                                    " ",  # by a space
-                                   " ".join(t.split("::")[-2:]))
+                                   " ".join(t.split(self.tags_separator)[-2:]))
                         # and keep only the last 2 levels of each tags
                         comb_text += " " + t
 

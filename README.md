@@ -99,6 +99,7 @@ AnnA was made with usability in mind. With the right arguments, you can have to 
  * `acronym_file` a python file containing dictionaries that themselves contain acronyms to extend in the text of cards. For example `CRC` can be extended to `CRC (colorectal cancer)`. (The parenthesis are automatically added.) Default is `"acronym_file.py"`. The matching is case sensitive only if the key contains uppercase characters. The ".py" file extension is not mandatory.
  * `acronym_list` a list of name of dictionaries found in the file from `acronym_file` to use to extend text. For example `["AI_machine_learning", "medical_terms"]` from `example_file/acronym_file.py`. Default to None.
  * `tags_to_ignore` a list of tags to ignore when appending tags to cards. Default is `None`, to ignore.
+ * `tags_separator` separator between levels of tags. Default to `::`.
 
  * `task` can be "filter_review_cards", "bury_excess_learning_cards", "bury_excess_review_cards". Respectively to create a filtered deck with the cards, or bury only the similar learning cards (among other learning cards), or bury only the similar cards in review (among other review cards). Default is "`filter_review_cards`".
  * `fdeckname_template` name template of the filtered deck to create. Only available if task is set to "filter_review_cards". Default is `None`.
