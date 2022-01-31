@@ -664,22 +664,23 @@ less than threshold ({self.lowlimit_due}).\nStopping.")
                 target_model = []
                 if card_model in field_dic:
                     target_model = [card_model]
+                    fields_to_keep = field_dic[target_model[0]]
                 else:
                     for user_model in field_dic:
                         if user_model.lower() in card_model.lower():
                             target_model.append(user_model)
 
-                if len(target_model) == 0:
-                    fields_to_keep = "take_first_fields"
-                elif len(target_model) == 1:
-                    fields_to_keep = field_dic[target_model[0]]
-                elif len(target_model) > 1:
-                    target_model = sorted(target_model,
-                                          key=lambda x: lev.ratio(
-                                              x.lower(), user_model.lower()))
-                    fields_to_keep = field_dic[target_model[0]]
-                    with lock:
-                        to_notify.append(f"Several notetypes match \
+                    if len(target_model) == 0:
+                        fields_to_keep = "take_first_fields"
+                    elif len(target_model) == 1:
+                        fields_to_keep = field_dic[target_model[0]]
+                    elif len(target_model) > 1:
+                        target_model = sorted(target_model,
+                                              key=lambda x: lev.ratio(
+                                                  x.lower(), user_model.lower()))
+                        fields_to_keep = field_dic[target_model[0]]
+                        with lock:
+                            to_notify.append(f"Several notetypes match \
 '{card_model}'. Selecting '{target_model[0]}'")
 
                 # concatenates the corresponding fields into one string:
