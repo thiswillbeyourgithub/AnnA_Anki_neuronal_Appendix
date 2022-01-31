@@ -105,7 +105,7 @@ class AnnA:
                  score_adjustment_factor=(1, 5),
                  log_level=2,  # 0, 1, 2
                  replace_greek=True,
-                 keep_ocr=True,
+                 keep_OCR=True,
                  field_mappings="field_mappings.py",
                  acronym_file="acronym_file.py",
                  acronym_list=None,
@@ -143,7 +143,9 @@ class AnnA:
 
         # loading args
         self.replace_greek = replace_greek
-        self.keep_ocr = keep_ocr
+        self.keep_OCR = keep_OCR
+        if keep_OCR:
+            self.OCR_content = ""
         self.target_deck_size = target_deck_size
         self.rated_last_X_days = rated_last_X_days
         self.lowlimit_due = lowlimit_due
@@ -295,23 +297,23 @@ values. {e}")
             if self.not_enough_cards is True:
                 return
             self._format_card()
-            self.show_acronyms()
+            self._print_acronyms()
             self._compute_card_vectors()
             self._compute_distance_matrix()
             self._compute_opti_rev_order()
-            self.bury_or_create_filtered(task=task)
+            self._bury_or_create_filtered(task=task)
         else:
             yel("Task : created filtered deck containing review cards")
             self._init_dataFrame()
             if self.not_enough_cards is True:
                 return
             self._format_card()
-            self.show_acronyms()
+            self._print_acronyms()
             self._compute_card_vectors()
             self._compute_distance_matrix()
             self._compute_opti_rev_order()
             if task == "filter_review_cards":
-                self.bury_or_create_filtered()
+                self._bury_or_create_filtered()
 
         red(f"\nDone with task '{self.task}' on deck '{self.deckname}'")
         gc.collect()
@@ -542,6 +544,11 @@ less than threshold ({self.lowlimit_due}).\nStopping.")
         out = string.group(0) + f" ({new_w})"
         return out
 
+    def _store_OCR(self, matched):
+        """storing OCR value to use later with self._print_acronyms"""
+        self.OCR_content += " " + matched.group(1)
+        return " " + matched.group(1) + " "
+
     def _text_formatter(self, text):
         """
         process and formats each card's text, including :
@@ -554,14 +561,8 @@ less than threshold ({self.lowlimit_due}).\nStopping.")
                     ).replace("/", " / "
                     ).replace("+++", " important "
                     ).replace("&nbsp", " "
-                    ).replace("\u001F", " "
-                    ).replace("é", "e"
-                    ).replace("è", "e"
-                    ).replace("ê", "e"
-                    ).replace("ô", "o"
-                    ).replace("à", "a"
-                    ).replace("ç", "c"
-                    )
+                    ).replace("\u001F", " ")
+
         # remove weird clozes
         text = re.sub(r"}}{{c\d+::", "", text)
 
@@ -586,12 +587,12 @@ less than threshold ({self.lowlimit_due}).\nStopping.")
         text = re.sub('</?blockquote(.*?)>', " ", text)
 
         # OCR
-        if self.keep_ocr:
+        if self.keep_OCR:
             # keep image title (usually OCR)
-            text = re.sub("title=(\".*?\")",
-                          "> Caption:___\\1___ <",
-                          text, flags=re.M | re.DOTALL)
-            text = text.replace('Caption:___""___', "")
+            text = re.sub("<img src=.*? title=\"(.*?)\".*?>",
+                          lambda string: self._store_OCR(string),
+                          text,
+                          flags=re.M | re.DOTALL)
 
         # cloze
         text = re.sub(r"{{c\d+?::|}}", "", text)  # remove cloze brackets
@@ -810,22 +811,20 @@ adjust formating issues:")
         self.df = self.df.sort_index()
         return True
 
-    def _compute_card_vectors(self,
-                              df=None):
+    def _compute_card_vectors(self):
         """
         Assigne vectors to each card's 'comb_text', using TFIDF as vectorizer.
 
         After calling this function df["VEC"] contains either all the vectors
             or less if you enabled dimensionality reduction
         """
-        if df is None:
-            df = self.df
+        df = self.df
 
         vectorizer = TfidfVectorizer(strip_accents="ascii",
                                      lowercase=True,
                                      tokenizer=self.tokenize,
                                      stop_words=None,
-                                     ngram_range=(1, 10),
+                                     ngram_range=(1, 5),
                                      max_features=10_000,
                                      norm="l2")
         # stop words have already been removed
@@ -932,7 +931,8 @@ retrying until above 80% or 2000 dimensions)")
             the card needs to be reviewed. The computation used depends on
             argument 'reference_order', hence picking a card according to its
             'ref' only can be the same as using a regular filtered deck with
-            'reference_order' set to 'relative_overdueness'
+            'reference_order' set to 'relative_overdueness' for example.
+            Some of the ref columns are centered and scaled.
         2. remove siblings of the due list of found (except if the queue
             is meant to contain a lot of cards, then siblings are not removed)
         3. prints a few stats about 'ref' distribution in your deck as well
@@ -1018,8 +1018,9 @@ retrying until above 80% or 2000 dimensions)")
             # the code for relative overdueness is not exactly the same as
             # in anki, as I was not able to replicate it.
             # Here's a link to one of the implementation : https://github.com/ankitects/anki/blob/afff4fc437f523a742f617c6c4ad973a4d477c15/rslib/src/storage/card/filtered.rs
-            ro = -1 * (df.loc[due, "interval"].values + 0.5) / (overdue + 0.5)
-            ro_cs = StandardScaler().fit_transform(ro.values.reshape(-1, 1))
+            ro = -1 * (df.loc[due, "interval"].values + 0.001) / (overdue + 0.001)
+            ro_clipped = np.clip(ro, -50, 50)
+            ro_cs = StandardScaler().fit_transform(ro_clipped.values.reshape(-1, 1))
             df.loc[due, "ref"] = ro_cs
 
         assert len([x for x in rated if df.loc[x, "status"] != "rated"]) == 0
@@ -1183,16 +1184,22 @@ all cards were included in the new queue.")
                     spread_else = np.mean(self.df_dist.loc[woAnnA, woAnnA].values.flatten())
 
                     red("Mean of distance in the new queue:")
-                    yel(spread_queue)
+                    yel(str(spread_queue))
                     red(f"Cards in common: {common} in a queue of \
 {len(queue)} cards.")
                     red("Mean of distance of the queue if you had not used \
 AnnA:")
-                    yel(spread_else)
+                    yel(str(spread_else))
 
-                    ratio = round(spread_queue / spread_else, 3)
+                    ratio = round(spread_queue / spread_else * 100 - 100, 3)
                     red("Improvement ratio:")
-                    red(pyfiglet.figlet_format(str(ratio)))
+                    if ratio > 0:
+                        sign = "+"
+                    elif ratio < 0:
+                        sign = "-"
+                    else:
+                        sign = ""
+                    red(pyfiglet.figlet_format(f"{sign}{ratio}%"))
 
         except Exception as e:
             red(f"\nException: {e}")
@@ -1201,17 +1208,59 @@ AnnA:")
         self.df = df
         return True
 
-    def display_opti_rev_order(self, display_limit=50):
+    def _print_acronyms(self, exclude_OCR_text=True):
         """
-        instead of creating a deck or buring cards, prints the content
-        of cards in the order AnnA though was best.
-        Only used for debugging.
+        Shows acronym present in the collection that were not found in
+            the file supplied by the argument `acronym_file`.
+            This is used to know which acronym you forgot to specify in
+            `acronym_file`
+        * acronyms found in OCR text are ignored by default, because they
+            cause too many false positive.
         """
-        order = self.opti_rev_order[:display_limit]
-        print(self.df.loc[order, "text"])
+        if not len(self.acronym_dict.keys()):
+            return True
+
+        full_text = " ".join(self.df["text"].tolist()).replace("'", " ")
+        if exclude_OCR_text:
+            ocr = re.findall("[A-Z][A-Z0-9]{2,}",
+                    string=self.OCR_content,
+                    flags=re.MULTILINE | re.DOTALL)
+        else:
+            ocr = []
+
+        def exclude(word):
+            """if exists as lowercase in text : probably just shouting for emphasis
+               if exists in ocr : ignore"""
+            if word.lower() in full_text or word in ocr:
+                return False
+            else:
+                return True
+
+        matched = list(set(
+            [x for x in re.findall("[A-Z][A-Z0-9]{2,}", full_text)
+             if exclude(x)]))
+
+        if len(matched) == 0:
+            print("No acronym found in those cards.")
+            return True
+
+        for compiled in self.acronym_dict:
+            for acr in matched:
+                if re.match(compiled, acr) is not None:
+                    matched.remove(acr)
+
+        if not matched:
+            print("All found acronyms were already replaced using \
+the data in `acronym_list`.")
+        else:
+            print("List of some acronyms still found:")
+            if exclude_OCR_text:
+                print("(Excluding OCR text)")
+            pprint(random.choices(matched, k=min(5, len(matched))))
+        print("")
         return True
 
-    def bury_or_create_filtered(self,
+    def _bury_or_create_filtered(self,
                            fdeckname_template=None,
                            task=None):
         """
@@ -1296,6 +1345,16 @@ as opti_rev_order!")
             yel(" Done!")
             return True
 
+    def display_opti_rev_order(self, display_limit=50):
+        """
+        instead of creating a deck or buring cards, prints the content
+        of cards in the order AnnA though was best.
+        Only used for debugging.
+        """
+        order = self.opti_rev_order[:display_limit]
+        print(self.df.loc[order, "text"])
+        return True
+
     def save_df(self, df=None, out_name=None):
         """
         export dataframe as pickle format in the folder DF_backups/
@@ -1309,47 +1368,6 @@ as opti_rev_order!")
         name = f"{out_name}_{self.deckname}_{cur_time}.pickle"
         df.to_pickle("./.DataFrame_backups/" + name)
         print(f"Dataframe exported to {name}.")
-        return True
-
-    def show_acronyms(self, exclude_OCR_text=True):
-        """
-        Shows acronym present in your collection that were not found in
-            the file supplied by the argument `acronym_file`.
-            This is used to know when you forgot the specify an acronym to
-            replace.
-        * acronyms found in OCR text are removed by default, as it often
-            creates too many false positive.
-        """
-        if not len(self.acronym_dict.keys()):
-            return True
-
-        full_text = " ".join(self.df["text"].tolist()).replace("'", " ")
-        if exclude_OCR_text:
-            full_text = re.sub(" Caption:___.*?___ ", " ", full_text,
-                               flags=re.MULTILINE | re.DOTALL)
-
-        matched = list({x for x in re.findall("[A-Z][A-Z0-9]{2,}", full_text)
-                        if x.lower() not in full_text})
-        # if exists as lowercase : probably just shouting for emphasis
-
-        if len(matched) == 0:
-            print("No acronym found in those cards.")
-            return True
-
-        for compiled in self.acronym_dict:
-            for acr in matched:
-                if re.match(compiled, acr) is not None:
-                    matched.remove(acr)
-
-        if not matched:
-            print("All found acronyms were already replaced using \
-the data in `acronym_list`.")
-        else:
-            print("List of some acronyms still found:")
-            if exclude_OCR_text:
-                print("(Excluding OCR text)")
-            pprint(random.choices(matched, k=min(5, len(matched))))
-        print("")
         return True
 
 
