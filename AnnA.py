@@ -100,7 +100,7 @@ class AnnA:
                  # can be "lowest_interval", "relative overdueness", "order_added"
                  target_deck_size="80%",  # 80%, 0.8, "all"
                  rated_last_X_days=4,
-                 lowlimit_due=30,
+                 minimum_due=30,
                  highjack_due_query=None,
                  highjack_rated_query=None,
                  score_adjustment_factor=(1, 5),
@@ -151,7 +151,7 @@ class AnnA:
             self.OCR_content = ""
         self.target_deck_size = target_deck_size
         self.rated_last_X_days = rated_last_X_days
-        self.lowlimit_due = lowlimit_due
+        self.minimum_due = minimum_due
         self.highjack_due_query = highjack_due_query
         self.highjack_rated_query = highjack_rated_query
         self.score_adjustment_factor = score_adjustment_factor
@@ -493,9 +493,9 @@ threads of size {batchsize})")
         self.due_cards = due_cards
         self.rated_cards = rated_cards
 
-        if len(self.due_cards) < self.lowlimit_due:
+        if len(self.due_cards) < self.minimum_due:
             red(f"Number of due cards is {len(self.due_cards)} which is \
-less than threshold ({self.lowlimit_due}).\nStopping.")
+less than threshold ({self.minimum_due}).\nStopping.")
             self.not_enough_cards = True
             return
         else:
