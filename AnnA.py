@@ -1201,7 +1201,7 @@ all cards were included in the new queue.")
 AnnA:")
                     yel(str(spread_else))
 
-                    ratio = round(spread_queue / spread_else * 100 - 100, 3)
+                    ratio = round(spread_queue / spread_else * 100 - 100, 1)
                     red("Improvement ratio:")
                     if ratio > 0:
                         sign = "+"
