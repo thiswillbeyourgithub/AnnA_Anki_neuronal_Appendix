@@ -118,6 +118,7 @@ class AnnA:
                  tags_separator="::",
                  fdeckname_template=None,
                  show_banner=True,
+                 skip_print_similar=False,
 
                  # vectorization:
                  vectorizer="TFIDF",  # can only be "TFIDF" but left for legacy reason
@@ -168,6 +169,7 @@ class AnnA:
         self.TFIDF_tokenize = TFIDF_tokenize
         self.task = task
         self.fdeckname_template = fdeckname_template
+        self.skip_print_similar = skip_print_similar
 
         # args sanity checks
         if isinstance(self.target_deck_size, int):
@@ -894,6 +896,9 @@ retrying until above 80% or 2000 dimensions)")
         mean_dist = np.nanmean(self.df_dist[self.df_dist != 0])
         std_dist = np.nanstd(self.df_dist[self.df_dist != 0])
         yel(f"Mean distance: {mean_dist}, std: {std_dist}\n")
+
+        if self.skip_print_similar:
+            return True
 
         # showing to user which cards are similar and different,
         # for troubleshooting

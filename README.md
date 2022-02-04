@@ -105,6 +105,7 @@ AnnA was made with customizability in mind. All the settings you might want to e
  * `tags_separator` separator between levels of tags. Default to `::`.
  * `fdeckname_template` name template of the filtered deck to create. Only available if task is set to "filter_review_cards". Default is `None`.
  * `show_banner` used to display a nice banner when instantiating the collection. Default is `True`.
+ * `skip_print_similar` default to `False`. Skip printing example of cards that are very similar or very different. This speeds up execution but can help figure out when something when wrong.
 
  **Vectorization arguments:**
  * `vectorizer` can nowadays only be set to "TFIDF", but kept for legacy reasons.
