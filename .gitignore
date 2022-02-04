@@ -4,7 +4,5 @@ obsolete
 __pycache__/
 AMIMA_jupyter.py
 *.pickle
-acronym_file.py
-autorun*.py
 logs.txt
-cc.fr.*00.bin
+personnal_files/
