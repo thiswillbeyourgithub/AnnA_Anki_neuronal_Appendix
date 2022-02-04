@@ -93,37 +93,37 @@ class AnnA:
     just instantiating the class does the job, as you can see in the
     __init__ function
     """
-    def __init__(self, show_banner=True,
-                 # main settings
+    def __init__(self,
+
+                 # most important:
                  deckname=None,
-                 reference_order="relative_overdueness",
-                 # can be "lowest_interval", "relative overdueness", "order_added"
-                 target_deck_size="80%",  # 80%, 0.8, "all"
+                 reference_order="relative_overdueness",  # any of "lowest_interval", "relative overdueness", "order_added"
+                 task="filter_review_cards", # any of "filter_review_cards", "bury_excess_review_cards", "bury_excess_learning_cards"
+                 target_deck_size="80%",  # format: 80%, 0.8, "all"
+                 stopwords_lang=["english", "french"],
                  rated_last_X_days=4,
-                 lowlimit_due=30,
-                 highjack_due_query=None,
-                 highjack_rated_query=None,
-                 score_adjustment_factor=(1, 5),
-                 log_level=2,  # 0, 1, 2
-                 replace_greek=True,
-                 keep_OCR=True,
+                 score_adjustment_factor=(1, 2),
                  field_mappings="field_mappings.py",
                  acronym_file="acronym_file.py",
                  acronym_list=None,
+
+                 # others:
+                 minimum_due=15,
+                 highjack_due_query=None,
+                 highjack_rated_query=None,
+                 log_level=2,  # 0, 1, 2
+                 replace_greek=True,
+                 keep_OCR=True,
                  tags_to_ignore=None,
                  tags_separator="::",
-
-                 task="filter_review_cards",
-                 # can be "filter_review_cards", "bury_excess_review_cards",
-                 # "bury_excess_learning_cards"
                  fdeckname_template=None,
+                 show_banner=True,
 
                  # vectorization:
-                 stopwords_lang=["english", "french"],
-                 vectorizer="TFIDF",  # can only be "TFIDF"
+                 vectorizer="TFIDF",  # can only be "TFIDF" but left for legacy reason
                  TFIDF_dim=100,
-                 TFIDF_stem=False,
                  TFIDF_tokenize=True,
+                 TFIDF_stem=False,
                  ):
 
         if show_banner:
@@ -151,7 +151,7 @@ class AnnA:
             self.OCR_content = ""
         self.target_deck_size = target_deck_size
         self.rated_last_X_days = rated_last_X_days
-        self.lowlimit_due = lowlimit_due
+        self.minimum_due = minimum_due
         self.highjack_due_query = highjack_due_query
         self.highjack_rated_query = highjack_rated_query
         self.score_adjustment_factor = score_adjustment_factor
@@ -493,9 +493,9 @@ threads of size {batchsize})")
         self.due_cards = due_cards
         self.rated_cards = rated_cards
 
-        if len(self.due_cards) < self.lowlimit_due:
+        if len(self.due_cards) < self.minimum_due:
             red(f"Number of due cards is {len(self.due_cards)} which is \
-less than threshold ({self.lowlimit_due}).\nStopping.")
+less than threshold ({self.minimum_due}).\nStopping.")
             self.not_enough_cards = True
             return
         else:
@@ -548,7 +548,7 @@ less than threshold ({self.lowlimit_due}).\nStopping.")
                 if string.group(i + 1) is not None:
                     new_w = new_w.replace('\\' + str(i + 1),
                                           string.group(i + 1))
-        out = string.group(0) + f" ({new_w})"
+        out = string.group(0) + f" {new_w} "
         return out
 
     def _store_OCR(self, matched):
@@ -657,7 +657,8 @@ less than threshold ({self.lowlimit_due}).\nStopping.")
             For example you can give more importance to field "Body" of a
             cloze than to the field "More"
         """
-        def _threaded_field_filter(df, index_list, lock, pbar, stopw_compiled):
+        def _threaded_field_filter(df, index_list, lock, pbar,
+                                   stopw_compiled, spacers_compiled):
             """
             threaded call to speed up execution
             """
@@ -726,10 +727,9 @@ less than threshold ({self.lowlimit_due}).\nStopping.")
 
                 # add tags to comb_text
                 tags = self.df.loc[index, "tags"].split(" ")
-                spacers_reg = re.compile("_|-|/")
                 for t in tags:
                     if ("AnnA" not in t) and (t not in self.tags_to_ignore):
-                        t = re.sub(spacers_reg,  # replaces _ - and /
+                        t = re.sub(spacers_compiled,  # replaces _ - and /
                                    " ",  # by a space
                                    " ".join(t.split(self.tags_separator)[-2:]))
                         # and keep only the last 2 levels of each tags
@@ -747,6 +747,7 @@ less than threshold ({self.lowlimit_due}).\nStopping.")
         to_notify = []
         stopw_compiled = re.compile("\b" + "\b|\b".join(self.stops) + "\b",
                                     flags=re.MULTILINE | re.IGNORECASE | re.DOTALL)
+        spacers_compiled = re.compile("_|-|/")
 
         with tqdm(total=n,
                   desc="Combining relevant fields",
@@ -759,7 +760,8 @@ less than threshold ({self.lowlimit_due}).\nStopping.")
                                                 sub_card_list,
                                                 lock,
                                                 pbar,
-                                                stopw_compiled),
+                                                stopw_compiled,
+                                                spacers_compiled),
                                           daemon=False)
                 thread.start()
                 threads.append(thread)
@@ -1199,7 +1201,7 @@ all cards were included in the new queue.")
 AnnA:")
                     yel(str(spread_else))
 
-                    ratio = round(spread_queue / spread_else * 100 - 100, 3)
+                    ratio = round(spread_queue / spread_else * 100 - 100, 1)
                     red("Improvement ratio:")
                     if ratio > 0:
                         sign = "+"
