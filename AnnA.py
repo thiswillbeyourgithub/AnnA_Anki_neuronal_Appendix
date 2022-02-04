@@ -806,7 +806,7 @@ less than threshold ({self.minimum_due}).\nStopping.")
             red("{len(ind_short)} cards contain less than 10 characters after \
 formatting: {','.join(ind_short)}")
 
-        print("\n\nPrinting 2 random samples of your formated text, to help \
+        yel("\n\nPrinting 2 random samples of your formated text, to help \
 adjust formating issues:")
         pd.set_option('display.max_colwidth', 8000)
         max_length = 1000
@@ -847,7 +847,7 @@ TFIDF"))
             df["VEC"] = [x for x in t_vec]
         else:
             while True:
-                print(f"Reducing dimensions to {self.TFIDF_dim} using SVD")
+                yel(f"\nReducing dimensions to {self.TFIDF_dim} using SVD...", end= " ")
                 svd = TruncatedSVD(n_components=min(self.TFIDF_dim,
                                                     t_vec.shape[1]))
                 t_red = svd.fit_transform(t_vec)
@@ -864,10 +864,10 @@ TFIDF"))
                     else:
                         self.TFIDF_dim += int(self.TFIDF_dim * 0.5)
                     self.TFIDF_dim = min(self.TFIDF_dim, 2000)
-                    yel(f"Explained variance ratio is only {evr}% (\
-retrying until above 80% or 2000 dimensions)")
+                    red(f"Explained variance ratio is only {evr}% (\
+retrying until above 80% or 2000 dimensions)", end= " ")
                     continue
-            whi(f"Explained variance ratio after SVD on Tf_idf: {evr}%")
+            yel(f"\nExplained variance ratio after SVD on Tf_idf: {evr}%")
 
             df["VEC"] = [x for x in t_red]
 
@@ -1232,6 +1232,7 @@ AnnA:")
         * acronyms found in OCR text are ignored by default, because they
             cause too many false positive.
         """
+        yel("Looking for acronyms that perhaps should be in 'acronym_file'...")
         if not len(self.acronym_dict.keys()):
             return True
 
