@@ -93,37 +93,37 @@ class AnnA:
     just instantiating the class does the job, as you can see in the
     __init__ function
     """
-    def __init__(self, show_banner=True,
-                 # main settings
+    def __init__(self,
+
+                 # most important:
                  deckname=None,
-                 reference_order="relative_overdueness",
-                 # can be "lowest_interval", "relative overdueness", "order_added"
-                 target_deck_size="80%",  # 80%, 0.8, "all"
+                 reference_order="relative_overdueness",  # any of "lowest_interval", "relative overdueness", "order_added"
+                 task="filter_review_cards", # any of "filter_review_cards", "bury_excess_review_cards", "bury_excess_learning_cards"
+                 target_deck_size="80%",  # format: 80%, 0.8, "all"
+                 stopwords_lang=["english", "french"],
                  rated_last_X_days=4,
-                 minimum_due=30,
-                 highjack_due_query=None,
-                 highjack_rated_query=None,
-                 score_adjustment_factor=(1, 5),
-                 log_level=2,  # 0, 1, 2
-                 replace_greek=True,
-                 keep_OCR=True,
+                 score_adjustment_factor=(1, 2),
                  field_mappings="field_mappings.py",
                  acronym_file="acronym_file.py",
                  acronym_list=None,
+
+                 # others:
+                 minimum_due=30,
+                 highjack_due_query=None,
+                 highjack_rated_query=None,
+                 log_level=2,  # 0, 1, 2
+                 replace_greek=True,
+                 keep_OCR=True,
                  tags_to_ignore=None,
                  tags_separator="::",
-
-                 task="filter_review_cards",
-                 # can be "filter_review_cards", "bury_excess_review_cards",
-                 # "bury_excess_learning_cards"
                  fdeckname_template=None,
+                 show_banner=True,
 
                  # vectorization:
-                 stopwords_lang=["english", "french"],
-                 vectorizer="TFIDF",  # can only be "TFIDF"
+                 vectorizer="TFIDF",  # can only be "TFIDF" but left for legacy reason
                  TFIDF_dim=100,
-                 TFIDF_stem=False,
                  TFIDF_tokenize=True,
+                 TFIDF_stem=False,
                  ):
 
         if show_banner:
