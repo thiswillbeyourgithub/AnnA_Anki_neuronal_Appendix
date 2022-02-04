@@ -26,4 +26,3 @@ field_dic = {
              "morse": ["Front", "mnemonic"],
              "fallacy_bias": ["Name & Picture", "Summary", "Description"],
              }
-

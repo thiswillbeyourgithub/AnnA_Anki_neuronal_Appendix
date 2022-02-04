@@ -118,6 +118,7 @@ class AnnA:
                  tags_separator="::",
                  fdeckname_template=None,
                  show_banner=True,
+                 skip_print_similar=False,
 
                  # vectorization:
                  vectorizer="TFIDF",  # can only be "TFIDF" but left for legacy reason
@@ -168,6 +169,7 @@ class AnnA:
         self.TFIDF_tokenize = TFIDF_tokenize
         self.task = task
         self.fdeckname_template = fdeckname_template
+        self.skip_print_similar = skip_print_similar
 
         # args sanity checks
         if isinstance(self.target_deck_size, int):
@@ -804,7 +806,7 @@ less than threshold ({self.minimum_due}).\nStopping.")
             red("{len(ind_short)} cards contain less than 10 characters after \
 formatting: {','.join(ind_short)}")
 
-        print("\n\nPrinting 2 random samples of your formated text, to help \
+        yel("\n\nPrinting 2 random samples of your formated text, to help \
 adjust formating issues:")
         pd.set_option('display.max_colwidth', 8000)
         max_length = 1000
@@ -845,7 +847,7 @@ TFIDF"))
             df["VEC"] = [x for x in t_vec]
         else:
             while True:
-                print(f"Reducing dimensions to {self.TFIDF_dim} using SVD")
+                yel(f"\nReducing dimensions to {self.TFIDF_dim} using SVD...", end= " ")
                 svd = TruncatedSVD(n_components=min(self.TFIDF_dim,
                                                     t_vec.shape[1]))
                 t_red = svd.fit_transform(t_vec)
@@ -862,10 +864,10 @@ TFIDF"))
                     else:
                         self.TFIDF_dim += int(self.TFIDF_dim * 0.5)
                     self.TFIDF_dim = min(self.TFIDF_dim, 2000)
-                    yel(f"Explained variance ratio is only {evr}% (\
-retrying until above 80% or 2000 dimensions)")
+                    red(f"Explained variance ratio is only {evr}% (\
+retrying until above 80% or 2000 dimensions)", end= " ")
                     continue
-            whi(f"Explained variance ratio after SVD on Tf_idf: {evr}%")
+            yel(f"\nExplained variance ratio after SVD on Tf_idf: {evr}%")
 
             df["VEC"] = [x for x in t_red]
 
@@ -895,44 +897,46 @@ retrying until above 80% or 2000 dimensions)")
         std_dist = np.nanstd(self.df_dist[self.df_dist != 0])
         yel(f"Mean distance: {mean_dist}, std: {std_dist}\n")
 
-        # showing to user which cards are similar and different,
-        # for troubleshooting
-        red("Printing the most semantically different cards:")
-        pd.set_option('display.max_colwidth', 80)
-        max_length = 100
-        maxs = np.where(self.df_dist.values == np.max(self.df_dist.values))
-        maxs = [x for x in zip(maxs[0], maxs[1])]
-        yel(f"* {str(df.loc[df.index[maxs[0][0]]].text)[0:max_length]}...")
-        yel(f"* {str(df.loc[df.index[maxs[0][1]]].text)[0:max_length]}...")
-        print("")
+        if self.skip_print_similar is False:
+            # showing to user which cards are similar and different,
+            # for troubleshooting
+            red("Printing the most semantically different cards:")
+            pd.set_option('display.max_colwidth', 80)
+            max_length = 100
+            maxs = np.where(self.df_dist.values == np.max(self.df_dist.values))
+            maxs = [x for x in zip(maxs[0], maxs[1])]
+            yel(f"* {str(df.loc[df.index[maxs[0][0]]].text)[0:max_length]}...")
+            yel(f"* {str(df.loc[df.index[maxs[0][1]]].text)[0:max_length]}...")
+            print("")
 
-        printed = False
-        lowest_values = [0]
-        start_time = time.time()
-        for i in range(9999):
-            if printed is True:
-                break
-            if time.time() - start_time >= 60:
-                red("Taking too long to find nonequal similar cards, skipping")
-                break
-            lowest_values.append(self.df_dist.values[self.df_dist.values > max(
-                        lowest_values)].min())
-            mins = np.where(self.df_dist.values == lowest_values[-1])
-            mins = [x for x in zip(mins[0], mins[1]) if x[0] != x[1]]
-            random.shuffle(mins)
-            for pair in mins: 
-                text_1 = str(df.loc[df.index[pair[0]]].text)
-                text_2 = str(df.loc[df.index[pair[1]]].text)
-                if text_1 != text_2:
-                    red("Example among most semantically similar cards:")
-                    yel(f"* {text_1[0:max_length]}...")
-                    yel(f"* {text_2[0:max_length]}...")
-                    printed = True
+            printed = False
+            lowest_values = [0]
+            start_time = time.time()
+            for i in range(9999):
+                if printed is True:
                     break
-        if printed is False:
-            red("Couldn't find lowest values to print!")
-        print("")
-        pd.reset_option('display.max_colwidth')
+                if time.time() - start_time >= 60:
+                    red("Taking too long to find nonequal similar cards, \
+skipping")
+                    break
+                lowest_values.append(self.df_dist.values[
+                    self.df_dist.values > max(lowest_values)].min())
+                mins = np.where(self.df_dist.values == lowest_values[-1])
+                mins = [x for x in zip(mins[0], mins[1]) if x[0] != x[1]]
+                random.shuffle(mins)
+                for pair in mins:
+                    text_1 = str(df.loc[df.index[pair[0]]].text)
+                    text_2 = str(df.loc[df.index[pair[1]]].text)
+                    if text_1 != text_2:
+                        red("Example among most semantically similar cards:")
+                        yel(f"* {text_1[0:max_length]}...")
+                        yel(f"* {text_2[0:max_length]}...")
+                        printed = True
+                        break
+            if printed is False:
+                red("Couldn't find lowest values to print!")
+            print("")
+            pd.reset_option('display.max_colwidth')
         return True
 
     def _compute_opti_rev_order(self):
@@ -1227,6 +1231,7 @@ AnnA:")
         * acronyms found in OCR text are ignored by default, because they
             cause too many false positive.
         """
+        yel("Looking for acronyms that perhaps should be in 'acronym_file'...")
         if not len(self.acronym_dict.keys()):
             return True
 

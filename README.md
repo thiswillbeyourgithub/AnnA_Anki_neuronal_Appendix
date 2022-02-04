@@ -70,18 +70,17 @@ Here are different ways of looking at what AnnA can do for you in a few words:
 
 ## Getting started
 * First, **read this page in its entirety, this is a complicated piece of software and you don't want to use it irresponsibly on your cards. The [usage section](#Usage-and-arguments) is especially useful.**
-* Make sure to install the addon [AnnA-compagnon](https://ankiweb.net/shared/info/447942356)
-* Clone / Download this repository (for example with `git clone https://github.com/thiswillbeyourgithub/AnnA_Anki_neuronal_Appendix`)
-* Use pip to install the necessary python libraries : `pip install -r requirements.txt` (in case of issue, try using python 3.9)
-* Edit `field_mapping.py` and `example_files/acronym_file.py` to your liking
-* Edit the file `example_files/autorun.py` to suit your needs
-* Move the new example_files to the main folder
-* run AnnA : `python3 autorun.py`
-* Enjoy your filtered deck, but don't empty it or rebuilt it. You can delete it though.
+* Install the addon [AnnA Companion (Anki neuronal Appendix) - do LESS reviews with MORE retention!](https://ankiweb.net/shared/info/447942356)
+* Clone this repository (for example with `git clone https://github.com/thiswillbeyourgithub/AnnA_Anki_neuronal_Appendix`)
+* Install the required python libraries : `pip install -r requirements.txt` (in case of issue, try using python 3.9)
+* Edit file `field_mapping.py`: it contains a dictionary where the keys are notetypes and values are lists of which field to take into account.
+* Edit file `acronym_file.py`: it contains dictionaries where keys are words to replace and values are what the words should be replaced with.
+* Open a Python console in the repo and run AnnA : `from AnnA import * ; AnnA(YOUR_ARGUMENTS)`
+* If you want to run AnnA on several decks in a row like I do, edit the file `autorun.py`. You can then run it with `python3 ./autorun.py`
 * Open an issue telling me your remarks and suggestion
 
 ### Usage and arguments
-AnnA was made with customizability in mind. All the settings you might want to edit are arguments of the call of AnnA Class. Don't be frightened, many of those settings are rarely used and the default values should be good for almost anyone. The file `example_files/autorun.py` mention the most important arguments. Here are the arguments with the relevant explanation:
+AnnA was made with customizability in mind. All the settings you might want to edit are arguments of the call of AnnA Class. Don't be frightened, many of those settings are rarely used and the default values should be good for almost anyone. Here are the arguments with the relevant explanation:
 
  **Most important arguments:**
  * `deckname` the deck containing the cards you want to review. If you don't supply this value or make a mistake, AnnA will ask you to type in the deckname, with autocompletion enabled (use `<TAB>`). Default is `None`.
@@ -93,7 +92,7 @@ AnnA was made with customizability in mind. All the settings you might want to e
  * `score_adjustment_factor` a tuple used to adjust the value of the reference order compared to how similar the cards are. Default is `(1, 5)`. For example: (1, 1.3) means that the algorithm will spread the similar cards farther apart.
  * `field_mapping` path of file that indicates which field to keep from which note type and in which order. Default value is `field_mappings.py`. If empty, only takes into account the first 2 fields.
  * `acronym_file` a python file containing dictionaries that themselves contain acronyms to extend in the text of cards. For example `CRC` can be extended to `CRC (colorectal cancer)`. (The parenthesis are automatically added.) Default is `"acronym_file.py"`. The matching is case sensitive only if the key contains uppercase characters. The ".py" file extension is not mandatory.
- * `acronym_list` a list of name of dictionaries found in the file from `acronym_file` to use to extend text. For example `["AI_machine_learning", "medical_terms"]` from `example_file/acronym_file.py`. Default to None.
+ * `acronym_list` a list of name of dictionaries to extract file supplied in `acronym_file`. Used to extend text, for instance `["AI_machine_learning", "medical_terms"]`. Default to None.
 
  **Other arguments:**
  * `minimum_due` stops AnnA if the number of due cards is inferior to this value. Default is `15`.
@@ -106,6 +105,7 @@ AnnA was made with customizability in mind. All the settings you might want to e
  * `tags_separator` separator between levels of tags. Default to `::`.
  * `fdeckname_template` name template of the filtered deck to create. Only available if task is set to "filter_review_cards". Default is `None`.
  * `show_banner` used to display a nice banner when instantiating the collection. Default is `True`.
+ * `skip_print_similar` default to `False`. Skip printing example of cards that are very similar or very different. This speeds up execution but can help figure out when something when wrong.
 
  **Vectorization arguments:**
  * `vectorizer` can nowadays only be set to "TFIDF", but kept for legacy reasons.
@@ -113,7 +113,7 @@ AnnA was made with customizability in mind. All the settings you might want to e
  * `TFIDF_tokenize` default to `True`. Enable sub word tokenization, for example turn `hypernatremia` to `hyp + er + natr + emia`. The current tokenizer is `bert-base-multilingual-cased` and should work on just about any languages. You cannot enable both `TFIDF_tokenize` and `TFIDF_stem` but should absolutely enable at least one.
  * `TFIDF_stem` default to `False`. Wether to enable stemming of words. Currently the PorterStemmer is used, and was made for English but can still be useful for some other languages. Keep in mind that this is the longest step when formatting text.
 
-AnnA has a number of other built-in methods you can run after instantiating the class. Note that methods beginning with a "_" are not supposed to be called by the user and are reserved for backend use. Here's a list of useful methods:
+AnnA includes built-in methods you can run after instantiating the class. Note that methods beginning with a "_" are not supposed to be called by the user and are reserved for backend use. Here's a list of useful methods:
 
 * `display_best_review_order` used as a debugging tool : only display order. Allows to check if the order seems correct without having to create a filtered deck.
 * `save_df` saves the dataframe containing the cards and all other infos needed by AnnA as a pickle file. Used mainly for debugging. Files will be saved to the folder `DF_backups`
