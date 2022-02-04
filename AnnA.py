@@ -897,47 +897,46 @@ retrying until above 80% or 2000 dimensions)", end= " ")
         std_dist = np.nanstd(self.df_dist[self.df_dist != 0])
         yel(f"Mean distance: {mean_dist}, std: {std_dist}\n")
 
-        if self.skip_print_similar:
-            return True
+        if self.skip_print_similar is False:
+            # showing to user which cards are similar and different,
+            # for troubleshooting
+            red("Printing the most semantically different cards:")
+            pd.set_option('display.max_colwidth', 80)
+            max_length = 100
+            maxs = np.where(self.df_dist.values == np.max(self.df_dist.values))
+            maxs = [x for x in zip(maxs[0], maxs[1])]
+            yel(f"* {str(df.loc[df.index[maxs[0][0]]].text)[0:max_length]}...")
+            yel(f"* {str(df.loc[df.index[maxs[0][1]]].text)[0:max_length]}...")
+            print("")
 
-        # showing to user which cards are similar and different,
-        # for troubleshooting
-        red("Printing the most semantically different cards:")
-        pd.set_option('display.max_colwidth', 80)
-        max_length = 100
-        maxs = np.where(self.df_dist.values == np.max(self.df_dist.values))
-        maxs = [x for x in zip(maxs[0], maxs[1])]
-        yel(f"* {str(df.loc[df.index[maxs[0][0]]].text)[0:max_length]}...")
-        yel(f"* {str(df.loc[df.index[maxs[0][1]]].text)[0:max_length]}...")
-        print("")
-
-        printed = False
-        lowest_values = [0]
-        start_time = time.time()
-        for i in range(9999):
-            if printed is True:
-                break
-            if time.time() - start_time >= 60:
-                red("Taking too long to find nonequal similar cards, skipping")
-                break
-            lowest_values.append(self.df_dist.values[self.df_dist.values > max(
-                        lowest_values)].min())
-            mins = np.where(self.df_dist.values == lowest_values[-1])
-            mins = [x for x in zip(mins[0], mins[1]) if x[0] != x[1]]
-            random.shuffle(mins)
-            for pair in mins: 
-                text_1 = str(df.loc[df.index[pair[0]]].text)
-                text_2 = str(df.loc[df.index[pair[1]]].text)
-                if text_1 != text_2:
-                    red("Example among most semantically similar cards:")
-                    yel(f"* {text_1[0:max_length]}...")
-                    yel(f"* {text_2[0:max_length]}...")
-                    printed = True
+            printed = False
+            lowest_values = [0]
+            start_time = time.time()
+            for i in range(9999):
+                if printed is True:
                     break
-        if printed is False:
-            red("Couldn't find lowest values to print!")
-        print("")
-        pd.reset_option('display.max_colwidth')
+                if time.time() - start_time >= 60:
+                    red("Taking too long to find nonequal similar cards, \
+skipping")
+                    break
+                lowest_values.append(self.df_dist.values[
+                    self.df_dist.values > max(lowest_values)].min())
+                mins = np.where(self.df_dist.values == lowest_values[-1])
+                mins = [x for x in zip(mins[0], mins[1]) if x[0] != x[1]]
+                random.shuffle(mins)
+                for pair in mins:
+                    text_1 = str(df.loc[df.index[pair[0]]].text)
+                    text_2 = str(df.loc[df.index[pair[1]]].text)
+                    if text_1 != text_2:
+                        red("Example among most semantically similar cards:")
+                        yel(f"* {text_1[0:max_length]}...")
+                        yel(f"* {text_2[0:max_length]}...")
+                        printed = True
+                        break
+            if printed is False:
+                red("Couldn't find lowest values to print!")
+            print("")
+            pd.reset_option('display.max_colwidth')
         return True
 
     def _compute_opti_rev_order(self):
