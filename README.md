@@ -83,31 +83,35 @@ Here are different ways of looking at what AnnA can do for you in a few words:
 ### Usage and arguments
 AnnA was made with customizability in mind. All the settings you might want to edit are arguments of the call of AnnA Class. Don't be frightened, many of those settings are rarely used and the default values should be good for almost anyone. The file `example_files/autorun.py` mention the most important arguments. Here are the arguments with the relevant explanation:
 
- * `show_banner` used to display a nice banner when instantiating the collection. Default is `True`.
+ **Most important arguments:**
  * `deckname` the deck containing the cards you want to review. If you don't supply this value or make a mistake, AnnA will ask you to type in the deckname, with autocompletion enabled (use `<TAB>`). Default is `None`.
  * `reference_order` either "relative_overdueness" or "lowest_interval". It is the reference used to sort the card before adjusting them using the similarity scores. Default is `"relative_overdueness"`. Keep in mind that my relative_overdueness is a reimplementation of the default overdueness of anki and is not absolutely exactly the same but should be a close approximation. If you find edge cases or have any idea, please open an issue.
+ * `task` can be "filter_review_cards", "bury_excess_learning_cards", "bury_excess_review_cards". Respectively to create a filtered deck with the cards, or bury only the similar learning cards (among other learning cards), or bury only the similar cards in review (among other review cards). Default is "`filter_review_cards`".
  * `target_deck_size` indicates the size of the filtered deck to create. Can be the number of cards (500), a proportion of due cards ("80%" or 0.80) or the word "all". Default is `"80%"`.
+ * `stopwords_lang` a list of languages used to construct a list of stop words (i.e. words that will be ignored, like "I" or "be" in English). Default is `["english", "french"]`.
  * `rated_last_X_days` indicates the number of passed days to take into account when fetching past anki sessions. If you rated 500 cards yesterday, then you don't want your today cards to be too close to what you viewed yesterday, so AnnA will find the 500 cards you reviewed yesterday, and all the cards you rated before that, up to the number of days in rated_last_X_days value. Default is `4` (meaning rated today, and in the 3 days before today). A value of 0 or None will disable fetching those cards. A value of 1 will only fetch cards that were rated today. Not that this will include cards rated in the last X days, no matter if they are reviews or learnings. you can change this using "highjack_rated_query" argument.
- * `minimum_due` stops AnnA if the number of due cards is inferior to this value. Default is `15`.
- * `highjack_due_query` bypasses the query used to fetch due cards in anki. Default is `None`.
- * `highjack_rated_query` bypasses the query used to fetch rated cards in anki. Default is `None`.
  * `score_adjustment_factor` a tuple used to adjust the value of the reference order compared to how similar the cards are. Default is `(1, 5)`. For example: (1, 1.3) means that the algorithm will spread the similar cards farther apart.
- * `log_level` can be any number between 0 and 2. Default is `2` to only print errors. 1 means print also useful information and >=2 means print everything. Messages are color coded so it might be better to leave it at 3 and just focus on colors.
- * `replace_greek` if True, all greek letters will be replaced with a spelled version. For example `\u03C3` becomes `sigma`. Default is `True`.
- * `keep_OCR` if True, the OCR text extracted using [the great AnkiOCR addon](https://github.com/cfculhane/AnkiOCR/) will be included in the card. Default is `True`.
  * `field_mapping` path of file that indicates which field to keep from which note type and in which order. Default value is `field_mappings.py`. If empty, only takes into account the first 2 fields.
  * `acronym_file` a python file containing dictionaries that themselves contain acronyms to extend in the text of cards. For example `CRC` can be extended to `CRC (colorectal cancer)`. (The parenthesis are automatically added.) Default is `"acronym_file.py"`. The matching is case sensitive only if the key contains uppercase characters. The ".py" file extension is not mandatory.
  * `acronym_list` a list of name of dictionaries found in the file from `acronym_file` to use to extend text. For example `["AI_machine_learning", "medical_terms"]` from `example_file/acronym_file.py`. Default to None.
+
+ **Other arguments:**
+ * `minimum_due` stops AnnA if the number of due cards is inferior to this value. Default is `15`.
+ * `highjack_due_query` bypasses the query used to fetch due cards in anki. Default is `None`.
+ * `highjack_rated_query` bypasses the query used to fetch rated cards in anki. Default is `None`.
+ * `log_level` can be any number between 0 and 2. Default is `2` to only print errors. 1 means print also useful information and >=2 means print everything. Messages are color coded so it might be better to leave it at 3 and just focus on colors.
+ * `replace_greek` if True, all greek letters will be replaced with a spelled version. For example `\u03C3` becomes `sigma`. Default is `True`.
+ * `keep_OCR` if True, the OCR text extracted using [the great AnkiOCR addon](https://github.com/cfculhane/AnkiOCR/) will be included in the card. Default is `True`.
  * `tags_to_ignore` a list of tags to ignore when appending tags to cards. Default is `None`, to ignore.
  * `tags_separator` separator between levels of tags. Default to `::`.
-
- * `task` can be "filter_review_cards", "bury_excess_learning_cards", "bury_excess_review_cards". Respectively to create a filtered deck with the cards, or bury only the similar learning cards (among other learning cards), or bury only the similar cards in review (among other review cards). Default is "`filter_review_cards`".
  * `fdeckname_template` name template of the filtered deck to create. Only available if task is set to "filter_review_cards". Default is `None`.
+ * `show_banner` used to display a nice banner when instantiating the collection. Default is `True`.
 
- * `stopwords_lang` a list of languages used to construct a list of stop words (i.e. words that will be ignored, like "I" or "be" in English). Default is `["english", "french"]`.
- * `vectorizer` can nowadays only be set to "TFIDF".
+ **Vectorization arguments:**
+ * `vectorizer` can nowadays only be set to "TFIDF", but kept for legacy reasons.
  * `TFIDF_dim` the number of dimension to keep using [SVD](https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.TruncatedSVD.html). Default is `100`, you cannot disable dimension reduction for TF_IDF because that would result in a sparse matrix. AnnA will automatically try a higher number of dimension if needed, up to 2000.
- * `TFIDF_stem` default to `True`. Wether to enable stemming of words. Currently the PorterStemmer is used, and was made for English but can still be useful for some other languages. Keep in mind that this is the longest step when formatting text.
+ * `TFIDF_tokenize` default to `True`. Enable sub word tokenization, for example turn `hypernatremia` to `hyp + er + natr + emia`. The current tokenizer is `bert-base-multilingual-cased` and should work on just about any languages. You cannot enable both `TFIDF_tokenize` and `TFIDF_stem` but should absolutely enable at least one.
+ * `TFIDF_stem` default to `False`. Wether to enable stemming of words. Currently the PorterStemmer is used, and was made for English but can still be useful for some other languages. Keep in mind that this is the longest step when formatting text.
 
 AnnA has a number of other built-in methods you can run after instantiating the class. Note that methods beginning with a "_" are not supposed to be called by the user and are reserved for backend use. Here's a list of useful methods:
 
