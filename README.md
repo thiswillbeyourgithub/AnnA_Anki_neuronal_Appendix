@@ -94,8 +94,6 @@ AnnA was made with customizability in mind. All the settings you might want to e
  * `field_mapping` path of file that indicates which field to keep from which note type and in which order. Default value is `field_mappings.py`. If empty, only takes into account the first 2 fields.
  * `acronym_file` a python file containing dictionaries that themselves contain acronyms to extend in the text of cards. For example `CRC` can be extended to `CRC (colorectal cancer)`. (The parenthesis are automatically added.) Default is `"acronym_file.py"`. The matching is case sensitive only if the key contains uppercase characters. The ".py" file extension is not mandatory.
  * `acronym_list` a list of name of dictionaries found in the file from `acronym_file` to use to extend text. For example `["AI_machine_learning", "medical_terms"]` from `example_file/acronym_file.py`. Default to None.
- * `tags_to_ignore` a list of tags to ignore when appending tags to cards. Default is `None`, to ignore.
- * `tags_separator` separator between levels of tags. Default to `::`.
 
  **Other arguments:**
  * `minimum_due` stops AnnA if the number of due cards is inferior to this value. Default is `15`.
