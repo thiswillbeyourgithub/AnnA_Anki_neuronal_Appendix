@@ -5,4 +5,4 @@ __pycache__/
 AMIMA_jupyter.py
 *.pickle
 logs.txt
-personnal_files/
+*perso*
