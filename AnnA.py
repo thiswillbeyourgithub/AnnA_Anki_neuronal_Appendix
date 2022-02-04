@@ -108,7 +108,7 @@ class AnnA:
                  acronym_list=None,
 
                  # others:
-                 minimum_due=30,
+                 minimum_due=15,
                  highjack_due_query=None,
                  highjack_rated_query=None,
                  log_level=2,  # 0, 1, 2
