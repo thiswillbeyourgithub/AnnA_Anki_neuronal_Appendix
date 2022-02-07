@@ -1271,7 +1271,7 @@ the data in `acronym_list`.")
             print("List of some acronyms still found:")
             if exclude_OCR_text:
                 print("(Excluding OCR text)")
-            pprint(random.choices(matched, k=min(5, len(matched))))
+            pprint(", ".join(random.choices(matched, k=min(5, len(matched)))))
         print("")
         return True
 
