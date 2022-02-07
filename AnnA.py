@@ -867,7 +867,7 @@ TFIDF"))
                     red(f"Explained variance ratio is only {evr}% (\
 retrying until above 80% or 2000 dimensions)", end= " ")
                     continue
-            yel(f"\nExplained variance ratio after SVD on Tf_idf: {evr}%")
+            yel(f"Explained variance ratio after SVD on Tf_idf: {evr}%")
 
             df["VEC"] = [x for x in t_red]
 
