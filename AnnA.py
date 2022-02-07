@@ -893,8 +893,8 @@ retrying until above 80% or 2000 dimensions)", end= " ")
         print("Computing mean distance...")
         # ignore the diagonal of the distance matrix to get a sensible mean
         # value then scale the matrix:
-        mean_dist = np.nanmean(self.df_dist[self.df_dist != 0])
-        std_dist = np.nanstd(self.df_dist[self.df_dist != 0])
+        mean_dist = round(np.nanmean(self.df_dist[self.df_dist != 0]), 2)
+        std_dist = round(np.nanstd(self.df_dist[self.df_dist != 0]), 2)
         yel(f"Mean distance: {mean_dist}, std: {std_dist}\n")
 
         if self.skip_print_similar is False:
