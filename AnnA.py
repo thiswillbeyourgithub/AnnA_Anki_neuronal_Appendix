@@ -1207,10 +1207,8 @@ AnnA:")
 
                     ratio = round(spread_queue / spread_else * 100 - 100, 1)
                     red("Improvement ratio:")
-                    if ratio > 0:
+                    if ratio >= 0:
                         sign = "+"
-                    elif ratio < 0:
-                        sign = "-"
                     else:
                         sign = ""
                     red(pyfiglet.figlet_format(f"{sign}{ratio}%"))
