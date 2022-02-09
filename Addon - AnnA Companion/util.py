@@ -69,7 +69,7 @@ def setting(key):
     defaults = {
         'apiKey': None,
         'apiLogPath': None,
-        'apiPollInterval': 25,
+        'apiPollInterval': 500,
         'apiVersion': 6,
         'webBacklog': 5,
         'webBindAddress': os.getenv('ANKICONNECT_BIND_ADDRESS', '127.0.0.1'),
