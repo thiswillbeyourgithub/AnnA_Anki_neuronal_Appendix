@@ -1197,12 +1197,12 @@ all cards were included in the new queue.")
                     spread_queue = np.mean(self.df_dist.loc[queue, queue].values.flatten())
                     spread_else = np.mean(self.df_dist.loc[woAnnA, woAnnA].values.flatten())
 
-                    red("Mean of distance in the new queue:")
+                    red("Mean of distance in the new queue:", end=" ")
                     yel(str(spread_queue))
                     red(f"Cards in common: {common} in a queue of \
 {len(queue)} cards.")
                     red("Mean of distance of the queue if you had not used \
-AnnA:")
+AnnA:", end=" ")
                     yel(str(spread_else))
 
                     ratio = round(spread_queue / spread_else * 100 - 100, 1)
