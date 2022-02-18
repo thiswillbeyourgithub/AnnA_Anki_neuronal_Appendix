@@ -852,7 +852,7 @@ TFIDF"))
                                                     t_vec.shape[1]))
                 t_red = svd.fit_transform(t_vec)
                 evr = round(sum(svd.explained_variance_ratio_) * 100, 1)
-                if evr >= 80:
+                if evr >= 70:
                     break
                 else:
                     if self.TFIDF_dim >= 2000:
@@ -865,7 +865,7 @@ TFIDF"))
                         self.TFIDF_dim += int(self.TFIDF_dim * 0.5)
                     self.TFIDF_dim = min(self.TFIDF_dim, 2000)
                     red(f"Explained variance ratio is only {evr}% (\
-retrying until above 80% or 2000 dimensions)", end= " ")
+retrying until above 70% or 2000 dimensions)", end= " ")
                     continue
             yel(f"Explained variance ratio after SVD on Tf_idf: {evr}%")
 
