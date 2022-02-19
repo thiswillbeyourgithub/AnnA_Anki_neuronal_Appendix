@@ -56,6 +56,7 @@ Here are different ways of looking at what AnnA can do for you in a few words:
 * **What version of anki does this run on?** I've been using AnnA from anki 2.1.44 and am currently on 2.1.49 Compatibility relies heavily on anki-connect. Please tell me if you run into issues.
 
 * **If I create a filtered deck using AnnA, how can I rebuild it?** You can't rebuilt it or empty it through anki directly as it would leave you with anki's order and not AnnA's. You have to delete the filtered deck then run the script. Hence, I suggest creating large filtered decks in advance. 
+* **I don't think the reviews I do on AnnA's filtered decks are saved, wtf?** It might be because you're using multiple device and are deleting the filtered deck on one of the device without syncing first.
 * **What is subword TF_IDF?** Short for "subword term frequency–inverse document frequency". It's a clever way to split words into subparts then count the parts to figure out which cards are related.
 * **Does it work with images?** Not currently but sBERT can be used with CLIP models so I could pretty simply implement this. If you think you would find it useful I can implement it :).
 * **What are the supported languages using TF_IDF?** TF_IDF is language agnostic, but the language model used to split the words was trained on the 102 largest wikipedia corpus. If your languages is very weird and non unicode or non standard in some ways you might have issues, don't hesitate to open an issue as I would gladly take a look.
