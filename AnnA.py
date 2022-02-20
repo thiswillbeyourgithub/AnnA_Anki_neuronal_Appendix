@@ -849,7 +849,7 @@ TFIDF"))
             while True:
                 yel(f"\nReducing dimensions to {self.TFIDF_dim} using SVD...", end= " ")
                 svd = TruncatedSVD(n_components=min(self.TFIDF_dim,
-                                                    t_vec.shape[1]))
+                                                    t_vec.shape[1] - 1))
                 t_red = svd.fit_transform(t_vec)
                 evr = round(sum(svd.explained_variance_ratio_) * 100, 1)
                 if evr >= 70:
