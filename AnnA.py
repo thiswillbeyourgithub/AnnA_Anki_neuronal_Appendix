@@ -849,10 +849,10 @@ TFIDF"))
             while True:
                 yel(f"\nReducing dimensions to {self.TFIDF_dim} using SVD...", end= " ")
                 svd = TruncatedSVD(n_components=min(self.TFIDF_dim,
-                                                    t_vec.shape[1]))
+                                                    t_vec.shape[1] - 1))
                 t_red = svd.fit_transform(t_vec)
                 evr = round(sum(svd.explained_variance_ratio_) * 100, 1)
-                if evr >= 80:
+                if evr >= 70:
                     break
                 else:
                     if self.TFIDF_dim >= 2000:
@@ -865,9 +865,9 @@ TFIDF"))
                         self.TFIDF_dim += int(self.TFIDF_dim * 0.5)
                     self.TFIDF_dim = min(self.TFIDF_dim, 2000)
                     red(f"Explained variance ratio is only {evr}% (\
-retrying until above 80% or 2000 dimensions)", end= " ")
+retrying until above 70% or 2000 dimensions)", end= " ")
                     continue
-            yel(f"\nExplained variance ratio after SVD on Tf_idf: {evr}%")
+            yel(f"Explained variance ratio after SVD on Tf_idf: {evr}%")
 
             df["VEC"] = [x for x in t_red]
 
@@ -893,8 +893,8 @@ retrying until above 80% or 2000 dimensions)", end= " ")
         print("Computing mean distance...")
         # ignore the diagonal of the distance matrix to get a sensible mean
         # value then scale the matrix:
-        mean_dist = np.nanmean(self.df_dist[self.df_dist != 0])
-        std_dist = np.nanstd(self.df_dist[self.df_dist != 0])
+        mean_dist = round(np.nanmean(self.df_dist[self.df_dist != 0]), 2)
+        std_dist = round(np.nanstd(self.df_dist[self.df_dist != 0]), 2)
         yel(f"Mean distance: {mean_dist}, std: {std_dist}\n")
 
         if self.skip_print_similar is False:
@@ -1197,20 +1197,18 @@ all cards were included in the new queue.")
                     spread_queue = np.mean(self.df_dist.loc[queue, queue].values.flatten())
                     spread_else = np.mean(self.df_dist.loc[woAnnA, woAnnA].values.flatten())
 
-                    red("Mean of distance in the new queue:")
+                    red("Mean of distance in the new queue:", end=" ")
                     yel(str(spread_queue))
                     red(f"Cards in common: {common} in a queue of \
 {len(queue)} cards.")
                     red("Mean of distance of the queue if you had not used \
-AnnA:")
+AnnA:", end=" ")
                     yel(str(spread_else))
 
                     ratio = round(spread_queue / spread_else * 100 - 100, 1)
                     red("Improvement ratio:")
-                    if ratio > 0:
+                    if ratio >= 0:
                         sign = "+"
-                    elif ratio < 0:
-                        sign = "-"
                     else:
                         sign = ""
                     red(pyfiglet.figlet_format(f"{sign}{ratio}%"))
@@ -1271,7 +1269,7 @@ the data in `acronym_list`.")
             print("List of some acronyms still found:")
             if exclude_OCR_text:
                 print("(Excluding OCR text)")
-            pprint(random.choices(matched, k=min(5, len(matched))))
+            pprint(", ".join(random.choices(matched, k=min(5, len(matched)))))
         print("")
         return True
 
