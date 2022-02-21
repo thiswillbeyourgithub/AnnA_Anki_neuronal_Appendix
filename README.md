@@ -98,8 +98,9 @@ AnnA was made with customizability in mind. All the settings you might want to e
 
  **Other arguments:**
  * `minimum_due` stops AnnA if the number of due cards is inferior to this value. Default is `15`.
- * `highjack_due_query` bypasses the query used to fetch due cards in anki. Default is `None`.
- * `highjack_rated_query` bypasses the query used to fetch rated cards in anki. Default is `None`.
+ * `highjack_due_query` bypasses the browser query used to find the list of due cards. You can set it for example to `deck:"my_deck" is:due -rated:14 flag:1`. Default is `None`. **Keep in mind that, when highjacking queries, you have to specify the deck otherwise AnnA will compare your whole collection.**
+ * `highjack_rated_query` same idea as above, bypasses the query used to fetch rated cards in anki. Related to `highjack_due_query` although you can set only one of them. Default is `None`.
+
  * `log_level` can be any number between 0 and 2. Default is `2` to only print errors. 1 means print also useful information and >=2 means print everything. Messages are color coded so it might be better to leave it at 3 and just focus on colors.
  * `replace_greek` if True, all greek letters will be replaced with a spelled version. For example `\u03C3` becomes `sigma`. Default is `True`.
  * `keep_OCR` if True, the OCR text extracted using [the great AnkiOCR addon](https://github.com/cfculhane/AnkiOCR/) will be included in the card. Default is `True`.
