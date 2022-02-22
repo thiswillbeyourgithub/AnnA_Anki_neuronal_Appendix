@@ -111,6 +111,7 @@ class AnnA:
                  minimum_due=15,
                  highjack_due_query=None,
                  highjack_rated_query=None,
+                 low_power_mode=False,
                  log_level=2,  # 0, 1, 2
                  replace_greek=True,
                  keep_OCR=True,
@@ -162,6 +163,7 @@ class AnnA:
         self.acronym_list = acronym_list
         self.tags_to_ignore = tags_to_ignore
         self.tags_separator = tags_separator
+        self.low_power_mode = low_power_mode
         self.vectorizer = vectorizer
         self.stopwords_lang = stopwords_lang
         self.TFIDF_dim = TFIDF_dim
@@ -185,6 +187,10 @@ class AnnA:
         if task != "filter_review_cards" and self.fdeckname_template is not None:
             red("Ignoring argument 'fdeckname_template' because 'task' is not \
 set to 'filter_review_cards'.")
+        if low_power_mode:
+            if TFIDF_dim > 50:
+                red(f"Low power mode is activated, it is usually recommended \
+to set low values of TFIDF_dim (less than 50, currently at {TFIDF_dim}")
 
         if TFIDF_tokenize:
             # from : https://huggingface.co/bert-base-multilingual-cased/
@@ -832,11 +838,15 @@ adjust formating issues:")
         """
         df = self.df
 
+        if self.low_power_mode is True:
+            ngram_val = (1, 1)
+        else:
+            ngram_val = (1, 5)
         vectorizer = TfidfVectorizer(strip_accents="ascii",
                                      lowercase=True,
                                      tokenizer=self.tokenize,
                                      stop_words=None,
-                                     ngram_range=(1, 5),
+                                     ngram_range=ngram_val,
                                      max_features=10_000,
                                      norm="l2")
         # stop words have already been removed
