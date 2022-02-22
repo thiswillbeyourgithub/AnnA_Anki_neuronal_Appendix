@@ -190,7 +190,7 @@ set to 'filter_review_cards'.")
         if low_power_mode:
             if TFIDF_dim > 50:
                 red(f"Low power mode is activated, it is usually recommended \
-to set low values of TFIDF_dim (less than 50, currently at {TFIDF_dim}")
+to set low values of TFIDF_dim (currently set at {TFIDF_dim} dimensions)")
 
         if TFIDF_tokenize:
             # from : https://huggingface.co/bert-base-multilingual-cased/
