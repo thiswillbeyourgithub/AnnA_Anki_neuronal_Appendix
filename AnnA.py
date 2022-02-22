@@ -173,7 +173,7 @@ class AnnA:
         self.fdeckname_template = fdeckname_template
         self.skip_print_similar = skip_print_similar
 
-        # args sanity checks
+        # args sanity checks and initialization
         if isinstance(self.target_deck_size, int):
             self.target_deck_size = str(self.target_deck_size)
         assert TFIDF_stem + TFIDF_tokenize != 2
