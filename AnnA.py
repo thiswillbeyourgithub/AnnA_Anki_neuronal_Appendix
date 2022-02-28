@@ -721,7 +721,7 @@ less than threshold ({self.minimum_due}).\nStopping.")
                         order = df.loc[index, "fields"][f.lower()]["order"]
                         if order == 0:
                             fields_to_keep[0] = f
-                        if order == 1:
+                        elif order == 1:
                             fields_to_keep[1] = f
                     with lock:
                         to_notify.append(f"No matching notetype found for \
