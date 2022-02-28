@@ -725,7 +725,7 @@ less than threshold ({self.minimum_due}).\nStopping.")
                             fields_to_keep[1] = f
                     with lock:
                         to_notify.append(f"No matching notetype found for \
-{card_model}. Chose first 2 fields: {', '.join(fields_to_keep)}")
+{card_model}. Keeping the first 2 fields: {', '.join(fields_to_keep)}")
 
                 comb_text = ""
                 field_counter = {}
