@@ -720,9 +720,9 @@ less than threshold ({self.minimum_due}).\nStopping.")
 '{card_model}'. Selecting '{target_model[0]}'")
 
                 # concatenates the corresponding fields into one string:
+                field_list = list(df.loc[index, "fields"])
                 if fields_to_keep == "take_first_fields":
                     fields_to_keep = ["", ""]
-                    field_list = list(df.loc[index, "fields"])
                     for f in field_list:
                         order = df.loc[index, "fields"][f.lower()]["order"]
                         if order == 0:
@@ -732,6 +732,9 @@ less than threshold ({self.minimum_due}).\nStopping.")
                     with lock:
                         to_notify.append(f"No matching notetype found for \
 {card_model}. Keeping the first 2 fields: {', '.join(fields_to_keep)}")
+                elif fields_to_keep == "take_all_fields":
+                    fields_to_keep = sorted(field_list,
+                                            key=lambda x: int(df.loc[index, "fields"][x.lower()]["order"]))
 
                 comb_text = ""
                 field_counter = {}

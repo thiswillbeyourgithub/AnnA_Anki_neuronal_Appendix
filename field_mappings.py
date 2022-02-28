@@ -6,6 +6,9 @@
 # * If you add a field multiple times, it will weight more than the other fields
 # * The tags of the card is appended to the text anyway
 # * Matching for note type or field name is case insensitive
+# * To take all fields of a note type into account you can use the following:
+#      "example_card": ["take_all_fields"]
+
 
 field_dic = {
              "clozolkor": ["Header", "Header",

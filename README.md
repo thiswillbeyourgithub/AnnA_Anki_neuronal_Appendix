@@ -94,7 +94,7 @@ AnnA was made with customizability in mind. All the settings you might want to e
  * `stopwords_lang` a list of languages used to construct a list of stop words (i.e. words that will be ignored, like "I" or "be" in English). Default is `["english", "french"]`.
  * `rated_last_X_days` indicates the number of passed days to take into account when fetching past anki sessions. If you rated 500 cards yesterday, then you don't want your today cards to be too close to what you viewed yesterday, so AnnA will find the 500 cards you reviewed yesterday, and all the cards you rated before that, up to the number of days in rated_last_X_days value. Default is `4` (meaning rated today, and in the 3 days before today). A value of 0 or None will disable fetching those cards. A value of 1 will only fetch cards that were rated today. Not that this will include cards rated in the last X days, no matter if they are reviews or learnings. you can change this using "highjack_rated_query" argument.
  * `score_adjustment_factor` a tuple used to adjust the value of the reference order compared to how similar the cards are. Default is `(1, 5)`. For example: (1, 1.3) means that the algorithm will spread the similar cards farther apart.
- * `field_mapping` path of file that indicates which field to keep from which note type and in which order. Default value is `field_mappings.py`. If empty, only takes into account the first 2 fields.
+ * `field_mapping` path of file that indicates which field to keep from which note type and in which order. Default value is `field_mappings.py`. If empty or if no matching notetype was found, AnnA will only take into account the first 2 fields. If you assign a notetype to `["take_all_fields]`, AnnA will grab all fields of the notetype in the same order as they appear in Anki's interface.
  * `acronym_file` a python file containing dictionaries that themselves contain acronyms to extend in the text of cards. For example `CRC` can be extended to `CRC (colorectal cancer)`. (The parenthesis are automatically added.) Default is `"acronym_file.py"`. The matching is case sensitive only if the key contains uppercase characters. The ".py" file extension is not mandatory.
  * `acronym_list` a list of name of dictionaries to extract file supplied in `acronym_file`. Used to extend text, for instance `["AI_machine_learning", "medical_terms"]`. Default to None.
 
@@ -126,7 +126,6 @@ AnnA includes built-in methods you can run after instantiating the class. Note t
 
 ## TODO
 *More or less by order of urgency*
-* add a "all" feature to field_mapping
 * warn LW
 
 * relative overdueness v2 : either square or take square root of interval
