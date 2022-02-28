@@ -191,6 +191,10 @@ set to 'filter_review_cards'.")
             if TFIDF_dim > 50:
                 red(f"Low power mode is activated, it is usually recommended \
 to set low values of TFIDF_dim (currently set at {TFIDF_dim} dimensions)")
+            if not self.skip_print_similar:
+                self.skip_print_similar = True
+                red("Enabling 'skip_print_similar' because 'low_power_mode' \
+is set to True")
 
         if TFIDF_tokenize:
             # from : https://huggingface.co/bert-base-multilingual-cased/
@@ -316,7 +320,10 @@ values. {e}")
             if self.not_enough_cards is True:
                 return
             self._format_card()
-            self._print_acronyms()
+            if self.low_power_mode:
+                red("Not printing acronyms because low_power_mode is set to 'True'")
+            else:
+                self._print_acronyms()
             self._compute_card_vectors()
             self._compute_distance_matrix()
             self._compute_opti_rev_order()
@@ -327,7 +334,10 @@ values. {e}")
             if self.not_enough_cards is True:
                 return
             self._format_card()
-            self._print_acronyms()
+            if self.low_power_mode:
+                red("Not printing acronyms because low_power_mode is set to 'True'")
+            else:
+                self._print_acronyms()
             self._compute_card_vectors()
             self._compute_distance_matrix()
             self._compute_opti_rev_order()
