@@ -1086,7 +1086,7 @@ skipping")
 
         # remove potential siblings of indTODO, only if the intent is not
         # to study all the backlog over a few days:
-        if (target_deck_size not in ["all", "100%", 1, "1"]) and (len(indTODO) >= 500):
+        if (target_deck_size not in ["all", "100%", "1"]) and (len(indTODO) >= 500):
             noteCard = {}
             for card, note in {df.loc[x].name: df.loc[x, "note"]
                                for x in indTODO}.items():
