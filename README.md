@@ -90,7 +90,7 @@ AnnA was made with customizability in mind. All the settings you might want to e
  * `deckname` the deck containing the cards you want to review. If you don't supply this value or make a mistake, AnnA will ask you to type in the deckname, with autocompletion enabled (use `<TAB>`). Default is `None`.
  * `reference_order` either "relative_overdueness" or "lowest_interval". It is the reference used to sort the card before adjusting them using the similarity scores. Default is `"relative_overdueness"`. Keep in mind that my relative_overdueness is a reimplementation of the default overdueness of anki and is not absolutely exactly the same but should be a close approximation. If you find edge cases or have any idea, please open an issue.
  * `task` can be "filter_review_cards", "bury_excess_learning_cards", "bury_excess_review_cards". Respectively to create a filtered deck with the cards, or bury only the similar learning cards (among other learning cards), or bury only the similar cards in review (among other review cards). Default is "`filter_review_cards`".
- * `target_deck_size` indicates the size of the filtered deck to create. Can be the number of cards (500), a proportion of due cards ("80%" or 0.80) or the word "all". Default is `"80%"`.
+ * `target_deck_size` indicates the size of the filtered deck to create. Can be the number of due cards ("100"?), a proportion of due cards ("80%" or "0.80"), the word "all" or "deck_config" to use the deck's settings for max review. Default is `deck_config`.
  * `stopwords_lang` a list of languages used to construct a list of stop words (i.e. words that will be ignored, like "I" or "be" in English). Default is `["english", "french"]`.
  * `rated_last_X_days` indicates the number of passed days to take into account when fetching past anki sessions. If you rated 500 cards yesterday, then you don't want your today cards to be too close to what you viewed yesterday, so AnnA will find the 500 cards you reviewed yesterday, and all the cards you rated before that, up to the number of days in rated_last_X_days value. Default is `4` (meaning rated today, and in the 3 days before today). A value of 0 or None will disable fetching those cards. A value of 1 will only fetch cards that were rated today. Not that this will include cards rated in the last X days, no matter if they are reviews or learnings. you can change this using "highjack_rated_query" argument.
  * `score_adjustment_factor` a tuple used to adjust the value of the reference order compared to how similar the cards are. Default is `(1, 5)`. For example: (1, 1.3) means that the algorithm will spread the similar cards farther apart.
@@ -129,7 +129,6 @@ AnnA includes built-in methods you can run after instantiating the class. Note t
 * add a "all" feature to field_mapping
 * warn LW
 
-* add a "deck_settings" mode that fetches the number of max reviews per day and use it as "target_deck_size", make it the default
 * relative overdueness v2 : either square or take square root of interval
 * create a gui : mainly by clicking on the gear of deck settings : AnnA > run AnnA with preset > each preset / run all active presets / About / configuration > acronym editor | field mappings | presets
 * try to package AnnA as a standalone package with all libraries.

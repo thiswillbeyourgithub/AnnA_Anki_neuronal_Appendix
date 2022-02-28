@@ -99,7 +99,7 @@ class AnnA:
                  deckname=None,
                  reference_order="relative_overdueness",  # any of "lowest_interval", "relative overdueness", "order_added"
                  task="filter_review_cards", # any of "filter_review_cards", "bury_excess_review_cards", "bury_excess_learning_cards"
-                 target_deck_size="80%",  # format: 80%, 0.8, "all"
+                 target_deck_size="deck_config",  # format: 80%, 0.8, "all", "deck_config"
                  stopwords_lang=["english", "french"],
                  rated_last_X_days=4,
                  score_adjustment_factor=(1, 2),
@@ -300,6 +300,10 @@ values. {e}")
         yel(f"Selected deck: {self.deckname}\n")
         self.deck_config = self._call_anki(action="getDeckConfig",
                                              deck=self.deckname)
+        if self.target_deck_size == "deck_config":
+            self.target_deck_size = str(self.deck_config["rev"]["perDay"])
+            yel(f"Set 'target_deck_size' to deck's value: {self.target_deck_size}")
+
         if task in ["bury_excess_learning_cards",
                       "bury_excess_review_cards"]:
             # bypasses most of the code to bury learning cards
