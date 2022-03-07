@@ -66,14 +66,20 @@ def coloured_log(color_asked):
 
     if color_asked == "white":
         def printer(string, **args):
+            if isinstance(string, list):
+                string = ",".join(string)
             log.info(string)
             tqdm.write(col_rst + string + col_rst, **args)
     elif color_asked == "yellow":
         def printer(string, **args):
+            if isinstance(string, list):
+                string = ",".join(string)
             log.warn(string)
             tqdm.write(col_yel + string + col_rst, **args)
     elif color_asked == "red":
         def printer(string, **args):
+            if isinstance(string, list):
+                string = ",".join(string)
             log.error(string)
             tqdm.write(col_red + string + col_rst, **args)
     return printer
@@ -99,7 +105,7 @@ class AnnA:
                  deckname=None,
                  reference_order="relative_overdueness",  # any of "lowest_interval", "relative overdueness", "order_added"
                  task="filter_review_cards", # any of "filter_review_cards", "bury_excess_review_cards", "bury_excess_learning_cards"
-                 target_deck_size="80%",  # format: 80%, 0.8, "all"
+                 target_deck_size="deck_config",  # format: 80%, 0.8, "all", "deck_config"
                  stopwords_lang=["english", "french"],
                  rated_last_X_days=4,
                  score_adjustment_factor=(1, 2),
@@ -111,6 +117,7 @@ class AnnA:
                  minimum_due=15,
                  highjack_due_query=None,
                  highjack_rated_query=None,
+                 low_power_mode=False,
                  log_level=2,  # 0, 1, 2
                  replace_greek=True,
                  keep_OCR=True,
@@ -162,6 +169,7 @@ class AnnA:
         self.acronym_list = acronym_list
         self.tags_to_ignore = tags_to_ignore
         self.tags_separator = tags_separator
+        self.low_power_mode = low_power_mode
         self.vectorizer = vectorizer
         self.stopwords_lang = stopwords_lang
         self.TFIDF_dim = TFIDF_dim
@@ -171,7 +179,7 @@ class AnnA:
         self.fdeckname_template = fdeckname_template
         self.skip_print_similar = skip_print_similar
 
-        # args sanity checks
+        # args sanity checks and initialization
         if isinstance(self.target_deck_size, int):
             self.target_deck_size = str(self.target_deck_size)
         assert TFIDF_stem + TFIDF_tokenize != 2
@@ -185,6 +193,14 @@ class AnnA:
         if task != "filter_review_cards" and self.fdeckname_template is not None:
             red("Ignoring argument 'fdeckname_template' because 'task' is not \
 set to 'filter_review_cards'.")
+        if low_power_mode:
+            if TFIDF_dim > 50:
+                red(f"Low power mode is activated, it is usually recommended \
+to set low values of TFIDF_dim (currently set at {TFIDF_dim} dimensions)")
+            if not self.skip_print_similar:
+                self.skip_print_similar = True
+                red("Enabling 'skip_print_similar' because 'low_power_mode' \
+is set to True")
 
         if TFIDF_tokenize:
             # from : https://huggingface.co/bert-base-multilingual-cased/
@@ -294,6 +310,10 @@ values. {e}")
         yel(f"Selected deck: {self.deckname}\n")
         self.deck_config = self._call_anki(action="getDeckConfig",
                                              deck=self.deckname)
+        if self.target_deck_size == "deck_config":
+            self.target_deck_size = str(self.deck_config["rev"]["perDay"])
+            yel(f"Set 'target_deck_size' to deck's value: {self.target_deck_size}")
+
         if task in ["bury_excess_learning_cards",
                       "bury_excess_review_cards"]:
             # bypasses most of the code to bury learning cards
@@ -306,7 +326,10 @@ values. {e}")
             if self.not_enough_cards is True:
                 return
             self._format_card()
-            self._print_acronyms()
+            if self.low_power_mode:
+                red("Not printing acronyms because low_power_mode is set to 'True'")
+            else:
+                self._print_acronyms()
             self._compute_card_vectors()
             self._compute_distance_matrix()
             self._compute_opti_rev_order()
@@ -317,7 +340,10 @@ values. {e}")
             if self.not_enough_cards is True:
                 return
             self._format_card()
-            self._print_acronyms()
+            if self.low_power_mode:
+                red("Not printing acronyms because low_power_mode is set to 'True'")
+            else:
+                self._print_acronyms()
             self._compute_card_vectors()
             self._compute_distance_matrix()
             self._compute_opti_rev_order()
@@ -694,18 +720,21 @@ less than threshold ({self.minimum_due}).\nStopping.")
 '{card_model}'. Selecting '{target_model[0]}'")
 
                 # concatenates the corresponding fields into one string:
+                field_list = list(df.loc[index, "fields"])
                 if fields_to_keep == "take_first_fields":
                     fields_to_keep = ["", ""]
-                    field_list = list(df.loc[index, "fields"])
                     for f in field_list:
                         order = df.loc[index, "fields"][f.lower()]["order"]
                         if order == 0:
                             fields_to_keep[0] = f
-                        if order == 1:
+                        elif order == 1:
                             fields_to_keep[1] = f
                     with lock:
                         to_notify.append(f"No matching notetype found for \
-{card_model}. Chose first 2 fields: {', '.join(fields_to_keep)}")
+{card_model}. Keeping the first 2 fields: {', '.join(fields_to_keep)}")
+                elif fields_to_keep == "take_all_fields":
+                    fields_to_keep = sorted(field_list,
+                                            key=lambda x: int(df.loc[index, "fields"][x.lower()]["order"]))
 
                 comb_text = ""
                 field_counter = {}
@@ -832,11 +861,15 @@ adjust formating issues:")
         """
         df = self.df
 
+        if self.low_power_mode is True:
+            ngram_val = (1, 1)
+        else:
+            ngram_val = (1, 5)
         vectorizer = TfidfVectorizer(strip_accents="ascii",
                                      lowercase=True,
                                      tokenizer=self.tokenize,
                                      stop_words=None,
-                                     ngram_range=(1, 5),
+                                     ngram_range=ngram_val,
                                      max_features=10_000,
                                      norm="l2")
         # stop words have already been removed
@@ -1053,7 +1086,7 @@ skipping")
 
         # remove potential siblings of indTODO, only if the intent is not
         # to study all the backlog over a few days:
-        if (target_deck_size not in ["all", "100%", 1, "1"]) and (len(indTODO) >= 500):
+        if (target_deck_size not in ["all", "100%", "1"]) and (len(indTODO) >= 500):
             noteCard = {}
             for card, note in {df.loc[x].name: df.loc[x, "note"]
                                for x in indTODO}.items():

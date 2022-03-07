@@ -25,7 +25,7 @@ if __name__=='__main__':
 
     AnnA(deckname="Some_OtherDeck::subdeck#1",
             task="bury_excess_learning_cards",  # don't create a filtered deck and just bury the cards not to review today ; only takes into account learning cards
-            target_deck_size="80%",
+            target_deck_size="deck_settings",
             rated_last_X_days=3,
             acronym_list=["medical_terms", "AI_machine_learning"],
             reference_order="lowest_interval",
