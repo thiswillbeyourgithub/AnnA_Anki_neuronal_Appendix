@@ -127,10 +127,11 @@ AnnA includes built-in methods you can run after instantiating the class. Note t
 ## TODO
 *More or less by order of urgency*
 * warn LW
+* use ankipandas to fetch the complete deck, use TFIDF.fit() on it, then only use .transform() instead of .fit_transform() on only the due and rated cards
 
-* relative overdueness v2 : either square or take square root of interval
+* relative overdueness v2 : either square or take square root of interval, or something like that
 * create a gui : mainly by clicking on the gear of deck settings : AnnA > run AnnA with preset > each preset / run all active presets / About / configuration > acronym editor | field mappings | presets
-* try to package AnnA as a standalone package with all libraries.
+* try to package AnnA as a standalone package
 * ask Anking to review it
 
 * implement task "optimize_filtered_deck" to optimize the order of an already existing filtered deck without burying anything
