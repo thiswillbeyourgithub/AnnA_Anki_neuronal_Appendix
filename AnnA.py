@@ -642,7 +642,7 @@ less than threshold ({self.minimum_due}).\nStopping.")
         text = re.sub(r"\[\d*\]", "", text)  # wiki style citation
 
         text = re.sub("<.*?>", "", text)  # remaining html tags
-        text = re.sub("&gt;|&lt;|<|>", "", text)
+        text = text.replace("&gt", "").replace("&lt", "").replace("<", "").replace(">", "").replace("'", " ")  # misc + french apostrophe
 
         # replace greek letter
         if self.replace_greek:
@@ -661,7 +661,7 @@ less than threshold ({self.minimum_due}).\nStopping.")
 
         # misc
         text = " ".join(text.split())  # multiple spaces
-        text = re.sub(r"\b[a-zA-Z]'(\w{2,})", r"\1", text)  # french apostrophe etc
+        text = re.sub(r"\b[a-zA-Z]'(\w{2,})", r"\1", text)  # misc etc
 
         # optionnal stemmer
         if self.vectorizer == "TFIDF":
