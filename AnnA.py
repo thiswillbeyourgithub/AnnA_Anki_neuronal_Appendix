@@ -569,7 +569,7 @@ less than threshold ({self.minimum_due}).\nStopping.")
     def _regexp_acronym_replacer(self, string, compiled, new_w):
         """
         this function is needed to replace acronym containing match groups
-        For example: replacing 'IL(\\d+)' by "Interleukin 2"
+        For example: replacing 'IL2' by "IL2 Interleukin 2"
         """
         if len(string.groups()):
             for i in range(len(string.groups())):

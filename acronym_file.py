@@ -13,7 +13,7 @@
 #    appearance, for example :
 #            "HIV": "human immuno defficiency virus AIDS"
 #            "AIDS": "acquired immuno defficiency syndrome"
-#    will turns 'HIV' into 'HIV human immunon defficiency virus AIDS acquired
+#    will turns 'HIV' into 'HIV human immuno defficiency virus AIDS acquired
 #    immuno defficiency syndrome'. This can be good or bad depending on your
 #    usage
 
