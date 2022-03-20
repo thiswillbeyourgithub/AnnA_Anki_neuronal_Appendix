@@ -745,7 +745,7 @@ less than threshold ({self.minimum_due}).\nStopping.")
                         field_counter[f] = 1
                     try:
                         next_field = re.sub(stopw_compiled,
-                                            "",
+                                            " ",
                                 df.loc[index, "fields"][f.lower()]["value"].strip())
                         if next_field != "":
                             comb_text = comb_text + next_field + ": "
