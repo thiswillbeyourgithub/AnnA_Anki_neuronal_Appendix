@@ -10,3 +10,6 @@ tqdm == 4.62.3
 
 nltk == 3.5
 tokenizers == 0.10.3
+
+# optional:
+ankipandas==0.3.10

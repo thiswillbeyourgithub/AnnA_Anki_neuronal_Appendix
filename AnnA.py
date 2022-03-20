@@ -132,6 +132,9 @@ class AnnA:
                  TFIDF_dim=100,
                  TFIDF_tokenize=True,
                  TFIDF_stem=False,
+
+                 whole_deck_analysis=False,
+                 profile_name=None,
                  ):
 
         if show_banner:
@@ -178,6 +181,8 @@ class AnnA:
         self.task = task
         self.fdeckname_template = fdeckname_template
         self.skip_print_similar = skip_print_similar
+        self.whole_deck_analysis = whole_deck_analysis
+        self.profile_name = profile_name
 
         # args sanity checks and initialization
         if isinstance(self.target_deck_size, int):
@@ -865,17 +870,55 @@ adjust formating issues:")
             ngram_val = (1, 1)
         else:
             ngram_val = (1, 5)
+
         vectorizer = TfidfVectorizer(strip_accents="ascii",
                                      lowercase=True,
                                      tokenizer=self.tokenize,
-                                     stop_words=None,
+                                     stop_words=None, # note that stop words
+                                     # have already been removed
                                      ngram_range=ngram_val,
                                      max_features=10_000,
                                      norm="l2")
-        # stop words have already been removed
-        t_vec = vectorizer.fit_transform(tqdm(df["text"],
-                                         desc="Vectorizing text using \
-TFIDF"))
+
+        if self.whole_deck_analysis:
+            try:
+                from ankipandas import Collection, find_db
+                from shutil import copy
+
+                yel(f"Copying anki database to local cache file")
+                original_db = find_db(user=self.profile_name)
+                Path.mkdir(Path("cache"), exist_ok=True)
+                temp_db = copy(original_db, f"cache/{self.deckname.replace(' ', '_')}")
+                col = Collection(path=temp_db)
+                cards = col.cards.merge_notes()
+                cards = cards[ cards["cdeck"] == deckname.replace("::", "\x1f") ] # restrict by deck
+                cards[ cards["cqueue"] != "suspended"] # remove suspended cards
+                cards = cards[ ["nflds", "ntags"] ]
+                if len(cards.index):
+                    raise Exception("Copied database of length 0")
+
+                corpus = []
+                for ind in tqdm(cards.index, desc=f"Gathering {self.deckname} text content"):
+                    corpus.append(" ".join(cards.loc[ind, "nflds"]))
+
+                stopw_compiled = re.compile("\b" + "\b|\b".join(self.stops) + "\b", flags=re.MULTILINE | re.IGNORECASE | re.DOTALL)
+                for c, i in enumerate(corpus):
+                    corpus[i] = self._text_formatter(re.sub(sopw_compiled, " ", c)
+
+                vectorizer.fit(tqdm(vocabulary, desc="Vectorizing whole deck"))
+                t_vec = vectorizer.transform(tqdm(df["text"], desc="Vectorizing \
+dues cards using TFIDF"))
+
+                use_fallback = False
+            except Exception as e:
+                red(f"Exception : {e}")
+                use_fallback = True
+        else:
+            use_fallback = False
+
+        if use_fallback:
+            t_vec = vectorizer.fit_transform(tqdm(df["text"],
+                                             desc="Vectorizing using TFIDF"))
         if self.TFIDF_dim is None:
             df["VEC"] = [x for x in t_vec]
         else:
