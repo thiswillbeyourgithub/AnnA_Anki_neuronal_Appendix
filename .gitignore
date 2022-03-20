@@ -6,3 +6,4 @@ AMIMA_jupyter.py
 *.pickle
 logs.txt
 *perso*
+cache

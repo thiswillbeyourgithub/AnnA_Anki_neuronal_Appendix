@@ -121,7 +121,6 @@ AnnA was made with customizability in mind. All the settings you might want to e
  * `whole_deck_analysis` defaults to `False`. Set it to True to use [ankipandas](https://github.com/klieret/AnkiPandas) to more accurately find relative distance between cards.
  * `profile_name` defaults to `None`. Used by ankipandas to find your cards using the right anki profile file.
 
-
 AnnA includes built-in methods you can run after instantiating the class. Note that methods beginning with a "_" are not supposed to be called by the user and are reserved for backend use. Here's a list of useful methods:
 
 * `display_best_review_order` used as a debugging tool : only display order. Allows to check if the order seems correct without having to create a filtered deck.
