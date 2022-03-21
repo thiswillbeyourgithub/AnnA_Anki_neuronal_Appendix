@@ -880,21 +880,22 @@ adjust formating issues:")
                                      max_features=10_000,
                                      norm="l2")
 
+        use_fallback = False
         if self.whole_deck_analysis:
             try:
                 from ankipandas import Collection, find_db
                 from shutil import copy
 
-                yel(f"Copying anki database to local cache file")
+                yel("\nCopying anki database to local cache file")
                 original_db = find_db(user=self.profile_name)
                 Path.mkdir(Path("cache"), exist_ok=True)
-                temp_db = copy(original_db, f"cache/{self.deckname.replace(' ', '_')}")
+                name = f"{self.profile_name} {self.deckname}".replace(" ", "_")
+                temp_db = copy(original_db, f"./cache/{name}")
                 col = Collection(path=temp_db)
                 cards = col.cards.merge_notes()
-                cards = cards[ cards["cdeck"] == deckname.replace("::", "\x1f") ] # restrict by deck
-                cards[ cards["cqueue"] != "suspended"] # remove suspended cards
-                cards = cards[ ["nflds", "ntags"] ]
-                if len(cards.index):
+                cards = cards[ cards["cdeck"].str.startswith(self.deckname.replace("::", "\x1f")) ] # restrict by deck
+                cards = cards[ cards["cqueue"] != "suspended"] # remove suspended cards
+                if len(cards.index) == 0:
                     raise Exception("Copied database of length 0")
 
                 corpus = []
@@ -902,21 +903,18 @@ adjust formating issues:")
                     corpus.append(" ".join(cards.loc[ind, "nflds"]))
 
                 stopw_compiled = re.compile("\b" + "\b|\b".join(self.stops) + "\b", flags=re.MULTILINE | re.IGNORECASE | re.DOTALL)
-                for c, i in enumerate(corpus):
-                    corpus[i] = self._text_formatter(re.sub(sopw_compiled, " ", c)
+                for i, c in enumerate(corpus):
+                    corpus[i] = self._text_formatter(re.sub(stopw_compiled, " ", c))
 
-                vectorizer.fit(tqdm(vocabulary, desc="Vectorizing whole deck"))
+                vectorizer.fit(tqdm(corpus, desc="Vectorizing whole deck"))
                 t_vec = vectorizer.transform(tqdm(df["text"], desc="Vectorizing \
-dues cards using TFIDF"))
-
-                use_fallback = False
+    dues cards using TFIDF"))
+                yel("Done vectorizing over whole deck!")
             except Exception as e:
                 red(f"Exception : {e}")
                 use_fallback = True
-        else:
-            use_fallback = False
 
-        if use_fallback:
+        if (self.whole_deck_analysis is False) or (use_fallback):
             t_vec = vectorizer.fit_transform(tqdm(df["text"],
                                              desc="Vectorizing using TFIDF"))
         if self.TFIDF_dim is None:
