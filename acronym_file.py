@@ -1,8 +1,8 @@
 # list of user defined acronym list:
 # * for example if you add to this file "TACH": "tachycardia":
 #    'John has TACH' becomes 'John has TACH tachycardia '
-# * if the key (word to be replace) contains uppercase, the matching will be
-#    case sensitive, otherwise matching will be case insensitive
+# * if the key (word to be replace) contains any uppercase symbol, the matching
+#    will be case sensitive, otherwise matching will be case insensitive
 # * the dictionnary name has to be the argument `acronym_list`
 # * avoid using stop words as they will not be removed, for example :
 #    "TNM": "tumor lymph node metastasis" instead of "tumor of the
@@ -13,7 +13,7 @@
 #    appearance, for example :
 #            "HIV": "human immuno defficiency virus AIDS"
 #            "AIDS": "acquired immuno defficiency syndrome"
-#    will turns 'HIV' into 'HIV human immuno defficiency virus AIDS acquired
+#    will turns 'HIV' into 'HIV human immunon defficiency virus AIDS acquired
 #    immuno defficiency syndrome'. This can be good or bad depending on your
 #    usage
 
