@@ -885,7 +885,7 @@ adjust formating issues:")
         use_fallback = False
         if self.whole_deck_analysis:
             try:
-                from ankipandas import Collection, find_db
+                from ankipandas import Collection, find_db, raw
                 from shutil import copy
 
                 yel("\nCopying anki database to local cache file")
@@ -899,6 +899,9 @@ adjust formating issues:")
                 cards = cards[ cards["cqueue"] != "suspended"] # remove suspended cards
                 if len(cards.index) == 0:
                     raise Exception("Copied database of length 0")
+
+                # TODO
+                #models = raw.get_model_info(col.db)
 
                 corpus = []
                 for ind in tqdm(cards.index, desc=f"Gathering {self.deckname} text content"):
