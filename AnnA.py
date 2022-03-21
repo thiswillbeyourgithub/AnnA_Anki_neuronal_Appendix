@@ -614,7 +614,7 @@ less than threshold ({self.minimum_due}).\nStopping.")
                       flags=re.M | re.DOTALL)
         text = re.sub(r"\b<b>(.*?)</b>\b", r" \1 \1 ", text,
                       flags=re.M | re.DOTALL)
-        text = re.sub(r"{{c\d+::.*?}}", lambda x: 2 * (f"{x.group(0)} "),
+        text = re.sub(r"{{c\d+::.*?}}", lambda x: f"{x.group(0)} {x.group(0)}",
                       text, flags=re.M | re.DOTALL)
 
         # if blockquote or li or ul, mention that it's a list item
@@ -623,7 +623,7 @@ less than threshold ({self.minimum_due}).\nStopping.")
             text += " list list list list list"
 
         # remove html spaces
-        text = re.sub('\\n|</?div/?>|<br/?>|</?span/?>|</?li/?>|</?ul/?>', " ", text)
+        text = re.sub('\\n|</?div/?>|</?br/?>|</?span/?>|</?li/?>|</?ul/?>', " ", text)
         text = re.sub('</?blockquote(.*?)>', " ", text)
 
         # OCR
