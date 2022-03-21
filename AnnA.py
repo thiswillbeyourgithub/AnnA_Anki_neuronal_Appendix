@@ -829,6 +829,8 @@ less than threshold ({self.minimum_due}).\nStopping.")
         for notification in list(set(to_notify)):
             red(notification)
 
+        # using multithreading is not faster, using multiprocess is probably
+        # slower
         tqdm.pandas(desc="Formating text", smoothing=0, unit=" card")
         self.df["text"] = self.df["comb_text"].progress_apply(lambda x: self._text_formatter(x))
 
