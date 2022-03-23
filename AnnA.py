@@ -885,23 +885,22 @@ adjust formating issues:")
         use_fallback = False
         if self.whole_deck_analysis:
             try:
-                from ankipandas import Collection, find_db, raw
+                import ankipandas as akp
                 from shutil import copy
 
                 yel("\nCopying anki database to local cache file")
-                original_db = find_db(user=self.profile_name)
+                original_db = akp.find_db(user=self.profile_name)
                 Path.mkdir(Path("cache"), exist_ok=True)
                 name = f"{self.profile_name} {self.deckname}".replace(" ", "_")
                 temp_db = copy(original_db, f"./cache/{name}")
-                col = Collection(path=temp_db)
+                col = akp.Collection(path=temp_db)
                 cards = col.cards.merge_notes()
-                cards = cards[ cards["cdeck"].str.startswith(self.deckname.replace("::", "\x1f")) ] # restrict by deck
-                cards = cards[ cards["cqueue"] != "suspended"] # remove suspended cards
+                cards = cards[cards["cdeck"].str.startswith(self.deckname.replace("::", "\x1f"))] # restrict by deck
+                cards = cards[cards["cqueue"] != "suspended"] # remove suspended cards
                 if len(cards.index) == 0:
                     raise Exception("Copied database of length 0")
 
-                # TODO
-                #models = raw.get_model_info(col.db)
+                models = akp.raw.get_model_info(col.db)
 
                 corpus = []
                 for ind in tqdm(cards.index, desc=f"Gathering {self.deckname} text content"):
