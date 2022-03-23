@@ -749,9 +749,10 @@ less than threshold ({self.minimum_due}).\nStopping.")
                     else:
                         field_counter[f] = 1
                     try:
-                        next_field = re.sub(stopw_compiled,
-                                            " ",
-                                df.loc[index, "fields"][f.lower()]["value"].strip())
+                        next_field = df.loc[index, "fields"][f.lower()]["value"].strip()
+#                        next_field = re.sub(stopw_compiled,
+#                                            " ",
+#                                df.loc[index, "fields"][f.lower()]["value"].strip())
                         if next_field != "":
                             comb_text = comb_text + next_field + ": "
                     except KeyError as e:
@@ -876,8 +877,7 @@ adjust formating issues:")
         vectorizer = TfidfVectorizer(strip_accents="ascii",
                                      lowercase=True,
                                      tokenizer=self.tokenize,
-                                     stop_words=None, # note that stop words
-                                     # have already been removed
+                                     stop_words=self.stops,
                                      ngram_range=ngram_val,
                                      max_features=10_000,
                                      norm="l2")
@@ -906,9 +906,9 @@ adjust formating issues:")
                 for ind in tqdm(cards.index, desc=f"Gathering {self.deckname} text content"):
                     corpus.append(" ".join(cards.loc[ind, "nflds"]))
 
-                stopw_compiled = re.compile("\b" + "\b|\b".join(self.stops) + "\b", flags=re.MULTILINE | re.IGNORECASE | re.DOTALL)
-                for i, c in enumerate(corpus):
-                    corpus[i] = self._text_formatter(re.sub(stopw_compiled, " ", c))
+#                stopw_compiled = re.compile("\b" + "\b|\b".join(self.stops) + "\b", flags=re.MULTILINE | re.IGNORECASE | re.DOTALL)
+#                for i, c in enumerate(corpus):
+#                    corpus[i] = self._text_formatter(re.sub(stopw_compiled, " ", c))
 
                 vectorizer.fit(tqdm(corpus, desc="Vectorizing whole deck"))
                 t_vec = vectorizer.transform(tqdm(df["text"], desc="Vectorizing \
