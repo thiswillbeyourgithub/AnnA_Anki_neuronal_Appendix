@@ -598,7 +598,6 @@ less than threshold ({self.minimum_due}).\nStopping.")
         * OCR text extractor
         """
         text = text.replace("&amp;", "&"
-                    ).replace("/", " / "
                     ).replace("+++", " important "
                     ).replace("&nbsp", " "
                     ).replace("\u001F", " ")
