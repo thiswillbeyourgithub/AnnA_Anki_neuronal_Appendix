@@ -212,7 +212,8 @@ is set to True")
             self.tokenizer = Tokenizer.from_file("./bert-base-multilingual-cased_tokenizer.json")
             self.tokenizer.no_truncation()
             self.tokenizer.no_padding()
-            self.tokenize = lambda x : [x for x in self.tokenizer.encode(x).tokens if x not in ["[CLS]", "[SEP]"]]
+            self.exclude_tkn = set(["[CLS]", "[SEP]"])
+            self.tokenize = lambda x : [x for x in self.tokenizer.encode(x).tokens if x not in self.exclude_tkn]
         else:
             self.tokenize = lambda x : x
 
