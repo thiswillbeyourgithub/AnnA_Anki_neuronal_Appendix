@@ -132,6 +132,9 @@ class AnnA:
                  TFIDF_dim=100,
                  TFIDF_tokenize=True,
                  TFIDF_stem=False,
+
+                 whole_deck_analysis=True,
+                 profile_name=None,
                  ):
 
         if show_banner:
@@ -178,6 +181,8 @@ class AnnA:
         self.task = task
         self.fdeckname_template = fdeckname_template
         self.skip_print_similar = skip_print_similar
+        self.whole_deck_analysis = whole_deck_analysis
+        self.profile_name = profile_name
 
         # args sanity checks and initialization
         if isinstance(self.target_deck_size, int):
@@ -207,7 +212,8 @@ is set to True")
             self.tokenizer = Tokenizer.from_file("./bert-base-multilingual-cased_tokenizer.json")
             self.tokenizer.no_truncation()
             self.tokenizer.no_padding()
-            self.tokenize = lambda x : [x for x in self.tokenizer.encode(x).tokens if x not in ["[CLS]", "[SEP]"]]
+            self.exclude_tkn = set(["[CLS]", "[SEP]"])
+            self.tokenize = lambda x : [x for x in self.tokenizer.encode(x).tokens if x not in self.exclude_tkn]
         else:
             self.tokenize = lambda x : x
 
@@ -569,7 +575,7 @@ less than threshold ({self.minimum_due}).\nStopping.")
     def _regexp_acronym_replacer(self, string, compiled, new_w):
         """
         this function is needed to replace acronym containing match groups
-        For example: replacing 'IL(\\d+)' by "Interleukin 2"
+        For example: replacing 'IL2' by "IL2 Interleukin 2"
         """
         if len(string.groups()):
             for i in range(len(string.groups())):
@@ -593,7 +599,6 @@ less than threshold ({self.minimum_due}).\nStopping.")
         * OCR text extractor
         """
         text = text.replace("&amp;", "&"
-                    ).replace("/", " / "
                     ).replace("+++", " important "
                     ).replace("&nbsp", " "
                     ).replace("\u001F", " ")
@@ -609,16 +614,16 @@ less than threshold ({self.minimum_due}).\nStopping.")
                       flags=re.M | re.DOTALL)
         text = re.sub(r"\b<b>(.*?)</b>\b", r" \1 \1 ", text,
                       flags=re.M | re.DOTALL)
-        text = re.sub(r"{{c\d+::.*?}}", lambda x: 2 * (f"{x.group(0)} "),
+        text = re.sub(r"{{c\d+::.*?}}", lambda x: f"{x.group(0)} {x.group(0)}",
                       text, flags=re.M | re.DOTALL)
 
         # if blockquote or li or ul, mention that it's a list item
         # usually indicating a harder card
-        if re.match("</blockquote>|</li>|</ul|", text, flags=re.M):
-            text += " list"
+        if re.match("</?blockquote/?>|</?li/?>|</?ul/?>|", text, flags=re.M):
+            text += " list list list list list"
 
         # remove html spaces
-        text = re.sub('\\n|</?div>|<br>|</?span>|</?li>|</?ul>', " ", text)
+        text = re.sub('\\n|</?div/?>|</?br/?>|</?span/?>|</?li/?>|</?ul/?>', " ", text)
         text = re.sub('</?blockquote(.*?)>', " ", text)
 
         # OCR
@@ -642,7 +647,7 @@ less than threshold ({self.minimum_due}).\nStopping.")
         text = re.sub(r"\[\d*\]", "", text)  # wiki style citation
 
         text = re.sub("<.*?>", "", text)  # remaining html tags
-        text = re.sub("&gt;|&lt;|<|>", "", text)
+        text = text.replace("&gt", "").replace("&lt", "").replace("<", "").replace(">", "").replace("'", " ")  # misc + french apostrophe
 
         # replace greek letter
         if self.replace_greek:
@@ -661,7 +666,7 @@ less than threshold ({self.minimum_due}).\nStopping.")
 
         # misc
         text = " ".join(text.split())  # multiple spaces
-        text = re.sub(r"\b[a-zA-Z]'(\w{2,})", r"\1", text)  # french apostrophe etc
+        text = re.sub(r"\b[a-zA-Z]'(\w{2,})", r"\1", text)  # misc etc
 
         # optionnal stemmer
         if self.vectorizer == "TFIDF":
@@ -745,7 +750,7 @@ less than threshold ({self.minimum_due}).\nStopping.")
                         field_counter[f] = 1
                     try:
                         next_field = re.sub(stopw_compiled,
-                                            "",
+                                            " ",
                                 df.loc[index, "fields"][f.lower()]["value"].strip())
                         if next_field != "":
                             comb_text = comb_text + next_field + ": "
@@ -824,6 +829,8 @@ less than threshold ({self.minimum_due}).\nStopping.")
         for notification in list(set(to_notify)):
             red(notification)
 
+        # using multithreading is not faster, using multiprocess is probably
+        # slower
         tqdm.pandas(desc="Formating text", smoothing=0, unit=" card")
         self.df["text"] = self.df["comb_text"].progress_apply(lambda x: self._text_formatter(x))
 
@@ -865,6 +872,7 @@ adjust formating issues:")
             ngram_val = (1, 1)
         else:
             ngram_val = (1, 5)
+
         vectorizer = TfidfVectorizer(strip_accents="ascii",
                                      lowercase=True,
                                      tokenizer=self.tokenize,
@@ -872,10 +880,50 @@ adjust formating issues:")
                                      ngram_range=ngram_val,
                                      max_features=10_000,
                                      norm="l2")
-        # stop words have already been removed
-        t_vec = vectorizer.fit_transform(tqdm(df["text"],
-                                         desc="Vectorizing text using \
-TFIDF"))
+
+        use_fallback = False
+        if self.whole_deck_analysis:
+            try:
+                import ankipandas as akp
+                from shutil import copy
+
+                yel("\nCopying anki database to local cache file")
+                original_db = akp.find_db(user=self.profile_name)
+                if self.profile_name is None:
+                    red(f"Ankipandas will use anki collection found at {original_db}")
+                else:
+                    yel(f"Ankipandas will use anki collection found at {original_db}")
+                Path.mkdir(Path("cache"), exist_ok=True)
+                name = f"{self.profile_name}_{self.deckname}".replace(" ", "_")
+                temp_db = copy(original_db, f"./cache/{name}")
+                col = akp.Collection(path=temp_db)
+                cards = col.cards.merge_notes()
+                cards = cards[cards["cdeck"].str.startswith(self.deckname.replace("::", "\x1f"))] # restrict by deck
+                cards = cards[cards["cqueue"] != "suspended"] # remove suspended cards
+                if len(cards.index) == 0:
+                    raise Exception("Copied database of length 0")
+
+                models = akp.raw.get_model_info(col.db)
+
+                corpus = []
+                for ind in tqdm(cards.index, desc=f"Gathering {self.deckname} text content"):
+                    corpus.append(" ".join(cards.loc[ind, "nflds"]))
+
+                stopw_compiled = re.compile("\b" + "\b|\b".join(self.stops) + "\b", flags=re.MULTILINE | re.IGNORECASE | re.DOTALL)
+                for i, c in enumerate(corpus):
+                    corpus[i] = self._text_formatter(re.sub(stopw_compiled, " ", c))
+
+                vectorizer.fit(tqdm(corpus, desc="Vectorizing whole deck"))
+                t_vec = vectorizer.transform(tqdm(df["text"], desc="Vectorizing \
+    dues cards using TFIDF"))
+                yel("Done vectorizing over whole deck!")
+            except Exception as e:
+                red(f"Exception : {e}")
+                use_fallback = True
+
+        if (self.whole_deck_analysis is False) or (use_fallback):
+            t_vec = vectorizer.fit_transform(tqdm(df["text"],
+                                             desc="Vectorizing using TFIDF"))
         if self.TFIDF_dim is None:
             df["VEC"] = [x for x in t_vec]
         else:

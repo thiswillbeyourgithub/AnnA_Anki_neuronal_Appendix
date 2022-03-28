@@ -26,6 +26,7 @@ field_dic = {
              "basic": ["Front", "Back", "Hint"],
              "basic (and reversed card)": ["Front", "Back"],
              "spanish cards": ["Spanish", "English"],
+             "Spanish sentences cloze" : ["SpanishSentence", "EnglishSentence"],
              "morse": ["Front", "mnemonic"],
              "fallacy_bias": ["Name & Picture", "Summary", "Description"],
              }

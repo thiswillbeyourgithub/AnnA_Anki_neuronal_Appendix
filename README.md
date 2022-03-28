@@ -118,6 +118,8 @@ AnnA was made with customizability in mind. All the settings you might want to e
  * `TFIDF_dim` the number of dimension to keep using [SVD](https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.TruncatedSVD.html). Default is `100`, you cannot disable dimension reduction for TF_IDF because that would result in a sparse matrix. AnnA will automatically try a higher number of dimension if needed, up to 2000.
  * `TFIDF_tokenize` default to `True`. Enable sub word tokenization, for example turn `hypernatremia` to `hyp + er + natr + emia`. The current tokenizer is `bert-base-multilingual-cased` and should work on just about any languages. You cannot enable both `TFIDF_tokenize` and `TFIDF_stem` but should absolutely enable at least one.
  * `TFIDF_stem` default to `False`. Wether to enable stemming of words. Currently the PorterStemmer is used, and was made for English but can still be useful for some other languages. Keep in mind that this is the longest step when formatting text.
+ * `whole_deck_analysis` defaults to `True`. Use [ankipandas](https://github.com/klieret/AnkiPandas) to extract all text from the deck to feed into the vectorizer. Results in more accurate relative distances between cards.
+ * `profile_name` defaults to `None`. Profile named used by ankipandas to find your collection. If None, ankipandas will infer the most fitting collection.
 
 AnnA includes built-in methods you can run after instantiating the class. Note that methods beginning with a "_" are not supposed to be called by the user and are reserved for backend use. Here's a list of useful methods:
 
