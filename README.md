@@ -130,6 +130,7 @@ AnnA includes built-in methods you can run after instantiating the class. Note t
 *More or less by order of urgency*
 * fetch only the right cards fields when using ankipandas
 * use ankipandas to fetch information instead of anki connect
+* investigate using parallel processing of TF_IDF to format text using the .preprocess() method
 
 * warn LW
 * relative overdueness v2 : either square or take square root of interval, or something like that
