@@ -133,7 +133,7 @@ class AnnA:
                  TFIDF_tokenize=True,
                  TFIDF_stem=False,
 
-                 whole_deck_analysis=False,
+                 whole_deck_analysis=True,
                  profile_name=None,
                  ):
 
@@ -889,6 +889,10 @@ adjust formating issues:")
 
                 yel("\nCopying anki database to local cache file")
                 original_db = akp.find_db(user=self.profile_name)
+                if self.profile_name is None:
+                    red(f"Ankipandas will use anki collection found at {original_db}")
+                else:
+                    yel(f"Ankipandas will use anki collection found at {original_db}")
                 Path.mkdir(Path("cache"), exist_ok=True)
                 name = f"{self.profile_name}_{self.deckname}".replace(" ", "_")
                 temp_db = copy(original_db, f"./cache/{name}")
