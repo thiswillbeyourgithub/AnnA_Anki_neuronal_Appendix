@@ -311,6 +311,14 @@ values. {e}")
             red(f"Error when extracting stop words: {e}")
             red("Setting stop words list to None.")
             self.stops = None
+        if self.whole_deck_computation:
+            try:
+                import ankipandas as akp
+                from shutil import copy
+            except Exception as e:
+                red(f"Error importing modules to compute whole deck distance: \
+{str(e)}")
+                raise SystemExit()
 
         # actual execution
         self.deckname = self._deckname_check(deckname)
@@ -885,9 +893,6 @@ adjust formating issues:")
         use_fallback = False
         if self.whole_deck_computation:
             try:
-                import ankipandas as akp
-                from shutil import copy
-
                 yel("\nCopying anki database to local cache file")
                 original_db = akp.find_db(user=self.profile_name)
                 if self.profile_name is None:
