@@ -913,7 +913,7 @@ adjust formating issues:")
 
                 corpus = []
                 for ind in tqdm(cards.index, desc=f"Gathering {self.deckname} text content"):
-                    corpus.append(" ".join(cards.loc[ind, "nflds"]))
+                    corpus.extend(list(cards.loc[ind, "nflds"]))
 
                 stopw_compiled = re.compile("\b" + "\b|\b".join(self.stops) + "\b", flags=re.MULTILINE | re.IGNORECASE | re.DOTALL)
                 for i, c in enumerate(corpus):
