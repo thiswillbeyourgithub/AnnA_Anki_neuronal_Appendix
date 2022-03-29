@@ -1560,7 +1560,7 @@ if __name__ == "__main__":
                         dest="reference_order",
                         default="relative_overdueness",
                         type=str,
-                        required=True,
+                        required=False,
                         help="either \"relative_overdueness\" or \"lowest_interval\".\
                         It is the reference used to sort the card before\
                         adjusting them using the similarity scores. Default is\
@@ -1639,7 +1639,7 @@ if __name__ == "__main__":
                         dest="field_mappings",
                         default="field_mappings.py",
                         type=str,
-                        required=True,
+                        required=False,
                         help="path of file that indicates which field to keep from\
                         which note type and in which order. Default value is\
                         `field_mappings.py`. If empty or if no matching notetype\
