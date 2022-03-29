@@ -218,9 +218,8 @@ AnnA includes built-in methods you can run after instantiating the class. Note t
 
 ## TODO
 *More or less by order of urgency*
-* keep only the right fields when using ankipandas
-* use ankipandas to fetch some information instead of anki connect
-* try to package AnnA on pypi or as a standalone package
+* switch to using more ankipandas than anki connect to gather information
+* package AnnA on pypi or as a standalone package
 
 * investigate using parallel processing of TF_IDF instead of _format_text using the .preprocess() method
 

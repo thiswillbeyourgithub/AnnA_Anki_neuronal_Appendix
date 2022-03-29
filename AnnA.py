@@ -478,6 +478,17 @@ threads of size {batchsize})")
                                   completer=auto_complete)
         return deckname
 
+    def memoize(self, f):
+        """ store previous value to speed up vector retrieval
+        (40x speed up) """
+        memo = {}
+
+        def helper(x):
+            if x not in memo:
+                memo[x] = f(x)
+            return memo[x]
+        return helper
+
     def _init_dataFrame(self):
         """
         create a pandas DataFrame with the information gathered from
@@ -899,21 +910,63 @@ adjust formating issues:")
                 name = f"{self.profile_name}_{self.deckname}".replace(" ", "_")
                 temp_db = copy(original_db, f"./cache/{name}")
                 col = akp.Collection(path=temp_db)
-                cards = col.cards.merge_notes()
-                cards = cards[cards["cdeck"].str.startswith(self.deckname.replace("::", "\x1f"))] # restrict by deck
-                cards = cards[cards["cqueue"] != "suspended"] # remove suspended cards
-                if len(cards.index) == 0:
-                    raise Exception("Copied database of length 0")
 
-                models = akp.raw.get_model_info(col.db)
+                # keep only unsuspended cards from the right deck
+                cards = col.cards.merge_notes()
+                cards["cdeck"] = cards["cdeck"].apply(lambda x: x.replace("\x1f", "::"))
+                cards = cards[cards["cdeck"].str.startswith(self.deckname)]
+                cards = cards[cards["cqueue"] != "suspended"]
+                whi("Ankipandas db loaded successfuly.")
+
+                if len(cards.index) == 0:
+                    raise Exception("Ankipandas database is of length 0")
+
+                # get only the right fields
+                cards["mid"] = col.cards.mid.loc[cards.index]
+                mid2fields = akp.raw.get_mid2fields(col.db)
+                mod2mid = akp.raw.get_model2mid(col.db)
+
+                if len(cards.index) == 0:
+                    raise Exception("Ankipandas database is of length 0")
+
+                to_notify = []
+                def get_index_of_fields(mod):
+                    ret = []
+                    if mod in mod2mid:
+                        fields = mid2fields[mod2mid[mod]]
+                        if mod in self.field_dic:
+                            for f in self.field_dic[mod]:
+                                ret.append(fields.index(f))
+                        else:
+                            to_notify.append(f"Missing field mapping for card \
+model {mod}.Taking first 2 fields.")
+                            ret = [0, 1]
+                    else:
+                        print(mod)
+                        best_models = sorted(list(mod2mid.keys()),
+                                key=lambda x: lev.ratio(x.lower(), mod.lower()))
+                        for m in best_models:
+                            if m in self.field_dic:
+                                ret = get_index_of_fields(m)
+                                break
+                    assert len(ret) != 0
+                    return ret
+
+                m_gIoF = self.memoize(get_index_of_fields)
+
+                for notification in list(set(to_notify)):
+                    red(notification)
 
                 corpus = []
-                for ind in tqdm(cards.index, desc=f"Gathering {self.deckname} text content"):
-                    corpus.extend(list(cards.loc[ind, "nflds"]))
-
                 stopw_compiled = re.compile("\b" + "\b|\b".join(self.stops) + "\b", flags=re.MULTILINE | re.IGNORECASE | re.DOTALL)
-                for i, c in enumerate(tqdm(corpus, desc="Formatting text")):
-                    corpus[i] = self._text_formatter(re.sub(stopw_compiled, " ", c))
+                tf = self._text_formatter
+                for ind in tqdm(cards.index, desc=f"Gathering and formating {self.deckname}"):
+                    indices_to_keep = m_gIoF(cards.loc[ind, "nmodel"])
+                    fields_list = cards.loc[ind, "nflds"]
+                    new = ""
+                    for i in indices_to_keep:
+                        new += fields_list[i] + " "
+                    corpus.append(tf(re.sub(stopw_compiled, " ", new)))
 
                 if self.acronym_file is not None:
                     for compiled, new_word in tqdm(self.acronym_dict.items(),
