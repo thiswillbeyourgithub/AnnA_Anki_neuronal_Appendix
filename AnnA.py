@@ -30,6 +30,9 @@ from sklearn.metrics import pairwise_distances
 from sklearn.decomposition import TruncatedSVD
 from sklearn.preprocessing import StandardScaler
 
+import ankipandas as akp
+from shutil import copy
+
 # avoids annoying warning
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
@@ -311,20 +314,12 @@ values. {e}")
             red(f"Error when extracting stop words: {e}")
             red("Setting stop words list to None.")
             self.stops = None
-        if self.whole_deck_computation:
-            try:
-                import ankipandas as akp
-                from shutil import copy
-            except Exception as e:
-                red(f"Error importing modules to compute whole deck distance: \
-{str(e)}")
-                raise SystemExit()
 
         # actual execution
         self.deckname = self._deckname_check(deckname)
         yel(f"Selected deck: {self.deckname}\n")
         self.deck_config = self._call_anki(action="getDeckConfig",
-                                             deck=self.deckname)
+                                           deck=self.deckname)
         if self.target_deck_size == "deck_config":
             self.target_deck_size = str(self.deck_config["rev"]["perDay"])
             yel(f"Set 'target_deck_size' to deck's value: {self.target_deck_size}")
