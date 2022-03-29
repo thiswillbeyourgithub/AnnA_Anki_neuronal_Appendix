@@ -916,7 +916,7 @@ adjust formating issues:")
                     corpus.extend(list(cards.loc[ind, "nflds"]))
 
                 stopw_compiled = re.compile("\b" + "\b|\b".join(self.stops) + "\b", flags=re.MULTILINE | re.IGNORECASE | re.DOTALL)
-                for i, c in enumerate(corpus):
+                for i, c in enumerate(tqdm(corpus, desc="Formatting text")):
                     corpus[i] = self._text_formatter(re.sub(stopw_compiled, " ", c))
 
                 vectorizer.fit(tqdm(corpus, desc="Vectorizing whole deck"))
