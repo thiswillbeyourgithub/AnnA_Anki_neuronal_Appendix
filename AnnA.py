@@ -919,6 +919,18 @@ adjust formating issues:")
                 for i, c in enumerate(tqdm(corpus, desc="Formatting text")):
                     corpus[i] = self._text_formatter(re.sub(stopw_compiled, " ", c))
 
+                if self.acronym_file is not None:
+                    for compiled, new_word in tqdm(self.acronym_dict.items(),
+                            desc="Replacing acronyms", unit=" acr"):
+                        corpus[i] = re.sub(
+                                compiled,
+                                lambda string: self._regexp_acronym_replacer(
+                                    string,
+                                    compiled,
+                                    new_word
+                                    ),
+                                corpus[i])
+
                 vectorizer.fit(tqdm(corpus, desc="Vectorizing whole deck"))
                 t_vec = vectorizer.transform(tqdm(df["text"], desc="Vectorizing \
     dues cards using TFIDF"))
