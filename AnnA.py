@@ -706,12 +706,12 @@ less than threshold ({self.minimum_due}).\nStopping.")
             """
             for index in index_list:
                 card_model = df.loc[index, "modelName"]
+                target_model = []
                 fields_to_keep = []
 
                 # determines which is the corresponding model described
                 # in field_dic
                 field_dic = self.field_dic
-                target_model = []
                 if card_model in field_dic:
                     target_model = [card_model]
                     fields_to_keep = field_dic[target_model[0]]
