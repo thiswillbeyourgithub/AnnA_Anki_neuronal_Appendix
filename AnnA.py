@@ -30,6 +30,9 @@ from sklearn.metrics import pairwise_distances
 from sklearn.decomposition import TruncatedSVD
 from sklearn.preprocessing import StandardScaler
 
+import ankipandas as akp
+from shutil import copy
+
 # avoids annoying warning
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
@@ -134,7 +137,7 @@ class AnnA:
                  TFIDF_tokenize=True,
                  TFIDF_stem=False,
 
-                 whole_deck_analysis=True,
+                 whole_deck_computation=True,
                  profile_name=None,
                  ):
 
@@ -182,7 +185,7 @@ class AnnA:
         self.task = task
         self.fdeckname_template = fdeckname_template
         self.skip_print_similar = skip_print_similar
-        self.whole_deck_analysis = whole_deck_analysis
+        self.whole_deck_computation = whole_deck_computation
         self.profile_name = profile_name
 
         # args sanity checks and initialization
@@ -316,7 +319,7 @@ values. {e}")
         self.deckname = self._deckname_check(deckname)
         yel(f"Selected deck: {self.deckname}\n")
         self.deck_config = self._call_anki(action="getDeckConfig",
-                                             deck=self.deckname)
+                                           deck=self.deckname)
         if self.target_deck_size == "deck_config":
             self.target_deck_size = str(self.deck_config["rev"]["perDay"])
             yel(f"Set 'target_deck_size' to deck's value: {self.target_deck_size}")
@@ -474,6 +477,17 @@ threads of size {batchsize})")
                 deckname = prompt("Enter the name of the deck:\n>",
                                   completer=auto_complete)
         return deckname
+
+    def memoize(self, f):
+        """ store previous value to speed up vector retrieval
+        (40x speed up) """
+        memo = {}
+
+        def helper(x):
+            if x not in memo:
+                memo[x] = f(x)
+            return memo[x]
+        return helper
 
     def _init_dataFrame(self):
         """
@@ -698,12 +712,12 @@ less than threshold ({self.minimum_due}).\nStopping.")
             """
             for index in index_list:
                 card_model = df.loc[index, "modelName"]
+                target_model = []
                 fields_to_keep = []
 
                 # determines which is the corresponding model described
                 # in field_dic
                 field_dic = self.field_dic
-                target_model = []
                 if card_model in field_dic:
                     target_model = [card_model]
                     fields_to_keep = field_dic[target_model[0]]
@@ -805,6 +819,7 @@ less than threshold ({self.minimum_due}).\nStopping.")
 
             [t.join() for t in threads]
 
+            # retries in case of error:
             cnt = 0
             while sum(self.df.isna()["comb_text"]) != 0:
                 cnt += 1
@@ -883,11 +898,8 @@ adjust formating issues:")
                                      norm="l2")
 
         use_fallback = False
-        if self.whole_deck_analysis:
+        if self.whole_deck_computation:
             try:
-                import ankipandas as akp
-                from shutil import copy
-
                 yel("\nCopying anki database to local cache file")
                 original_db = akp.find_db(user=self.profile_name)
                 if self.profile_name is None:
@@ -898,21 +910,75 @@ adjust formating issues:")
                 name = f"{self.profile_name}_{self.deckname}".replace(" ", "_")
                 temp_db = copy(original_db, f"./cache/{name}")
                 col = akp.Collection(path=temp_db)
-                cards = col.cards.merge_notes()
-                cards = cards[cards["cdeck"].str.startswith(self.deckname.replace("::", "\x1f"))] # restrict by deck
-                cards = cards[cards["cqueue"] != "suspended"] # remove suspended cards
-                if len(cards.index) == 0:
-                    raise Exception("Copied database of length 0")
 
-                models = akp.raw.get_model_info(col.db)
+                # keep only unsuspended cards from the right deck
+                cards = col.cards.merge_notes()
+                cards["cdeck"] = cards["cdeck"].apply(lambda x: x.replace("\x1f", "::"))
+                cards = cards[cards["cdeck"].str.startswith(self.deckname)]
+                cards = cards[cards["cqueue"] != "suspended"]
+                whi("Ankipandas db loaded successfuly.")
+
+                if len(cards.index) == 0:
+                    raise Exception("Ankipandas database is of length 0")
+
+                # get only the right fields
+                cards["mid"] = col.cards.mid.loc[cards.index]
+                mid2fields = akp.raw.get_mid2fields(col.db)
+                mod2mid = akp.raw.get_model2mid(col.db)
+
+                if len(cards.index) == 0:
+                    raise Exception("Ankipandas database is of length 0")
+
+                to_notify = []
+                def get_index_of_fields(mod):
+                    ret = []
+                    if mod in mod2mid:
+                        fields = mid2fields[mod2mid[mod]]
+                        if mod in self.field_dic:
+                            for f in self.field_dic[mod]:
+                                ret.append(fields.index(f))
+                        else:
+                            to_notify.append(f"Missing field mapping for card \
+model {mod}.Taking first 2 fields.")
+                            ret = [0, 1]
+                    else:
+                        print(mod)
+                        best_models = sorted(list(mod2mid.keys()),
+                                key=lambda x: lev.ratio(x.lower(), mod.lower()))
+                        for m in best_models:
+                            if m in self.field_dic:
+                                ret = get_index_of_fields(m)
+                                break
+                    assert len(ret) != 0
+                    return ret
+
+                m_gIoF = self.memoize(get_index_of_fields)
+
+                for notification in list(set(to_notify)):
+                    red(notification)
 
                 corpus = []
-                for ind in tqdm(cards.index, desc=f"Gathering {self.deckname} text content"):
-                    corpus.append(" ".join(cards.loc[ind, "nflds"]))
-
                 stopw_compiled = re.compile("\b" + "\b|\b".join(self.stops) + "\b", flags=re.MULTILINE | re.IGNORECASE | re.DOTALL)
-                for i, c in enumerate(corpus):
-                    corpus[i] = self._text_formatter(re.sub(stopw_compiled, " ", c))
+                tf = self._text_formatter
+                for ind in tqdm(cards.index, desc=f"Gathering and formating {self.deckname}"):
+                    indices_to_keep = m_gIoF(cards.loc[ind, "nmodel"])
+                    fields_list = cards.loc[ind, "nflds"]
+                    new = ""
+                    for i in indices_to_keep:
+                        new += fields_list[i] + " "
+                    corpus.append(tf(re.sub(stopw_compiled, " ", new)))
+
+                if self.acronym_file is not None:
+                    for compiled, new_word in tqdm(self.acronym_dict.items(),
+                            desc="Replacing acronyms", unit=" acr"):
+                        corpus[i] = re.sub(
+                                compiled,
+                                lambda string: self._regexp_acronym_replacer(
+                                    string,
+                                    compiled,
+                                    new_word
+                                    ),
+                                corpus[i])
 
                 vectorizer.fit(tqdm(corpus, desc="Vectorizing whole deck"))
                 t_vec = vectorizer.transform(tqdm(df["text"], desc="Vectorizing \
@@ -922,7 +988,7 @@ adjust formating issues:")
                 red(f"Exception : {e}")
                 use_fallback = True
 
-        if (self.whole_deck_analysis is False) or (use_fallback):
+        if (self.whole_deck_computation is False) or (use_fallback):
             t_vec = vectorizer.fit_transform(tqdm(df["text"],
                                              desc="Vectorizing using TFIDF"))
         if self.TFIDF_dim is None:
@@ -1542,7 +1608,7 @@ if __name__ == "__main__":
                         dest="reference_order",
                         default="relative_overdueness",
                         type=str,
-                        required=True,
+                        required=False,
                         help="either \"relative_overdueness\" or \"lowest_interval\".\
                         It is the reference used to sort the card before\
                         adjusting them using the similarity scores. Default is\
@@ -1621,7 +1687,7 @@ if __name__ == "__main__":
                         dest="field_mappings",
                         default="field_mappings.py",
                         type=str,
-                        required=True,
+                        required=False,
                         help="path of file that indicates which field to keep from\
                         which note type and in which order. Default value is\
                         `field_mappings.py`. If empty or if no matching notetype\
@@ -1811,8 +1877,8 @@ if __name__ == "__main__":
                         made for English but can still be useful for some other\
                         languages. Keep in mind that this is the longest step\
                         when formatting text.")
-    parser.add_argument("--whole_deck_analysis",
-                        dest="whole_deck_analysis",
+    parser.add_argument("--whole_deck_computation",
+                        dest="whole_deck_computation",
                         default=True,
                         required=False,
                         action="store_true",

@@ -101,7 +101,7 @@ usage: AnnA.py [-h] --deckname DECKNAME --reference_order REF_ORDER --task TASK 
                [--replace_greek] [--keep_OCR] [--tags_to_ignore [TAGS_TO_IGNORE ...]] [--tags_separator TAGS_SEP]
                [--fdeckname_template FILTER_DECK_NAME_TEMPLATE] [--show_banner] [--skip_print_similar]
                [--vectorizer VECTORIZER] [--TFIDF_dim TFIDF_DIMENSIONS] [--TFIDF_tokenize] [--TFIDF_stem]
-               [--whole_deck_analysis] [--profile_name PROFILE_NAME] [--keep_console_open]
+               [--whole_deck_computation] [--profile_name PROFILE_NAME] [--keep_console_open]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -198,7 +198,7 @@ optional arguments:
   --TFIDF_stem          default to `False`. Wether to enable stemming of words. Currently the PorterStemmer is used,
                         and was made for English but can still be useful for some other languages. Keep in mind that
                         this is the longest step when formatting text.
-  --whole_deck_analysis
+  --whole_deck_computation
                         defaults to `True`. Use ankipandas to extract all text from the deck to feed into the
                         vectorizer. Results in more accurate relative distances between cards. (more information at
                         https://github.com/klieret/AnkiPandas)
