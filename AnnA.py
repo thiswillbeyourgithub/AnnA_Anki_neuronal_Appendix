@@ -134,7 +134,7 @@ class AnnA:
                  TFIDF_tokenize=True,
                  TFIDF_stem=False,
 
-                 whole_deck_analysis=True,
+                 whole_deck_computation=True,
                  profile_name=None,
                  ):
 
@@ -182,7 +182,7 @@ class AnnA:
         self.task = task
         self.fdeckname_template = fdeckname_template
         self.skip_print_similar = skip_print_similar
-        self.whole_deck_analysis = whole_deck_analysis
+        self.whole_deck_computation = whole_deck_computation
         self.profile_name = profile_name
 
         # args sanity checks and initialization
@@ -883,7 +883,7 @@ adjust formating issues:")
                                      norm="l2")
 
         use_fallback = False
-        if self.whole_deck_analysis:
+        if self.whole_deck_computation:
             try:
                 import ankipandas as akp
                 from shutil import copy
@@ -922,7 +922,7 @@ adjust formating issues:")
                 red(f"Exception : {e}")
                 use_fallback = True
 
-        if (self.whole_deck_analysis is False) or (use_fallback):
+        if (self.whole_deck_computation is False) or (use_fallback):
             t_vec = vectorizer.fit_transform(tqdm(df["text"],
                                              desc="Vectorizing using TFIDF"))
         if self.TFIDF_dim is None:
@@ -1811,8 +1811,8 @@ if __name__ == "__main__":
                         made for English but can still be useful for some other\
                         languages. Keep in mind that this is the longest step\
                         when formatting text.")
-    parser.add_argument("--whole_deck_analysis",
-                        dest="whole_deck_analysis",
+    parser.add_argument("--whole_deck_computation",
+                        dest="whole_deck_computation",
                         default=True,
                         required=False,
                         action="store_true",
