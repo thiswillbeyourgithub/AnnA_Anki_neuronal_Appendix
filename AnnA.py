@@ -684,6 +684,92 @@ less than threshold ({self.minimum_due}).\nStopping.")
 
         return text
 
+    def _threaded_field_filter(self, df, index_list, lock, pbar,
+                               stopw_compiled, spacers_compiled):
+        """
+        threaded call to speed up execution
+        """
+        global to_notify
+        for index in index_list:
+            card_model = df.loc[index, "modelName"]
+            fields_to_keep = []
+
+            # determines which is the corresponding model described
+            # in field_dic
+            field_dic = self.field_dic
+            target_model = []
+            if card_model in field_dic:
+                target_model = [card_model]
+                fields_to_keep = field_dic[target_model[0]]
+            else:
+                for user_model in field_dic:
+                    if user_model.lower() in card_model.lower():
+                        target_model.append(user_model)
+
+                if len(target_model) == 0:
+                    fields_to_keep = "take_first_fields"
+                elif len(target_model) == 1:
+                    fields_to_keep = field_dic[target_model[0]]
+                elif len(target_model) > 1:
+                    target_model = sorted(target_model,
+                                          key=lambda x: lev.ratio(
+                                              x.lower(), user_model.lower()))
+                    fields_to_keep = field_dic[target_model[0]]
+                    with lock:
+                        to_notify.append(f"Several notetypes match \
+'{card_model}'. Selecting '{target_model[0]}'")
+
+            # concatenates the corresponding fields into one string:
+            field_list = list(df.loc[index, "fields"])
+            if fields_to_keep == "take_first_fields":
+                fields_to_keep = ["", ""]
+                for f in field_list:
+                    order = df.loc[index, "fields"][f.lower()]["order"]
+                    if order == 0:
+                        fields_to_keep[0] = f
+                    elif order == 1:
+                        fields_to_keep[1] = f
+                with lock:
+                    to_notify.append(f"No matching notetype found for \
+{card_model}. Keeping the first 2 fields: {', '.join(fields_to_keep)}")
+            elif fields_to_keep == "take_all_fields":
+                fields_to_keep = sorted(field_list,
+                                        key=lambda x: int(df.loc[index, "fields"][x.lower()]["order"]))
+
+            comb_text = ""
+            field_counter = {}
+            for f in fields_to_keep:
+                if f in field_counter:
+                    field_counter[f] += 1
+                else:
+                    field_counter[f] = 1
+                try:
+                    next_field = re.sub(stopw_compiled,
+                                        " ",
+                            df.loc[index, "fields"][f.lower()]["value"].strip())
+                    if next_field != "":
+                        comb_text = comb_text + next_field + ": "
+                except KeyError as e:
+                    with lock:
+                        to_notify.append(f"Error when looking for field {e} in card \
+{df.loc[index, 'modelName']} identified as notetype {target_model}")
+            if comb_text[-2:] == ": ":
+                comb_text = comb_text[:-2]
+
+            # add tags to comb_text
+            tags = self.df.loc[index, "tags"].split(" ")
+            for t in tags:
+                if ("AnnA" not in t) and (t not in self.tags_to_ignore):
+                    t = re.sub(spacers_compiled,  # replaces _ - and /
+                               " ",  # by a space
+                               " ".join(t.split(self.tags_separator)[-2:]))
+                    # and keep only the last 2 levels of each tags
+                    comb_text += " " + t
+
+            with lock:
+                self.df.at[index, "comb_text"] = comb_text
+                pbar.update(1)
+
     def _format_card(self):
         """
         goes through each cards and keep only fields deemed useful in
@@ -699,91 +785,6 @@ less than threshold ({self.minimum_due}).\nStopping.")
             For example you can give more importance to field "Body" of a
             cloze than to the field "More"
         """
-        def _threaded_field_filter(df, index_list, lock, pbar,
-                                   stopw_compiled, spacers_compiled):
-            """
-            threaded call to speed up execution
-            """
-            for index in index_list:
-                card_model = df.loc[index, "modelName"]
-                fields_to_keep = []
-
-                # determines which is the corresponding model described
-                # in field_dic
-                field_dic = self.field_dic
-                target_model = []
-                if card_model in field_dic:
-                    target_model = [card_model]
-                    fields_to_keep = field_dic[target_model[0]]
-                else:
-                    for user_model in field_dic:
-                        if user_model.lower() in card_model.lower():
-                            target_model.append(user_model)
-
-                    if len(target_model) == 0:
-                        fields_to_keep = "take_first_fields"
-                    elif len(target_model) == 1:
-                        fields_to_keep = field_dic[target_model[0]]
-                    elif len(target_model) > 1:
-                        target_model = sorted(target_model,
-                                              key=lambda x: lev.ratio(
-                                                  x.lower(), user_model.lower()))
-                        fields_to_keep = field_dic[target_model[0]]
-                        with lock:
-                            to_notify.append(f"Several notetypes match \
-'{card_model}'. Selecting '{target_model[0]}'")
-
-                # concatenates the corresponding fields into one string:
-                field_list = list(df.loc[index, "fields"])
-                if fields_to_keep == "take_first_fields":
-                    fields_to_keep = ["", ""]
-                    for f in field_list:
-                        order = df.loc[index, "fields"][f.lower()]["order"]
-                        if order == 0:
-                            fields_to_keep[0] = f
-                        elif order == 1:
-                            fields_to_keep[1] = f
-                    with lock:
-                        to_notify.append(f"No matching notetype found for \
-{card_model}. Keeping the first 2 fields: {', '.join(fields_to_keep)}")
-                elif fields_to_keep == "take_all_fields":
-                    fields_to_keep = sorted(field_list,
-                                            key=lambda x: int(df.loc[index, "fields"][x.lower()]["order"]))
-
-                comb_text = ""
-                field_counter = {}
-                for f in fields_to_keep:
-                    if f in field_counter:
-                        field_counter[f] += 1
-                    else:
-                        field_counter[f] = 1
-                    try:
-                        next_field = re.sub(stopw_compiled,
-                                            " ",
-                                df.loc[index, "fields"][f.lower()]["value"].strip())
-                        if next_field != "":
-                            comb_text = comb_text + next_field + ": "
-                    except KeyError as e:
-                        with lock:
-                            to_notify.append(f"Error when looking for field {e} in card \
-{df.loc[index, 'modelName']} identified as notetype {target_model}")
-                if comb_text[-2:] == ": ":
-                    comb_text = comb_text[:-2]
-
-                # add tags to comb_text
-                tags = self.df.loc[index, "tags"].split(" ")
-                for t in tags:
-                    if ("AnnA" not in t) and (t not in self.tags_to_ignore):
-                        t = re.sub(spacers_compiled,  # replaces _ - and /
-                                   " ",  # by a space
-                                   " ".join(t.split(self.tags_separator)[-2:]))
-                        # and keep only the last 2 levels of each tags
-                        comb_text += " " + t
-
-                with lock:
-                    self.df.at[index, "comb_text"] = comb_text
-                    pbar.update(1)
-
         n = len(self.df.index)
         batchsize = n // 4 + 1
         lock = threading.Lock()
@@ -800,7 +801,7 @@ less than threshold ({self.minimum_due}).\nStopping.")
                   unit=" card") as pbar:
             for nb in range(0, n, batchsize):
                 sub_card_list = self.df.index[nb: nb + batchsize]
-                thread = threading.Thread(target=_threaded_field_filter,
+                thread = threading.Thread(target=self._threaded_field_filter,
                                           args=(self.df,
                                                 sub_card_list,
                                                 lock,
@@ -813,13 +814,14 @@ less than threshold ({self.minimum_due}).\nStopping.")
 
             [t.join() for t in threads]
 
+            # retries in case of missing information:
             cnt = 0
             while sum(self.df.isna()["comb_text"]) != 0:
                 cnt += 1
                 na_list = [x for x in self.df.index[self.df.isna()["comb_text"]].tolist()]
                 pbar.update(-len(na_list))
                 red(f"Found {sum(self.df.isna()['comb_text'])} null values in comb_text: retrying")
-                thread = threading.Thread(target=_threaded_field_filter,
+                thread = threading.Thread(target=self._threaded_field_filter,
                                           args=(self.df,
                                                 na_list,
                                                 lock,
