@@ -1905,7 +1905,11 @@ if __name__ == "__main__":
         console_mode = False
 
     args.pop("console_mode")
-    anna = AnnA(**args)
+    try:
+        anna = AnnA(**args)
+    except Exception as e:
+        red(f"Error: {str(e)}")
+        breakpoint()
     if console_mode:
         red("\n\nRun finished. Opening console:\n(You can access the last \
 instance of AnnA by inspecting variable \"anna\")\n")
