@@ -125,6 +125,7 @@ class AnnA:
                  log_level=2,  # 0, 1, 2
                  replace_greek=True,
                  keep_OCR=True,
+                 append_tags=False,
                  tags_to_ignore=None,
                  tags_separator="::",
                  fdeckname_template=None,
@@ -174,6 +175,7 @@ class AnnA:
         self.field_mappings = field_mappings
         self.acronym_file = acronym_file
         self.acronym_list = acronym_list
+        self.append_tags = append_tags
         self.tags_to_ignore = tags_to_ignore
         self.tags_separator = tags_separator
         self.low_power_mode = low_power_mode
@@ -777,14 +779,15 @@ less than threshold ({self.minimum_due}).\nStopping.")
                     comb_text = comb_text[:-2]
 
                 # add tags to comb_text
-                tags = self.df.loc[index, "tags"].split(" ")
-                for t in tags:
-                    if ("AnnA" not in t) and (t not in self.tags_to_ignore):
-                        t = re.sub(spacers_compiled,  # replaces _ - and /
-                                   " ",  # by a space
-                                   " ".join(t.split(self.tags_separator)[-2:]))
-                        # and keep only the last 2 levels of each tags
-                        comb_text += " " + t
+                if self.append_tags:
+                    tags = self.df.loc[index, "tags"].split(" ")
+                    for t in tags:
+                        if ("AnnA" not in t) and (t not in self.tags_to_ignore):
+                            t = re.sub(spacers_compiled,  # replaces _ - and /
+                                       " ",  # by a space
+                                       " ".join(t.split(self.tags_separator)[-2:]))
+                            # and keep only the last 2 levels of each tags
+                            comb_text += " " + t
 
                 with lock:
                     self.df.at[index, "comb_text"] = comb_text
@@ -1778,6 +1781,13 @@ if __name__ == "__main__":
                         help="if True, the OCR text extracted using the great\
                         AnkiOCR addon (https://github.com/cfculhane/AnkiOCR/)\
                         will be included in the card. Default is `True`.")
+    parser.add_argument("--append_tags",
+                        dest="append_tags",
+                        default=False,
+                        required=False,
+                        action="store_true",
+                        help="Wether to append the 2 deepest tags to the cards \
+                        content or to add no tags.")
     parser.add_argument("--tags_to_ignore",
                         nargs="*",
                         metavar="TAGS_TO_IGNORE",
