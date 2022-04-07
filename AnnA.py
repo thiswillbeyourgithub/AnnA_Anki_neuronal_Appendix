@@ -538,7 +538,7 @@ threads of size {batchsize})")
             temp = [x for x in rated_cards if x not in due_cards]
             diff = len(rated_cards) - len(temp)
             if diff != 0:
-                red(f"Removed overlap between rated cards and due cards: \
+                yel(f"Removed overlap between rated cards and due cards: \
 {diff} cards removed. Keeping {len(temp)} cards.\n")
                 rated_cards = temp
         self.due_cards = due_cards
