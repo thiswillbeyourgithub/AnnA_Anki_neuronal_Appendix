@@ -110,6 +110,7 @@ class AnnA:
                  reference_order="relative_overdueness",  # any of "lowest_interval", "relative overdueness", "order_added"
                  task="filter_review_cards", # any of "filter_review_cards", "bury_excess_review_cards", "bury_excess_learning_cards"
                  target_deck_size="deck_config",  # format: 80%, 0.8, "all", "deck_config"
+                 max_deck_size=None,
                  stopwords_lang=["english", "french"],
                  rated_last_X_days=4,
                  score_adjustment_factor=(1, 2),
@@ -166,6 +167,7 @@ class AnnA:
         if keep_OCR:
             self.OCR_content = ""
         self.target_deck_size = target_deck_size
+        self.max_deck_size = max_deck_size
         self.rated_last_X_days = rated_last_X_days
         self.minimum_due = minimum_due
         self.highjack_due_query = highjack_due_query
@@ -1113,6 +1115,7 @@ skipping")
         reference_order = self.reference_order
         df = self.df
         target_deck_size = self.target_deck_size
+        max_deck_size = self.max_deck_size
         rated = self.rated_cards
         due = self.due_cards
         w1 = self.score_adjustment_factor[0]
@@ -1242,6 +1245,13 @@ all the cards and study the deck over multiple days.")
                 target_deck_size = 0.01 * int(target_deck_size[:-1]) * (
                     len(df.index) - len(rated))
         target_deck_size = int(target_deck_size)
+
+        if max_deck_size is not None:
+            if target_deck_size > max_deck_size:
+                diff = target_deck_size - max_deck_size
+                red(f"Target deck size ({target_deck_size}) is above maximum \
+threshold ({max_deck_size}), excluding {diff} cards.")
+            target_deck_size = min(target_deck_size, max_deck_size)
 
         # checking if desired deck size is feasible:
         if target_deck_size > len(indTODO):
@@ -1632,6 +1642,14 @@ if __name__ == "__main__":
                         due cards like '80%%' or '0.80', the word \"all\" or\
                         \"deck_config\" to use the deck's settings for max review.\
                         Default is `deck_config`.")
+    parser.add_argument("--max_deck_size",
+                        nargs=1,
+                        metavar="MAX_DECK_SIZE",
+                        dest="max_deck_size",
+                        default=None,
+                        required=False,
+                        help="Maximum number of cards to put in the filtered \
+                        deck or to leave unburieed. Default is `None`.")
     parser.add_argument("--stopwords_lang",
                         nargs="+",
                         metavar="STOPLANG",
