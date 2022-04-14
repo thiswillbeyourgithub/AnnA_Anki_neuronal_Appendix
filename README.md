@@ -261,7 +261,6 @@ AnnA includes built-in methods you can run after instantiating the class. Note t
 * investigate using parallel processing of TF_IDF instead of _format_text using the .preprocess() method
 
 * notify LW
-* relative overdueness v2 : either square or take square root of interval, or something like that
 * create a gui : mainly by clicking on the gear of deck settings : AnnA > run AnnA with preset > each preset / run all active presets / About / configuration > acronym editor | field mappings | presets
 * ask Anking to review it
 
