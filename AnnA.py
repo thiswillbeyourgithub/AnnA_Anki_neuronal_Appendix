@@ -647,7 +647,6 @@ less than threshold ({self.minimum_due}).\nStopping.")
 
         # OCR
         if self.keep_OCR:
-            # keep image title (usually OCR)
             text = re.sub("<img src=.*? title=\"(.*?)\".*?>",
                           lambda string: self._store_OCR(string),
                           text,
