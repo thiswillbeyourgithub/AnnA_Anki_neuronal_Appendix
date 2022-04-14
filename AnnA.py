@@ -197,7 +197,7 @@ class AnnA:
             self.target_deck_size = str(self.target_deck_size)
         assert TFIDF_stem + TFIDF_tokenize != 2
         assert reference_order in ["lowest_interval", "relative_overdueness",
-                                   "order_added"]
+                                   "order_added", "LIRO_mix"]
         assert task in ["filter_review_cards",
                         "bury_excess_learning_cards",
                         "bury_excess_review_cards"]
@@ -1144,16 +1144,17 @@ skipping")
         df["ref"] = np.nan
 
         # computing reference order:
-        if reference_order == "lowest_interval":
+        if reference_order in ["lowest_interval", "LIRO_mix"]:
             ivl = df.loc[due, 'interval'].to_numpy().reshape(-1, 1)
             interval_cs = StandardScaler().fit_transform(ivl)
-            df.loc[due, "ref"] = interval_cs
+            if not reference_order == "LIRO_mix":
+                df.loc[due, "ref"] = interval_cs
 
         elif reference_order == "order_added":
             df.loc[due, "ref"] = StandardScaler().fit_transform(np.array(due).reshape(-1, 1))
 
-        elif reference_order == "relative_overdueness":
-            print("Computing relative overdueness...")
+        if reference_order in ["relative_overdueness", "LIRO_mix"]:
+            yel("Computing relative overdueness...")
             anki_col_time = int(self._call_anki(
                 action="getCollectionCreationTime"))
             time_offset = int((time.time() - anki_col_time) / 86400)
@@ -1176,7 +1177,13 @@ skipping")
             ro = -1 * (df.loc[due, "interval"].values + 0.001) / (overdue + 0.001)
             ro_clipped = np.clip(ro, -50, 50)
             ro_cs = StandardScaler().fit_transform(ro_clipped.values.reshape(-1, 1))
-            df.loc[due, "ref"] = ro_cs
+            if not reference_order == "LIRO_mix":
+                df.loc[due, "ref"] = ro_cs
+
+        # mean of lowest interval and relative overdueness
+        if reference_order == "LIRO_mix":
+            assert 0 not in list(df["ref"].isnan())
+            df.loc[due, "ref"] = (ro_cs + interval_cs) / 2
 
         assert len([x for x in rated if df.loc[x, "status"] != "rated"]) == 0
         red(f"\nCards identified as rated in the past {self.rated_last_X_days} days: \
@@ -1609,7 +1616,8 @@ if __name__ == "__main__":
                         default="relative_overdueness",
                         type=str,
                         required=False,
-                        help="either \"relative_overdueness\" or \"lowest_interval\".\
+                        help="either \"relative_overdueness\" or \"lowest_interval\"\
+                        or \"order_added\" or \"LIRO_mix\".\
                         It is the reference used to sort the card before\
                         adjusting them using the similarity scores. Default is\
                         `\"relative_overdueness\"`. Keep in mind that my\
@@ -1617,7 +1625,10 @@ if __name__ == "__main__":
                         default overdueness of anki and is not absolutely\
                         exactly the same but should be a close approximation.\
                         If you find edge cases or have any idea, please open an\
-                        issue.")
+                        issue. LIRO_mix is simply the the average of relative \
+                        overdueness and lowest interval (after centering and \
+                        scaling. I created it as a compromise between old and \
+                        new courses.")
     parser.add_argument("--task",
                         nargs=1,
                         metavar="TASK",
