@@ -1182,7 +1182,7 @@ skipping")
 
         # mean of lowest interval and relative overdueness
         if reference_order == "LIRO_mix":
-            assert 0 not in list(df["ref"].isnan())
+            assert 0 not in list(np.isnan(df["ref"].values))
             df.loc[due, "ref"] = (ro_cs + interval_cs) / 2
 
         assert len([x for x in rated if df.loc[x, "status"] != "rated"]) == 0
