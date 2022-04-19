@@ -1183,7 +1183,7 @@ skipping")
         # mean of lowest interval and relative overdueness
         if reference_order == "LIRO_mix":
             assert 0 not in list(np.isnan(df["ref"].values))
-            df.loc[due, "ref"] = (ro_cs + interval_cs) / 2
+            df.loc[due, "ref"] = (ro_cs + 3 * interval_cs) / 4
 
         assert len([x for x in rated if df.loc[x, "status"] != "rated"]) == 0
         red(f"\nCards identified as rated in the past {self.rated_last_X_days} days: \
@@ -1625,10 +1625,10 @@ if __name__ == "__main__":
                         default overdueness of anki and is not absolutely\
                         exactly the same but should be a close approximation.\
                         If you find edge cases or have any idea, please open an\
-                        issue. LIRO_mix is simply the the average of relative \
-                        overdueness and lowest interval (after centering and \
-                        scaling. I created it as a compromise between old and \
-                        new courses.")
+                        issue. LIRO_mix is simply the the weighted average of \
+                        relative overdueness and lowest interval (3 times more \
+                        important than RO) (after centering and  scaling. I \
+                        created it as a compromise between old and new courses.")
     parser.add_argument("--task",
                         nargs=1,
                         metavar="TASK",
