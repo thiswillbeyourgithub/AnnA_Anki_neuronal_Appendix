@@ -3,6 +3,10 @@
 # if you have low memory, declare all the instance "a" instead
 # of a, then b, then c etc.
 
+ans = input("Launch AnnA?\n>")
+if ans != "":
+    raise SystemExit()
+
 if __name__=='__main__':
     from AnnA import *
 
