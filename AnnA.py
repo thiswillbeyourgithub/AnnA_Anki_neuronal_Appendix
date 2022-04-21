@@ -1176,8 +1176,8 @@ skipping")
             # Here's a link to one of the implementation : https://github.com/ankitects/anki/blob/afff4fc437f523a742f617c6c4ad973a4d477c15/rslib/src/storage/card/filtered.rs
             ro = -1 * (df.loc[due, "interval"].values + 0.001) / (overdue + 0.001)
             # squishing values
-            ro[ro>15] = 15 + np.log(ro[ro>15])
-            ro[ro<-15] = -15 - np.log(-ro[ro<-15])
+            ro[ro>15] = 15 + np.log(ro[ro>15]) - 2.7
+            ro[ro<-15] = -15 - np.log(-ro[ro<-15]) + 2.7
             # clipping values above 50 and below -50
             ro_clipped = np.clip(ro, -50, 50)
             # centering and scaling
