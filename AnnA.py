@@ -1086,7 +1086,7 @@ skipping")
             argument 'reference_order', hence picking a card according to its
             'ref' only can be the same as using a regular filtered deck with
             'reference_order' set to 'relative_overdueness' for example.
-            Some of the ref columns are centered and scaled.
+            Some of the ref columns are centered and scaled or processed.
         2. remove siblings of the due list of found (except if the queue
             is meant to contain a lot of cards, then siblings are not removed)
         3. prints a few stats about 'ref' distribution in your deck as well
@@ -1175,11 +1175,16 @@ skipping")
             # in anki, as I was not able to replicate it.
             # Here's a link to one of the implementation : https://github.com/ankitects/anki/blob/afff4fc437f523a742f617c6c4ad973a4d477c15/rslib/src/storage/card/filtered.rs
             ro = -1 * (df.loc[due, "interval"].values + 0.001) / (overdue + 0.001)
+            # squishing values
+            ro[ro>15] = 15 + np.log(ro[ro>15])
+            ro[ro<-15] = -15 - np.log(-ro[ro<-15])
+            # clipping values above 50 and below -50
             ro_clipped = np.clip(ro, -50, 50)
+            # centering and scaling
             ro_cs = StandardScaler().fit_transform(ro_clipped.values.reshape(-1, 1))
+
             if not reference_order == "LIRO_mix":
                 df.loc[due, "ref"] = ro_cs
-
         # mean of lowest interval and relative overdueness
         if reference_order == "LIRO_mix":
             assert 0 not in list(np.isnan(df["ref"].values))
@@ -1627,7 +1632,7 @@ if __name__ == "__main__":
                         If you find edge cases or have any idea, please open an\
                         issue. LIRO_mix is simply the the weighted average of \
                         relative overdueness and lowest interval (2 times more \
-                        important than RO) (after centering and  scaling. I \
+                        important than RO) (after some post processing). I \
                         created it as a compromise between old and new courses.")
     parser.add_argument("--task",
                         nargs=1,
