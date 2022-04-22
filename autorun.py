@@ -43,3 +43,8 @@ if __name__=='__main__':
             acronym_list=None,
             rated_last_X_days=3,
             )
+
+ans = input("\n\nEnter console? (y/n)\n>")
+if ans in ["y", "yes"]:
+    import code
+    code.interact(local=locals())
