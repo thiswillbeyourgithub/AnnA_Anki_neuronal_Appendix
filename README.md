@@ -256,6 +256,7 @@ AnnA includes built-in methods you can run after instantiating the class. Note t
 
 ## TODO
 * add argument : repicking_task = tag / boost / tag&boost
+* merge code from anki connect to make companion addon compatible with latest anki
 * switch to using more ankipandas than anki connect to gather information
 * package AnnA on pypi or as a standalone package
 
