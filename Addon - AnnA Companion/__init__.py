@@ -417,7 +417,7 @@ class AnkiConnect:
         newDeckName = str(newDeckName)
         if newDeckName in deckList:
             return False  # deckname already taken
- 
+
         did = self.collection().decks.newDyn(newDeckName)
         d = self.collection().decks.current()
         d['terms'] = [[str(searchQuery), int(gatherCount), sortOrder]]
@@ -520,7 +520,7 @@ class AnkiConnect:
     def getCollectionCreationTime(self):
         try:
             return aqt.mw.col.crt
-        except:
+        except Exception:
             return False
 
 

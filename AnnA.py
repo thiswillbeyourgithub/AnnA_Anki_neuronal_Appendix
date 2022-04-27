@@ -1500,8 +1500,7 @@ the data in `acronym_list`.")
             assert len(to_bury) < len(self.due_cards)
             red(f"Burying {len(to_bury)} cards out of {len(self.due_cards)}.")
             red("This will not affect the due order.")
-            self._call_anki(action="bury",
-                              cards=to_bury)
+            self._call_anki(action="bury", cards=to_bury)
             return True
         else:
             if self.fdeckname_template is not None:
