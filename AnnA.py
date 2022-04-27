@@ -1155,6 +1155,13 @@ skipping")
 
         if reference_order in ["relative_overdueness", "LIRO_mix"]:
             yel("Computing relative overdueness...")
+
+            # the code for relative overdueness is not exactly the same as
+            # in anki, as I was not able to fully replicate it.
+            # Here's a link to one of the original implementation :
+            # https://github.com/ankitects/anki/blob/afff4fc437f523a742f617c6c4ad973a4d477c15/rslib/src/storage/card/filtered.rs
+
+            # first, get the offset for due cards values that are timestamp
             anki_col_time = int(self._call_anki(
                 action="getCollectionCreationTime"))
             time_offset = int((time.time() - anki_col_time) / 86400)
@@ -1171,15 +1178,30 @@ skipping")
             overdue = df.loc[due, "ref_due"] - time_offset
             df.drop("ref_due", axis=1, inplace=True)
 
-            # the code for relative overdueness is not exactly the same as
-            # in anki, as I was not able to replicate it.
-            # Here's a link to one of the implementation : https://github.com/ankitects/anki/blob/afff4fc437f523a742f617c6c4ad973a4d477c15/rslib/src/storage/card/filtered.rs
-            ro = -1 * (df.loc[due, "interval"].values + 0.001) / (overdue + 0.001)
-            # squishing values
-            ro[ro>15] = 15 + np.log(ro[ro>15]) - 2.7
-            ro[ro<-15] = -15 - np.log(-ro[ro<-15]) + 2.7
-            # clipping values above 50 and below -50
-            ro_clipped = np.clip(ro, -50, 50)
+            # then, correct overdue values to make sure they are negative
+            correction = overdue.max() + 0.01
+            if correction > 1:
+                red(f"This should not happen.")
+                breakpoint()
+            # my implementation of relative overdueness:
+            # (intervals are positive, overdue are negative for due cards
+            # hence ro is positive)
+            # low ro means urgent, high lo means not urgent
+            ro = -1 * (df.loc[due, "interval"].values + correction) / (overdue - correction)
+
+            # sanity check
+            try:
+                assert np.sum((overdue-correction)>0) == 0
+                assert np.sum(ro<0) == 0
+            except:
+                red(f"This should not happen.")
+                breakpoint()
+
+            # squishing values above some threashold
+            limit = np.percentile(ro, 75)
+            ro[ro>limit] = limit + np.log(ro[ro>limit]) - 2.7
+            # clipping extreme values
+            ro_clipped = np.clip(ro, 0, 2*limit)
             # centering and scaling
             ro_cs = StandardScaler().fit_transform(ro_clipped.values.reshape(-1, 1))
 
