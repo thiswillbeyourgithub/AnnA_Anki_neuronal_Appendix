@@ -132,6 +132,7 @@ class AnnA:
                  fdeckname_template=None,
                  show_banner=True,
                  skip_print_similar=False,
+                 repick_task="boost&addtag",  # None, "addtag", "boost" or "boost&addtag"
 
                  # vectorization:
                  vectorizer="TFIDF",  # can only be "TFIDF" but left for legacy reason
@@ -191,6 +192,7 @@ class AnnA:
         self.skip_print_similar = skip_print_similar
         self.whole_deck_computation = whole_deck_computation
         self.profile_name = profile_name
+        self.repick_task = str(repick_task)
 
         # args sanity checks and initialization
         if isinstance(self.target_deck_size, int):
@@ -318,6 +320,7 @@ values. {e}")
             red(f"Error when extracting stop words: {e}")
             red("Setting stop words list to None.")
             self.stops = None
+        assert "None" == self.repick_task or "addtag" in self.repick_task or "boost" in self.repick_task
 
         # actual execution
         self.deckname = self._deckname_check(deckname)
@@ -1206,6 +1209,7 @@ skipping")
             ro_cs = StandardScaler().fit_transform(ro_clipped.values.reshape(-1, 1))
 
             # boosting urgent cards to make sure they make it to the deck
+            boost = True if "boost" in self.repick_task else False
             repicked = []
             for x in due:
                 # if overdue at least equal to interval, then boost those cards
@@ -1213,17 +1217,20 @@ skipping")
                 # is very ugent, n will be about -2 so this card will be boosted.
                 n = (overdue.loc[x] - correction) / (df.loc[x, "interval"] + correction)
                 if n <= -1:
-                    ro_cs[due.index(x)] = n
                     repicked.append(x)
+                    if boost:
+                        ro_cs[due.index(x)] = n
             if repicked:
-                red(f"{len(repicked)}/{len(due)} cards with too low relative overdueness (i.e. on the "
-                     "brink of being forgotten) where boosted: {', '.join(repicked)}")
+                red(f"{len(repicked)}/{len(due)} cards with too low "
+                    "relative overdueness (i.e. on the brink of being "
+                    "forgotten) where found.")
 
-                today_date = time.asctime()
-                notes = self._call_anki(action="cardsToNotes", cards=repicked)
-                new_tag = f"AnnA::Session_{today_date.replace(' ', '_')}::urgent_reviews"
-                self._call_anki(action="addTags", notes=notes, tags=new_tag)
-                red("Appended tags 'urgent_reviews' to cards with very low relative overdueness")
+                if "addtag" in self.repick_task:
+                    today_date = time.asctime()
+                    notes = self._call_anki(action="cardsToNotes", cards=repicked)
+                    new_tag = f"AnnA::Session_{today_date.replace(' ', '_')}::urgent_reviews"
+                    self._call_anki(action="addTags", notes=notes, tags=new_tag)
+                    red("Appended tags 'urgent_reviews' to cards with very low relative overdueness")
 
             if not reference_order == "LIRO_mix":
                 df.loc[due, "ref"] = ro_cs
@@ -1911,6 +1918,19 @@ if __name__ == "__main__":
                         that are very similar or very different. This speeds up\
                         execution but can help figure out when something when\
                         wrong.")
+    parser.add_argument("--repick_task",
+                        nargs=1,
+                        metavar="REPICK_TASK",
+                        dest="repick_task",
+                        default=None,
+                        required=False,
+                        help="Define what happens to cards deemes urgent when \
+                        relative overdueness is used. If contains 'boost', \
+                        those cards will have a boost in priority to make \
+                        sure you will review them ASAP. If contains 'addtag' \
+                        a tag indicating which card is urgent will be added \
+                        at the end of the run. Disable by setting it to None. \
+                        Default is `boost&addtag`.")
     parser.add_argument("--vectorizer",
                         nargs=1,
                         metavar="VECTORIZER",

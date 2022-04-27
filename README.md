@@ -255,7 +255,6 @@ AnnA includes built-in methods you can run after instantiating the class. Note t
 * `save_df` saves the dataframe containing the cards and all other infos needed by AnnA as a pickle file. Used mainly for debugging. Files will be saved to the folder `DF_backups`
 
 ## TODO
-* add argument : repicking_task = tag / boost / tag&boost
 * merge code from anki connect to make companion addon compatible with latest anki
 * switch to using more ankipandas than anki connect to gather information
 * package AnnA on pypi or as a standalone package
