@@ -1674,7 +1674,13 @@ if __name__ == "__main__":
                         issue. LIRO_mix is simply the the weighted average of \
                         relative overdueness and lowest interval (2 times more \
                         important than RO) (after some post processing). I \
-                        created it as a compromise between old and new courses.")
+                        created it as a compromise between old and new courses. \
+                        My implementation of relative overdueness includes a \
+                        boosting feature: if your dues contain cards \
+                        with its overdueness several times larger than \
+                        its interval, they are urgent. AnnA will add \
+                        a tag to them and increase their likelyhood \
+                        of being part of the Optideck.")
     parser.add_argument("--task",
                         nargs=1,
                         metavar="TASK",
