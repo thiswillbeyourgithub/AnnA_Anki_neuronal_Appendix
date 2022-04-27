@@ -1219,6 +1219,12 @@ skipping")
                 red(f"{len(repicked)}/{len(due)} cards with too low relative overdueness (i.e. on the "
                      "brink of being forgotten) where boosted: {', '.join(repicked)}")
 
+                today_date = time.asctime()
+                notes = self._call_anki(action="cardsToNotes", cards=repicked)
+                new_tag = f"AnnA::Session_{today_date.replace(' ', '_')}::urgent_reviews"
+                self._call_anki(action="addTags", notes=notes, tags=new_tag)
+                red("Appended tags 'urgent_reviews' to cards with very low relative overdueness")
+
             if not reference_order == "LIRO_mix":
                 df.loc[due, "ref"] = ro_cs
         # mean of lowest interval and relative overdueness

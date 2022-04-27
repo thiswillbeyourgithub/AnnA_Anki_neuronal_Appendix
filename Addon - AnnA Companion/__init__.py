@@ -523,6 +523,15 @@ class AnkiConnect:
         except Exception:
             return False
 
+    @util.api()
+    def addTags(self, notes, tags, add=True):
+        self.startEditing()
+        self.collection().tags.bulkAdd(notes, tags, add)
+        self.stopEditing()
+
+    @util.api()
+    def cardsToNotes(self, cards):
+        return self.collection().db.list('select distinct nid from cards where id in ' + anki.utils.ids2str(cards))
 
 #
 # Entry
