@@ -1302,7 +1302,7 @@ threshold ({max_deck_size}), excluding {diff} cards.")
 
         # checking if desired deck size is feasible:
         if target_deck_size > len(indTODO):
-            red(f"You wanted to create a deck with \
+            yel(f"You wanted to create a deck with \
 {target_deck_size} in it but only {len(indTODO)} cards remain, taking the \
 lowest value.")
         queue_size_goal = min(target_deck_size, len(indTODO))
