@@ -1205,6 +1205,20 @@ skipping")
             # centering and scaling
             ro_cs = StandardScaler().fit_transform(ro_clipped.values.reshape(-1, 1))
 
+            # boosting urgent cards to make sure they make it to the deck
+            repicked = []
+            for x in due:
+                # if overdue at least equal to interval, then boost those cards
+                # for example, a card with interval 7 days, that is 15 days overdue
+                # is very ugent, n will be about -2 so this card will be boosted.
+                n = (overdue.loc[x] - correction) / (df.loc[x, "interval"] + correction)
+                if n <= -1:
+                    ro_cs[due.index(x)] = n
+                    repicked.append(x)
+            if repicked:
+                red(f"{len(repicked)}/{len(due)} cards with too low relative overdueness (i.e. on the "
+                     "brink of being forgotten) where boosted: {', '.join(repicked)}")
+
             if not reference_order == "LIRO_mix":
                 df.loc[due, "ref"] = ro_cs
         # mean of lowest interval and relative overdueness
