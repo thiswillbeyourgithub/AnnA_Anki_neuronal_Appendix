@@ -255,7 +255,7 @@ AnnA includes built-in methods you can run after instantiating the class. Note t
 * `save_df` saves the dataframe containing the cards and all other infos needed by AnnA as a pickle file. Used mainly for debugging. Files will be saved to the folder `DF_backups`
 
 ## TODO
-*More or less by order of urgency*
+* add argument to turn off repicking
 * switch to using more ankipandas than anki connect to gather information
 * package AnnA on pypi or as a standalone package
 
@@ -268,7 +268,7 @@ AnnA includes built-in methods you can run after instantiating the class. Note t
 * implement task "optimize_filtered_deck" to optimize the order of an already existing filtered deck without burying anything
 * implement autonomous mode : mean distance across the queue probably follows an elbow curve with diminishing returns, this should help do only most important reviews
 * look into sentence mining methods from sbert, that might contain useful ideas
-* take a look at topic modelling techniques that might be cleaner to invoke than the current ctf-idf implementation
+* take a look at topic modeling techniques that might be cleaner to invoke than the current ctf-idf implementation
 * re read this article for inspiration : http://mccormickml.com/2021/05/27/question-answering-system-tf-idf/
 * automatically create a phylogeny of cards based on a distance matrix and see if it's an appropriate mind map, plotly is suitable for this kind of tree
 * investigate crazy ideas list
