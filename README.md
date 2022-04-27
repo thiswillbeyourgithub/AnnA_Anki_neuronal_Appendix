@@ -89,7 +89,7 @@ Here are different ways of looking at what AnnA can do for you in a few words:
 * Open an issue telling me your remarks and suggestion
 
 ### Usage and arguments
-AnnA was made with customizability in mind. All the settings you might want to edit are arguments of the call of AnnA Class. Don't be frightened, many of those settings are rarely used and the default values should be good for almost anyone. Here are the arguments with the relevant explanation (*careful, this might not be up to date, refer to the actual --help message for latest edition*):
+AnnA was made with customizability in mind. All the settings you might want to edit are arguments of the call of AnnA Class. Don't be frightened, many of those settings are rarely used and the default values should be good for almost anyone. Here are the arguments with the relevant explanation.
 
 * `python3 ./AnnA.py  --help`:
 ```
