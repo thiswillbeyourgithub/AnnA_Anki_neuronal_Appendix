@@ -1228,7 +1228,7 @@ skipping")
                 if "addtag" in self.repick_task:
                     today_date = time.asctime()
                     notes = self._call_anki(action="cardsToNotes", cards=repicked)
-                    new_tag = f"AnnA::Session_{today_date.replace(' ', '_')}::urgent_reviews"
+                    new_tag = f"AnnA::urgent_reviews::session_of_{today_date.replace(' ', '_')}"
                     try:
                         self._call_anki(action="addTags", notes=notes, tags=new_tag)
                     except Exception as e:
