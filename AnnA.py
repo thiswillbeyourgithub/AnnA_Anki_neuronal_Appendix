@@ -1927,8 +1927,8 @@ if __name__ == "__main__":
                         dest="repick_task",
                         default=None,
                         required=False,
-                        help="Define what happens to cards deemes urgent when \
-                        relative overdueness is used. If contains 'boost', \
+                        help="Define what happens to cards deemed urgent in \
+                        'relative_overdueness' ref mode. If contains 'boost', \
                         those cards will have a boost in priority to make \
                         sure you will review them ASAP. If contains 'addtag' \
                         a tag indicating which card is urgent will be added \
