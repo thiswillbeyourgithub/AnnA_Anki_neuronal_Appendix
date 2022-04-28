@@ -1216,7 +1216,7 @@ skipping")
                 # for example, a card with interval 7 days, that is 15 days overdue
                 # is very ugent, n will be about -2 so this card will be boosted.
                 n = (overdue.loc[x] - correction) / (df.loc[x, "interval"] + correction)
-                if n <= -1:
+                if n <= -1 and df.loc[x, "interval"] >= 3:
                     repicked.append(x)
                     if boost:
                         ro_cs[due.index(x)] = n
