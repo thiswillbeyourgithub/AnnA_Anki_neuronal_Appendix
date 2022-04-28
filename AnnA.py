@@ -1229,7 +1229,10 @@ skipping")
                     today_date = time.asctime()
                     notes = self._call_anki(action="cardsToNotes", cards=repicked)
                     new_tag = f"AnnA::Session_{today_date.replace(' ', '_')}::urgent_reviews"
-                    self._call_anki(action="addTags", notes=notes, tags=new_tag)
+                    try:
+                        self._call_anki(action="addTags", notes=notes, tags=new_tag)
+                    except Exception as e:
+                        red(f"Error adding tags to urgent cards: {str(e)}")
                     red("Appended tags 'urgent_reviews' to cards with very low relative overdueness")
 
             if not reference_order == "LIRO_mix":
