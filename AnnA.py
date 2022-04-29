@@ -902,7 +902,7 @@ adjust formating issues:")
                                      stop_words=None,
                                      ngram_range=ngram_val,
                                      max_features=10_000,
-                                     norm="l2")
+                                     norm="l1")
 
         use_fallback = False
         if self.whole_deck_computation:
