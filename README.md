@@ -188,7 +188,7 @@ optional arguments:
   --low_power_mode      enable to reduce the computation needed for AnnA, making it usable
                         for less powerful computers. Default to `False`. In more details, it
                         mainly reduces the argument `ngram_range` for TFIDF, making it use
-                        unigrams instead of n-grams with n from 1 to 5. It also skips trying
+                        unigrams instead of n-grams with n from 1 to 3. It also skips trying
                         to find acronyms that were not replaced as well as identifying
                         similar cards.
   --log_level LOG_LEVEL
