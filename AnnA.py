@@ -1182,9 +1182,9 @@ skipping")
             df.drop("ref_due", axis=1, inplace=True)
 
             # then, correct overdue values to make sure they are negative
-            correction = overdue.max() + 0.01
+            correction = max(overdue.max(), 0) + 0.01
             if correction > 1:
-                red(f"This should not happen.")
+                red(f"This should probably not happen.")
                 breakpoint()
             # my implementation of relative overdueness:
             # (intervals are positive, overdue are negative for due cards
