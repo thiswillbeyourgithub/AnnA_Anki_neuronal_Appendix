@@ -44,7 +44,12 @@ if __name__=='__main__':
             rated_last_X_days=3,
             )
 
-ans = input("\n\nEnter console? (y/n)\n>")
-if ans in ["y", "yes"]:
-    import code
-    code.interact(local=locals())
+try:
+    ans = input("\n\nEnter console? (y/n)\n>")
+    if ans in ["y", "yes"]:
+        import code
+        code.interact(local=locals())
+    else:
+        raise SystemExit()
+except Exception:
+        raise SystemExit()
