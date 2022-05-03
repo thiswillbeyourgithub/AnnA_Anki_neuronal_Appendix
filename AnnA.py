@@ -1276,6 +1276,7 @@ skipping")
             else:
                 red(f"Removed {previous_len-len(indTODO)} siblings cards out of \
 {previous_len}.")
+            assert len(indTODO) != 0
         else:
             yel("Not excluding siblings because you want to study all the cards.")
 
