@@ -1196,7 +1196,7 @@ skipping")
             try:
                 assert np.sum((overdue-correction)>0) == 0
                 assert np.sum(ro<0) == 0
-            except:
+            except Exception:
                 red(f"This should not happen.")
                 breakpoint()
 
@@ -1213,7 +1213,7 @@ skipping")
             repicked = []
             for x in due:
                 # if overdue at least equal to interval, then boost those cards
-                # for example, a card with interval 7 days, that is 15 days overdue
+                # for example, a card with interval 7 days, that is -15 days overdue
                 # is very ugent, n will be about -2 so this card will be boosted.
                 n = (overdue.loc[x] - correction) / (df.loc[x, "interval"] + correction)
                 if n <= -1 and df.loc[x, "interval"] >= 3:
