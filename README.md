@@ -258,6 +258,7 @@ AnnA includes built-in methods you can run after instantiating the class. Note t
 * merge code from anki connect to make companion addon compatible with latest anki
 * switch to using more ankipandas than anki connect to gather information
 * package AnnA on pypi or as a standalone package
+* consider image occlusions of the same image as siblings
 
 * investigate using parallel processing of TF_IDF instead of _format_text using the .preprocess() method
 
