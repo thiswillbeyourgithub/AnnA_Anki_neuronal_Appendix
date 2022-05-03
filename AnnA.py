@@ -641,7 +641,7 @@ less than threshold ({self.minimum_due}).\nStopping.")
 
         # if blockquote or li or ul, mention that it's a list item
         # usually indicating a harder card
-        if re.match("</?blockquote/?>|</?li/?>|</?ul/?>|", text, flags=re.M):
+        if re.match("</?blockquote/?>|</?li/?>|</?ul/?>", text, flags=re.M):
             text += " list list list list list"
 
         # remove html spaces
