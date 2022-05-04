@@ -862,7 +862,7 @@ less than threshold ({self.minimum_due}).\nStopping.")
             if len(self.df.loc[ind, "text"]) < 10:
                 ind_short.append(ind)
         if ind_short:
-            red("{len(ind_short)} cards contain less than 10 characters after \
+            red(f"{len(ind_short)} cards contain less than 10 characters after \
 formatting: {','.join(ind_short)}")
 
         yel("\n\nPrinting 2 random samples of your formated text, to help \
