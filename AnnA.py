@@ -861,6 +861,7 @@ less than threshold ({self.minimum_due}).\nStopping.")
         tqdm.pandas(desc="Formating text", smoothing=0, unit=" card")
         self.df["text"] = self.df["comb_text"].progress_apply(lambda x: self._text_formatter(x))
 
+        # find short cards
         ind_short = []
         for ind in self.df.index:
             if len(self.df.loc[ind, "text"]) < 10:
@@ -986,6 +987,7 @@ model {mod}.Taking first 2 fields.")
                 yel("Done vectorizing over whole deck!")
             except Exception as e:
                 red(f"Exception : {e}")
+                red("Using fallback method...")
                 beep()
                 use_fallback = True
 
