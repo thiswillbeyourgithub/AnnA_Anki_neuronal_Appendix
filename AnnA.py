@@ -99,6 +99,7 @@ set_global_logging_level(logging.ERROR,
                           "tensorflow", "sklearn", "nltk"])
 
 def beep(sound="error", **args):
+    red("BEEP")
     beepy.beep(sound, **args)
     time.sleep(1)
 
