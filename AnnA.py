@@ -856,6 +856,7 @@ less than threshold ({self.minimum_due}).\nStopping.")
 
         for notification in list(set(to_notify)):
             red(notification)
+            beep()
 
         # using multithreading is not faster, using multiprocess is probably
         # slower if not done by large batching
