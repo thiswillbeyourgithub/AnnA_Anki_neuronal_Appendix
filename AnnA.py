@@ -1242,9 +1242,9 @@ skipping")
                     new_tag = f"AnnA::urgent_reviews::session_of_{today_date.replace(' ', '_')}"
                     try:
                         self._call_anki(action="addTags", notes=notes, tags=new_tag)
+                        red("Appended tags 'urgent_reviews' to cards with very low relative overdueness")
                     except Exception as e:
                         red(f"Error adding tags to urgent cards: {str(e)}")
-                    red("Appended tags 'urgent_reviews' to cards with very low relative overdueness")
                         beep()
 
             if not reference_order == "LIRO_mix":
