@@ -1,3 +1,4 @@
+import beepy
 import argparse
 import logging
 import gc
@@ -97,6 +98,9 @@ set_global_logging_level(logging.ERROR,
                          ["transformers", "nlp", "torch",
                           "tensorflow", "sklearn", "nltk"])
 
+def beep(sound="error", **args):
+    beepy.beep(sound, **args)
+    time.sleep(1)
 
 class AnnA:
     """
@@ -864,6 +868,7 @@ less than threshold ({self.minimum_due}).\nStopping.")
         if ind_short:
             red(f"{len(ind_short)} cards contain less than 10 characters after \
 formatting: {','.join(ind_short)}")
+            beep()
 
         yel("\n\nPrinting 2 random samples of your formated text, to help \
 adjust formating issues:")
@@ -981,6 +986,7 @@ model {mod}.Taking first 2 fields.")
                 yel("Done vectorizing over whole deck!")
             except Exception as e:
                 red(f"Exception : {e}")
+                beep()
                 use_fallback = True
 
         if (self.whole_deck_computation is False) or (use_fallback):
@@ -1078,6 +1084,7 @@ skipping")
                         break
             if printed is False:
                 red("Couldn't find lowest values to print!")
+                beep()
             print("")
             pd.reset_option('display.max_colwidth')
         return True
@@ -1185,6 +1192,7 @@ skipping")
             correction = max(overdue.max(), 0) + 0.01
             if correction > 1:
                 red(f"This should probably not happen.")
+                beep()
                 breakpoint()
             # my implementation of relative overdueness:
             # (intervals are positive, overdue are negative for due cards
@@ -1198,6 +1206,7 @@ skipping")
                 assert np.sum(ro<0) == 0
             except Exception:
                 red(f"This should not happen.")
+                beep()
                 breakpoint()
 
             # squishing values above some threashold
@@ -1234,6 +1243,7 @@ skipping")
                     except Exception as e:
                         red(f"Error adding tags to urgent cards: {str(e)}")
                     red("Appended tags 'urgent_reviews' to cards with very low relative overdueness")
+                        beep()
 
             if not reference_order == "LIRO_mix":
                 df.loc[due, "ref"] = ro_cs
@@ -1340,6 +1350,7 @@ set its adjustment weight to 0")
                 whi(f"Distance: {val}\n\n")
             except Exception as e:
                 red(f"Exception: {e}")
+                beep()
             pd.reset_option('display.float_format')
 
         # final check before computing optimal order:
@@ -1427,6 +1438,7 @@ AnnA:", end=" ")
 
         except Exception as e:
             red(f"\nException: {e}")
+            beep()
 
         self.opti_rev_order = [int(x) for x in queue]
         self.df = df
@@ -1532,6 +1544,7 @@ the data in `acronym_list`.")
                 red(f"\nFound existing filtered deck: {filtered_deck_name} \
 You have to delete it manually, the cards will be returned to their original \
 deck.")
+                beep()
                 input("Done? >")
 
         whi(f"Creating deck containing the cards to review: \
@@ -1557,6 +1570,7 @@ deck.")
 as opti_rev_order!")
             pprint(diff)
             red(f"\nNumber of inconsistent cards: {len(diff)}")
+            beep()
 
         yel("\nAsking anki to alter the filtered deck's due order...", end="")
         res = self._call_anki(action="setDueOrderOfFiltered",
@@ -2022,9 +2036,11 @@ if __name__ == "__main__":
         anna = AnnA(**args)
     except Exception as e:
         red(f"Error: {str(e)}")
+        beep()
         pdb.set_trace()
     if console_mode:
         red("\n\nRun finished. Opening console:\n(You can access the last \
 instance of AnnA by inspecting variable \"anna\")\n")
         import code
+        beep()
         code.interact(local=locals())
