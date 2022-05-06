@@ -867,10 +867,10 @@ less than threshold ({self.minimum_due}).\nStopping.")
         ind_short = []
         for ind in self.df.index:
             if len(self.df.loc[ind, "text"]) < 10:
-                ind_short.append(str(ind))
+                ind_short.append(ind)
         if ind_short:
             red(f"{len(ind_short)} cards contain less than 10 characters after \
-formatting: {','.join(ind_short)}")
+formatting: {','.join([str(x) for x in ind_short])}")
             if self.append_tags is False:
                 red("Appending tags to those cards despite setting `append_tags` to False.")
                 for ind in ind_short:
@@ -880,7 +880,7 @@ formatting: {','.join(ind_short)}")
                             t = re.sub(spacers_compiled,
                                        " ",
                                        " ".join(t.split(self.tags_separator)[-2:]))
-                            self.df.loc[int(ind), "text"] += " " + t
+                            self.df.loc[ind, "text"] += " " + t
             beep()
 
         yel("\n\nPrinting 2 random samples of your formated text, to help \
