@@ -1913,7 +1913,8 @@ if __name__ == "__main__":
                         default=None,
                         required=False,
                         help="a list of tags to ignore when appending tags to\
-                        cards. Default is `None`, to ignore.")
+                        cards. This is not a list of tags whose card should \
+                        be ignored! Default is `None (i.e. disabled).")
     parser.add_argument("--tags_separator",
                         nargs=1,
                         metavar="TAGS_SEP",
