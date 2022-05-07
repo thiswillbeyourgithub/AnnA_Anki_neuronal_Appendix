@@ -983,6 +983,7 @@ model {mod}.Taking first 2 fields.")
                     red(notification)
 
                 corpus = []
+                spacers_compiled = re.compile("_|-|/")
                 stopw_compiled = re.compile("\b" + "\b|\b".join(self.stops) + "\b", flags=re.MULTILINE | re.IGNORECASE | re.DOTALL)
                 tf = self._text_formatter
                 for ind in tqdm(cards.index, desc=f"Gathering and formating {self.deckname}"):
@@ -991,7 +992,14 @@ model {mod}.Taking first 2 fields.")
                     new = ""
                     for i in indices_to_keep:
                         new += fields_list[i] + " "
-                    corpus.append(tf(re.sub(stopw_compiled, " ", new)))
+                    processed = tf(re.sub(stopw_compiled, " ", new))
+                    if len(processed) < 10 or self.append_tags:
+                        tags = cards.loc[ind, "ntags"]
+                        for t in tags:
+                            if ("AnnA" not in t) and (t not in self.tags_to_ignore):
+                                t = re.sub(spacers_compiled, " ", " ".join(t.split(self.tags_separator)[-2:]))
+                                processed += " " + t
+                    corpus.append(processed)
 
                 vectorizer.fit(tqdm(corpus, desc="Vectorizing whole deck"))
                 t_vec = vectorizer.transform(tqdm(df["text"], desc="Vectorizing \
