@@ -174,7 +174,7 @@ optional arguments:
                         `["AI_machine_learning", "medical_terms"]`. Default to None.
   --minimum_due MINIMUM_DUE_CARDS
                         stops AnnA if the number of due cards is inferior to this value.
-                        Default is `15`.
+                        Default is `5`.
   --highjack_due_query HIGHJACK_DUE_QUERY
                         bypasses the browser query used to find the list of due cards. You
                         can set it for example to `deck:"my_deck" is:due -rated:14 flag:1`.

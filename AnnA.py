@@ -124,7 +124,7 @@ class AnnA:
                  acronym_list=None,
 
                  # others:
-                 minimum_due=15,
+                 minimum_due=5,
                  highjack_due_query=None,
                  highjack_rated_query=None,
                  low_power_mode=False,
@@ -1840,11 +1840,11 @@ if __name__ == "__main__":
                         nargs=1,
                         metavar="MINIMUM_DUE_CARDS",
                         dest="minimum_due",
-                        default=15,
+                        default=5,
                         type=int,
                         required=False,
                         help="stops AnnA if the number of due cards is inferior\
-                        to this value. Default is `15`.")
+                        to this value. Default is `5`.")
     parser.add_argument("--highjack_due_query",
                         nargs=1,
                         metavar="HIGHJACK_DUE_QUERY",
