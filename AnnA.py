@@ -332,6 +332,8 @@ values. {e}")
             red(f"Error when extracting stop words: {e}")
             red("Setting stop words list to None.")
             self.stops = None
+        self.stopw_compiled = re.compile("\b" + "\b|\b".join(self.stops) + "\b",
+                                         flags=re.MULTILINE | re.IGNORECASE | re.DOTALL)
         assert "None" == self.repick_task or "addtag" in self.repick_task or "boost" in self.repick_task
 
         # actual execution
@@ -782,7 +784,7 @@ less than threshold ({self.minimum_due}).\nStopping.")
                     else:
                         field_counter[f] = 1
                     try:
-                        next_field = re.sub(stopw_compiled,
+                        next_field = re.sub(self.stopw_compiled,
                                             " ",
                                 df.loc[index, "fields"][f.lower()]["value"].strip())
                         if next_field != "":
@@ -815,8 +817,6 @@ less than threshold ({self.minimum_due}).\nStopping.")
 
         threads = []
         to_notify = []
-        stopw_compiled = re.compile("\b" + "\b|\b".join(self.stops) + "\b",
-                                    flags=re.MULTILINE | re.IGNORECASE | re.DOTALL)
         spacers_compiled = re.compile("_|-|/")
 
         with tqdm(total=n,
@@ -830,7 +830,7 @@ less than threshold ({self.minimum_due}).\nStopping.")
                                                 sub_card_list,
                                                 lock,
                                                 pbar,
-                                                stopw_compiled,
+                                                self.stopw_compiled,
                                                 spacers_compiled),
                                           daemon=False)
                 thread.start()
@@ -850,7 +850,7 @@ less than threshold ({self.minimum_due}).\nStopping.")
                                                 na_list,
                                                 lock,
                                                 pbar,
-                                                stopw_compiled),
+                                                self.stopw_compiled),
                                           daemon=False)
                 thread.start()
                 thread.join()
@@ -991,7 +991,6 @@ model {mod}.Taking first 2 fields.")
 
                 corpus = []
                 spacers_compiled = re.compile("_|-|/")
-                stopw_compiled = re.compile("\b" + "\b|\b".join(self.stops) + "\b", flags=re.MULTILINE | re.IGNORECASE | re.DOTALL)
                 tf = self._text_formatter
                 for ind in tqdm(cards.index, desc=f"Gathering and formating {self.deckname}"):
                     indices_to_keep = m_gIoF(cards.loc[ind, "nmodel"])
@@ -999,7 +998,7 @@ model {mod}.Taking first 2 fields.")
                     new = ""
                     for i in indices_to_keep:
                         new += fields_list[i] + " "
-                    processed = tf(re.sub(stopw_compiled, " ", new))
+                    processed = tf(re.sub(self.stopw_compiled, " ", new))
                     if len(processed) < 10 or self.append_tags:
                         tags = cards.loc[ind, "ntags"]
                         for t in tags:
