@@ -100,7 +100,14 @@ set_global_logging_level(logging.ERROR,
 
 def beep(sound="error", **args):
     red("BEEP")
-    beepy.beep(sound, **args)
+    try:
+        beepy.beep(sound, **args)
+    except Exception:
+        time.sleep(1)
+        try:
+            beepy.beep(sound, **args)
+        except Exception:
+            red("Failed to beep twice.")
     time.sleep(1)
 
 class AnnA:
