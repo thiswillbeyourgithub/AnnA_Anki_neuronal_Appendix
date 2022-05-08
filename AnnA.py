@@ -861,8 +861,10 @@ less than threshold ({self.minimum_due}).\nStopping.")
                 yel(f"Succesfully corrected null combined texts on #{cnt} trial.")
 
 
-        for notification in list(set(to_notify)):
+        to_notify = list(set(to_notify))
+        for notification in to_notify:
             red(notification)
+        if to_notify:
             beep()
 
         # using multithreading is not faster, using multiprocess is probably
