@@ -878,7 +878,7 @@ less than threshold ({self.minimum_due}).\nStopping.")
             if len(self.df.loc[ind, "text"]) < 10:
                 ind_short.append(ind)
         if ind_short:
-            red(f"{len(ind_short)} cards contain less than 10 characters after \
+            yel(f"\n{len(ind_short)} cards contain less than 10 characters after \
 formatting: {','.join([str(x) for x in ind_short])}")
             if self.append_tags is False:
                 red("Appending tags to those cards despite setting `append_tags` to False.")
