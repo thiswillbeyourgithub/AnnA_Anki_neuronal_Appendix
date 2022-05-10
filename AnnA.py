@@ -890,7 +890,6 @@ formatting: {','.join([str(x) for x in ind_short])}")
                                        " ",
                                        " ".join(t.split(self.tags_separator)[-2:]))
                             self.df.loc[ind, "text"] += " " + t
-            beep()
 
         yel("\n\nPrinting 2 random samples of your formated text, to help \
 adjust formating issues:")
