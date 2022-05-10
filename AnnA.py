@@ -138,7 +138,7 @@ class AnnA:
                  log_level=2,  # 0, 1, 2
                  replace_greek=True,
                  keep_OCR=True,
-                 append_tags=False,
+                 append_tags=True,
                  tags_to_ignore=None,
                  tags_separator="::",
                  fdeckname_template=None,
@@ -1917,11 +1917,11 @@ if __name__ == "__main__":
                         will be included in the card. Default is `True`.")
     parser.add_argument("--append_tags",
                         dest="append_tags",
-                        default=False,
+                        default=True,
                         required=False,
                         action="store_true",
                         help="Wether to append the 2 deepest tags to the cards \
-                        content or to add no tags.")
+                        content or to add no tags. Default to `True`.")
     parser.add_argument("--tags_to_ignore",
                         nargs="*",
                         metavar="TAGS_TO_IGNORE",
