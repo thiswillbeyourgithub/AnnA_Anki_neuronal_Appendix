@@ -24,7 +24,7 @@ field_dic = {
                                           "Extra 2", "Extra 2",
                                           "Image"],
              "basic": ["Front", "Back", "Hint"],
-             "basic (and reversed card)": ["Front", "Back"],
+             "Basic (and reversed card)": ["Front", "Back"],
              "spanish cards": ["Spanish", "English"],
              "Spanish sentences cloze" : ["SpanishSentence", "EnglishSentence"],
              "____spanish sentence - Sans-serif-light": ["Front", "Back"],
