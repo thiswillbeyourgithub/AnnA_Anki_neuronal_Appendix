@@ -144,7 +144,7 @@ class AnnA:
                  fdeckname_template=None,
                  show_banner=True,
                  skip_print_similar=False,
-                 repick_task="boost&addtag",  # None, "addtag", "boost" or "boost&addtag"
+                 repick_task="boost",  # None, "addtag", "boost" or "boost&addtag"
 
                  # vectorization:
                  vectorizer="TFIDF",  # can only be "TFIDF" but left for legacy reason
@@ -1977,7 +1977,7 @@ if __name__ == "__main__":
                         sure you will review them ASAP. If contains 'addtag' \
                         a tag indicating which card is urgent will be added \
                         at the end of the run. Disable by setting it to None. \
-                        Default is `boost&addtag`.")
+                        Default is `boost`.")
     parser.add_argument("--vectorizer",
                         nargs=1,
                         metavar="VECTORIZER",
