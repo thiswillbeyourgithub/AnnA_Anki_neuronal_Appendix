@@ -31,7 +31,7 @@ Here are different ways of looking at what AnnA can do for you in a few words:
 ## Other features
 * Code is PEP8 compliant, dynamically typed, all the functions have a detailed docstrings. Contributions are welcome, opening issues is encouraged and appreciated.
 * Keeps the OCR data of pictures in your cards, if you analyzed them beforehand using [AnkiOCR](https://github.com/cfculhane/AnkiOCR/).
-* Can automatically replace acronyms in your cards (e.g. 'PNO' can be replaced to "pneumothorax" if you tell it to), regexp are supported
+* Can automatically replace acronyms in your cards (e.g. 'PNO' can be replaced to "pneumothorax" if you tell it to), regexp are supported (if you want access to my homemade list of french medical acronyms, open an issue)
 * Can attribute more importance to some fields of some cards if needed.
 * Can be used to optimize the order of a deck of new cards, [read this thread to know more](https://github.com/thiswillbeyourgithub/AnnA_Anki_neuronal_Appendix/issues/14)
 * Previous feature like clustering, plotting, searching have been removed as I don't expect them to be useful to users. But the code was clean so if you need it for some reason don't hesitate to open an issue.
