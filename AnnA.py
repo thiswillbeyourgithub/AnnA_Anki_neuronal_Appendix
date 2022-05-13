@@ -923,7 +923,7 @@ adjust formating issues:")
             ngram_val = (1, 3)
 
         vectorizer = TfidfVectorizer(strip_accents="ascii",
-                                     lowercase=True,
+                                     lowercase=False,
                                      tokenizer=self.tokenize,
                                      stop_words=None,
                                      ngram_range=ngram_val,
