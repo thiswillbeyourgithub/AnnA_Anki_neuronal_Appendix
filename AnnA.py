@@ -1028,10 +1028,13 @@ model {mod}.Taking first 2 fields.")
         if self.TFIDF_dim is None:
             df["VEC"] = [x for x in t_vec]
         else:
+            if self.TFIDF_dim >= t_vec.shape[1] - 1:
+                red(f"Number of dimensions desired ({self.TFIDF_dim}) is higher than number of features ({t_vec.shape[1]}), taking the lowest value.")
+                beep()
             while True:
+                self.TFIDF_dim = min(self.TFIDF_dim, t_vec.shape[1] - 1)
                 yel(f"\nReducing dimensions to {self.TFIDF_dim} using SVD...", end= " ")
-                svd = TruncatedSVD(n_components=min(self.TFIDF_dim,
-                                                    t_vec.shape[1] - 1))
+                svd = TruncatedSVD(n_components=self.TFIDF_dim)
                 t_red = svd.fit_transform(t_vec)
                 evr = round(sum(svd.explained_variance_ratio_) * 100, 1)
                 if evr >= 70:
