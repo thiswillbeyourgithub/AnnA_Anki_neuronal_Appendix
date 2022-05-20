@@ -922,6 +922,16 @@ adjust formating issues:")
         else:
             ngram_val = (1, 3)
 
+        def init_vectorizer():
+            """used to make sure the same statement is used to create
+            the vectorizer"""
+            return TfidfVectorizer(strip_accents="ascii",
+                                   lowercase=False,
+                                   tokenizer=self.tokenize,
+                                   stop_words=None,
+                                   ngram_range=ngram_val,
+                                   max_features=10_000,
+                                   norm="l2")
         use_fallback = False
         if self.whole_deck_computation:
             try:
@@ -1000,13 +1010,7 @@ model {mod}.Taking first 2 fields.")
                                 processed += " " + t
                     corpus.append(processed)
 
-                vectorizer = TfidfVectorizer(strip_accents="ascii",
-                                             lowercase=False,
-                                             tokenizer=self.tokenize,
-                                             stop_words=None,
-                                             ngram_range=ngram_val,
-                                             max_features=10_000,
-                                             norm="l1")
+                vectorizer = init_vectorizer()
                 vectorizer.fit(tqdm(corpus, desc="Vectorizing whole deck"))
                 t_vec = vectorizer.transform(tqdm(df["text"], desc="Vectorizing \
     dues cards using TFIDF"))
@@ -1018,13 +1022,7 @@ model {mod}.Taking first 2 fields.")
                 use_fallback = True
 
         if (self.whole_deck_computation is False) or (use_fallback):
-            vectorizer = TfidfVectorizer(strip_accents="ascii",
-                                         lowercase=False,
-                                         tokenizer=self.tokenize,
-                                         stop_words=None,
-                                         ngram_range=ngram_val,
-                                         max_features=10_000,
-                                         norm="l1")
+            vectorizer = init_vectorizer()
             t_vec = vectorizer.fit_transform(tqdm(df["text"],
                                              desc="Vectorizing using TFIDF"))
         if self.TFIDF_dim is None:
