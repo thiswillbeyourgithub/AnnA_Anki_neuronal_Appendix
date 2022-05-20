@@ -255,10 +255,13 @@ AnnA includes built-in methods you can run after instantiating the class. Note t
 * `save_df` saves the dataframe containing the cards and all other infos needed by AnnA as a pickle file. Used mainly for debugging. Files will be saved to the folder `DF_backups`
 
 ## TODO
+* implement flagging urgent card instead of only tag or boost
+* investigate wether CLIP is a better vectorizer than what you used in the past
 * merge code from anki connect to make companion addon compatible with latest anki
 * switch to using more ankipandas than anki connect to gather information
 * package AnnA on pypi or as a standalone package
-* consider image occlusions of the same image as siblings
+* you can now vectorize the whole deck but what about computing distance in the whole deck too?
+* consider considering image occlusions of the same image as siblings
 
 * investigate using parallel processing of TF_IDF instead of _format_text using the .preprocess() method
 
