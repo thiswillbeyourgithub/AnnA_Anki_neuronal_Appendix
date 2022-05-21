@@ -1233,7 +1233,7 @@ skipping")
             # then, correct overdue values to make sure they are negative
             correction = max(overdue.max(), 0) + 0.01
             if correction > 1:
-                red(f"This should probably not happen.")
+                red("This should probably not happen.")
                 beep()
                 breakpoint()
             # my implementation of relative overdueness:
@@ -1246,8 +1246,8 @@ skipping")
             try:
                 assert np.sum((overdue-correction)>0) == 0
                 assert np.sum(ro<0) == 0
-            except Exception:
-                red(f"This should not happen.")
+            except Exception as e:
+                red(f"This should not happen: {str(e)}")
                 beep()
                 breakpoint()
 
