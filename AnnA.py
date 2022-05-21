@@ -1270,7 +1270,12 @@ skipping")
                 if n <= -1 and df.loc[x, "interval"] >= 1 and overdue.loc[x] <= -1:
                     repicked.append(x)
                     if boost:
-                        ro_cs[due.index(x)] = n
+                        # scales the value to be relevant compared to distance factor
+                        if self.score_adjustment_factor[0] != 0 and self.score_adjustment_factor[1] != 0:
+                            ro_cs[due.index(x)] = n * (self.score_adjustment_factor[1] / self.score_adjustment_factor[0])
+                        else:
+                            # makes sure it works even if user used weird settings:
+                            ro_cs[due.index(x)] = n * max([abs(x) for x in self.score_adjustment_factor])
             if repicked:
                 red(f"{len(repicked)}/{len(due)} cards with too low "
                     "relative overdueness (i.e. on the brink of being "
