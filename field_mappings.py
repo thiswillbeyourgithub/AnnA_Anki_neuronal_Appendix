@@ -11,7 +11,7 @@
 
 
 field_dic = {
-             "clozolkor": ["Header", "Header",
+             "clozolkor": ["Header",
                            "Body", "Body", "Body", "Body", "Body",
                            "Hint",
                            "More"],
