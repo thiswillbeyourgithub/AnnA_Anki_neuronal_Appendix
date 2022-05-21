@@ -1275,7 +1275,10 @@ skipping")
                 red(f"{len(repicked)}/{len(due)} cards with too low "
                     "relative overdueness (i.e. on the brink of being "
                     "forgotten) where found.")
-
+                if boost:
+                    red("Those cards were boosted to make sur you review them soon.")
+                else:
+                    red("Those cards were NOT boosted.")
                 if "addtag" in self.repick_task:
                     today_date = time.asctime()
                     notes = self._call_anki(action="cardsToNotes", cards=repicked)
