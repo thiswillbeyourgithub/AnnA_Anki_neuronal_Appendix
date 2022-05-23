@@ -1271,11 +1271,8 @@ skipping")
                     repicked.append(x)
                     if boost:
                         # scales the value to be relevant compared to distance factor
-                        if self.score_adjustment_factor[0] != 0 and self.score_adjustment_factor[1] != 0:
-                            ro_cs[due.index(x)] = n * (self.score_adjustment_factor[1] / self.score_adjustment_factor[0])
-                        else:
-                            # makes sure it works even if user used weird settings:
-                            ro_cs[due.index(x)] = n * max([abs(x) for x in self.score_adjustment_factor])
+                        ro_cs[due.index(x)] = n * self.score_adjustment_factor[0]
+
             if repicked:
                 red(f"{len(repicked)}/{len(due)} cards with too low "
                     "relative overdueness (i.e. on the brink of being "
