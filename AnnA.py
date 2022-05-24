@@ -242,6 +242,7 @@ is set to True")
         if self.acronym_file is not None and self.acronym_list is not None:
             file = Path(acronym_file)
             if not file.exists():
+                beep()
                 raise Exception(f"Acronym file was not found: {acronym_file}")
             else:
                 # importing acronym file
@@ -257,6 +258,7 @@ is set to True")
 
                 # if empty file:
                 if len(acr_dict_list) == 0:
+                    beep()
                     red(f"No dictionnary found in {acronym_file}")
                     raise SystemExit()
 
@@ -266,6 +268,7 @@ is set to True")
                 missing = [x for x in self.acronym_list
                            if x not in acr_dict_list]
                 if missing:
+                    beep()
                     red(f"Mising the following acronym dictionnary in \
 {acronym_file}: {','.join(missing)}")
                     raise SystemExit()
@@ -274,6 +277,7 @@ is set to True")
                                  if x in self.acronym_list]
 
                 if len(acr_dict_list) == 0:
+                    beep()
                     red(f"No dictionnary from {self.acr_dict_list} \
 found in {acronym_file}")
                     raise SystemExit()
@@ -399,15 +403,20 @@ values. {e}")
                     'http://localhost:8775',
                     requestJson)))
         except (ConnectionRefusedError, urllib.error.URLError) as e:
+            beep()
             raise Exception(f"{e}: is Anki open and ankiconnect enabled?")
 
         if len(response) != 2:
+            beep()
             raise Exception('response has an unexpected number of fields')
         if 'error' not in response:
+            beep()
             raise Exception('response is missing required error field')
         if 'result' not in response:
+            beep()
             raise Exception('response is missing required result field')
         if response['error'] is not None:
+            beep()
             raise Exception(response['error'])
         return response['result']
 
@@ -855,6 +864,7 @@ less than threshold ({self.minimum_due}).\nStopping.")
                 thread.start()
                 thread.join()
                 if cnt > 10:
+                    beep()
                     red(f"Error: restart anki then rerun AnnA.")
                     raise SystemExit()
             if cnt > 0:
@@ -954,6 +964,7 @@ adjust formating issues:")
                 whi("Ankipandas db loaded successfuly.")
 
                 if len(cards.index) == 0:
+                    beep()
                     raise Exception("Ankipandas database is of length 0")
 
                 # get only the right fields
@@ -962,6 +973,7 @@ adjust formating issues:")
                 mod2mid = akp.raw.get_model2mid(col.db)
 
                 if len(cards.index) == 0:
+                    beep()
                     raise Exception("Ankipandas database is of length 0")
 
                 to_notify = []
@@ -1624,8 +1636,8 @@ as opti_rev_order!")
                               cards=self.opti_rev_order)
         err = [x[1] for x in res if x[0] is False]
         if err:
-            print("")
-            raise(f"Error when setting due order : {err}")
+            beep()
+            raise(f"\nError when setting due order : {err}")
         else:
             yel(" Done!")
             return True
