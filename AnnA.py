@@ -141,7 +141,7 @@ class AnnA:
                  append_tags=True,
                  tags_to_ignore=None,
                  tags_separator="::",
-                 fdeckname_template=None,
+                 filtered_deck_name_template=None,
                  show_banner=True,
                  skip_print_similar=False,
                  repick_task="boost",  # None, "addtag", "boost" or "boost&addtag"
@@ -200,7 +200,7 @@ class AnnA:
         self.TFIDF_stem = TFIDF_stem
         self.TFIDF_tokenize = TFIDF_tokenize
         self.task = task
-        self.fdeckname_template = fdeckname_template
+        self.filtered_deck_name_template = filtered_deck_name_template
         self.skip_print_similar = skip_print_similar
         self.whole_deck_computation = whole_deck_computation
         self.profile_name = profile_name
@@ -217,8 +217,8 @@ class AnnA:
                         "bury_excess_review_cards"]
         if self.tags_to_ignore is None:
             self.tags_to_ignore = []
-        if task != "filter_review_cards" and self.fdeckname_template is not None:
-            red("Ignoring argument 'fdeckname_template' because 'task' is not \
+        if task != "filter_review_cards" and self.filtered_deck_name_template is not None:
+            red("Ignoring argument 'filtered_deck_name_template' because 'task' is not \
 set to 'filter_review_cards'.")
         if low_power_mode:
             if TFIDF_dim > 50:
@@ -1545,7 +1545,7 @@ the data in `acronym_list`.")
         return True
 
     def _bury_or_create_filtered(self,
-                           fdeckname_template=None,
+                           filtered_deck_name_template=None,
                            task=None):
         """
         Either bury cards that are not in the optimal queue or create a
@@ -1555,7 +1555,7 @@ the data in `acronym_list`.")
             ("oldest seen first"). This function then changes the review order
             inside this deck. That's why rebuilding this deck will keep the
             cards but lose the order.
-        * fdeckname_template can be used to automatically put the filtered
+        * filtered_deck_name_template can be used to automatically put the filtered
             decks to a specific location in your deck hierarchy. Leaving it
             to None will make the filtered deck appear alongside the
             original deck
@@ -1578,10 +1578,10 @@ the data in `acronym_list`.")
             self._call_anki(action="bury", cards=to_bury)
             return True
         else:
-            if self.fdeckname_template is not None:
-                fdeckname_template = self.fdeckname_template
-            if fdeckname_template is not None:
-                filtered_deck_name = str(fdeckname_template + f" - {self.deckname}")
+            if self.filtered_deck_name_template is not None:
+                filtered_deck_name_template = self.filtered_deck_name_template
+            if filtered_deck_name_template is not None:
+                filtered_deck_name = str(filtered_deck_name_template + f" - {self.deckname}")
                 filtered_deck_name = filtered_deck_name.replace("::", "_")
             else:
                 filtered_deck_name = f"{self.deckname} - AnnA Optideck"
@@ -1957,10 +1957,10 @@ if __name__ == "__main__":
                         required=False,
                         help="separator between levels of tags. Default to\
                         `::`.")
-    parser.add_argument("--fdeckname_template",
+    parser.add_argument("--filtered_deck_name_template",
                         nargs=1,
                         metavar="FILTER_DECK_NAME_TEMPLATE",
-                        dest="fdeckname_template",
+                        dest="filtered_deck_name_template",
                         default=None,
                         required=False,
                         type=str,
