@@ -2198,12 +2198,7 @@ if __name__ == "__main__":
         console_mode = False
 
     args.pop("console_mode")
-    try:
-        anna = AnnA(**args)
-    except Exception as e:
-        red(f"Error: {str(e)}")
-        beep()
-        pdb.set_trace()
+    anna = AnnA(**args)
     if console_mode:
         red("\n\nRun finished. Opening console:\n(You can access the last \
 instance of AnnA by inspecting variable \"anna\")\n")
