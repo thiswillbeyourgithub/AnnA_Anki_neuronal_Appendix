@@ -142,6 +142,8 @@ class AnnA:
                  tags_to_ignore=None,
                  tags_separator="::",
                  filtered_deck_name_template=None,
+                 filtered_deck_by_batch=True,
+                 filtered_deck_batch_size=25,
                  show_banner=True,
                  skip_print_similar=False,
                  repick_task="boost",  # None, "addtag", "boost" or "boost&addtag"
@@ -201,6 +203,8 @@ class AnnA:
         self.TFIDF_tokenize = TFIDF_tokenize
         self.task = task
         self.filtered_deck_name_template = filtered_deck_name_template
+        self.filtered_deck_by_batch = filtered_deck_by_batch
+        self.filtered_deck_batch_size = filtered_deck_batch_size
         self.skip_print_similar = skip_print_similar
         self.whole_deck_computation = whole_deck_computation
         self.profile_name = profile_name
@@ -215,6 +219,8 @@ class AnnA:
         assert task in ["filter_review_cards",
                         "bury_excess_learning_cards",
                         "bury_excess_review_cards"]
+        assert isinstance(filtered_deck_batch_size, int)
+        assert isinstance(filtered_deck_by_batch, bool)
         if self.tags_to_ignore is None:
             self.tags_to_ignore = []
         if task != "filter_review_cards" and self.filtered_deck_name_template is not None:
@@ -1608,30 +1614,49 @@ deck.")
 
         whi(f"Creating deck containing the cards to review: \
 {filtered_deck_name}")
-        query = "is:due -rated:1 cid:" + ','.join(
-                [str(x) for x in self.opti_rev_order])
-        self._call_anki(action="createFilteredDeck",
-                        newDeckName=filtered_deck_name,
-                        searchQuery=query,
-                        gatherCount=len(self.opti_rev_order) + 1,
-                        reschedule=True,
-                        sortOrder=0,
-                        createEmpty=False)
+        if self.filtered_deck_by_batch and len(self.opti_rev_order) > self.filtered_deck_batch_size:
+            yel("Creating several filtered decks.")
+            batchsize = self.filtered_deck_batch_size
+            cnt = 0
+            while cnt <= 10000:
+                batch_cards = self.opti_rev_order[cnt*batchsize : (cnt+1)*batchsize]
+                if not batch_cards:
+                    break
+                query = "is:due -rated:1 cid:" + ','.join(
+                        [str(x) for x in batch_cards])
+                self._call_anki(action="createFilteredDeck",
+                                newDeckName=f"{filtered_deck_name}_{cnt+1}",
+                                searchQuery=query,
+                                gatherCount=len(batchsize) + 1,
+                                reschedule=True,
+                                sortOrder=0,
+                                createEmpty=False)
+                cnt += 1
+        else:
+            query = "is:due -rated:1 cid:" + ','.join(
+                    [str(x) for x in self.opti_rev_order])
+            self._call_anki(action="createFilteredDeck",
+                            newDeckName=filtered_deck_name,
+                            searchQuery=query,
+                            gatherCount=len(self.opti_rev_order) + 1,
+                            reschedule=True,
+                            sortOrder=0,
+                            createEmpty=False)
 
-        print("Checking that the content of filtered deck name is the same as \
+            print("Checking that the content of filtered deck name is the same as \
  the order inferred by AnnA...", end="")
-        cur_in_deck = self._call_anki(action="findCards",
-                                      query=f"\"deck:{filtered_deck_name}\"")
-        diff = [x for x in self.opti_rev_order + cur_in_deck
-                if x not in self.opti_rev_order or x not in cur_in_deck]
-        if len(diff) != 0:
-            red("Inconsistency! The deck does not contain the same cards \
+            cur_in_deck = self._call_anki(action="findCards",
+                                          query=f"\"deck:{filtered_deck_name}\"")
+            diff = [x for x in self.opti_rev_order + cur_in_deck
+                    if x not in self.opti_rev_order or x not in cur_in_deck]
+            if len(diff) != 0:
+                red("Inconsistency! The deck does not contain the same cards \
 as opti_rev_order!")
-            pprint(diff)
-            red(f"\nNumber of inconsistent cards: {len(diff)}")
-            beep()
+                pprint(diff)
+                red(f"\nNumber of inconsistent cards: {len(diff)}")
+                beep()
 
-        yel("\nAsking anki to alter the filtered deck's due order...", end="")
+        yel("\nAsking anki to alter the due order...", end="")
         res = self._call_anki(action="setDueOrderOfFiltered",
                               cards=self.opti_rev_order)
         err = [x[1] for x in res if x[0] is False]
@@ -1979,6 +2004,21 @@ if __name__ == "__main__":
                         help="name template of the filtered deck to create. Only\
                         available if task is set to \"filter_review_cards\".\
                         Default is `None`.")
+    parser.add_argument("--filtered_deck_by_batch",
+                        action="store_true",
+                        dest="filtered_deck_by_batch",
+                        default=True,
+                        required=False,
+                        help="To enable creating batch of filtered decks. \
+                        Default is `True`.")
+    parser.add_argument("--filtered_deck_batch_size",
+                        nargs=1,
+                        metavar="FILTERED_DECK_BATCH_SIZE",
+                        dest="filtered_deck_batch_size",
+                        default=25,
+                        required=False,
+                        help="If creating batch of filtered deck, this is the \
+                        number of cards in each. Default is `25`.")
     parser.add_argument("--show_banner",
                         action="store_true",
                         dest="show_banner",
