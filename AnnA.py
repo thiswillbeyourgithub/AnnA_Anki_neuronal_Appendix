@@ -1826,6 +1826,7 @@ if __name__ == "__main__":
                         dest="max_deck_size",
                         default=None,
                         required=False,
+                        type=int,
                         help="Maximum number of cards to put in the filtered \
                         deck or to leave unburieed. Default is `None`.")
     parser.add_argument("--stopwords_lang",
@@ -2024,6 +2025,7 @@ if __name__ == "__main__":
                         metavar="FILTERED_DECK_BATCH_SIZE",
                         dest="filtered_deck_batch_size",
                         default=25,
+                        type=int,
                         required=False,
                         help="If creating batch of filtered deck, this is the \
                         number of cards in each. Default is `25`.")
