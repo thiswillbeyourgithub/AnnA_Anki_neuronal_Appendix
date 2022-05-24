@@ -1622,19 +1622,20 @@ deck.")
         whi(f"Creating deck containing the cards to review: \
 {filtered_deck_name}")
         if self.filtered_deck_by_batch and len(self.opti_rev_order) > self.filtered_deck_batch_size:
-            yel("Creating several filtered decks.")
+            yel("Creating batches of filtered decks...")
             batchsize = self.filtered_deck_batch_size
             cnt = 0
             while cnt <= 10000:
-                batch_cards = self.opti_rev_order[cnt*batchsize : (cnt+1)*batchsize]
+                batch_cards = self.opti_rev_order[cnt*batchsize:(cnt+1)*batchsize]
                 if not batch_cards:
+                    yel(f"Done creating {cnt+1} filtered decks.")
                     break
                 query = "is:due -rated:1 cid:" + ','.join(
                         [str(x) for x in batch_cards])
                 self._call_anki(action="createFilteredDeck",
                                 newDeckName=f"{filtered_deck_name}_{cnt+1}",
                                 searchQuery=query,
-                                gatherCount=len(batchsize) + 1,
+                                gatherCount=batchsize + 1,
                                 reschedule=True,
                                 sortOrder=0,
                                 createEmpty=False)
