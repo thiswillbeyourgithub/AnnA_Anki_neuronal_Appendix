@@ -121,7 +121,7 @@ class AnnA:
                  deckname=None,
                  reference_order="relative_overdueness",  # any of "lowest_interval", "relative overdueness", "order_added"
                  task="filter_review_cards", # any of "filter_review_cards", "bury_excess_review_cards", "bury_excess_learning_cards"
-                 target_deck_size="deck_config",  # format: 80%, 0.8, "all", "deck_config"
+                 target_deck_size="deck_config",  # format: 80%, "all", "deck_config"
                  max_deck_size=None,
                  stopwords_lang=["english", "french"],
                  rated_last_X_days=4,
@@ -1340,7 +1340,7 @@ skipping")
 
         # remove potential siblings of indTODO, only if the intent is not
         # to study all the backlog over a few days:
-        if (target_deck_size not in ["all", "100%", "1"]):
+        if (target_deck_size not in ["all", "100%"]):
             noteCard = {}
             for card, note in {df.loc[x].name: df.loc[x, "note"]
                                for x in indTODO}.items():
@@ -1378,9 +1378,6 @@ skipping")
         # improvement ratio
 
         # parsing desired deck size:
-        if isinstance(target_deck_size, float):
-            if target_deck_size <= 1.0:
-                target_deck_size = str(target_deck_size * 100) + "%"
         if isinstance(target_deck_size, str):
             if target_deck_size in ["all", "100%"]:
                 red("Taking the whole deck.")
@@ -1817,7 +1814,7 @@ if __name__ == "__main__":
                         required=True,
                         help="indicates the size of the filtered deck to create.\
                         Can be the number of due cards like \"100\", a proportion of\
-                        due cards like '80%%' or '0.80', the word \"all\" or\
+                        due cards like '80%%', the word \"all\" or\
                         \"deck_config\" to use the deck's settings for max review.\
                         Default is `deck_config`.")
     parser.add_argument("--max_deck_size",
