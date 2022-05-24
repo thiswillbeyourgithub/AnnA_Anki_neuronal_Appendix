@@ -164,7 +164,7 @@ class AnnA:
 
         gc.collect()
 
-        # miscellaneous
+        # init logging
         if log_level == 0:
             log.setLevel(logging.ERROR)
         elif log_level == 1:
@@ -174,66 +174,114 @@ class AnnA:
         else:
             log.setLevel(logging.INFO)
 
-        assert vectorizer == "TFIDF"
-
-        # loading args
+        # loading arguments and proceed to check correct values
+        assert isinstance(replace_greek, bool)
         self.replace_greek = replace_greek
-        self.keep_OCR = keep_OCR
-        if keep_OCR:
-            self.OCR_content = ""
-        self.target_deck_size = target_deck_size
-        self.max_deck_size = max_deck_size
-        self.rated_last_X_days = rated_last_X_days
-        self.minimum_due = minimum_due
-        self.highjack_due_query = highjack_due_query
-        self.highjack_rated_query = highjack_rated_query
-        self.score_adjustment_factor = score_adjustment_factor
-        self.reference_order = reference_order
-        self.field_mappings = field_mappings
-        self.acronym_file = acronym_file
-        self.acronym_list = acronym_list
-        self.append_tags = append_tags
-        self.tags_to_ignore = tags_to_ignore
-        self.tags_separator = tags_separator
-        self.low_power_mode = low_power_mode
-        self.vectorizer = vectorizer
-        self.stopwords_lang = stopwords_lang
-        self.TFIDF_dim = TFIDF_dim
-        self.TFIDF_stem = TFIDF_stem
-        self.TFIDF_tokenize = TFIDF_tokenize
-        self.task = task
-        self.filtered_deck_name_template = filtered_deck_name_template
-        self.filtered_deck_by_batch = filtered_deck_by_batch
-        self.filtered_deck_batch_size = filtered_deck_batch_size
-        self.skip_print_similar = skip_print_similar
-        self.whole_deck_computation = whole_deck_computation
-        self.profile_name = profile_name
-        self.repick_task = str(repick_task)
 
-        # args sanity checks and initialization
-        if isinstance(self.target_deck_size, int):
-            self.target_deck_size = str(self.target_deck_size)
-        assert (isinstance(score_adjustment_factor, list) or isinstance(score_adjustment_factor, tuple))
+        assert isinstance(keep_OCR, bool)
+        self.keep_OCR = keep_OCR
+        self.OCR_content = "" # used to avoid looking for acronyms in OCR content
+
+        if isinstance(target_deck_size, int):
+            assert target_deck_size > 0
+            target_deck_size = str(target_deck_size)
+        elif isinstance(target_deck_size, str):
+            assert "%" in target_deck_size or target_deck_size in ["all", "deck_config"]
+        self.target_deck_size = target_deck_size
+
+        assert max_deck_size is None or max_deck_size >= 1
+        self.max_deck_size = max_deck_size
+
+        assert rated_last_X_days is None or rated_last_X_days >= 0
+        self.rated_last_X_days = rated_last_X_days
+
+        assert minimum_due >= 0
+        self.minimum_due = minimum_due
+
+        assert isinstance(highjack_due_query, (str, type(None))
+        self.highjack_due_query = highjack_due_query
+
+        assert isinstance(highjack_rated_query, (str, type(None))
+        self.highjack_rated_query = highjack_rated_query
+
+        assert (isinstance(score_adjustment_factor, (list, tuple))
         assert len(score_adjustment_factor) == 2
         for n in range(len(score_adjustment_factor)):
             if not isinstance(score_adjustment_factor[n], float):
                 score_adjustment_factor[n] = float(score_adjustment_factor[n])
+        self.score_adjustment_factor = score_adjustment_factor
 
+        assert reference_order in ["lowest_interval", "relative_overdueness", "order_added", "LIRO_mix"]
+        self.reference_order = reference_order
 
+        assert isinstance(append_tags, bool)
+        self.append_tags = append_tags
+
+        if tags_to_ignore is None:
+            tags_to_ignore = []
+        self.tags_to_ignore = tags_to_ignore
+
+        assert isinstance(tags_separator, str)
+        self.tags_separator = tags_separator
+
+        assert isinstance(low_power_mode, bool)
+        self.low_power_mode = low_power_mode
+
+        assert vectorizer == "TFIDF"
+        self.vectorizer = vectorizer
+
+        assert isinstance(stopwords_lang, list)
+        self.stopwords_lang = stopwords_lang
+
+        assert isinstance(TFIDF_dim, (int, type(None))
+        self.TFIDF_dim = TFIDF_dim
+
+        assert isinstance(TFIDF_stem, bool)
+        assert isinstance(TFIDF_tokenize, bool)
         assert TFIDF_stem + TFIDF_tokenize != 2
-        assert reference_order in ["lowest_interval", "relative_overdueness",
-                                   "order_added", "LIRO_mix"]
+        self.TFIDF_stem = TFIDF_stem
+        self.TFIDF_tokenize = TFIDF_tokenize
+
         assert task in ["filter_review_cards",
                         "bury_excess_learning_cards",
                         "bury_excess_review_cards"]
-        assert isinstance(filtered_deck_batch_size, int)
+        self.task = task
+
+        assert isinstance(filtered_deck_name_template, (str, type(None)))
+        self.filtered_deck_name_template = filtered_deck_name_template
+
         assert isinstance(filtered_deck_by_batch, bool)
-        if self.tags_to_ignore is None:
-            self.tags_to_ignore = []
+        self.filtered_deck_by_batch = filtered_deck_by_batch
+
+        assert isinstance(filtered_deck_batch_size, int)
+        self.filtered_deck_batch_size = filtered_deck_batch_size
+
+        assert isinstance(skip_print_similar, bool)
+        self.skip_print_similar = skip_print_similar
+
+        assert isinstance(whole_deck_computation, bool)
+        self.whole_deck_computation = whole_deck_computation
+
+        assert isinstance(profile_name, (str, type(None)))
+        self.profile_name = profile_name
+
+        assert isinstance(repick_task, str)
+        self.repick_task = repick_task
+
+        assert isinstance(acronym_file, (str, type(None))
+        self.acronym_file = acronym_file
+
+        assert isinstance(acronym_list, (list, type(None)))
+        self.acronym_list = acronym_list
+
+        assert isinstance(field_mappings, (str, type(None))
+        self.field_mappings = field_mappings
+
+        # additional processing of arguments
         if task != "filter_review_cards" and self.filtered_deck_name_template is not None:
             red("Ignoring argument 'filtered_deck_name_template' because 'task' is not \
 set to 'filter_review_cards'.")
-        if low_power_mode:
+        if low_power_mode and TFIDF_dim is not None:
             if TFIDF_dim > 50:
                 red(f"Low power mode is activated, it is usually recommended \
 to set low values of TFIDF_dim (currently set at {TFIDF_dim} dimensions)")
@@ -1386,6 +1434,8 @@ skipping")
                 red(f"Taking {target_deck_size} of the deck.")
                 target_deck_size = 0.01 * int(target_deck_size[:-1]) * (
                     len(df.index) - len(rated) + 1)
+            else:
+                raise Exception(f"Invalid target_deck_size value: {target_deck_size}")
         target_deck_size = int(target_deck_size)
 
         if max_deck_size is not None:
@@ -1988,8 +2038,9 @@ if __name__ == "__main__":
                         metavar="TAGS_TO_IGNORE",
                         dest="tags_to_ignore",
                         default=None,
+                        type=str,
                         required=False,
-                        help="a list of tags to ignore when appending tags to\
+                        help="a comma separated list of tags to ignore when appending tags to\
                         cards. This is not a list of tags whose card should \
                         be ignored! Default is `None (i.e. disabled).")
     parser.add_argument("--tags_separator",
