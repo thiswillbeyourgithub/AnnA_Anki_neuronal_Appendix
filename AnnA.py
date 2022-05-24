@@ -2098,7 +2098,7 @@ if __name__ == "__main__":
                         nargs=1,
                         metavar="REPICK_TASK",
                         dest="repick_task",
-                        default=None,
+                        default="boost",
                         required=False,
                         help="Define what happens to cards deemed urgent in \
                         'relative_overdueness' ref mode. If contains 'boost', \
