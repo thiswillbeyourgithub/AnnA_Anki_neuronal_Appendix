@@ -1828,17 +1828,17 @@ if __name__ == "__main__":
                         required=False,
                         type=int,
                         help="Maximum number of cards to put in the filtered \
-                        deck or to leave unburieed. Default is `None`.")
+                        deck or to leave unburied. Default is `None`.")
     parser.add_argument("--stopwords_lang",
                         nargs="+",
                         metavar="STOPLANG",
                         dest="stopwords_lang",
-                        default="english french",
+                        default="english,french",
                         type=str,
                         required=False,
-                        help="a list of languages used to construct a list of stop\
-                        words (i.e. words that will be ignored, like \"I\" or\
-                        \"be\" in English). Default is `english french`.")
+                        help="a comma separated list of languages used to construct \
+                        a list of stop words (i.e. words that will be ignored, like \
+                        \"I\" or \"be\" in English). Default is `english french`.")
     parser.add_argument("--rated_last_X_days",
                         nargs=1,
                         metavar="RATED_LAST_X_DAYS",
@@ -1859,16 +1859,17 @@ if __name__ == "__main__":
                         are reviews or learnings. you can change this using\
                         \"highjack_rated_query\" argument.")
     parser.add_argument("--score_adjustment_factor",
-                        nargs=1,
+                        nargs="+",
                         metavar="SCORE_ADJUSTMENT_FACTOR",
                         dest="score_adjustment_factor",
-                        default=(1, 5),
-                        type=tuple,
+                        default="1,2",
+                        type=str,
                         required=False,
-                        help="a tuple used to adjust the value of the reference\
-                        order compared to how similar the cards are. Default is\
-                        `(1, 5)`. For example: (1, 1.3) means that the algorithm\
-                        will spread the similar cards farther apart.")
+                        help="a comma separated list of numbers used to adjust \
+                        the value of the reference order compared to how similar \
+                        the cards are. Default is `1,2`. For example: '1, 1.3' \
+                        means that the algorithm will spread the similar cards \
+                        farther apart.")
     parser.add_argument("--field_mapping",
                         nargs=1,
                         metavar="FIELD_MAPPING_PATH",
@@ -1897,15 +1898,15 @@ if __name__ == "__main__":
                         if the key contains uppercase characters. The \".py\" file\
                         extension is not mandatory.")
     parser.add_argument("--acronym_list",
-                        nargs="*",
+                        nargs="+",
                         metavar="ACRONYM_LIST",
                         dest="acronym_list",
                         default=None,
                         type=str,
                         required=False,
-                        help="a list of name of dictionaries to extract file\
-                        supplied in `acronym_file`. Used to extend text, for\
-                        instance `[\"AI_machine_learning\", \"medical_terms\"]`.\
+                        help="a comma separated list of name of dictionaries to \
+                        extract file\ supplied in `acronym_file`. Used to \
+                        extend text, for instance `AI_machine_learning,medical_terms`.\
                         Default to None.")
     parser.add_argument("--minimum_due",
                         nargs=1,
@@ -2129,9 +2130,16 @@ if __name__ == "__main__":
                         python console after running.")
 
     args = parser.parse_args().__dict__
+
+    # makes sure that argument are correctly parsed :
     for arg in args:
         if isinstance(args[arg], list) and len(args[arg]) == 1:
             args[arg] = args[arg][0]
+        if isinstance(args[arg], str):
+            if args[arg] == "None":
+                args[arg] = None
+            elif "," in args[arg]:
+                args[arg] = args[arg].split(",")
 
     whi(f"Launched AnnA with arguments :\r")
     pprint(args)
