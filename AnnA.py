@@ -213,6 +213,13 @@ class AnnA:
         # args sanity checks and initialization
         if isinstance(self.target_deck_size, int):
             self.target_deck_size = str(self.target_deck_size)
+        assert (isinstance(score_adjustment_factor, list) or isinstance(score_adjustment_factor, tuple))
+        assert len(score_adjustment_factor) == 2
+        for n in range(len(score_adjustment_factor)):
+            if not isinstance(score_adjustment_factor[n], float):
+                score_adjustment_factor[n] = float(score_adjustment_factor[n])
+
+
         assert TFIDF_stem + TFIDF_tokenize != 2
         assert reference_order in ["lowest_interval", "relative_overdueness",
                                    "order_added", "LIRO_mix"]
