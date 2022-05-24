@@ -198,13 +198,13 @@ class AnnA:
         assert minimum_due >= 0
         self.minimum_due = minimum_due
 
-        assert isinstance(highjack_due_query, (str, type(None))
+        assert isinstance(highjack_due_query, (str, type(None)))
         self.highjack_due_query = highjack_due_query
 
-        assert isinstance(highjack_rated_query, (str, type(None))
+        assert isinstance(highjack_rated_query, (str, type(None)))
         self.highjack_rated_query = highjack_rated_query
 
-        assert (isinstance(score_adjustment_factor, (list, tuple))
+        assert (isinstance(score_adjustment_factor, (list, tuple)))
         assert len(score_adjustment_factor) == 2
         for n in range(len(score_adjustment_factor)):
             if not isinstance(score_adjustment_factor[n], float):
@@ -233,7 +233,7 @@ class AnnA:
         assert isinstance(stopwords_lang, list)
         self.stopwords_lang = stopwords_lang
 
-        assert isinstance(TFIDF_dim, (int, type(None))
+        assert isinstance(TFIDF_dim, (int, type(None)))
         self.TFIDF_dim = TFIDF_dim
 
         assert isinstance(TFIDF_stem, bool)
@@ -268,13 +268,13 @@ class AnnA:
         assert isinstance(repick_task, str)
         self.repick_task = repick_task
 
-        assert isinstance(acronym_file, (str, type(None))
+        assert isinstance(acronym_file, (str, type(None)))
         self.acronym_file = acronym_file
 
         assert isinstance(acronym_list, (list, type(None)))
         self.acronym_list = acronym_list
 
-        assert isinstance(field_mappings, (str, type(None))
+        assert isinstance(field_mappings, (str, type(None)))
         self.field_mappings = field_mappings
 
         # additional processing of arguments
