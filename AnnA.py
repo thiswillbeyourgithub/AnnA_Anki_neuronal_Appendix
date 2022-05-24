@@ -79,7 +79,7 @@ def coloured_log(color_asked):
         def printer(string, **args):
             if isinstance(string, list):
                 string = ",".join(string)
-            log.warn(string)
+            log.warning(string)
             tqdm.write(col_yel + string + col_rst, **args)
     elif color_asked == "red":
         def printer(string, **args):
