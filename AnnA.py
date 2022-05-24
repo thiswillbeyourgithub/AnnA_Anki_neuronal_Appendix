@@ -625,9 +625,9 @@ less than threshold ({self.minimum_due}).\nStopping.")
         self.df = pd.DataFrame().append(list_cardInfo,
                                         ignore_index=True,
                                         sort=True)
-        self.df["cardId"] = self.df["cardId"].astype(np.int)
+        self.df["cardId"] = self.df["cardId"].astype(int)
         self.df = self.df.set_index("cardId").sort_index()
-        self.df["interval"] = self.df["interval"].astype(np.float32)
+        self.df["interval"] = self.df["interval"].astype(float)
         return True
 
     def _regexp_acronym_replacer(self, string, compiled, new_w):
