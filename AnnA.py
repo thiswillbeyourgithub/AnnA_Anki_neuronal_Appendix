@@ -125,7 +125,7 @@ class AnnA:
                  max_deck_size=None,
                  stopwords_lang=["english", "french"],
                  rated_last_X_days=4,
-                 score_adjustment_factor=(1, 2),
+                 score_adjustment_factor=[1, 2],
                  field_mappings="field_mappings.py",
                  acronym_file="acronym_file.py",
                  acronym_list=None,
@@ -204,7 +204,9 @@ class AnnA:
         assert isinstance(highjack_rated_query, (str, type(None)))
         self.highjack_rated_query = highjack_rated_query
 
-        assert (isinstance(score_adjustment_factor, (list, tuple)))
+        if isinstance(score_adjustment_factor, tuple):
+            score_adjustment_factor = list(score_adjustment_factor)
+        assert (isinstance(score_adjustment_factor, list))
         assert len(score_adjustment_factor) == 2
         for n in range(len(score_adjustment_factor)):
             if not isinstance(score_adjustment_factor[n], float):
