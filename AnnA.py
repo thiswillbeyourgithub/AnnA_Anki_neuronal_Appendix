@@ -175,10 +175,10 @@ class AnnA:
             log.setLevel(logging.INFO)
 
         # loading arguments and proceed to check correct values
-        assert isinstance(replace_greek, bool)
+        assert isinstance(replace_greek, bool), "Invalid type of `replace_greek`"
         self.replace_greek = replace_greek
 
-        assert isinstance(keep_OCR, bool)
+        assert isinstance(keep_OCR, bool), "Invalid type of `keep_OCR`"
         self.keep_OCR = keep_OCR
         self.OCR_content = "" # used to avoid looking for acronyms in OCR content
 
@@ -190,97 +190,97 @@ class AnnA:
                 testint = int(target_deck_size)
             except Exception:
                 pass
-            assert "%" in target_deck_size or target_deck_size in ["all", "deck_config"] or isinstance(testint, int)
+            assert "%" in target_deck_size or target_deck_size in ["all", "deck_config"] or isinstance(testint, int), "Invalid value for `target_deck_size`"
         self.target_deck_size = target_deck_size
 
-        assert max_deck_size is None or max_deck_size >= 1
+        assert max_deck_size is None or max_deck_size >= 1, "Invalid value for `max_deck_size`"
         self.max_deck_size = max_deck_size
 
-        assert rated_last_X_days is None or rated_last_X_days >= 0
+        assert rated_last_X_days is None or rated_last_X_days >= 0, "Invalid value for `rated_last_X_days`"
         self.rated_last_X_days = rated_last_X_days
 
-        assert minimum_due >= 0
+        assert minimum_due >= 0, "Invalid value for `minimum_due`"
         self.minimum_due = minimum_due
 
-        assert isinstance(highjack_due_query, (str, type(None)))
+        assert isinstance(highjack_due_query, (str, type(None))), "Invalid type of `highjack_due_query`"
         self.highjack_due_query = highjack_due_query
 
-        assert isinstance(highjack_rated_query, (str, type(None)))
+        assert isinstance(highjack_rated_query, (str, type(None))), "Invalid type of `highjack_rated_query`"
         self.highjack_rated_query = highjack_rated_query
 
         if isinstance(score_adjustment_factor, tuple):
             score_adjustment_factor = list(score_adjustment_factor)
-        assert (isinstance(score_adjustment_factor, list))
-        assert len(score_adjustment_factor) == 2
+        assert (isinstance(score_adjustment_factor, list)), "Invalid type of `score_adjustment_factor`"
+        assert len(score_adjustment_factor) == 2, "Invalid length of `score_adjustment_factor`"
         for n in range(len(score_adjustment_factor)):
             if not isinstance(score_adjustment_factor[n], float):
                 score_adjustment_factor[n] = float(score_adjustment_factor[n])
         self.score_adjustment_factor = score_adjustment_factor
 
-        assert reference_order in ["lowest_interval", "relative_overdueness", "order_added", "LIRO_mix"]
+        assert reference_order in ["lowest_interval", "relative_overdueness", "order_added", "LIRO_mix"], "Invalid value for `reference_order`"
         self.reference_order = reference_order
 
-        assert isinstance(append_tags, bool)
+        assert isinstance(append_tags, bool), "Invalid type of `append_tags`"
         self.append_tags = append_tags
 
         if tags_to_ignore is None:
             tags_to_ignore = []
         self.tags_to_ignore = tags_to_ignore
 
-        assert isinstance(tags_separator, str)
+        assert isinstance(tags_separator, str), "Invalid type of `tags_separator`"
         self.tags_separator = tags_separator
 
-        assert isinstance(low_power_mode, bool)
+        assert isinstance(low_power_mode, bool), "Invalid type of `low_power_mode`"
         self.low_power_mode = low_power_mode
 
-        assert vectorizer == "TFIDF"
+        assert vectorizer == "TFIDF", "Invalid value for `vectorizer`"
         self.vectorizer = vectorizer
 
-        assert isinstance(stopwords_lang, list)
+        assert isinstance(stopwords_lang, list), "Invalid type of var `stopwords_lang`"
         self.stopwords_lang = stopwords_lang
 
-        assert isinstance(TFIDF_dim, (int, type(None)))
+        assert isinstance(TFIDF_dim, (int, type(None))), "Invalid type of `TFIDF_dim`"
         self.TFIDF_dim = TFIDF_dim
 
-        assert isinstance(TFIDF_stem, bool)
-        assert isinstance(TFIDF_tokenize, bool)
+        assert isinstance(TFIDF_stem, bool), "Invalid type of `TFIDF_stem`"
+        assert isinstance(TFIDF_tokenize, bool), "Invalid type of `TFIDF_tokenize`"
         assert TFIDF_stem + TFIDF_tokenize != 2
         self.TFIDF_stem = TFIDF_stem
         self.TFIDF_tokenize = TFIDF_tokenize
 
         assert task in ["filter_review_cards",
                         "bury_excess_learning_cards",
-                        "bury_excess_review_cards"]
+                        "bury_excess_review_cards"], "Invalid value for `task`"
         self.task = task
 
-        assert isinstance(filtered_deck_name_template, (str, type(None)))
+        assert isinstance(filtered_deck_name_template, (str, type(None))), "Invalid type for `filtered_deck_name_template`"
         self.filtered_deck_name_template = filtered_deck_name_template
 
-        assert isinstance(filtered_deck_by_batch, bool)
+        assert isinstance(filtered_deck_by_batch, bool), "Invalid type for `filtered_deck_by_batch`"
         self.filtered_deck_by_batch = filtered_deck_by_batch
 
-        assert isinstance(filtered_deck_batch_size, int)
+        assert isinstance(filtered_deck_batch_size, int), "Invalid type for `filtered_deck_batch_size`"
         self.filtered_deck_batch_size = filtered_deck_batch_size
 
-        assert isinstance(skip_print_similar, bool)
+        assert isinstance(skip_print_similar, bool), "Invalid type for `skip_print_similar`"
         self.skip_print_similar = skip_print_similar
 
-        assert isinstance(whole_deck_computation, bool)
+        assert isinstance(whole_deck_computation, bool), "Invalid type for `whole_deck_computation`"
         self.whole_deck_computation = whole_deck_computation
 
-        assert isinstance(profile_name, (str, type(None)))
+        assert isinstance(profile_name, (str, type(None))), "Invalid type for `profile_name`"
         self.profile_name = profile_name
 
-        assert isinstance(repick_task, str)
+        assert isinstance(repick_task, str), "Invalid type for `repick_task`"
         self.repick_task = repick_task
 
-        assert isinstance(acronym_file, (str, type(None)))
+        assert isinstance(acronym_file, (str, type(None))), "Invalid type for `acronym_file`"
         self.acronym_file = acronym_file
 
-        assert isinstance(acronym_list, (list, type(None)))
+        assert isinstance(acronym_list, (list, type(None))), "Invalid type for `acronym_list`"
         self.acronym_list = acronym_list
 
-        assert isinstance(field_mappings, (str, type(None)))
+        assert isinstance(field_mappings, (str, type(None))), "Invalid type for `field_mappings`"
         self.field_mappings = field_mappings
 
         # additional processing of arguments
@@ -377,7 +377,7 @@ multiple times in acronym dictionnary, keeping only the last one.")
         if self.field_mappings is not None:
             f = Path(self.field_mappings)
             try:
-                assert f.exists()
+                assert f.exists(), f"field_mappings file does not exist : {self.field_mappings}"
                 imp = importlib.import_module(
                     self.field_mappings.replace(".py", ""))
                 self.field_dic = imp.field_dic
@@ -405,7 +405,7 @@ values. {e}")
             self.stops = None
         self.stopw_compiled = re.compile("\b" + "\b|\b".join(self.stops) + "\b",
                                          flags=re.MULTILINE | re.IGNORECASE | re.DOTALL)
-        assert "None" == self.repick_task or "addtag" in self.repick_task or "boost" in self.repick_task
+        assert "None" == self.repick_task or isinstance(self.repick_task, type(None)) or "addtag" in self.repick_task or "boost" in self.repick_task, "Invalid value for `self.repick_task`"
 
         # actual execution
         self.deckname = self._deckname_check(deckname)
@@ -547,7 +547,7 @@ threads of size {batchsize})")
                         time.sleep(0.5)
                 print("")
                 [t.join() for t in threads]
-            assert len(r_list) == len(card_id)
+            assert len(r_list) == len(card_id), "could not retrieve all cards"
             r_list = sorted(r_list,
                             key=lambda x: x["cardId"],
                             reverse=False)
@@ -1260,10 +1260,10 @@ skipping")
         for i in df.index:
             if df.loc[i, "type"] == 1:  # learning
                 df.at[i, "interval"] = steps_L[int(str(df.loc[i, "left"])[-3:])-1]
-                assert df.at[i, "interval"] >= 0
+                assert df.at[i, "interval"] >= 0, f"negative interval for card {i}"
             elif df.loc[i, "type"] == 3:  # relearning
                 df.at[i, "interval"] = steps_RL[int(str(df.loc[i, "left"])[-3:])-1]
-                assert df.at[i, "interval"] >= 0
+                assert df.at[i, "interval"] >= 0, f"negative interval for card {i}"
             if df.loc[i, "interval"] < 0:  # negative values are in seconds
                 yel(f"Changing interval: cid: {i}, ivl: {df.loc[i, 'interval']} => {df.loc[i, 'interval']/(-86400)}")
                 df.at[i, "interval"] /= -86400
@@ -1305,7 +1305,7 @@ skipping")
                 if df.loc[i, "ref_due"] >= 100_000:  # timestamp and not days
                     df.at[i, "ref_due"] -= anki_col_time
                     df.at[i, "ref_due"] /= 86400
-                assert df.at[i, "ref_due"] > 0
+                assert df.at[i, "ref_due"] > 0, f"negative interval for card {i}"
             overdue = df.loc[due, "ref_due"] - time_offset
             df.drop("ref_due", axis=1, inplace=True)
 
@@ -1323,8 +1323,8 @@ skipping")
 
             # sanity check
             try:
-                assert np.sum((overdue-correction)>0) == 0
-                assert np.sum(ro<0) == 0
+                assert np.sum((overdue-correction)>0) == 0, "wrong value computed to correct overdue"
+                assert np.sum(ro<0) == 0, "wrong values of relative overdueness"
             except Exception as e:
                 red(f"This should not happen: {str(e)}")
                 beep()
@@ -1375,10 +1375,10 @@ skipping")
                 df.loc[due, "ref"] = ro_cs
         # mean of lowest interval and relative overdueness
         if reference_order == "LIRO_mix":
-            assert 0 not in list(np.isnan(df["ref"].values))
+            assert 0 not in list(np.isnan(df["ref"].values)), "missing ref value for some cards"
             df.loc[due, "ref"] = (ro_cs + 2 * interval_cs) / 3
 
-        assert len([x for x in rated if df.loc[x, "status"] != "rated"]) == 0
+        assert len([x for x in rated if df.loc[x, "status"] != "rated"]) == 0, "all rated cards are not marked as rated"
         red(f"\nCards identified as rated in the past {self.rated_last_X_days} days: \
 {len(rated)}")
 
@@ -1412,7 +1412,7 @@ skipping")
             else:
                 red(f"Removed {previous_len-len(indTODO)} siblings cards out of \
 {previous_len}.")
-            assert len(indTODO) != 0
+            assert len(indTODO) >= 0, "wrong length of indTODO"
         else:
             yel("Not excluding siblings because you want to study all the cards.")
 
@@ -1478,8 +1478,8 @@ set its adjustment weight to 0")
 
         # final check before computing optimal order:
         for x in ["interval", "ref", "due"]:
-            assert np.sum(np.isnan(df.loc[rated, x].values)) == len(rated)
-            assert np.sum(np.isnan(df.loc[due, x].values)) == 0
+            assert np.sum(np.isnan(df.loc[rated, x].values)) == len(rated), f"invalid treatment of rated cards, column : {x}"
+            assert np.sum(np.isnan(df.loc[due, x].values)) == 0, f"invalid treatment of due cards, column : {x}"
 
         def combinator(array):
             """
@@ -1523,7 +1523,7 @@ set its adjustment weight to 0")
                 indQUEUE.append(indTODO.pop(indTODO.index(queue[-1])))
                 pbar.update(1)
 
-        assert indQUEUE == rated + queue
+        assert indQUEUE == rated + queue, "indQUEUE is not the sum of rated and queue lists"
 
         try:
             if w1 == 0:
@@ -1648,7 +1648,7 @@ the data in `acronym_list`.")
         if task in ["bury_excess_learning_cards", "bury_excess_review_cards"]:
             to_keep = self.opti_rev_order
             to_bury = [x for x in self.due_cards if x not in to_keep]
-            assert len(to_bury) < len(self.due_cards)
+            assert len(to_bury) < len(self.due_cards), "trying to bury more cards than there are"
             red(f"Burying {len(to_bury)} cards out of {len(self.due_cards)}.")
             red("This will not affect the due order.")
             self._call_anki(action="bury", cards=to_bury)
