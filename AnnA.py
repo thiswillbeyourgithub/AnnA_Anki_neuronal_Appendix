@@ -1678,7 +1678,7 @@ deck.")
                 query = "is:due -rated:1 cid:" + ','.join(
                         [str(x) for x in batch_cards])
                 self._call_anki(action="createFilteredDeck",
-                                newDeckName=f"{filtered_deck_name}_{cnt+1}",
+                                newDeckName=f"{filtered_deck_name}_{cnt+1:02d}",
                                 searchQuery=query,
                                 gatherCount=batchsize + 1,
                                 reschedule=True,
