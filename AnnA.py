@@ -1434,8 +1434,6 @@ skipping")
                 red(f"Taking {target_deck_size} of the deck.")
                 target_deck_size = 0.01 * int(target_deck_size[:-1]) * (
                     len(df.index) - len(rated) + 1)
-            else:
-                raise Exception(f"Invalid target_deck_size value: {target_deck_size}")
         target_deck_size = int(target_deck_size)
 
         if max_deck_size is not None:
