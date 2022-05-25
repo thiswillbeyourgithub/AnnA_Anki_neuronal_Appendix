@@ -186,7 +186,11 @@ class AnnA:
             assert target_deck_size > 0
             target_deck_size = str(target_deck_size)
         elif isinstance(target_deck_size, str):
-            assert "%" in target_deck_size or target_deck_size in ["all", "deck_config"]
+            try:
+                testint = int(target_deck_size)
+            except Exception:
+                pass
+            assert "%" in target_deck_size or target_deck_size in ["all", "deck_config"] or isinstance(testint, int)
         self.target_deck_size = target_deck_size
 
         assert max_deck_size is None or max_deck_size >= 1
