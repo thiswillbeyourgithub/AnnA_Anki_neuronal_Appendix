@@ -1495,8 +1495,8 @@ set its adjustment weight to 0")
                 good candidate to add to indQEUE.
             * if a cell of np.mean is high, then the corresponding card of
                 indTODO is different from most cards of indQUEUE (i.e. it is
-                quite different from most cards of indQUEUE). This cas is
-                a good candidate to add to indQUEUE
+                quite different from most cards of indQUEUE). This card is
+                a good candidate to add to indQUEUE (same for np.median)
             * Naturally, np.min is given more importance than np.mean
 
             Best candidates are cards with high combinator output.
@@ -1508,7 +1508,7 @@ set its adjustment weight to 0")
 
             The content of 'queue' is the list of card_id in best review order.
             """
-            return 0.9 * np.min(array, axis=1) + 0.1 * np.mean(array, axis=1)
+            return 0.7 * np.min(array, axis=1) + 0.2 * np.mean(array, axis=1) + 0.1 * np.median(array, axis=1)
 
         with tqdm(desc="Computing optimal review order",
                   unit=" card",
