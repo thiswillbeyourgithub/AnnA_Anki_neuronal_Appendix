@@ -147,6 +147,7 @@ class AnnA:
                  show_banner=True,
                  skip_print_similar=False,
                  repick_task="boost",  # None, "addtag", "boost" or "boost&addtag"
+                 disable_fuzz=False,
 
                  # vectorization:
                  vectorizer="TFIDF",  # can only be "TFIDF" but left for legacy reason
@@ -282,6 +283,9 @@ class AnnA:
 
         assert isinstance(field_mappings, (str, type(None))), "Invalid type for `field_mappings`"
         self.field_mappings = field_mappings
+
+        assert isinstance(disable_fuzz, bool)
+        self.disable_fuzz = disable_fuzz
 
         # additional processing of arguments
         if task != "filter_review_cards" and self.filtered_deck_name_template is not None:
@@ -1250,6 +1254,10 @@ skipping")
         due = self.due_cards
         w1 = self.score_adjustment_factor[0]
         w2 = self.score_adjustment_factor[1]
+        if self.disable_fuzz:
+            w3 = 0
+        else:
+            w3 = (w1 + w2) / 2 / 10
 
         # hardcoded settings
         display_stats = True
@@ -1518,7 +1526,8 @@ set its adjustment weight to 0")
             while len(queue) < queue_size_goal:
                 queue.append(indTODO[
                         (w1*df.loc[indTODO, "ref"].values -\
-                         w2*combinator(self.df_dist.loc[indTODO, indQUEUE].values)
+                         w2*combinator(self.df_dist.loc[indTODO, indQUEUE].values) +\
+                         w3*np.random.rand(1, len(indTODO))
                          ).argmin()])
                 indQUEUE.append(indTODO.pop(indTODO.index(queue[-1])))
                 pbar.update(1)
@@ -2164,6 +2173,18 @@ if __name__ == "__main__":
                         all text from the deck to feed into the vectorizer.\
                         Results in more accurate relative distances between\
                         cards. (more information at https://github.com/klieret/AnkiPandas)")
+    parser.add_argument("--disable_fuzz",
+                        dest="disable_fuzz",
+                        default=False,
+                        action="store_true",
+                        required=False,
+                        help="Disable fuzzing when computing optimal order \
+                        , otherwise a small random vector is added to the \
+                        reference_score and distance_score of each card. Note \
+                        that this vector is multiplied by the average of the \
+                        score_adjustment_factor then divided by 10 to make sure \
+                        that it does not significatively alter results. \
+                        Defaults to `False`.")
     parser.add_argument("--profile_name",
                         nargs=1,
                         metavar="PROFILE_NAME",
