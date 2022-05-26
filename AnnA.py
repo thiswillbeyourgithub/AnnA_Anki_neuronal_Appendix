@@ -142,7 +142,7 @@ class AnnA:
                  tags_to_ignore=None,
                  tags_separator="::",
                  filtered_deck_name_template=None,
-                 filtered_deck_by_batch=True,
+                 filtered_deck_by_batch=False,
                  filtered_deck_batch_size=25,
                  show_banner=True,
                  skip_print_similar=False,
@@ -2069,10 +2069,10 @@ if __name__ == "__main__":
     parser.add_argument("--filtered_deck_by_batch",
                         action="store_true",
                         dest="filtered_deck_by_batch",
-                        default=True,
+                        default=False,
                         required=False,
                         help="To enable creating batch of filtered decks. \
-                        Default is `True`.")
+                        Default is `False`.")
     parser.add_argument("--filtered_deck_batch_size",
                         nargs=1,
                         metavar="FILTERED_DECK_BATCH_SIZE",
