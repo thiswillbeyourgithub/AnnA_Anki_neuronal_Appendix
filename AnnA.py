@@ -1379,8 +1379,8 @@ skipping")
             df.loc[due, "ref"] = (ro_cs + 2 * interval_cs) / 3
 
         assert len([x for x in rated if df.loc[x, "status"] != "rated"]) == 0, "all rated cards are not marked as rated"
-        red(f"\nCards identified as rated in the past {self.rated_last_X_days} days: \
-{len(rated)}")
+        if self.rated_last_X_days is not None:
+            red(f"\nCards identified as rated in the past {self.rated_last_X_days} days: {len(rated)}")
 
         # contain the index of the cards that will be use when
         # computing optimal order
