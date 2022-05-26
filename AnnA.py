@@ -1697,7 +1697,7 @@ deck.")
                                 searchQuery=query,
                                 gatherCount=batchsize + 1,
                                 reschedule=True,
-                                sortOrder=0,
+                                sortOrder=5,
                                 createEmpty=False)
                 cnt += 1
         else:
@@ -1708,7 +1708,7 @@ deck.")
                             searchQuery=query,
                             gatherCount=len(self.opti_rev_order) + 1,
                             reschedule=True,
-                            sortOrder=0,
+                            sortOrder=5,
                             createEmpty=False)
 
             print("Checking that the content of filtered deck name is the same as \
