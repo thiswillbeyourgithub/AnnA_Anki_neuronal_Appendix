@@ -1516,7 +1516,7 @@ set its adjustment weight to 0")
 
             The content of 'queue' is the list of card_id in best review order.
             """
-            return 0.7 * np.min(array, axis=1) + 0.2 * np.mean(array, axis=1) + 0.1 * np.median(array, axis=1)
+            return 0.6 * np.min(array, axis=1) + 0.3 * np.mean(array, axis=1) + 0.1 * np.median(array, axis=1)
 
         with tqdm(desc="Computing optimal review order",
                   unit=" card",
