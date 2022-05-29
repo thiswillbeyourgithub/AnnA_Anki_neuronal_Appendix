@@ -1137,7 +1137,7 @@ model {mod}.Taking first 2 fields.")
                     offset = desired_variance_kept - evr
                     # multiply or divide by 2 every 20% of difference
                     self.TFIDF_dim *= 2**(offset/20)
-                    self.TFIDF_dim = int(max(5, min(self.TFIDF_dim, 1999)))
+                    self.TFIDF_dim = int(max(2, min(self.TFIDF_dim, 1999)))
                     red(f"Explained variance ratio is only {evr}% (\
 retrying up to 10 times to get closer to {desired_variance_kept}%)", end= " ")
                     continue
