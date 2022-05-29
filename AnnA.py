@@ -1443,11 +1443,11 @@ skipping")
         if isinstance(target_deck_size, str):
             if target_deck_size in ["all", "100%"]:
                 red("Taking the whole deck.")
-                target_deck_size = len(df.index) - len(rated) + 1
+                target_deck_size = len(indTODO) + 1
             elif target_deck_size.endswith("%"):
                 red(f"Taking {target_deck_size} of the deck.")
                 target_deck_size = 0.01 * int(target_deck_size[:-1]) * (
-                    len(df.index) - len(rated) + 1)
+                        len(indTODO) +1)
         target_deck_size = int(target_deck_size)
 
         if max_deck_size is not None:
