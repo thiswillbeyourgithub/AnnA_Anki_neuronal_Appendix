@@ -1024,7 +1024,7 @@ adjust formating issues:")
                     yel(f"Ankipandas will use anki collection found at {original_db}")
                 Path.mkdir(Path("cache"), exist_ok=True)
                 name = f"{self.profile_name}_{self.deckname}".replace(" ", "_")
-                temp_db = copy(original_db, f"./cache/{name}")
+                temp_db = copy(original_db, f"./cache/{name.replace('/', '_')}")
                 col = akp.Collection(path=temp_db)
 
                 # keep only unsuspended cards from the right deck
