@@ -221,8 +221,7 @@ optional arguments:
   --TFIDF_dim TFIDF_DIMENSIONS
                         the number of dimension to keep using SVD Default is `100`, you
                         cannot disable dimension reduction for TF_IDF because that would
-                        result in a sparse matrix. AnnA will automatically try a higher
-                        number of dimension if needed, up to 2000. (More information at
+                        result in a sparse matrix.
                         https://scikit-learn.org/stable/modules/generated/sklearn.decomposit
                         ion.TruncatedSVD.html).
   --TFIDF_tokenize      default to `True`. Enable sub word tokenization, for example turn

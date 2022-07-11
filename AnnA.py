@@ -151,7 +151,7 @@ class AnnA:
 
                  # vectorization:
                  vectorizer="TFIDF",  # can only be "TFIDF" but left for legacy reason
-                 TFIDF_dim=100,
+                 TFIDF_dim=50,
                  TFIDF_tokenize=True,
                  TFIDF_stem=False,
 
@@ -1111,36 +1111,17 @@ model {mod}.Taking first 2 fields.")
         if self.TFIDF_dim is None:
             df["VEC"] = [x for x in t_vec]
         else:
-            # explanation : trying to do a dimensions reduction on the vectors
-            # but trying up to 10 times to find the right value that keeps
-            # between 45% and 55% of variance. Otherwise, either the information
-            # is lost, or the cards are all equidistant I think.
-            trial = 0
-            desired_variance_kept = 50
             if self.TFIDF_dim >= t_vec.shape[1] - 1:
-                red(f"Number of dimensions desired ({self.TFIDF_dim}) is higher than number of features ({t_vec.shape[1]}), taking the lowest value.")
+                red(f"Number of dimensions desired ({self.TFIDF_dim}) is "
+                    "higher than number of features ({t_vec.shape[1]}), "
+                    " taking the lowest value.")
                 beep()
-            while True:
-                self.TFIDF_dim = min(self.TFIDF_dim, t_vec.shape[1] - 1)
-                yel(f"\nReducing dimensions to {self.TFIDF_dim} using SVD...", end= " ")
-                svd = TruncatedSVD(n_components=self.TFIDF_dim)
-                t_red = svd.fit_transform(t_vec)
-                evr = round(sum(svd.explained_variance_ratio_) * 100, 1)
-                trial += 1
-                if abs(evr - desired_variance_kept) <= 5:
-                    break
-                elif trial >= 10:
-                    red(f"Tried {trial} times to find the right number of dimensions, stopping.")
-                    beep()
-                    break
-                else:
-                    offset = desired_variance_kept - evr
-                    # multiply or divide by 2 every 20% of difference
-                    self.TFIDF_dim *= 2**(offset/20)
-                    self.TFIDF_dim = int(max(2, min(self.TFIDF_dim, 1999)))
-                    red(f"Explained variance ratio is only {evr}% (\
-retrying up to 10 times to get closer to {desired_variance_kept}%)", end= " ")
-                    continue
+            self.TFIDF_dim = min(self.TFIDF_dim, t_vec.shape[1] - 1)
+            yel(f"\nReducing dimensions to {self.TFIDF_dim} using SVD...",
+                end=" ")
+            svd = TruncatedSVD(n_components=self.TFIDF_dim)
+            t_red = svd.fit_transform(t_vec)
+            evr = round(sum(svd.explained_variance_ratio_) * 100, 1)
             yel(f"Explained variance ratio after SVD on Tf_idf: {evr}%")
 
             df["VEC"] = [x for x in t_red]
@@ -2134,13 +2115,12 @@ if __name__ == "__main__":
                         metavar="TFIDF_DIMENSIONS",
                         dest="TFIDF_dim",
                         type=int,
-                        default=100,
+                        default=50,
                         required=False,
                         help="the number of dimension to keep using SVD \
-                        Default is `100`, you cannot disable dimension\
+                        Default is `50`, you cannot disable dimension\
                         reduction for TF_IDF because that would result in a\
-                        sparse matrix. AnnA will automatically try to find\
-                        the right number of dimension.\
+                        sparse matrix. 
                         (More information at https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.TruncatedSVD.html).")
     parser.add_argument("--TFIDF_tokenize",
                         dest="TFIDF_tokenize",
