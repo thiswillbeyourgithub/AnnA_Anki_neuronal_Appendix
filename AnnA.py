@@ -2120,7 +2120,7 @@ if __name__ == "__main__":
                         help="the number of dimension to keep using SVD \
                         Default is `50`, you cannot disable dimension\
                         reduction for TF_IDF because that would result in a\
-                        sparse matrix. 
+                        sparse matrix. \
                         (More information at https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.TruncatedSVD.html).")
     parser.add_argument("--TFIDF_tokenize",
                         dest="TFIDF_tokenize",
