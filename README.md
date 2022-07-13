@@ -254,6 +254,7 @@ AnnA includes built-in methods you can run after instantiating the class. Note t
 * `save_df` saves the dataframe containing the cards and all other infos needed by AnnA as a pickle file. Used mainly for debugging. Files will be saved to the folder `DF_backups`
 
 ## TODO
+* make this PEP8 compliant
 * implement flagging urgent card instead of only tag or boost
 * investigate wether CLIP is a better vectorizer than what you used in the past
 * merge code from anki connect to make companion addon compatible with latest anki
