@@ -878,7 +878,7 @@ less than threshold ({self.minimum_due}).\nStopping.")
 
                 # add tags to comb_text
                 if self.append_tags:
-                    tags = self.df.loc[index, "tags"].split(" ")
+                    tags = df.loc[index, "tags"].split(" ")
                     for t in tags:
                         if ("AnnA" not in t) and (t not in self.tags_to_ignore):
                             t = re.sub(spacers_compiled,  # replaces _ - and /
@@ -888,7 +888,7 @@ less than threshold ({self.minimum_due}).\nStopping.")
                             comb_text += " " + t
 
                 with lock:
-                    self.df.at[index, "comb_text"] = comb_text
+                    df.at[index, "comb_text"] = comb_text
                     pbar.update(1)
 
         n = len(self.df.index)
