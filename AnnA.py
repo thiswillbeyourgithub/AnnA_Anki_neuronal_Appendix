@@ -1457,7 +1457,7 @@ lowest value.")
                 else:
                     whi(f"Not showing statistics of the reference score, you \
 set its adjustment weight to 0")
-                val = pd.DataFrame(data=w2*self.df_dist.values.flatten(),
+                val = pd.DataFrame(data=w2*self.df_dist.values.ravel(),
                                    columns=['distance matrix']).describe(include='all')
                 whi(f"Distance: {val}\n\n")
             except Exception as e:
@@ -1530,8 +1530,8 @@ the adjustment weight of the reference score to 0.")
                     yel("Not displaying Improvement Ratio because almost \
 all cards were included in the new queue.")
                 else:
-                    spread_queue = np.mean(self.df_dist.loc[queue, queue].values.flatten())
-                    spread_else = np.mean(self.df_dist.loc[woAnnA, woAnnA].values.flatten())
+                    spread_queue = np.mean(self.df_dist.loc[queue, queue].values.ravel())
+                    spread_else = np.mean(self.df_dist.loc[woAnnA, woAnnA].values.ravel())
 
                     red("Mean of distance in the new queue:", end=" ")
                     yel(str(spread_queue))
