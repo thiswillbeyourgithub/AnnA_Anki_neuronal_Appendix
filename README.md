@@ -254,6 +254,7 @@ AnnA includes built-in methods you can run after instantiating the class. Note t
 * `save_df` saves the dataframe containing the cards and all other infos needed by AnnA as a pickle file. Used mainly for debugging. Files will be saved to the folder `DF_backups`
 
 ## TODO
+* use joblib caching
 - use hierarchical clustering (quick because you already have the distance matrix) to have the full tree, then instead of using the TFIDF distance when computing the optimal order, use the "tree distance"
 * make this PEP8 compliant
 * implement flagging urgent card instead of only tag or boost
