@@ -1022,6 +1022,16 @@ adjust formating issues:")
                     red(f"Ankipandas will use anki collection found at {original_db}")
                 else:
                     yel(f"Ankipandas will use anki collection found at {original_db}")
+                if "trash" in original_db.lower():
+                    cnt = 0
+                    while cnt <= 10:
+                        red("Ankipandas seems to have found a collection in "
+                            "the trash folder. If that is not your intention "
+                            "cancel now. Waiting 10s for you to see this "
+                            "message before proceeding.")
+                        beep()
+                        cnt += 1
+                        time.sleep(1)
                 Path.mkdir(Path("cache"), exist_ok=True)
                 name = f"{self.profile_name}_{self.deckname}".replace(" ", "_")
                 temp_db = copy(original_db, f"./cache/{name.replace('/', '_')}")
