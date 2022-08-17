@@ -1105,7 +1105,7 @@ threads of size {batchsize})")
                 else:
                     yel("Ankipandas will use anki collection found at "
                         f"{original_db}")
-                if "trash" in original_db.lower():
+                if "trash" in str(original_db).lower():
                     cnt = 0
                     while cnt <= 10:
                         red("Ankipandas seems to have found a collection in "
