@@ -98,6 +98,7 @@ set_global_logging_level(logging.ERROR,
                          ["transformers", "nlp", "torch",
                           "tensorflow", "sklearn", "nltk"])
 
+
 def beep(sound="error", **args):
     red("BEEP")
     try:
@@ -110,18 +111,25 @@ def beep(sound="error", **args):
             red("Failed to beep twice.")
     time.sleep(1)
 
+
 class AnnA:
     """
     just instantiating the class does the job, as you can see in the
     __init__ function
     """
+
     def __init__(self,
 
                  # most important:
                  deckname=None,
-                 reference_order="relative_overdueness",  # any of "lowest_interval", "relative overdueness", "order_added"
-                 task="filter_review_cards", # any of "filter_review_cards", "bury_excess_review_cards", "bury_excess_learning_cards"
-                 target_deck_size="deck_config",  # format: 80%, "all", "deck_config"
+                 # any of "lowest_interval", "relative overdueness",
+                 # "order_added"
+                 reference_order="relative_overdueness",
+                 # any of "filter_review_cards",
+                 # "bury_excess_review_cards", "bury_excess_learning_cards"
+                 task="filter_review_cards",
+                 target_deck_size="deck_config",
+                 # format: 80%, "all", "deck_config"
                  max_deck_size=None,
                  stopwords_lang=["english", "french"],
                  rated_last_X_days=4,
@@ -146,11 +154,13 @@ class AnnA:
                  filtered_deck_batch_size=25,
                  show_banner=True,
                  skip_print_similar=False,
-                 repick_task="boost",  # None, "addtag", "boost" or "boost&addtag"
+                 repick_task="boost",  # None, "addtag", "boost" or
+                 # "boost&addtag"
                  disable_fuzz=False,
 
                  # vectorization:
-                 vectorizer="TFIDF",  # can only be "TFIDF" but left for legacy reason
+                 vectorizer="TFIDF",  # can only be "TFIDF" but
+                 # left for legacy reason
                  TFIDF_dim=50,
                  TFIDF_tokenize=True,
                  TFIDF_stem=False,
@@ -176,12 +186,14 @@ class AnnA:
             log.setLevel(logging.INFO)
 
         # loading arguments and proceed to check correct values
-        assert isinstance(replace_greek, bool), "Invalid type of `replace_greek`"
+        assert isinstance(
+            replace_greek, bool), "Invalid type of `replace_greek`"
         self.replace_greek = replace_greek
 
         assert isinstance(keep_OCR, bool), "Invalid type of `keep_OCR`"
         self.keep_OCR = keep_OCR
-        self.OCR_content = "" # used to avoid looking for acronyms in OCR content
+        self.OCR_content = ""  # used to avoid looking for acronyms
+        # in OCR content
 
         if isinstance(target_deck_size, int):
             assert target_deck_size > 0
@@ -191,34 +203,49 @@ class AnnA:
                 testint = int(target_deck_size)
             except Exception:
                 pass
-            assert "%" in target_deck_size or target_deck_size in ["all", "deck_config"] or isinstance(testint, int), "Invalid value for `target_deck_size`"
+            assert "%" in target_deck_size or target_deck_size in [
+                "all", "deck_config"] or (
+                    isinstance(testint, int), (
+                        "Invalid value for `target_deck_size`"))
         self.target_deck_size = target_deck_size
 
-        assert max_deck_size is None or max_deck_size >= 1, "Invalid value for `max_deck_size`"
+        assert max_deck_size is None or max_deck_size >= 1, (
+            "Invalid value for `max_deck_size`")
         self.max_deck_size = max_deck_size
 
-        assert rated_last_X_days is None or rated_last_X_days >= 0, "Invalid value for `rated_last_X_days`"
+        assert rated_last_X_days is None or (
+            rated_last_X_days >= 0, (
+                "Invalid value for `rated_last_X_days`"))
         self.rated_last_X_days = rated_last_X_days
 
         assert minimum_due >= 0, "Invalid value for `minimum_due`"
         self.minimum_due = minimum_due
 
-        assert isinstance(highjack_due_query, (str, type(None))), "Invalid type of `highjack_due_query`"
+        assert isinstance(highjack_due_query, (str, type(None))
+                          ), "Invalid type of `highjack_due_query`"
         self.highjack_due_query = highjack_due_query
 
-        assert isinstance(highjack_rated_query, (str, type(None))), "Invalid type of `highjack_rated_query`"
+        assert isinstance(highjack_rated_query, (str, type(None))
+                          ), "Invalid type of `highjack_rated_query`"
         self.highjack_rated_query = highjack_rated_query
 
         if isinstance(score_adjustment_factor, tuple):
             score_adjustment_factor = list(score_adjustment_factor)
-        assert (isinstance(score_adjustment_factor, list)), "Invalid type of `score_adjustment_factor`"
-        assert len(score_adjustment_factor) == 2, "Invalid length of `score_adjustment_factor`"
+        assert (isinstance(score_adjustment_factor, list)
+                ), "Invalid type of `score_adjustment_factor`"
+        assert len(
+            score_adjustment_factor) == 2, (
+                "Invalid length of `score_adjustment_factor`")
         for n in range(len(score_adjustment_factor)):
             if not isinstance(score_adjustment_factor[n], float):
                 score_adjustment_factor[n] = float(score_adjustment_factor[n])
         self.score_adjustment_factor = score_adjustment_factor
 
-        assert reference_order in ["lowest_interval", "relative_overdueness", "order_added", "LIRO_mix"], "Invalid value for `reference_order`"
+        assert reference_order in ["lowest_interval",
+                                   "relative_overdueness",
+                                   "order_added",
+                                   "LIRO_mix"], (
+               "Invalid value for `reference_order`")
         self.reference_order = reference_order
 
         assert isinstance(append_tags, bool), "Invalid type of `append_tags`"
@@ -228,23 +255,28 @@ class AnnA:
             tags_to_ignore = []
         self.tags_to_ignore = tags_to_ignore
 
-        assert isinstance(tags_separator, str), "Invalid type of `tags_separator`"
+        assert isinstance(
+            tags_separator, str), "Invalid type of `tags_separator`"
         self.tags_separator = tags_separator
 
-        assert isinstance(low_power_mode, bool), "Invalid type of `low_power_mode`"
+        assert isinstance(
+            low_power_mode, bool), "Invalid type of `low_power_mode`"
         self.low_power_mode = low_power_mode
 
         assert vectorizer == "TFIDF", "Invalid value for `vectorizer`"
         self.vectorizer = vectorizer
 
-        assert isinstance(stopwords_lang, list), "Invalid type of var `stopwords_lang`"
+        assert isinstance(
+            stopwords_lang, list), "Invalid type of var `stopwords_lang`"
         self.stopwords_lang = stopwords_lang
 
-        assert isinstance(TFIDF_dim, (int, type(None))), "Invalid type of `TFIDF_dim`"
+        assert isinstance(TFIDF_dim, (int, type(None))
+                          ), "Invalid type of `TFIDF_dim`"
         self.TFIDF_dim = TFIDF_dim
 
         assert isinstance(TFIDF_stem, bool), "Invalid type of `TFIDF_stem`"
-        assert isinstance(TFIDF_tokenize, bool), "Invalid type of `TFIDF_tokenize`"
+        assert isinstance(
+            TFIDF_tokenize, bool), "Invalid type of `TFIDF_tokenize`"
         assert TFIDF_stem + TFIDF_tokenize != 2
         self.TFIDF_stem = TFIDF_stem
         self.TFIDF_tokenize = TFIDF_tokenize
@@ -254,61 +286,74 @@ class AnnA:
                         "bury_excess_review_cards"], "Invalid value for `task`"
         self.task = task
 
-        assert isinstance(filtered_deck_name_template, (str, type(None))), "Invalid type for `filtered_deck_name_template`"
+        assert isinstance(filtered_deck_name_template, (str, type(
+            None))), "Invalid type for `filtered_deck_name_template`"
         self.filtered_deck_name_template = filtered_deck_name_template
 
-        assert isinstance(filtered_deck_by_batch, bool), "Invalid type for `filtered_deck_by_batch`"
+        assert isinstance(filtered_deck_by_batch,
+                          bool), "Invalid type for `filtered_deck_by_batch`"
         self.filtered_deck_by_batch = filtered_deck_by_batch
 
-        assert isinstance(filtered_deck_batch_size, int), "Invalid type for `filtered_deck_batch_size`"
+        assert isinstance(filtered_deck_batch_size,
+                          int), "Invalid type for `filtered_deck_batch_size`"
         self.filtered_deck_batch_size = filtered_deck_batch_size
 
-        assert isinstance(skip_print_similar, bool), "Invalid type for `skip_print_similar`"
+        assert isinstance(skip_print_similar,
+                          bool), "Invalid type for `skip_print_similar`"
         self.skip_print_similar = skip_print_similar
 
-        assert isinstance(whole_deck_computation, bool), "Invalid type for `whole_deck_computation`"
+        assert isinstance(whole_deck_computation,
+                          bool), "Invalid type for `whole_deck_computation`"
         self.whole_deck_computation = whole_deck_computation
 
-        assert isinstance(profile_name, (str, type(None))), "Invalid type for `profile_name`"
+        assert isinstance(profile_name, (str, type(None))
+                          ), "Invalid type for `profile_name`"
         self.profile_name = profile_name
 
         assert isinstance(repick_task, str), "Invalid type for `repick_task`"
         self.repick_task = repick_task
 
-        assert isinstance(acronym_file, (str, type(None))), "Invalid type for `acronym_file`"
+        assert isinstance(acronym_file, (str, type(None))
+                          ), "Invalid type for `acronym_file`"
         self.acronym_file = acronym_file
 
-        assert isinstance(acronym_list, (list, type(None))), "Invalid type for `acronym_list`"
+        assert isinstance(acronym_list, (list, type(None))
+                          ), "Invalid type for `acronym_list`"
         self.acronym_list = acronym_list
 
-        assert isinstance(field_mappings, (str, type(None))), "Invalid type for `field_mappings`"
+        assert isinstance(field_mappings, (str, type(None))
+                          ), "Invalid type for `field_mappings`"
         self.field_mappings = field_mappings
 
         assert isinstance(disable_fuzz, bool)
         self.disable_fuzz = disable_fuzz
 
         # additional processing of arguments
-        if task != "filter_review_cards" and self.filtered_deck_name_template is not None:
-            red("Ignoring argument 'filtered_deck_name_template' because 'task' is not \
-set to 'filter_review_cards'.")
+        if task != "filter_review_cards" and (
+                self.filtered_deck_name_template is not None):
+            red("Ignoring argument 'filtered_deck_name_template' because "
+                "'task' is not set to 'filter_review_cards'.")
         if low_power_mode and TFIDF_dim is not None:
             if TFIDF_dim > 50:
-                red(f"Low power mode is activated, it is usually recommended \
-to set low values of TFIDF_dim (currently set at {TFIDF_dim} dimensions)")
+                red("Low power mode is activated, it is usually recommended "
+                    "to set low values of TFIDF_dim (currently set at "
+                    f"{TFIDF_dim} dimensions)")
             if not self.skip_print_similar:
                 self.skip_print_similar = True
-                red("Enabling 'skip_print_similar' because 'low_power_mode' \
-is set to True")
+                red("Enabling 'skip_print_similar' because 'low_power_mode' "
+                    " is set to True")
 
         if TFIDF_tokenize:
             # from : https://huggingface.co/bert-base-multilingual-cased/
-            self.tokenizer = Tokenizer.from_file("./bert-base-multilingual-cased_tokenizer.json")
+            self.tokenizer = Tokenizer.from_file(
+                "./bert-base-multilingual-cased_tokenizer.json")
             self.tokenizer.no_truncation()
             self.tokenizer.no_padding()
             self.exclude_tkn = set(["[CLS]", "[SEP]"])
-            self.tokenize = lambda x : [x for x in self.tokenizer.encode(x).tokens if x not in self.exclude_tkn]
+            self.tokenize = lambda x: [x for x in self.tokenizer.encode(
+                x).tokens if x not in self.exclude_tkn]
         else:
-            self.tokenize = lambda x : x
+            self.tokenize = lambda x: x
 
         if self.acronym_file is not None and self.acronym_list is not None:
             file = Path(acronym_file)
@@ -340,8 +385,8 @@ is set to True")
                            if x not in acr_dict_list]
                 if missing:
                     beep()
-                    red(f"Mising the following acronym dictionnary in \
-{acronym_file}: {','.join(missing)}")
+                    red("Mising the following acronym dictionnary in "
+                        f"{acronym_file}: {','.join(missing)}")
                     raise SystemExit()
 
                 acr_dict_list = [x for x in acr_dict_list
@@ -349,8 +394,8 @@ is set to True")
 
                 if len(acr_dict_list) == 0:
                     beep()
-                    red(f"No dictionnary from {self.acr_dict_list} \
-found in {acronym_file}")
+                    red(f"No dictionnary from {self.acr_dict_list} "
+                        f"found in {acronym_file}")
                     raise SystemExit()
 
                 compiled_dic = {}
@@ -360,12 +405,14 @@ found in {acronym_file}")
                     for ac in acronym_dict:
                         if ac.lower() == ac:
                             compiled = re.compile(r"\b" + ac + r"\b",
-                                                  flags=re.IGNORECASE |
-                                                  re.MULTILINE |
-                                                  re.DOTALL)
+                                                  flags=(re.IGNORECASE |
+                                                         re.MULTILINE |
+                                                         re.DOTALL))
                         else:
                             compiled = re.compile(r"\b" + ac + r"\b",
-                                                  flags=re.MULTILINE | re.DOTALL)
+                                                  flags=(
+                                                      re.MULTILINE |
+                                                      re.DOTALL))
                         if compiled in compiled_dic:
                             notifs.append(f"Pattern '{compiled}' found \
 multiple times in acronym dictionnary, keeping only the last one.")
@@ -381,7 +428,8 @@ multiple times in acronym dictionnary, keeping only the last one.")
         if self.field_mappings is not None:
             f = Path(self.field_mappings)
             try:
-                assert f.exists(), f"field_mappings file does not exist : {self.field_mappings}"
+                assert f.exists(), ("field_mappings file does not exist : "
+                                    f"{self.field_mappings}")
                 imp = importlib.import_module(
                     self.field_mappings.replace(".py", ""))
                 self.field_dic = imp.field_dic
@@ -407,9 +455,13 @@ values. {e}")
             red(f"Error when extracting stop words: {e}")
             red("Setting stop words list to None.")
             self.stops = None
-        self.stopw_compiled = re.compile("\b" + "\b|\b".join(self.stops) + "\b",
-                                         flags=re.MULTILINE | re.IGNORECASE | re.DOTALL)
-        assert "None" == self.repick_task or isinstance(self.repick_task, type(None)) or "addtag" in self.repick_task or "boost" in self.repick_task, "Invalid value for `self.repick_task`"
+        self.stopw_compiled = re.compile("\b" + "\b|\b".join(
+            self.stops) + "\b", flags=(
+                re.MULTILINE | re.IGNORECASE | re.DOTALL))
+        assert "None" == self.repick_task or isinstance(self.repick_task, type(
+            None)) or "addtag" in self.repick_task or (
+                "boost" in self.repick_task), (
+                    "Invalid value for `self.repick_task`")
 
         # actual execution
         self.deckname = self._deckname_check(deckname)
@@ -418,10 +470,11 @@ values. {e}")
                                            deck=self.deckname)
         if self.target_deck_size == "deck_config":
             self.target_deck_size = str(self.deck_config["rev"]["perDay"])
-            yel(f"Set 'target_deck_size' to deck's value: {self.target_deck_size}")
+            yel("Set 'target_deck_size' to deck's value: "
+                f"{self.target_deck_size}")
 
         if task in ["bury_excess_learning_cards",
-                      "bury_excess_review_cards"]:
+                    "bury_excess_review_cards"]:
             # bypasses most of the code to bury learning cards
             # directly in the deck without creating filtered decks
             if task == "bury_excess_learning_cards":
@@ -433,7 +486,8 @@ values. {e}")
                 return
             self._format_card()
             if self.low_power_mode:
-                red("Not printing acronyms because low_power_mode is set to 'True'")
+                red("Not printing acronyms because low_power_mode is set to "
+                    "'True'")
             else:
                 self._print_acronyms()
             self._compute_card_vectors()
@@ -447,7 +501,8 @@ values. {e}")
                 return
             self._format_card()
             if self.low_power_mode:
-                red("Not printing acronyms because low_power_mode is set to 'True'")
+                red("Not printing acronyms because low_power_mode is set to "
+                    "'True'")
             else:
                 self._print_acronyms()
             self._compute_card_vectors()
@@ -604,14 +659,16 @@ threads of size {batchsize})")
 
         elif self.task in ["filter_review_cards", "bury_excess_review_cards"]:
             yel("Getting due card list...")
-            query = f"\"deck:{self.deckname}\" is:due is:review -is:learn -is:suspended -is:buried -is:new -rated:1"
+            query = (f"\"deck:{self.deckname}\" is:due is:review -is:learn "
+                     "-is:suspended -is:buried -is:new -rated:1")
             whi(" >  '" + query + "'")
             due_cards = self._call_anki(action="findCards", query=query)
             whi(f"Found {len(due_cards)} reviews...\n")
 
         elif self.task == "bury_excess_learning_cards":
             yel("Getting is:learn card list...")
-            query = f"\"deck:{self.deckname}\" is:due is:learn -is:suspended -rated:1 -rated:2:1 -rated:2:2"
+            query = (f"\"deck:{self.deckname}\" is:due is:learn -is:suspended "
+                     "-rated:1 -rated:2:1 -rated:2:2")
             whi(" >  '" + query + "'")
             due_cards = self._call_anki(action="findCards", query=query)
             whi(f"Found {len(due_cards)} learning cards...\n")
@@ -624,8 +681,10 @@ threads of size {batchsize})")
             rated_cards = self._call_anki(action="findCards", query=query)
             red(f"Found {len(rated_cards)} cards...\n")
         elif self.rated_last_X_days not in [0, None]:
-            yel(f"Getting cards that where rated in the last {self.rated_last_X_days} days...")
-            query = f"\"deck:{self.deckname}\" rated:{self.rated_last_X_days} -is:suspended -is:buried"
+            yel("Getting cards that where rated in the last "
+                f"{self.rated_last_X_days} days...")
+            query = (f"\"deck:{self.deckname}\" rated:{self.rated_last_X_days}"
+                     " -is:suspended -is:buried")
             whi(" >  '" + query + "'")
             rated_cards = self._call_anki(action="findCards", query=query)
             whi(f"Found {len(rated_cards)} cards...\n")
@@ -637,15 +696,15 @@ threads of size {batchsize})")
             temp = [x for x in rated_cards if x not in due_cards]
             diff = len(rated_cards) - len(temp)
             if diff != 0:
-                yel(f"Removed overlap between rated cards and due cards: \
-{diff} cards removed. Keeping {len(temp)} cards.\n")
+                yel("Removed overlap between rated cards and due cards: "
+                    "{diff} cards removed. Keeping {len(temp)} cards.\n")
                 rated_cards = temp
         self.due_cards = due_cards
         self.rated_cards = rated_cards
 
         if len(self.due_cards) < self.minimum_due:
-            red(f"Number of due cards is {len(self.due_cards)} which is \
-less than threshold ({self.minimum_due}).\nStopping.")
+            red(f"Number of due cards is {len(self.due_cards)} which is "
+                "less than threshold ({self.minimum_due}).\nStopping.")
             self.not_enough_cards = True
             return
         else:
@@ -715,9 +774,9 @@ less than threshold ({self.minimum_due}).\nStopping.")
         * OCR text extractor
         """
         text = text.replace("&amp;", "&"
-                    ).replace("+++", " important "
-                    ).replace("&nbsp", " "
-                    ).replace("\u001F", " ")
+                            ).replace("+++", " important "
+                                      ).replace("&nbsp", " "
+                                                ).replace("\u001F", " ")
 
         # remove weird clozes
         text = re.sub(r"}}{{c\d+::", "", text)
@@ -739,7 +798,8 @@ less than threshold ({self.minimum_due}).\nStopping.")
             text += " list list"
 
         # remove html spaces
-        text = re.sub('\\n|</?div/?>|</?br/?>|</?span/?>|</?li/?>|</?ul/?>', " ", text)
+        text = re.sub(
+            '\\n|</?div/?>|</?br/?>|</?span/?>|</?li/?>|</?ul/?>', " ", text)
         text = re.sub('</?blockquote(.*?)>', " ", text)
 
         # OCR
@@ -758,11 +818,13 @@ less than threshold ({self.minimum_due}).\nStopping.")
         text = re.sub(r'[a-zA-Z0-9-]+\....', " ", text)  # media file name
         text = re.sub("<a href.*?</a>", " ", text)  # html links
         text = re.sub(r'https?://\S*?', " ", text)  # plaintext links
-        text = re.sub("</?su[bp]>", "", text) # exponant or indices
+        text = re.sub("</?su[bp]>", "", text)  # exponant or indices
         text = re.sub(r"\[\d*\]", "", text)  # wiki style citation
 
         text = re.sub("<.*?>", "", text)  # remaining html tags
-        text = text.replace("&gt", "").replace("&lt", "").replace("<", "").replace(">", "").replace("'", " ")  # misc + french apostrophe
+        text = text.replace("&gt", "").replace("&lt", "").replace(
+            "<", "").replace(">", "").replace("'",
+                                              " ")  # misc + french apostrophe
 
         # replace greek letter
         if self.replace_greek:
@@ -831,13 +893,14 @@ less than threshold ({self.minimum_due}).\nStopping.")
                     elif len(target_model) == 1:
                         fields_to_keep = field_dic[target_model[0]]
                     elif len(target_model) > 1:
-                        target_model = sorted(target_model,
-                                              key=lambda x: lev.ratio(
-                                                  x.lower(), user_model.lower()))
+                        target_model = sorted(
+                            target_model, key=lambda x: lev.ratio(
+                                x.lower(), user_model.lower()))
                         fields_to_keep = field_dic[target_model[0]]
                         with lock:
-                            to_notify.append(f"Several notetypes match \
-'{card_model}'. Selecting '{target_model[0]}'")
+                            to_notify.append(
+                                f"Several notetypes match  '{card_model}'"
+                                f". Selecting '{target_model[0]}'")
 
                 # concatenates the corresponding fields into one string:
                 field_list = list(df.loc[index, "fields"])
@@ -850,11 +913,14 @@ less than threshold ({self.minimum_due}).\nStopping.")
                         elif order == 1:
                             fields_to_keep[1] = f
                     with lock:
-                        to_notify.append(f"No matching notetype found for \
-{card_model}. Keeping the first 2 fields: {', '.join(fields_to_keep)}")
+                        to_notify.append(
+                            f"No matching notetype found for {card_model}. "
+                            "Keeping the first 2 fields: "
+                            f"{', '.join(fields_to_keep)}")
                 elif fields_to_keep == "take_all_fields":
-                    fields_to_keep = sorted(field_list,
-                                            key=lambda x: int(df.loc[index, "fields"][x.lower()]["order"]))
+                    fields_to_keep = sorted(
+                        field_list, key=lambda x: int(
+                            df.loc[index, "fields"][x.lower()]["order"]))
 
                 comb_text = ""
                 field_counter = {}
@@ -864,15 +930,19 @@ less than threshold ({self.minimum_due}).\nStopping.")
                     else:
                         field_counter[f] = 1
                     try:
-                        next_field = re.sub(self.stopw_compiled,
-                                            " ",
-                                df.loc[index, "fields"][f.lower()]["value"].strip())
+                        next_field = re.sub(
+                            self.stopw_compiled,
+                            " ",
+                            df.loc[index,
+                                   "fields"][f.lower()]["value"].strip())
                         if next_field != "":
                             comb_text = comb_text + next_field + ": "
                     except KeyError as e:
                         with lock:
-                            to_notify.append(f"Error when looking for field {e} in card \
-{df.loc[index, 'modelName']} identified as notetype {target_model}")
+                            to_notify.append(
+                                f"Error when looking for field {e} in card "
+                                f"{df.loc[index, 'modelName']} identified as "
+                                f"notetype {target_model}")
                 if comb_text[-2:] == ": ":
                     comb_text = comb_text[:-2]
 
@@ -880,11 +950,14 @@ less than threshold ({self.minimum_due}).\nStopping.")
                 if self.append_tags:
                     tags = df.loc[index, "tags"].split(" ")
                     for t in tags:
-                        if ("AnnA" not in t) and (t not in self.tags_to_ignore):
-                            t = re.sub(spacers_compiled,  # replaces _ - and /
-                                       " ",  # by a space
-                                       " ".join(t.split(self.tags_separator)[-2:]))
-                            # and keep only the last 2 levels of each tags
+                        if ("AnnA" not in t) and (
+                                t not in self.tags_to_ignore):
+                            # replaces _ - and / by a space and keep only
+                            # the last 2 levels of each tags:
+                            t = re.sub(
+                                spacers_compiled,
+                                " ",
+                                " ".join(t.split(self.tags_separator)[-2:]))
                             comb_text += " " + t
 
                 with lock:
@@ -922,9 +995,13 @@ less than threshold ({self.minimum_due}).\nStopping.")
             cnt = 0
             while sum(self.df.isna()["comb_text"]) != 0:
                 cnt += 1
-                na_list = [x for x in self.df.index[self.df.isna()["comb_text"]].tolist()]
+                na_list = [x
+                           for x in self.df.index[
+                               self.df.isna()["comb_text"]].tolist()]
                 pbar.update(-len(na_list))
-                red(f"Found {sum(self.df.isna()['comb_text'])} null values in comb_text: retrying")
+                red(
+                    f"Found {sum(self.df.isna()['comb_text'])} null values "
+                    "in comb_text: retrying")
                 thread = threading.Thread(target=_threaded_field_filter,
                                           args=(self.df,
                                                 na_list,
@@ -936,11 +1013,11 @@ less than threshold ({self.minimum_due}).\nStopping.")
                 thread.join()
                 if cnt > 10:
                     beep()
-                    red(f"Error: restart anki then rerun AnnA.")
+                    red("Error: restart anki then rerun AnnA.")
                     raise SystemExit()
             if cnt > 0:
-                yel(f"Succesfully corrected null combined texts on #{cnt} trial.")
-
+                yel(f"Succesfully corrected null combined texts on #{cnt} "
+                    "trial.")
 
         to_notify = list(set(to_notify))
         for notification in to_notify:
@@ -951,7 +1028,8 @@ less than threshold ({self.minimum_due}).\nStopping.")
         # using multithreading is not faster, using multiprocess is probably
         # slower if not done by large batching
         tqdm.pandas(desc="Formating text", smoothing=0, unit=" card")
-        self.df["text"] = self.df["comb_text"].progress_apply(lambda x: self._text_formatter(x))
+        self.df["text"] = self.df["comb_text"].progress_apply(
+            lambda x: self._text_formatter(x))
 
         # find short cards
         ind_short = []
@@ -959,21 +1037,24 @@ less than threshold ({self.minimum_due}).\nStopping.")
             if len(self.df.loc[ind, "text"]) < 10:
                 ind_short.append(ind)
         if ind_short:
-            yel(f"\n{len(ind_short)} cards contain less than 10 characters after \
-formatting: {','.join([str(x) for x in ind_short])}")
+            yel(f"\n{len(ind_short)} cards contain less than 10 characters"
+                f"after formatting: {','.join([str(x) for x in ind_short])}")
             if self.append_tags is False:
-                red("Appending tags to those cards despite setting `append_tags` to False.")
+                red("Appending tags to those cards despite setting "
+                    "`append_tags` to False.")
                 for ind in ind_short:
                     tags = self.df.loc[ind, "tags"].split(" ")
                     for t in tags:
-                        if ("AnnA" not in t) and (t not in self.tags_to_ignore):
-                            t = re.sub(spacers_compiled,
-                                       " ",
-                                       " ".join(t.split(self.tags_separator)[-2:]))
+                        if ("AnnA" not in t) and (
+                                t not in self.tags_to_ignore):
+                            t = re.sub(
+                                spacers_compiled,
+                                " ",
+                                " ".join(t.split(self.tags_separator)[-2:]))
                             self.df.loc[ind, "text"] += " " + t
 
-        yel("\n\nPrinting 2 random samples of your formated text, to help \
-adjust formating issues:")
+        yel("\n\nPrinting 2 random samples of your formated text, to help "
+            " adjust formating issues:")
         pd.set_option('display.max_colwidth', 8000)
         max_length = 1000
         sub_index = random.choices(self.df.index.tolist(), k=2)
@@ -1019,9 +1100,11 @@ adjust formating issues:")
                 yel("\nCopying anki database to local cache file")
                 original_db = akp.find_db(user=self.profile_name)
                 if self.profile_name is None:
-                    red(f"Ankipandas will use anki collection found at {original_db}")
+                    red("Ankipandas will use anki collection found at "
+                        f"{original_db}")
                 else:
-                    yel(f"Ankipandas will use anki collection found at {original_db}")
+                    yel("Ankipandas will use anki collection found at "
+                        f"{original_db}")
                 if "trash" in original_db.lower():
                     cnt = 0
                     while cnt <= 10:
@@ -1034,12 +1117,14 @@ adjust formating issues:")
                         time.sleep(1)
                 Path.mkdir(Path("cache"), exist_ok=True)
                 name = f"{self.profile_name}_{self.deckname}".replace(" ", "_")
-                temp_db = copy(original_db, f"./cache/{name.replace('/', '_')}")
+                temp_db = copy(
+                    original_db, f"./cache/{name.replace('/', '_')}")
                 col = akp.Collection(path=temp_db)
 
                 # keep only unsuspended cards from the right deck
                 cards = col.cards.merge_notes()
-                cards["cdeck"] = cards["cdeck"].apply(lambda x: x.replace("\x1f", "::"))
+                cards["cdeck"] = cards["cdeck"].apply(
+                    lambda x: x.replace("\x1f", "::"))
                 cards = cards[cards["cdeck"].str.startswith(self.deckname)]
                 cards = cards[cards["cqueue"] != "suspended"]
                 whi("Ankipandas db loaded successfuly.")
@@ -1058,6 +1143,7 @@ adjust formating issues:")
                     raise Exception("Ankipandas database is of length 0")
 
                 to_notify = []
+
                 def get_index_of_fields(mod):
                     ret = []
                     if mod in mod2mid:
@@ -1066,13 +1152,15 @@ adjust formating issues:")
                             for f in self.field_dic[mod]:
                                 ret.append(fields.index(f))
                         else:
-                            to_notify.append(f"Missing field mapping for card \
-model {mod}.Taking first 2 fields.")
+                            to_notify.append(
+                                "Missing field mapping for card model "
+                                f"{mod}.Taking first 2 fields.")
                             ret = [0, 1]
                     else:
                         print(mod)
-                        best_models = sorted(list(mod2mid.keys()),
-                                key=lambda x: lev.ratio(x.lower(), mod.lower()))
+                        best_models = sorted(
+                            list(mod2mid.keys()),
+                            key=lambda x: lev.ratio(x.lower(), mod.lower()))
                         for m in best_models:
                             if m in self.field_dic:
                                 ret = get_index_of_fields(m)
@@ -1088,7 +1176,9 @@ model {mod}.Taking first 2 fields.")
                 corpus = []
                 spacers_compiled = re.compile("_|-|/")
                 tf = self._text_formatter
-                for ind in tqdm(cards.index, desc=f"Gathering and formating {self.deckname}"):
+                for ind in tqdm(cards.index,
+                                desc=("Gathering and formating "
+                                      f"{self.deckname}")):
                     indices_to_keep = m_gIoF(cards.loc[ind, "nmodel"])
                     fields_list = cards.loc[ind, "nflds"]
                     new = ""
@@ -1098,15 +1188,18 @@ model {mod}.Taking first 2 fields.")
                     if len(processed) < 10 or self.append_tags:
                         tags = cards.loc[ind, "ntags"]
                         for t in tags:
-                            if ("AnnA" not in t) and (t not in self.tags_to_ignore):
-                                t = re.sub(spacers_compiled, " ", " ".join(t.split(self.tags_separator)[-2:]))
+                            if ("AnnA" not in t) and (
+                                    t not in self.tags_to_ignore):
+                                t = re.sub(spacers_compiled, " ", " ".join(
+                                    t.split(self.tags_separator)[-2:]))
                                 processed += " " + t
                     corpus.append(processed)
 
                 vectorizer = init_vectorizer()
                 vectorizer.fit(tqdm(corpus, desc="Vectorizing whole deck"))
-                t_vec = vectorizer.transform(tqdm(df["text"], desc="Vectorizing \
-    dues cards using TFIDF"))
+                t_vec = vectorizer.transform(tqdm(df["text"],
+                                                  desc=(
+                    "Vectorizing dues cards using TFIDF")))
                 yel("Done vectorizing over whole deck!")
             except Exception as e:
                 red(f"Exception : {e}")
@@ -1117,7 +1210,8 @@ model {mod}.Taking first 2 fields.")
         if (self.whole_deck_computation is False) or (use_fallback):
             vectorizer = init_vectorizer()
             t_vec = vectorizer.fit_transform(tqdm(df["text"],
-                                             desc="Vectorizing using TFIDF"))
+                                                  desc=(
+              "Vectorizing using TFIDF")))
         if self.TFIDF_dim is None:
             df["VEC"] = [x for x in t_vec]
         else:
@@ -1181,8 +1275,8 @@ model {mod}.Taking first 2 fields.")
                 if printed is True:
                     break
                 if time.time() - start_time >= 60:
-                    red("Taking too long to find nonequal similar cards, \
-skipping")
+                    red("Taking too long to find nonequal similar cards, "
+                        "skipping")
                     break
                 lowest_values.append(self.df_dist.values[
                     self.df_dist.values > max(lowest_values)].min())
@@ -1258,13 +1352,21 @@ skipping")
         steps_RL = [x / 1440 for x in self.deck_config["lapse"]["delays"]]
         for i in df.index:
             if df.loc[i, "type"] == 1:  # learning
-                df.at[i, "interval"] = steps_L[int(str(df.loc[i, "left"])[-3:])-1]
-                assert df.at[i, "interval"] >= 0, f"negative interval for card {i}"
+                df.at[i, "interval"] = steps_L[int(
+                    str(df.loc[i, "left"])[-3:])-1]
+                assert df.at[i,
+                             "interval"] >= 0, (
+                                     f"negative interval for card {i}")
             elif df.loc[i, "type"] == 3:  # relearning
-                df.at[i, "interval"] = steps_RL[int(str(df.loc[i, "left"])[-3:])-1]
-                assert df.at[i, "interval"] >= 0, f"negative interval for card {i}"
+                df.at[i, "interval"] = steps_RL[int(
+                    str(df.loc[i, "left"])[-3:])-1]
+                assert df.at[i,
+                             "interval"] >= 0, (
+                                     f"negative interval for card {i}")
             if df.loc[i, "interval"] < 0:  # negative values are in seconds
-                yel(f"Changing interval: cid: {i}, ivl: {df.loc[i, 'interval']} => {df.loc[i, 'interval']/(-86400)}")
+                yel(f"Changing interval: cid: {i}, ivl: "
+                    f"{df.loc[i, 'interval']} => "
+                    f"{df.loc[i, 'interval']/(-86400)}")
                 df.at[i, "interval"] /= -86400
 
         # setting rated cards value to nan value, to avoid them
@@ -1281,7 +1383,8 @@ skipping")
                 df.loc[due, "ref"] = interval_cs
 
         elif reference_order == "order_added":
-            df.loc[due, "ref"] = StandardScaler().fit_transform(np.array(due).reshape(-1, 1))
+            df.loc[due, "ref"] = StandardScaler().fit_transform(
+                np.array(due).reshape(-1, 1))
 
         if reference_order in ["relative_overdueness", "LIRO_mix"]:
             yel("Computing relative overdueness...")
@@ -1304,7 +1407,8 @@ skipping")
                 if df.loc[i, "ref_due"] >= 100_000:  # timestamp and not days
                     df.at[i, "ref_due"] -= anki_col_time
                     df.at[i, "ref_due"] /= 86400
-                assert df.at[i, "ref_due"] > 0, f"negative interval for card {i}"
+                assert df.at[i,
+                             "ref_due"] > 0, f"negative interval for card {i}"
             overdue = df.loc[due, "ref_due"] - time_offset
             df.drop("ref_due", axis=1, inplace=True)
 
@@ -1318,12 +1422,16 @@ skipping")
             # (intervals are positive, overdue are negative for due cards
             # hence ro is positive)
             # low ro means urgent, high lo means not urgent
-            ro = -1 * (df.loc[due, "interval"].values + correction) / (overdue - correction)
+            ro = -1 * (df.loc[due, "interval"].values +
+                       correction) / (overdue - correction)
 
             # sanity check
             try:
-                assert np.sum((overdue-correction)>0) == 0, "wrong value computed to correct overdue"
-                assert np.sum(ro<0) == 0, "wrong values of relative overdueness"
+                assert np.sum((overdue-correction) >
+                              0) == 0, (
+                    "wrong value computed to correct overdue")
+                assert np.sum(
+                    ro < 0) == 0, "wrong values of relative overdueness"
             except Exception as e:
                 red(f"This should not happen: {str(e)}")
                 beep()
@@ -1331,41 +1439,52 @@ skipping")
 
             # squishing values above some threashold
             limit = np.percentile(ro, 75)
-            ro[ro>limit] = limit + np.log(ro[ro>limit]) - 2.7
+            ro[ro > limit] = limit + np.log(ro[ro > limit]) - 2.7
             # clipping extreme values
             ro_clipped = np.clip(ro, 0, 2*limit)
             # centering and scaling
-            ro_cs = StandardScaler().fit_transform(ro_clipped.values.reshape(-1, 1))
+            ro_cs = StandardScaler().fit_transform(
+                    ro_clipped.values.reshape(-1, 1))
 
             # boosting urgent cards to make sure they make it to the deck
             boost = True if "boost" in self.repick_task else False
             repicked = []
             for x in due:
                 # if overdue at least equal to interval, then boost those cards
-                # for example, a card with interval 7 days, that is -15 days overdue
-                # is very ugent, n will be about -2 so this card will be boosted.
-                n = (overdue.loc[x] - correction) / (df.loc[x, "interval"] + correction)
-                if n <= -1 and df.loc[x, "interval"] >= 1 and overdue.loc[x] <= -1:
+                # for example, a card with interval 7 days, that is -15 days
+                # overdue is very ugent, n will be about -2 so this card will
+                # be boosted.
+                n = (overdue.loc[x] - correction) / \
+                    (df.loc[x, "interval"] + correction)
+                if n <= -1 and df.loc[x, "interval"] >= 1 and (
+                        overdue.loc[x] <= -1):
                     repicked.append(x)
                     if boost:
-                        # scales the value to be relevant compared to distance factor
-                        ro_cs[due.index(x)] = n * self.score_adjustment_factor[0]
+                        # scales the value to be relevant compared to
+                        # distance factor
+                        ro_cs[due.index(x)] = n * \
+                            self.score_adjustment_factor[0]
 
             if repicked:
                 red(f"{len(repicked)}/{len(due)} cards with too low "
                     "relative overdueness (i.e. on the brink of being "
                     "forgotten) where found.")
                 if boost:
-                    red("Those cards were boosted to make sur you review them soon.")
+                    red("Those cards were boosted to make sur you review them"
+                        " soon.")
                 else:
                     red("Those cards were NOT boosted.")
                 if "addtag" in self.repick_task:
                     today_date = time.asctime()
-                    notes = self._call_anki(action="cardsToNotes", cards=repicked)
-                    new_tag = f"AnnA::urgent_reviews::session_of_{today_date.replace(' ', '_')}"
+                    notes = self._call_anki(
+                        action="cardsToNotes", cards=repicked)
+                    new_tag = ("AnnA::urgent_reviews::session_of_"
+                               f"{today_date.replace(' ', '_')}")
                     try:
-                        self._call_anki(action="addTags", notes=notes, tags=new_tag)
-                        red("Appended tags 'urgent_reviews' to cards with very low relative overdueness.")
+                        self._call_anki(action="addTags",
+                                        notes=notes, tags=new_tag)
+                        red("Appended tags 'urgent_reviews' to cards with "
+                            "very low relative overdueness.")
                     except Exception as e:
                         red(f"Error adding tags to urgent cards: {str(e)}")
                         beep()
@@ -1374,12 +1493,15 @@ skipping")
                 df.loc[due, "ref"] = ro_cs
         # mean of lowest interval and relative overdueness
         if reference_order == "LIRO_mix":
-            assert 0 not in list(np.isnan(df["ref"].values)), "missing ref value for some cards"
+            assert 0 not in list(
+                np.isnan(df["ref"].values)), "missing ref value for some cards"
             df.loc[due, "ref"] = (ro_cs + 2 * interval_cs) / 3
 
-        assert len([x for x in rated if df.loc[x, "status"] != "rated"]) == 0, "all rated cards are not marked as rated"
+        assert len([x for x in rated if df.loc[x, "status"] != "rated"]
+                   ) == 0, "all rated cards are not marked as rated"
         if self.rated_last_X_days is not None:
-            red(f"\nCards identified as rated in the past {self.rated_last_X_days} days: {len(rated)}")
+            red("\nCards identified as rated in the past "
+                f"{self.rated_last_X_days} days: {len(rated)}")
 
         # contain the index of the cards that will be use when
         # computing optimal order
@@ -1409,11 +1531,12 @@ skipping")
             if previous_len - len(indTODO) == 0:
                 yel("No siblings found.")
             else:
-                red(f"Removed {previous_len-len(indTODO)} siblings cards out of \
-{previous_len}.")
+                red("Removed {previous_len-len(indTODO)} siblings cards "
+                    f"out of {previous_len}.")
             assert len(indTODO) >= 0, "wrong length of indTODO"
         else:
-            yel("Not excluding siblings because you want to study all the cards.")
+            yel("Not excluding siblings because you want to study all the "
+                "cards.")
 
         # can't start with an empty queue so picking 1 urgent card:
         if len(indQUEUE) == 0:
@@ -1438,21 +1561,21 @@ skipping")
             elif target_deck_size.endswith("%"):
                 red(f"Taking {target_deck_size} of the deck.")
                 target_deck_size = 0.01 * int(target_deck_size[:-1]) * (
-                        len(indTODO) +1)
+                    len(indTODO) + 1)
         target_deck_size = int(target_deck_size)
 
         if max_deck_size is not None:
             if target_deck_size > max_deck_size:
                 diff = target_deck_size - max_deck_size
-                red(f"Target deck size ({target_deck_size}) is above maximum \
-threshold ({max_deck_size}), excluding {diff} cards.")
+                red(f"Target deck size ({target_deck_size}) is above maximum "
+                    f" threshold ({max_deck_size}), excluding {diff} cards.")
             target_deck_size = min(target_deck_size, max_deck_size)
 
         # checking if desired deck size is feasible:
         if target_deck_size > len(indTODO):
-            yel(f"You wanted to create a deck with \
-{target_deck_size} in it but only {len(indTODO)} cards remain, taking the \
-lowest value.")
+            yel(f"You wanted to create a deck with {target_deck_size} in it "
+                f"but only {len(indTODO)} cards remain, taking the "
+                "lowest value.")
         queue_size_goal = min(target_deck_size, len(indTODO))
 
         # displaying stats of the reference order or the
@@ -1462,13 +1585,14 @@ lowest value.")
             try:
                 whi("\nScore stats of due cards (weight adjusted):")
                 if w1 != 0:
-                    whi(f"Reference score of due cards: \
-{(w1*df.loc[due, 'ref']).describe()}\n")
+                    whi("Reference score of due cards: "
+                        f" {(w1*df.loc[due, 'ref']).describe()}\n")
                 else:
-                    whi(f"Not showing statistics of the reference score, you \
-set its adjustment weight to 0")
+                    whi("Not showing statistics of the reference score, you "
+                        f"set its adjustment weight to 0")
                 val = pd.DataFrame(data=w2*self.df_dist.values.ravel(),
-                                   columns=['distance matrix']).describe(include='all')
+                                   columns=['distance matrix']).describe(
+                                           include='all')
                 whi(f"Distance: {val}\n\n")
             except Exception as e:
                 red(f"Exception: {e}")
@@ -1477,8 +1601,11 @@ set its adjustment weight to 0")
 
         # final check before computing optimal order:
         for x in ["interval", "ref", "due"]:
-            assert np.sum(np.isnan(df.loc[rated, x].values)) == len(rated), f"invalid treatment of rated cards, column : {x}"
-            assert np.sum(np.isnan(df.loc[due, x].values)) == 0, f"invalid treatment of due cards, column : {x}"
+            assert np.sum(np.isnan(df.loc[rated, x].values)) == len(
+                rated), f"invalid treatment of rated cards, column : {x}"
+            assert np.sum(np.isnan(
+                df.loc[due, x].values)) == 0, (
+                    f"invalid treatment of due cards, column : {x}")
 
         def combinator(array):
             """
@@ -1507,7 +1634,9 @@ set its adjustment weight to 0")
 
             The content of 'queue' is the list of card_id in best review order.
             """
-            return 0.6 * np.min(array, axis=1) + 0.3 * np.mean(array, axis=1) + 0.1 * np.median(array, axis=1)
+            return (0.6 * np.min(array, axis=1)) + \
+                   (0.3 * np.mean(array, axis=1)) + \
+                   (0.1 * np.median(array, axis=1))
 
         with tqdm(desc="Computing optimal review order",
                   unit=" card",
@@ -1516,19 +1645,21 @@ set its adjustment weight to 0")
                   total=queue_size_goal + len(rated)) as pbar:
             while len(queue) < queue_size_goal:
                 queue.append(indTODO[
-                        (w1*df.loc[indTODO, "ref"].values -\
-                         w2*combinator(self.df_dist.loc[indTODO, indQUEUE].values) +\
-                         w3*np.random.rand(1, len(indTODO))
-                         ).argmin()])
+                    (w1*df.loc[indTODO, "ref"].values -
+                     w2*combinator(self.df_dist.loc[indTODO, indQUEUE].values
+                         ) + \
+                     w3*np.random.rand(1, len(indTODO))
+                     ).argmin()])
                 indQUEUE.append(indTODO.pop(indTODO.index(queue[-1])))
                 pbar.update(1)
 
-        assert indQUEUE == rated + queue, "indQUEUE is not the sum of rated and queue lists"
+        assert indQUEUE == rated + queue, (
+                "indQUEUE is not the sum of rated and queue lists")
 
         try:
             if w1 == 0:
-                yel("Not showing distance without AnnA because you set \
-the adjustment weight of the reference score to 0.")
+                yel("Not showing distance without AnnA because you set "
+                    "the adjustment weight of the reference score to 0.")
             else:
                 woAnnA = [x
                           for x in df.sort_values(
@@ -1537,18 +1668,20 @@ the adjustment weight of the reference score to 0.")
 
                 common = len(set(queue) & set(woAnnA))
                 if common / len(queue) >= 0.95:
-                    yel("Not displaying Improvement Ratio because almost \
-all cards were included in the new queue.")
+                    yel("Not displaying Improvement Ratio because almost "
+                        "all cards were included in the new queue.")
                 else:
-                    spread_queue = np.mean(self.df_dist.loc[queue, queue].values.ravel())
-                    spread_else = np.mean(self.df_dist.loc[woAnnA, woAnnA].values.ravel())
+                    spread_queue = np.mean(
+                        self.df_dist.loc[queue, queue].values.ravel())
+                    spread_else = np.mean(
+                        self.df_dist.loc[woAnnA, woAnnA].values.ravel())
 
                     red("Mean of distance in the new queue:", end=" ")
                     yel(str(spread_queue))
-                    red(f"Cards in common: {common} in a queue of \
-{len(queue)} cards.")
-                    red("Mean of distance of the queue if you had not used \
-AnnA:", end=" ")
+                    red(f"Cards in common: {common} in a queue of "
+                        f"{len(queue)} cards.")
+                    red("Mean of distance of the queue if you had not used "
+                        " AnnA:", end=" ")
                     yel(str(spread_else))
 
                     ratio = round(spread_queue / spread_else * 100 - 100, 1)
@@ -1583,14 +1716,15 @@ AnnA:", end=" ")
         full_text = " ".join(self.df["text"].tolist()).replace("'", " ")
         if exclude_OCR_text:
             ocr = re.findall("[A-Z][A-Z0-9]{2,}",
-                    string=self.OCR_content,
-                    flags=re.MULTILINE | re.DOTALL)
+                             string=self.OCR_content,
+                             flags=re.MULTILINE | re.DOTALL)
         else:
             ocr = []
 
         def exclude(word):
-            """if exists as lowercase in text : probably just shouting for emphasis
-               if exists in ocr : ignore"""
+            """if exists as lowercase in text : probably just shouting for
+            emphasis
+            if exists in ocr : ignore"""
             if word.lower() in full_text or word in ocr:
                 return False
             else:
@@ -1610,8 +1744,8 @@ AnnA:", end=" ")
                     matched.remove(acr)
 
         if not matched:
-            print("All found acronyms were already replaced using \
-the data in `acronym_list`.")
+            print("All found acronyms were already replaced using the data "
+                  "in `acronym_list`.")
         else:
             print("List of some acronyms still found:")
             if exclude_OCR_text:
@@ -1621,8 +1755,8 @@ the data in `acronym_list`.")
         return True
 
     def _bury_or_create_filtered(self,
-                           filtered_deck_name_template=None,
-                           task=None):
+                                 filtered_deck_name_template=None,
+                                 task=None):
         """
         Either bury cards that are not in the optimal queue or create a
             filtered deck containing the cards to review in optimal order.
@@ -1631,15 +1765,16 @@ the data in `acronym_list`.")
             ("oldest seen first"). This function then changes the review order
             inside this deck. That's why rebuilding this deck will keep the
             cards but lose the order.
-        * filtered_deck_name_template can be used to automatically put the filtered
-            decks to a specific location in your deck hierarchy. Leaving it
-            to None will make the filtered deck appear alongside the
-            original deck
+        * filtered_deck_name_template can be used to automatically put the
+            filtered decks to a specific location in your deck hierarchy.
+            Leaving it to None will make the filtered deck appear alongside
+            the original deck
         * This uses a threaded call to increase speed.
         * I do a few sanity check to see if the filtered deck
             does indeed contain the right number of cards and the right cards
         * -100 000 seems to be the starting value for due order in filtered
-            decks by anki : cards are review from lowest to highest "due_order".
+            decks by anki : cards are review from lowest to highest
+            "due_order".
         * if task is set to 'bury_excess_learning_cards' or
             'bury_excess_review_cards', then no filtered deck will be created
             and AnnA will just bury some cards that are too similar to cards
@@ -1648,7 +1783,8 @@ the data in `acronym_list`.")
         if task in ["bury_excess_learning_cards", "bury_excess_review_cards"]:
             to_keep = self.opti_rev_order
             to_bury = [x for x in self.due_cards if x not in to_keep]
-            assert len(to_bury) < len(self.due_cards), "trying to bury more cards than there are"
+            assert len(to_bury) < len(
+                self.due_cards), "trying to bury more cards than there are"
             red(f"Burying {len(to_bury)} cards out of {len(self.due_cards)}.")
             red("This will not affect the due order.")
             self._call_anki(action="bury", cards=to_bury)
@@ -1657,34 +1793,38 @@ the data in `acronym_list`.")
             if self.filtered_deck_name_template is not None:
                 filtered_deck_name_template = self.filtered_deck_name_template
             if filtered_deck_name_template is not None:
-                filtered_deck_name = str(filtered_deck_name_template + f" - {self.deckname}")
+                filtered_deck_name = str(
+                    filtered_deck_name_template + f" - {self.deckname}")
                 filtered_deck_name = filtered_deck_name.replace("::", "_")
             else:
                 filtered_deck_name = f"{self.deckname} - AnnA Optideck"
             self.filtered_deck_name = filtered_deck_name
 
             while filtered_deck_name in self._call_anki(action="deckNames"):
-                red(f"\nFound existing filtered deck: {filtered_deck_name} \
-You have to delete it manually, the cards will be returned to their original \
-deck.")
+                red(f"\nFound existing filtered deck: {filtered_deck_name} "
+                    "You have to delete it manually, the cards will be "
+                    "returned to their original deck.")
                 beep()
                 input("Done? >")
 
-        whi(f"Creating deck containing the cards to review: \
-{filtered_deck_name}")
-        if self.filtered_deck_by_batch and len(self.opti_rev_order) > self.filtered_deck_batch_size:
+        whi("Creating deck containing the cards to review: "
+            f"{filtered_deck_name}")
+        if self.filtered_deck_by_batch and (
+                len(self.opti_rev_order) > self.filtered_deck_batch_size):
             yel("Creating batches of filtered decks...")
             batchsize = self.filtered_deck_batch_size
             cnt = 0
             while cnt <= 10000:
-                batch_cards = self.opti_rev_order[cnt*batchsize:(cnt+1)*batchsize]
+                batch_cards = self.opti_rev_order[cnt *
+                                                  batchsize:(cnt+1)*batchsize]
                 if not batch_cards:
                     yel(f"Done creating {cnt+1} filtered decks.")
                     break
                 query = "is:due -rated:1 cid:" + ','.join(
                         [str(x) for x in batch_cards])
                 self._call_anki(action="createFilteredDeck",
-                                newDeckName=f"{filtered_deck_name}_{cnt+1:02d}",
+                                newDeckName=(
+                                    f"{filtered_deck_name}_{cnt+1:02d}"),
                                 searchQuery=query,
                                 gatherCount=batchsize + 1,
                                 reschedule=True,
@@ -1702,15 +1842,16 @@ deck.")
                             sortOrder=5,
                             createEmpty=False)
 
-            print("Checking that the content of filtered deck name is the same as \
- the order inferred by AnnA...", end="")
-            cur_in_deck = self._call_anki(action="findCards",
-                                          query=f"\"deck:{filtered_deck_name}\"")
+            print("Checking that the content of filtered deck name is the "
+                  "same as the order inferred by AnnA...", end="")
+            cur_in_deck = self._call_anki(
+                    action="findCards",
+                    query=f"\"deck:{filtered_deck_name}\"")
             diff = [x for x in self.opti_rev_order + cur_in_deck
                     if x not in self.opti_rev_order or x not in cur_in_deck]
             if len(diff) != 0:
-                red("Inconsistency! The deck does not contain the same cards \
-as opti_rev_order!")
+                red("Inconsistency! The deck does not contain the same cards "
+                    " as opti_rev_order!")
                 pprint(diff)
                 red(f"\nNumber of inconsistent cards: {len(diff)}")
                 beep()
@@ -1805,9 +1946,6 @@ greek_alphabet_mapping = {
 }
 
 
-
-
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--deckname",
@@ -1817,11 +1955,12 @@ if __name__ == "__main__":
                         default=None,
                         type=str,
                         required=True,
-                        help="the deck containing the cards you want to review.\
-                        If you don't supply this value or make a mistake, AnnA\
-                        will ask you to type in the deckname, with\
-                        autocompletion enabled (use `<TAB>`). Default is\
-                        `None`.")
+                        help=(
+                        "the deck containing the cards you want to "
+                        "review. If you don't supply this value or make a "
+                        "mistake, AnnA will ask you to type in the deckname, "
+                        "with autocompletion enabled (use `<TAB>`). "
+                        "Default is `None`."))
     parser.add_argument("--reference_order",
                         nargs=1,
                         metavar="REF_ORDER",
@@ -1829,48 +1968,54 @@ if __name__ == "__main__":
                         default="relative_overdueness",
                         type=str,
                         required=False,
-                        help="either \"relative_overdueness\" or \"lowest_interval\"\
-                        or \"order_added\" or \"LIRO_mix\".\
-                        It is the reference used to sort the card before\
-                        adjusting them using the similarity scores. Default is\
-                        `\"relative_overdueness\"`. Keep in mind that my\
-                        relative_overdueness is a reimplementation of the\
-                        default overdueness of anki and is not absolutely\
-                        exactly the same but should be a close approximation.\
-                        If you find edge cases or have any idea, please open an\
-                        issue. LIRO_mix is simply the the weighted average of \
-                        relative overdueness and lowest interval (2 times more \
-                        important than RO) (after some post processing). I \
-                        created it as a compromise between old and new courses. \
-                        My implementation of relative overdueness includes a \
-                        boosting feature: if your dues contain cards \
-                        with its overdueness several times larger than \
-                        its interval, they are urgent. AnnA will add \
-                        a tag to them and increase their likelyhood \
-                        of being part of the Optideck.")
+                        help=(
+                        "either \"relative_overdueness\" or "
+                        "\"lowest_interval\" or \"order_added\" or "
+                        "\"LIRO_mix\". It is the reference used to sort the "
+                        "card before adjusting them using the similarity "
+                        "scores. Default is `\"relative_overdueness\"`. Keep "
+                        "in mind that my relative_overdueness is a "
+                        "reimplementation of the default overdueness of anki "
+                        "and is not absolutely exactly the same but should be "
+                        "a close approximation. If you find edge cases or "
+                        "have any idea, please open an issue. LIRO_mix is "
+                        "simply the the weighted average of relative "
+                        "overdueness and lowest interval (2 times more "
+                        "important than RO) (after some post processing). I "
+                        "created it as a compromise between old and new "
+                        "courses. My implementation of relative overdueness "
+                        "includes a boosting feature: if your dues contain "
+                        "cards with its overdueness several times larger than "
+                        "its interval, they are urgent. AnnA will add a tag "
+                        "to them and increase their likelyhood of being part "
+                        "of the Optideck."))
     parser.add_argument("--task",
                         nargs=1,
                         metavar="TASK",
                         dest="task",
                         default="filter_review_cards",
                         required=True,
-                        help="can be \"filter_review_cards\", \"bury_excess_learning_cards\",\
-                        \"bury_excess_review_cards\". Respectively to create a\
-                        filtered deck with the cards, or bury only the similar\
-                        learning cards (among other learning cards), or bury only\
-                        the similar cards in review (among other review cards).\
-                        Default is \"`filter_review_cards`\".")
+                        help=(
+                        "can be \"filter_review_cards\", "
+                        "\"bury_excess_learning_cards\", "
+                        "\"bury_excess_review_cards\". Respectively to create "
+                        "a filtered deck with the cards, or bury only the "
+                        "similar learning cards (among other learning cards), "
+                        "or bury only the similar cards in review (among "
+                        "other review cards). Default is "
+                        "\"`filter_review_cards`\"."))
     parser.add_argument("--target_deck_size",
                         nargs=1,
                         metavar="TARGET_SIZE",
                         dest="target_deck_size",
                         default="deck_config",
                         required=True,
-                        help="indicates the size of the filtered deck to create.\
-                        Can be the number of due cards like \"100\", a proportion of\
-                        due cards like '80%%', the word \"all\" or\
-                        \"deck_config\" to use the deck's settings for max review.\
-                        Default is `deck_config`.")
+                        help=(
+                        "indicates the size of the filtered deck to "
+                        "create. Can be the number of due cards like \"100\", "
+                        "a proportion of due cards like '80%%', the word "
+                        "\"all\" or \"deck_config\" to use the deck's "
+                        "settings for max review. Default is `deck_config`."))
     parser.add_argument("--max_deck_size",
                         nargs=1,
                         metavar="MAX_DECK_SIZE",
@@ -1878,8 +2023,9 @@ if __name__ == "__main__":
                         default=None,
                         required=False,
                         type=int,
-                        help="Maximum number of cards to put in the filtered \
-                        deck or to leave unburied. Default is `None`.")
+                        help=(
+                        "Maximum number of cards to put in the filtered deck "
+                        "or to leave unburied. Default is `None`."))
     parser.add_argument("--stopwords_lang",
                         nargs="+",
                         metavar="STOPLANG",
@@ -1887,28 +2033,33 @@ if __name__ == "__main__":
                         default="english,french",
                         type=str,
                         required=False,
-                        help="a comma separated list of languages used to construct \
-                        a list of stop words (i.e. words that will be ignored, like \
-                        \"I\" or \"be\" in English). Default is `english french`.")
+                        help=(
+                        "a comma separated list of languages used to "
+                        "construct a list of stop words (i.e. words that will "
+                        "be ignored, like \"I\" or \"be\" in English). "
+                        "Default is `english french`."))
     parser.add_argument("--rated_last_X_days",
                         nargs=1,
                         metavar="RATED_LAST_X_DAYS",
                         dest="rated_last_X_days",
                         default=4,
                         required=False,
-                        help="indicates the number of passed days to take into\
-                        account when fetching past anki sessions. If you rated 500\
-                        cards yesterday, then you don't want your today cards to be\
-                        too close to what you viewed yesterday, so AnnA will find\
-                        the 500 cards you reviewed yesterday, and all the cards you\
-                        rated before that, up to the number of days in\
-                        rated_last_X_days value. Default is `4` (meaning rated\
-                        today, and in the 3 days before today). A value of 0 or\
-                        `None` will disable fetching those cards. A value of 1 will\
-                        only fetch cards that were rated today. Not that this will\
-                        include cards rated in the last X days, no matter if they\
-                        are reviews or learnings. you can change this using\
-                        \"highjack_rated_query\" argument.")
+                        help=(
+                        "indicates the number of passed days to take "
+                        "into account when fetching past anki sessions. If "
+                        "you rated 500 cards yesterday, then you don't want "
+                        "your today cards to be too close to what you viewed "
+                        "yesterday, so AnnA will find the 500 cards you "
+                        "reviewed yesterday, and all the cards you rated "
+                        "before that, up to the number of days in "
+                        "rated_last_X_days value. Default is `4` (meaning "
+                        "rated today, and in the 3 days before today). A "
+                        "value of 0 or `None` will disable fetching those "
+                        "cards. A value of 1 will only fetch cards that were "
+                        "rated today. Not that this will include cards rated "
+                        "in the last X days, no matter if they are reviews "
+                        "or learnings. you can change this using "
+                        "\"highjack_rated_query\" argument."))
     parser.add_argument("--score_adjustment_factor",
                         nargs="+",
                         metavar="SCORE_ADJUSTMENT_FACTOR",
@@ -1916,11 +2067,12 @@ if __name__ == "__main__":
                         default="1,2",
                         type=str,
                         required=False,
-                        help="a comma separated list of numbers used to adjust \
-                        the value of the reference order compared to how similar \
-                        the cards are. Default is `1,2`. For example: '1, 1.3' \
-                        means that the algorithm will spread the similar cards \
-                        farther apart.")
+                        help=(
+                        "a comma separated list of numbers used to "
+                        "adjust the value of the reference order compared to "
+                        "how similar the cards are. Default is `1,2`. For "
+                        "example: '1, 1.3' means that the algorithm will "
+                        "spread the similar cards farther apart."))
     parser.add_argument("--field_mapping",
                         nargs=1,
                         metavar="FIELD_MAPPING_PATH",
@@ -1928,26 +2080,31 @@ if __name__ == "__main__":
                         default="field_mappings.py",
                         type=str,
                         required=False,
-                        help="path of file that indicates which field to keep from\
-                        which note type and in which order. Default value is\
-                        `field_mappings.py`. If empty or if no matching notetype\
-                        was found, AnnA will only take into account the first 2\
-                        fields. If you assign a notetype to `[\"take_all_fields]`,\
-                        AnnA will grab all fields of the notetype in the same order\
-                        as they appear in Anki's interface.")
+                        help=(
+                        "path of file that indicates which field to keep "
+                        "from which note type and in which order. Default "
+                        "value is `field_mappings.py`. If empty or if no "
+                        "matching notetype was found, AnnA will only take "
+                        "into account the first 2 fields. If you assign a "
+                        "notetype to `[\"take_all_fields]`, AnnA will grab "
+                        "all fields of the notetype in the same order as they"
+                        " appear in Anki's interface."))
     parser.add_argument("--acronym_file",
                         nargs=1,
                         metavar="ACRONYM_FILE_PATH",
                         dest="acronym_file",
                         default="acronym_file.py",
                         required=False,
-                        help="a python file containing dictionaries that themselves\
-                        contain acronyms to extend in the text of cards. For\
-                        example `CRC` can be extended to `CRC (colorectal cancer)`.\
-                        (The parenthesis are automatically added.) Default is\
-                        `\"acronym_file.py\"`. The matching is case sensitive only\
-                        if the key contains uppercase characters. The \".py\" file\
-                        extension is not mandatory.")
+                        help=(
+                        "a python file containing dictionaries that "
+                        "themselves contain acronyms to extend in the text "
+                        "of cards. For example `CRC` can be extended to `CRC "
+                        "(colorectal cancer)`. (The parenthesis are "
+                        "automatically added.) Default is "
+                        "`\"acronym_file.py\"`. The matching is case "
+                        "sensitive only if the key contains uppercase "
+                        "characters. The \".py\" file extension is not "
+                        "mandatory."))
     parser.add_argument("--acronym_list",
                         nargs="+",
                         metavar="ACRONYM_LIST",
@@ -1955,10 +2112,12 @@ if __name__ == "__main__":
                         default=None,
                         type=str,
                         required=False,
-                        help="a comma separated list of name of dictionaries to \
-                        extract file\ supplied in `acronym_file`. Used to \
-                        extend text, for instance `AI_machine_learning,medical_terms`.\
-                        Default to None.")
+                        help=(
+                        "a comma separated list of name of dictionaries "
+                        "to extract file\ supplied in `acronym_file`. Used "
+                        "to extend text, for instance "
+                        "`AI_machine_learning,medical_terms`. Default to "
+                        "None."))
     parser.add_argument("--minimum_due",
                         nargs=1,
                         metavar="MINIMUM_DUE_CARDS",
@@ -1966,42 +2125,46 @@ if __name__ == "__main__":
                         default=5,
                         type=int,
                         required=False,
-                        help="stops AnnA if the number of due cards is inferior\
-                        to this value. Default is `5`.")
+                        help=(
+                        "stops AnnA if the number of due cards is "
+                        "inferior to this value. Default is `5`."))
     parser.add_argument("--highjack_due_query",
                         nargs=1,
                         metavar="HIGHJACK_DUE_QUERY",
                         dest="highjack_due_query",
                         default=None,
                         required=False,
-                        help="bypasses the browser query used to find the list of\
-                        due cards. You can set it for example to `deck:\"my_deck\"\
-                        is:due -rated:14 flag:1`. Default is `None`. **Keep in mind\
-                        that, when highjacking queries, you have to specify the\
-                        deck otherwise AnnA will compare your whole\
-                        collection.**")
+                        help=(
+                        "bypasses the browser query used to find the "
+                        "list of due cards. You can set it for example to "
+                        "`deck:\"my_deck\" is:due -rated:14 flag:1`. Default "
+                        "is `None`. **Keep in mind that, when highjacking "
+                        "queries, you have to specify the deck otherwise "
+                        "AnnA will compare your whole collection.**"))
     parser.add_argument("--highjack_rated_query",
                         nargs=1,
                         metavar="HIGHJACK_RATED_QUERY",
                         dest="highjack_rated_query",
                         default=None,
                         required=False,
-                        help="same idea as above, bypasses the query used to fetch\
-                        rated cards in anki. Related to `highjack_due_query`\
-                        although you can set only one of them. Default is\
-                        `None`.")
+                        help=("same idea as above, bypasses the query used "
+                        "to fetch rated cards in anki. Related to "
+                        "`highjack_due_query` although you can set only one "
+                        "of them. Default is `None`."))
     parser.add_argument("--low_power_mode",
                         dest="low_power_mode",
                         default=False,
                         action="store_true",
                         required=False,
-                        help="enable to reduce the computation needed for AnnA,\
-                        making it usable for less powerful computers. Default to\
-                        `False`. In more details, it mainly reduces the argument\
-                        `ngram_range` for TFIDF, making it use unigrams instead of\
-                        n-grams with n from 1 to 3. It also skips trying to find\
-                        acronyms that were not replaced as well as identifying\
-                        similar cards.")
+                        help=(
+                        "enable to reduce the computation needed for "
+                        "AnnA, making it usable for less powerful computers. "
+                        "Default to `False`. In more details, it mainly "
+                        "reduces the argument `ngram_range` for TFIDF, "
+                        "making it use unigrams instead of n-grams with n "
+                        "from 1 to 3. It also skips trying to find acronyms "
+                        "that were not replaced as well as identifying "
+                        "similar cards."))
     parser.add_argument("--log_level",
                         nargs=1,
                         metavar="LOG_LEVEL",
@@ -2009,34 +2172,39 @@ if __name__ == "__main__":
                         default=2,
                         type=int,
                         required=False,
-                        help="can be any number between 0 and 2. Default is `2` to\
-                        only print errors. 1 means print also useful information\
-                        and >=2 means print everything. Messages are color coded so\
-                        it might be better to leave it at 3 and just focus on\
-                        colors.")
+                        help=(
+                        "can be any number between 0 and 2. Default is "
+                        "`2` to only print errors. 1 means print also useful "
+                        "information and >=2 means print everything. "
+                        "Messages are color coded so it might be better to "
+                        "leave it at 3 and just focus on colors."))
     parser.add_argument("--replace_greek",
                         action="store_true",
                         dest="replace_greek",
                         default=True,
                         required=False,
-                        help="if True, all greek letters will be replaced with a\
-                        spelled version. For example `\u03C3` becomes `sigma`.\
-                        Default is `True`.")
+                        help=(
+                        "if True, all greek letters will be replaced "
+                        "with a spelled version. For example `\u03C3` "
+                        "becomes `sigma`. Default is `True`."))
     parser.add_argument("--keep_OCR",
                         dest="keep_OCR",
                         default=True,
                         action="store_true",
                         required=False,
-                        help="if True, the OCR text extracted using the great\
-                        AnkiOCR addon (https://github.com/cfculhane/AnkiOCR/)\
-                        will be included in the card. Default is `True`.")
+                        help=(
+                        "if True, the OCR text extracted using the "
+                        "great AnkiOCR addon "
+                        "(https://github.com/cfculhane/AnkiOCR/) will be "
+                        "included in the card. Default is `True`."))
     parser.add_argument("--append_tags",
                         dest="append_tags",
                         default=True,
                         required=False,
                         action="store_true",
-                        help="Wether to append the 2 deepest tags to the cards \
-                        content or to add no tags. Default to `True`.")
+                        help=(
+                        "Wether to append the 2 deepest tags to the "
+                        "cards content or to add no tags. Default to `True`."))
     parser.add_argument("--tags_to_ignore",
                         nargs="*",
                         metavar="TAGS_TO_IGNORE",
@@ -2044,9 +2212,11 @@ if __name__ == "__main__":
                         default=None,
                         type=str,
                         required=False,
-                        help="a comma separated list of tags to ignore when appending tags to\
-                        cards. This is not a list of tags whose card should \
-                        be ignored! Default is `None (i.e. disabled).")
+                        help=(
+                        "a comma separated list of tags to ignore when "
+                        "appending tags to cards. This is not a list of tags "
+                        "whose card should be ignored! Default is `None "
+                        "(i.e. disabled)."))
     parser.add_argument("--tags_separator",
                         nargs=1,
                         metavar="TAGS_SEP",
@@ -2054,8 +2224,8 @@ if __name__ == "__main__":
                         default="::",
                         type=str,
                         required=False,
-                        help="separator between levels of tags. Default to\
-                        `::`.")
+                        help=(
+                        "separator between levels of tags. Default to `::`."))
     parser.add_argument("--filtered_deck_name_template",
                         nargs=1,
                         metavar="FILTER_DECK_NAME_TEMPLATE",
@@ -2063,16 +2233,18 @@ if __name__ == "__main__":
                         default=None,
                         required=False,
                         type=str,
-                        help="name template of the filtered deck to create. Only\
-                        available if task is set to \"filter_review_cards\".\
-                        Default is `None`.")
+                        help=(
+                        "name template of the filtered deck to create. "
+                        "Only available if task is set to "
+                        "\"filter_review_cards\". Default is `None`."))
     parser.add_argument("--filtered_deck_by_batch",
                         action="store_true",
                         dest="filtered_deck_by_batch",
                         default=False,
                         required=False,
-                        help="To enable creating batch of filtered decks. \
-                        Default is `False`.")
+                        help=(
+                        "To enable creating batch of filtered "
+                        "decks. Default is `False`."))
     parser.add_argument("--filtered_deck_batch_size",
                         nargs=1,
                         metavar="FILTERED_DECK_BATCH_SIZE",
@@ -2080,37 +2252,41 @@ if __name__ == "__main__":
                         default=25,
                         type=int,
                         required=False,
-                        help="If creating batch of filtered deck, this is the \
-                        number of cards in each. Default is `25`.")
+                        help=(
+                        "If creating batch of filtered deck, this is "
+                        "the number of cards in each. Default is `25`."))
     parser.add_argument("--show_banner",
                         action="store_true",
                         dest="show_banner",
                         default=True,
                         required=False,
-                        help="used to display a nice banner when instantiating\
-                        the collection. Default is `True`.")
+                        help=(
+                        "used to display a nice banner when instantiating the"
+                        " collection. Default is `True`."))
     parser.add_argument("--skip_print_similar",
                         dest="skip_print_similar",
                         default=False,
                         required=False,
                         action="store_true",
-                        help="default to `False`. Skip printing example of cards\
-                        that are very similar or very different. This speeds up\
-                        execution but can help figure out when something when\
-                        wrong.")
+                        help=(
+                        "default to `False`. Skip printing example of "
+                        "cards that are very similar or very different. This "
+                        "speeds up execution but can help figure out when "
+                        "something when wrong."))
     parser.add_argument("--repick_task",
                         nargs=1,
                         metavar="REPICK_TASK",
                         dest="repick_task",
                         default="boost",
                         required=False,
-                        help="Define what happens to cards deemed urgent in \
-                        'relative_overdueness' ref mode. If contains 'boost', \
-                        those cards will have a boost in priority to make \
-                        sure you will review them ASAP. If contains 'addtag' \
-                        a tag indicating which card is urgent will be added \
-                        at the end of the run. Disable by setting it to None. \
-                        Default is `boost`.")
+                        help=(
+                        "Define what happens to cards deemed urgent "
+                        "in 'relative_overdueness' ref mode. If contains "
+                        "'boost', those cards will have a boost in priority "
+                        "to make sure you will review them ASAP. If contains "
+                        "'addtag' a tag indicating which card is urgent will "
+                        "be added at the end of the run. Disable by setting "
+                        "it to None. Default is `boost`."))
     parser.add_argument("--vectorizer",
                         nargs=1,
                         metavar="VECTORIZER",
@@ -2118,8 +2294,9 @@ if __name__ == "__main__":
                         default="TFIDF",
                         required=False,
                         type=str,
-                        help="can nowadays only be set to \"TFIDF\", but kept\
-                        for legacy reasons.")
+                        help=(
+                        "can nowadays only be set to \"TFIDF\", but "
+                        "kept for legacy reasons."))
     parser.add_argument("--TFIDF_dim",
                         nargs=1,
                         metavar="TFIDF_DIMENSIONS",
@@ -2127,70 +2304,82 @@ if __name__ == "__main__":
                         type=int,
                         default=50,
                         required=False,
-                        help="the number of dimension to keep using SVD \
-                        Default is `50`, you cannot disable dimension\
-                        reduction for TF_IDF because that would result in a\
-                        sparse matrix. \
-                        (More information at https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.TruncatedSVD.html).")
+                        help=(
+                        "the number of dimension to keep using "
+                        "SVD Default is `50`, you cannot disable "
+                        "dimension reduction for TF_IDF because that would "
+                        "result in a sparse "
+                        "matrix. (More information at "
+                        "https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.TruncatedSVD.html)."))
     parser.add_argument("--TFIDF_tokenize",
                         dest="TFIDF_tokenize",
                         default=True,
                         action="store_true",
                         required=False,
-                        help="default to `True`. Enable sub word tokenization,\
-                        for example turn `hypernatremia` to\
-                        `hyp + er + natr + emia`. The current tokenizer is\
-                        `bert-base-multilingual-cased` and should work on just\
-                        about any languages. You cannot enable both\
-                        `TFIDF_tokenize` and `TFIDF_stem` but should\
-                        absolutely enable at least one.")
+                        help=(
+                        "default to `True`. Enable sub word "
+                        "tokenization, for example turn "
+                        "`hypernatremia` to `hyp + er + natr + emia`. The "
+                        "current tokenizer is `bert-base-multilingual-cased` "
+                        "and should work on just about any languages. You "
+                        "cannot enable both `TFIDF_tokenize` and "
+                        "`TFIDF_stem` but should absolutely enable at least "
+                        "one."))
     parser.add_argument("--TFIDF_stem",
                         dest="TFIDF_stem",
                         default=False,
                         action="store_true",
                         required=False,
-                        help="default to `False`. Wether to enable stemming of\
-                        words. Currently the PorterStemmer is used, and was\
-                        made for English but can still be useful for some other\
-                        languages. Keep in mind that this is the longest step\
-                        when formatting text.")
+                        help=(
+                        "default to `False`. Wether to enable "
+                        "stemming of words. Currently the PorterStemmer is "
+                        "used, and was made for English but can still be "
+                        "useful for some other languages. Keep in mind that "
+                        "this is the longest step when formatting text."))
     parser.add_argument("--whole_deck_computation",
                         dest="whole_deck_computation",
                         default=True,
                         required=False,
                         action="store_true",
-                        help="defaults to `True`. Use ankipandas to extract\
-                        all text from the deck to feed into the vectorizer.\
-                        Results in more accurate relative distances between\
-                        cards. (more information at https://github.com/klieret/AnkiPandas)")
+                        help=(
+                        "defaults to `True`. Use ankipandas to "
+                        "extract all text from the deck to feed into the "
+                        "vectorizer. Results in more accurate relative "
+                        "distances between cards."
+                        " (more information at "
+                        "https://github.com/klieret/AnkiPandas)"))
     parser.add_argument("--disable_fuzz",
                         dest="disable_fuzz",
                         default=False,
                         action="store_true",
                         required=False,
-                        help="Disable fuzzing when computing optimal order \
-                        , otherwise a small random vector is added to the \
-                        reference_score and distance_score of each card. Note \
-                        that this vector is multiplied by the average of the \
-                        score_adjustment_factor then divided by 10 to make sure \
-                        that it does not significatively alter results. \
-                        Defaults to `False`.")
+                        help=(
+                        "Disable fuzzing when computing optimal "
+                        "order , otherwise a small random vector is added to "
+                        "the reference_score and distance_score of each "
+                        "card. Note that this vector is multiplied by the "
+                        "average of the score_adjustment_factor then divided "
+                        "by 10 to make sure that it does not significatively "
+                        "alter results. Defaults to `False`."))
     parser.add_argument("--profile_name",
                         nargs=1,
                         metavar="PROFILE_NAME",
                         dest="profile_name",
                         default=None,
                         required=False,
-                        help="defaults to `None`. Profile named used by\
-                        ankipandas to find your collection. If None,\
-                        ankipandas will use the most probable collection.")
+                        help=(
+                        "defaults to `None`. Profile named "
+                        "used by ankipandas to find your collection. If "
+                        "None, ankipandas will use the most probable "
+                        "collection."))
     parser.add_argument("--keep_console_open",
                         dest="console_mode",
                         default=False,
                         action="store_true",
                         required=False,
-                        help="defaults to `False`. Set to True to open a \
-                        python console after running.")
+                        help=(
+                        "defaults to `False`. Set to True to "
+                        "open a python console after running."))
 
     args = parser.parse_args().__dict__
 
