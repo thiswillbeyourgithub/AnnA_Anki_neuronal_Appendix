@@ -255,6 +255,7 @@ AnnA includes built-in methods you can run after instantiating the class. Note t
 
 ## TODO
 * use joblib caching
+* add an option to generate a reachability plot for the decks using an argument
 - use hierarchical clustering (quick because you already have the distance matrix) to have the full tree, then instead of using the TFIDF distance when computing the optimal order, use the "tree distance"
 * make this PEP8 compliant
 * implement flagging urgent card instead of only tag or boost
