@@ -1956,11 +1956,11 @@ if __name__ == "__main__":
                         type=str,
                         required=True,
                         help=(
-                        "the deck containing the cards you want to "
-                        "review. If you don't supply this value or make a "
-                        "mistake, AnnA will ask you to type in the deckname, "
-                        "with autocompletion enabled (use `<TAB>`). "
-                        "Default is `None`."))
+                            "the deck containing the cards you want to "
+                            "review. If you don't supply this value or make a "
+                            "mistake, AnnA will ask you to type in the deckname, "
+                            "with autocompletion enabled (use `<TAB>`). "
+                            "Default is `None`."))
     parser.add_argument("--reference_order",
                         nargs=1,
                         metavar="REF_ORDER",
@@ -1969,26 +1969,26 @@ if __name__ == "__main__":
                         type=str,
                         required=False,
                         help=(
-                        "either \"relative_overdueness\" or "
-                        "\"lowest_interval\" or \"order_added\" or "
-                        "\"LIRO_mix\". It is the reference used to sort the "
-                        "card before adjusting them using the similarity "
-                        "scores. Default is `\"relative_overdueness\"`. Keep "
-                        "in mind that my relative_overdueness is a "
-                        "reimplementation of the default overdueness of anki "
-                        "and is not absolutely exactly the same but should be "
-                        "a close approximation. If you find edge cases or "
-                        "have any idea, please open an issue. LIRO_mix is "
-                        "simply the the weighted average of relative "
-                        "overdueness and lowest interval (2 times more "
-                        "important than RO) (after some post processing). I "
-                        "created it as a compromise between old and new "
-                        "courses. My implementation of relative overdueness "
-                        "includes a boosting feature: if your dues contain "
-                        "cards with its overdueness several times larger than "
-                        "its interval, they are urgent. AnnA will add a tag "
-                        "to them and increase their likelyhood of being part "
-                        "of the Optideck."))
+                            "either \"relative_overdueness\" or "
+                            "\"lowest_interval\" or \"order_added\" or "
+                            "\"LIRO_mix\". It is the reference used to sort the "
+                            "card before adjusting them using the similarity "
+                            "scores. Default is `\"relative_overdueness\"`. Keep "
+                            "in mind that my relative_overdueness is a "
+                            "reimplementation of the default overdueness of anki "
+                            "and is not absolutely exactly the same but should be "
+                            "a close approximation. If you find edge cases or "
+                            "have any idea, please open an issue. LIRO_mix is "
+                            "simply the the weighted average of relative "
+                            "overdueness and lowest interval (2 times more "
+                            "important than RO) (after some post processing). I "
+                            "created it as a compromise between old and new "
+                            "courses. My implementation of relative overdueness "
+                            "includes a boosting feature: if your dues contain "
+                            "cards with its overdueness several times larger than "
+                            "its interval, they are urgent. AnnA will add a tag "
+                            "to them and increase their likelyhood of being part "
+                            "of the Optideck."))
     parser.add_argument("--task",
                         nargs=1,
                         metavar="TASK",
@@ -1996,14 +1996,14 @@ if __name__ == "__main__":
                         default="filter_review_cards",
                         required=True,
                         help=(
-                        "can be \"filter_review_cards\", "
-                        "\"bury_excess_learning_cards\", "
-                        "\"bury_excess_review_cards\". Respectively to create "
-                        "a filtered deck with the cards, or bury only the "
-                        "similar learning cards (among other learning cards), "
-                        "or bury only the similar cards in review (among "
-                        "other review cards). Default is "
-                        "\"`filter_review_cards`\"."))
+                            "can be \"filter_review_cards\", "
+                            "\"bury_excess_learning_cards\", "
+                            "\"bury_excess_review_cards\". Respectively to create "
+                            "a filtered deck with the cards, or bury only the "
+                            "similar learning cards (among other learning cards), "
+                            "or bury only the similar cards in review (among "
+                            "other review cards). Default is "
+                            "\"`filter_review_cards`\"."))
     parser.add_argument("--target_deck_size",
                         nargs=1,
                         metavar="TARGET_SIZE",
@@ -2011,11 +2011,11 @@ if __name__ == "__main__":
                         default="deck_config",
                         required=True,
                         help=(
-                        "indicates the size of the filtered deck to "
-                        "create. Can be the number of due cards like \"100\", "
-                        "a proportion of due cards like '80%%', the word "
-                        "\"all\" or \"deck_config\" to use the deck's "
-                        "settings for max review. Default is `deck_config`."))
+                            "indicates the size of the filtered deck to "
+                            "create. Can be the number of due cards like \"100\", "
+                            "a proportion of due cards like '80%%', the word "
+                            "\"all\" or \"deck_config\" to use the deck's "
+                            "settings for max review. Default is `deck_config`."))
     parser.add_argument("--max_deck_size",
                         nargs=1,
                         metavar="MAX_DECK_SIZE",
@@ -2024,8 +2024,8 @@ if __name__ == "__main__":
                         required=False,
                         type=int,
                         help=(
-                        "Maximum number of cards to put in the filtered deck "
-                        "or to leave unburied. Default is `None`."))
+                            "Maximum number of cards to put in the filtered deck "
+                            "or to leave unburied. Default is `None`."))
     parser.add_argument("--stopwords_lang",
                         nargs="+",
                         metavar="STOPLANG",
@@ -2034,10 +2034,10 @@ if __name__ == "__main__":
                         type=str,
                         required=False,
                         help=(
-                        "a comma separated list of languages used to "
-                        "construct a list of stop words (i.e. words that will "
-                        "be ignored, like \"I\" or \"be\" in English). "
-                        "Default is `english french`."))
+                            "a comma separated list of languages used to "
+                            "construct a list of stop words (i.e. words that will "
+                            "be ignored, like \"I\" or \"be\" in English). "
+                            "Default is `english french`."))
     parser.add_argument("--rated_last_X_days",
                         nargs=1,
                         metavar="RATED_LAST_X_DAYS",
@@ -2045,21 +2045,21 @@ if __name__ == "__main__":
                         default=4,
                         required=False,
                         help=(
-                        "indicates the number of passed days to take "
-                        "into account when fetching past anki sessions. If "
-                        "you rated 500 cards yesterday, then you don't want "
-                        "your today cards to be too close to what you viewed "
-                        "yesterday, so AnnA will find the 500 cards you "
-                        "reviewed yesterday, and all the cards you rated "
-                        "before that, up to the number of days in "
-                        "rated_last_X_days value. Default is `4` (meaning "
-                        "rated today, and in the 3 days before today). A "
-                        "value of 0 or `None` will disable fetching those "
-                        "cards. A value of 1 will only fetch cards that were "
-                        "rated today. Not that this will include cards rated "
-                        "in the last X days, no matter if they are reviews "
-                        "or learnings. you can change this using "
-                        "\"highjack_rated_query\" argument."))
+                            "indicates the number of passed days to take "
+                            "into account when fetching past anki sessions. If "
+                            "you rated 500 cards yesterday, then you don't want "
+                            "your today cards to be too close to what you viewed "
+                            "yesterday, so AnnA will find the 500 cards you "
+                            "reviewed yesterday, and all the cards you rated "
+                            "before that, up to the number of days in "
+                            "rated_last_X_days value. Default is `4` (meaning "
+                            "rated today, and in the 3 days before today). A "
+                            "value of 0 or `None` will disable fetching those "
+                            "cards. A value of 1 will only fetch cards that were "
+                            "rated today. Not that this will include cards rated "
+                            "in the last X days, no matter if they are reviews "
+                            "or learnings. you can change this using "
+                            "\"highjack_rated_query\" argument."))
     parser.add_argument("--score_adjustment_factor",
                         nargs="+",
                         metavar="SCORE_ADJUSTMENT_FACTOR",
@@ -2068,11 +2068,11 @@ if __name__ == "__main__":
                         type=str,
                         required=False,
                         help=(
-                        "a comma separated list of numbers used to "
-                        "adjust the value of the reference order compared to "
-                        "how similar the cards are. Default is `1,2`. For "
-                        "example: '1, 1.3' means that the algorithm will "
-                        "spread the similar cards farther apart."))
+                            "a comma separated list of numbers used to "
+                            "adjust the value of the reference order compared to "
+                            "how similar the cards are. Default is `1,2`. For "
+                            "example: '1, 1.3' means that the algorithm will "
+                            "spread the similar cards farther apart."))
     parser.add_argument("--field_mapping",
                         nargs=1,
                         metavar="FIELD_MAPPING_PATH",
@@ -2081,14 +2081,14 @@ if __name__ == "__main__":
                         type=str,
                         required=False,
                         help=(
-                        "path of file that indicates which field to keep "
-                        "from which note type and in which order. Default "
-                        "value is `field_mappings.py`. If empty or if no "
-                        "matching notetype was found, AnnA will only take "
-                        "into account the first 2 fields. If you assign a "
-                        "notetype to `[\"take_all_fields]`, AnnA will grab "
-                        "all fields of the notetype in the same order as they"
-                        " appear in Anki's interface."))
+                            "path of file that indicates which field to keep "
+                            "from which note type and in which order. Default "
+                            "value is `field_mappings.py`. If empty or if no "
+                            "matching notetype was found, AnnA will only take "
+                            "into account the first 2 fields. If you assign a "
+                            "notetype to `[\"take_all_fields]`, AnnA will grab "
+                            "all fields of the notetype in the same order as they"
+                            " appear in Anki's interface."))
     parser.add_argument("--acronym_file",
                         nargs=1,
                         metavar="ACRONYM_FILE_PATH",
@@ -2096,15 +2096,15 @@ if __name__ == "__main__":
                         default="acronym_file.py",
                         required=False,
                         help=(
-                        "a python file containing dictionaries that "
-                        "themselves contain acronyms to extend in the text "
-                        "of cards. For example `CRC` can be extended to `CRC "
-                        "(colorectal cancer)`. (The parenthesis are "
-                        "automatically added.) Default is "
-                        "`\"acronym_file.py\"`. The matching is case "
-                        "sensitive only if the key contains uppercase "
-                        "characters. The \".py\" file extension is not "
-                        "mandatory."))
+                            "a python file containing dictionaries that "
+                            "themselves contain acronyms to extend in the text "
+                            "of cards. For example `CRC` can be extended to `CRC "
+                            "(colorectal cancer)`. (The parenthesis are "
+                            "automatically added.) Default is "
+                            "`\"acronym_file.py\"`. The matching is case "
+                            "sensitive only if the key contains uppercase "
+                            "characters. The \".py\" file extension is not "
+                            "mandatory."))
     parser.add_argument("--acronym_list",
                         nargs="+",
                         metavar="ACRONYM_LIST",
@@ -2113,11 +2113,11 @@ if __name__ == "__main__":
                         type=str,
                         required=False,
                         help=(
-                        "a comma separated list of name of dictionaries "
-                        "to extract file\ supplied in `acronym_file`. Used "
-                        "to extend text, for instance "
-                        "`AI_machine_learning,medical_terms`. Default to "
-                        "None."))
+                            "a comma separated list of name of dictionaries "
+                            "to extract file\ supplied in `acronym_file`. Used "
+                            "to extend text, for instance "
+                            "`AI_machine_learning,medical_terms`. Default to "
+                            "None."))
     parser.add_argument("--minimum_due",
                         nargs=1,
                         metavar="MINIMUM_DUE_CARDS",
@@ -2126,8 +2126,8 @@ if __name__ == "__main__":
                         type=int,
                         required=False,
                         help=(
-                        "stops AnnA if the number of due cards is "
-                        "inferior to this value. Default is `5`."))
+                            "stops AnnA if the number of due cards is "
+                            "inferior to this value. Default is `5`."))
     parser.add_argument("--highjack_due_query",
                         nargs=1,
                         metavar="HIGHJACK_DUE_QUERY",
@@ -2135,36 +2135,37 @@ if __name__ == "__main__":
                         default=None,
                         required=False,
                         help=(
-                        "bypasses the browser query used to find the "
-                        "list of due cards. You can set it for example to "
-                        "`deck:\"my_deck\" is:due -rated:14 flag:1`. Default "
-                        "is `None`. **Keep in mind that, when highjacking "
-                        "queries, you have to specify the deck otherwise "
-                        "AnnA will compare your whole collection.**"))
+                            "bypasses the browser query used to find the "
+                            "list of due cards. You can set it for example to "
+                            "`deck:\"my_deck\" is:due -rated:14 flag:1`. Default "
+                            "is `None`. **Keep in mind that, when highjacking "
+                            "queries, you have to specify the deck otherwise "
+                            "AnnA will compare your whole collection.**"))
     parser.add_argument("--highjack_rated_query",
                         nargs=1,
                         metavar="HIGHJACK_RATED_QUERY",
                         dest="highjack_rated_query",
                         default=None,
                         required=False,
-                        help=("same idea as above, bypasses the query used "
-                        "to fetch rated cards in anki. Related to "
-                        "`highjack_due_query` although you can set only one "
-                        "of them. Default is `None`."))
+                        help=(
+                            "same idea as above, bypasses the query used "
+                            "to fetch rated cards in anki. Related to "
+                            "`highjack_due_query` although you can set only one "
+                            "of them. Default is `None`."))
     parser.add_argument("--low_power_mode",
                         dest="low_power_mode",
                         default=False,
                         action="store_true",
                         required=False,
                         help=(
-                        "enable to reduce the computation needed for "
-                        "AnnA, making it usable for less powerful computers. "
-                        "Default to `False`. In more details, it mainly "
-                        "reduces the argument `ngram_range` for TFIDF, "
-                        "making it use unigrams instead of n-grams with n "
-                        "from 1 to 3. It also skips trying to find acronyms "
-                        "that were not replaced as well as identifying "
-                        "similar cards."))
+                            "enable to reduce the computation needed for "
+                            "AnnA, making it usable for less powerful computers. "
+                            "Default to `False`. In more details, it mainly "
+                            "reduces the argument `ngram_range` for TFIDF, "
+                            "making it use unigrams instead of n-grams with n "
+                            "from 1 to 3. It also skips trying to find acronyms "
+                            "that were not replaced as well as identifying "
+                            "similar cards."))
     parser.add_argument("--log_level",
                         nargs=1,
                         metavar="LOG_LEVEL",
@@ -2173,38 +2174,38 @@ if __name__ == "__main__":
                         type=int,
                         required=False,
                         help=(
-                        "can be any number between 0 and 2. Default is "
-                        "`2` to only print errors. 1 means print also useful "
-                        "information and >=2 means print everything. "
-                        "Messages are color coded so it might be better to "
-                        "leave it at 3 and just focus on colors."))
+                            "can be any number between 0 and 2. Default is "
+                            "`2` to only print errors. 1 means print also useful "
+                            "information and >=2 means print everything. "
+                            "Messages are color coded so it might be better to "
+                            "leave it at 3 and just focus on colors."))
     parser.add_argument("--replace_greek",
                         action="store_true",
                         dest="replace_greek",
                         default=True,
                         required=False,
                         help=(
-                        "if True, all greek letters will be replaced "
-                        "with a spelled version. For example `\u03C3` "
-                        "becomes `sigma`. Default is `True`."))
+                            "if True, all greek letters will be replaced "
+                            "with a spelled version. For example `\u03C3` "
+                            "becomes `sigma`. Default is `True`."))
     parser.add_argument("--keep_OCR",
                         dest="keep_OCR",
                         default=True,
                         action="store_true",
                         required=False,
                         help=(
-                        "if True, the OCR text extracted using the "
-                        "great AnkiOCR addon "
-                        "(https://github.com/cfculhane/AnkiOCR/) will be "
-                        "included in the card. Default is `True`."))
+                            "if True, the OCR text extracted using the "
+                            "great AnkiOCR addon "
+                            "(https://github.com/cfculhane/AnkiOCR/) will be "
+                            "included in the card. Default is `True`."))
     parser.add_argument("--append_tags",
                         dest="append_tags",
                         default=True,
                         required=False,
                         action="store_true",
                         help=(
-                        "Wether to append the 2 deepest tags to the "
-                        "cards content or to add no tags. Default to `True`."))
+                            "Wether to append the 2 deepest tags to the "
+                            "cards content or to add no tags. Default to `True`."))
     parser.add_argument("--tags_to_ignore",
                         nargs="*",
                         metavar="TAGS_TO_IGNORE",
@@ -2213,10 +2214,10 @@ if __name__ == "__main__":
                         type=str,
                         required=False,
                         help=(
-                        "a comma separated list of tags to ignore when "
-                        "appending tags to cards. This is not a list of tags "
-                        "whose card should be ignored! Default is `None "
-                        "(i.e. disabled)."))
+                            "a comma separated list of tags to ignore when "
+                            "appending tags to cards. This is not a list of tags "
+                            "whose card should be ignored! Default is `None "
+                            "(i.e. disabled)."))
     parser.add_argument("--tags_separator",
                         nargs=1,
                         metavar="TAGS_SEP",
@@ -2225,7 +2226,7 @@ if __name__ == "__main__":
                         type=str,
                         required=False,
                         help=(
-                        "separator between levels of tags. Default to `::`."))
+                            "separator between levels of tags. Default to `::`."))
     parser.add_argument("--filtered_deck_name_template",
                         nargs=1,
                         metavar="FILTER_DECK_NAME_TEMPLATE",
@@ -2234,17 +2235,17 @@ if __name__ == "__main__":
                         required=False,
                         type=str,
                         help=(
-                        "name template of the filtered deck to create. "
-                        "Only available if task is set to "
-                        "\"filter_review_cards\". Default is `None`."))
+                            "name template of the filtered deck to create. "
+                            "Only available if task is set to "
+                            "\"filter_review_cards\". Default is `None`."))
     parser.add_argument("--filtered_deck_by_batch",
                         action="store_true",
                         dest="filtered_deck_by_batch",
                         default=False,
                         required=False,
                         help=(
-                        "To enable creating batch of filtered "
-                        "decks. Default is `False`."))
+                            "To enable creating batch of filtered "
+                            "decks. Default is `False`."))
     parser.add_argument("--filtered_deck_batch_size",
                         nargs=1,
                         metavar="FILTERED_DECK_BATCH_SIZE",
@@ -2253,26 +2254,26 @@ if __name__ == "__main__":
                         type=int,
                         required=False,
                         help=(
-                        "If creating batch of filtered deck, this is "
-                        "the number of cards in each. Default is `25`."))
+                            "If creating batch of filtered deck, this is "
+                            "the number of cards in each. Default is `25`."))
     parser.add_argument("--show_banner",
                         action="store_true",
                         dest="show_banner",
                         default=True,
                         required=False,
                         help=(
-                        "used to display a nice banner when instantiating the"
-                        " collection. Default is `True`."))
+                            "used to display a nice banner when instantiating the"
+                            " collection. Default is `True`."))
     parser.add_argument("--skip_print_similar",
                         dest="skip_print_similar",
                         default=False,
                         required=False,
                         action="store_true",
                         help=(
-                        "default to `False`. Skip printing example of "
-                        "cards that are very similar or very different. This "
-                        "speeds up execution but can help figure out when "
-                        "something when wrong."))
+                            "default to `False`. Skip printing example of "
+                            "cards that are very similar or very different. This "
+                            "speeds up execution but can help figure out when "
+                            "something when wrong."))
     parser.add_argument("--repick_task",
                         nargs=1,
                         metavar="REPICK_TASK",
@@ -2280,13 +2281,13 @@ if __name__ == "__main__":
                         default="boost",
                         required=False,
                         help=(
-                        "Define what happens to cards deemed urgent "
-                        "in 'relative_overdueness' ref mode. If contains "
-                        "'boost', those cards will have a boost in priority "
-                        "to make sure you will review them ASAP. If contains "
-                        "'addtag' a tag indicating which card is urgent will "
-                        "be added at the end of the run. Disable by setting "
-                        "it to None. Default is `boost`."))
+                            "Define what happens to cards deemed urgent "
+                            "in 'relative_overdueness' ref mode. If contains "
+                            "'boost', those cards will have a boost in priority "
+                            "to make sure you will review them ASAP. If contains "
+                            "'addtag' a tag indicating which card is urgent will "
+                            "be added at the end of the run. Disable by setting "
+                            "it to None. Default is `boost`."))
     parser.add_argument("--vectorizer",
                         nargs=1,
                         metavar="VECTORIZER",
@@ -2295,8 +2296,8 @@ if __name__ == "__main__":
                         required=False,
                         type=str,
                         help=(
-                        "can nowadays only be set to \"TFIDF\", but "
-                        "kept for legacy reasons."))
+                            "can nowadays only be set to \"TFIDF\", but "
+                            "kept for legacy reasons."))
     parser.add_argument("--TFIDF_dim",
                         nargs=1,
                         metavar="TFIDF_DIMENSIONS",
@@ -2305,62 +2306,62 @@ if __name__ == "__main__":
                         default=50,
                         required=False,
                         help=(
-                        "the number of dimension to keep using "
-                        "SVD Default is `50`, you cannot disable "
-                        "dimension reduction for TF_IDF because that would "
-                        "result in a sparse "
-                        "matrix. (More information at "
-                        "https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.TruncatedSVD.html)."))
+                            "the number of dimension to keep using "
+                            "SVD Default is `50`, you cannot disable "
+                            "dimension reduction for TF_IDF because that would "
+                            "result in a sparse "
+                            "matrix. (More information at "
+                            "https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.TruncatedSVD.html)."))
     parser.add_argument("--TFIDF_tokenize",
                         dest="TFIDF_tokenize",
                         default=True,
                         action="store_true",
                         required=False,
                         help=(
-                        "default to `True`. Enable sub word "
-                        "tokenization, for example turn "
-                        "`hypernatremia` to `hyp + er + natr + emia`. The "
-                        "current tokenizer is `bert-base-multilingual-cased` "
-                        "and should work on just about any languages. You "
-                        "cannot enable both `TFIDF_tokenize` and "
-                        "`TFIDF_stem` but should absolutely enable at least "
-                        "one."))
+                            "default to `True`. Enable sub word "
+                            "tokenization, for example turn "
+                            "`hypernatremia` to `hyp + er + natr + emia`. The "
+                            "current tokenizer is `bert-base-multilingual-cased` "
+                            "and should work on just about any languages. You "
+                            "cannot enable both `TFIDF_tokenize` and "
+                            "`TFIDF_stem` but should absolutely enable at least "
+                            "one."))
     parser.add_argument("--TFIDF_stem",
                         dest="TFIDF_stem",
                         default=False,
                         action="store_true",
                         required=False,
                         help=(
-                        "default to `False`. Wether to enable "
-                        "stemming of words. Currently the PorterStemmer is "
-                        "used, and was made for English but can still be "
-                        "useful for some other languages. Keep in mind that "
-                        "this is the longest step when formatting text."))
+                            "default to `False`. Wether to enable "
+                            "stemming of words. Currently the PorterStemmer is "
+                            "used, and was made for English but can still be "
+                            "useful for some other languages. Keep in mind that "
+                            "this is the longest step when formatting text."))
     parser.add_argument("--whole_deck_computation",
                         dest="whole_deck_computation",
                         default=True,
                         required=False,
                         action="store_true",
                         help=(
-                        "defaults to `True`. Use ankipandas to "
-                        "extract all text from the deck to feed into the "
-                        "vectorizer. Results in more accurate relative "
-                        "distances between cards."
-                        " (more information at "
-                        "https://github.com/klieret/AnkiPandas)"))
+                            "defaults to `True`. Use ankipandas to "
+                            "extract all text from the deck to feed into the "
+                            "vectorizer. Results in more accurate relative "
+                            "distances between cards."
+                            " (more information at "
+                            "https://github.com/klieret/AnkiPandas)"))
     parser.add_argument("--disable_fuzz",
                         dest="disable_fuzz",
                         default=False,
                         action="store_true",
                         required=False,
                         help=(
-                        "Disable fuzzing when computing optimal "
-                        "order , otherwise a small random vector is added to "
-                        "the reference_score and distance_score of each "
-                        "card. Note that this vector is multiplied by the "
-                        "average of the score_adjustment_factor then divided "
-                        "by 10 to make sure that it does not significatively "
-                        "alter results. Defaults to `False`."))
+                            "Disable fuzzing when computing optimal "
+                            "order , otherwise a small random vector is added to "
+                            "the reference_score and distance_score of each "
+                            "card. Note that this vector is multiplied by the "
+                            "average of the score_adjustment_factor then divided "
+                            "by 10 to make sure that it does not significatively "
+                            "alter results. Defaults to `False`."))
     parser.add_argument("--profile_name",
                         nargs=1,
                         metavar="PROFILE_NAME",
@@ -2368,18 +2369,18 @@ if __name__ == "__main__":
                         default=None,
                         required=False,
                         help=(
-                        "defaults to `None`. Profile named "
-                        "used by ankipandas to find your collection. If "
-                        "None, ankipandas will use the most probable "
-                        "collection."))
+                            "defaults to `None`. Profile named "
+                            "used by ankipandas to find your collection. If "
+                            "None, ankipandas will use the most probable "
+                            "collection."))
     parser.add_argument("--keep_console_open",
                         dest="console_mode",
                         default=False,
                         action="store_true",
                         required=False,
                         help=(
-                        "defaults to `False`. Set to True to "
-                        "open a python console after running."))
+                            "defaults to `False`. Set to True to "
+                            "open a python console after running."))
 
     args = parser.parse_args().__dict__
 
@@ -2393,7 +2394,7 @@ if __name__ == "__main__":
             elif "," in args[arg]:
                 args[arg] = args[arg].split(",")
 
-    whi(f"Launched AnnA with arguments :\r")
+    whi("Launched AnnA with arguments :\r")
     pprint(args)
 
     if args["console_mode"]:
