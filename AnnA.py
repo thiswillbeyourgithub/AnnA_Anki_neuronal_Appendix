@@ -18,6 +18,7 @@ from pathlib import Path
 import threading
 from prompt_toolkit import prompt
 from prompt_toolkit.completion import WordCompleter
+from plyer import notification
 
 import pandas as pd
 import numpy as np
@@ -99,17 +100,32 @@ set_global_logging_level(logging.ERROR,
                           "tensorflow", "sklearn", "nltk"])
 
 
-def beep(sound="error", **args):
-    red("BEEP")
+def beep(message=None, **args):
+    sound = "error"  # default sound
+
+    if message is None:
+        red("BEEP")  # at least produce a written message
+    else:
+        try:
+            # create notification with error
+            red(message)
+            notification.notify(title="AnnA",
+                                message=message,
+                                timeout=0,
+                                )
+        except Exception as err:
+            red(f"Error when creating notificaiton: '{err}'")
+
     try:
         beepy.beep(sound, **args)
     except Exception:
-        time.sleep(1)
+        # retry sound if failed
+        time.sleep(0.2)
         try:
             beepy.beep(sound, **args)
         except Exception:
             red("Failed to beep twice.")
-    time.sleep(1)
+    time.sleep(1)  # avoid too close beeps in a row
 
 
 class AnnA:
@@ -358,7 +374,7 @@ class AnnA:
         if self.acronym_file is not None and self.acronym_list is not None:
             file = Path(acronym_file)
             if not file.exists():
-                beep()
+                beep(f"Acronym file was not found: {acronym_file}")
                 raise Exception(f"Acronym file was not found: {acronym_file}")
             else:
                 # importing acronym file
@@ -374,8 +390,7 @@ class AnnA:
 
                 # if empty file:
                 if len(acr_dict_list) == 0:
-                    beep()
-                    red(f"No dictionnary found in {acronym_file}")
+                    beep(f"No dictionnary found in {acronym_file}")
                     raise SystemExit()
 
                 if isinstance(self.acronym_list, str):
@@ -384,18 +399,16 @@ class AnnA:
                 missing = [x for x in self.acronym_list
                            if x not in acr_dict_list]
                 if missing:
-                    beep()
-                    red("Mising the following acronym dictionnary in "
-                        f"{acronym_file}: {','.join(missing)}")
+                    beep("Mising the following acronym dictionnary in "
+                         f"{acronym_file}: {','.join(missing)}")
                     raise SystemExit()
 
                 acr_dict_list = [x for x in acr_dict_list
                                  if x in self.acronym_list]
 
                 if len(acr_dict_list) == 0:
-                    beep()
-                    red(f"No dictionnary from {self.acr_dict_list} "
-                        f"found in {acronym_file}")
+                    beep(f"No dictionnary from {self.acr_dict_list} "
+                         f"found in {acronym_file}")
                     raise SystemExit()
 
                 compiled_dic = {}
@@ -529,20 +542,20 @@ values. {e}")
                     'http://localhost:8775',
                     requestJson)))
         except (ConnectionRefusedError, urllib.error.URLError) as e:
-            beep()
+            beep(f"{e}: is Anki open and ankiconnect enabled?")
             raise Exception(f"{e}: is Anki open and ankiconnect enabled?")
 
         if len(response) != 2:
-            beep()
+            beep('response has an unexpected number of fields')
             raise Exception('response has an unexpected number of fields')
         if 'error' not in response:
-            beep()
+            beep('response is missing required error field')
             raise Exception('response is missing required error field')
         if 'result' not in response:
-            beep()
+            beep('response is missing required result field')
             raise Exception('response is missing required result field')
         if response['error'] is not None:
-            beep()
+            beep(response['error'])
             raise Exception(response['error'])
         return response['result']
 
@@ -1012,8 +1025,7 @@ threads of size {batchsize})")
                 thread.start()
                 thread.join()
                 if cnt > 10:
-                    beep()
-                    red("Error: restart anki then rerun AnnA.")
+                    beep("Error: restart anki then rerun AnnA.")
                     raise SystemExit()
             if cnt > 0:
                 yel(f"Succesfully corrected null combined texts on #{cnt} "
@@ -1021,9 +1033,7 @@ threads of size {batchsize})")
 
         to_notify = list(set(to_notify))
         for notification in to_notify:
-            red(notification)
-        if to_notify:
-            beep()
+            beep(notification)
 
         # using multithreading is not faster, using multiprocess is probably
         # slower if not done by large batching
@@ -1108,11 +1118,10 @@ threads of size {batchsize})")
                 if "trash" in str(original_db).lower():
                     cnt = 0
                     while cnt <= 10:
-                        red("Ankipandas seems to have found a collection in "
-                            "the trash folder. If that is not your intention "
-                            "cancel now. Waiting 10s for you to see this "
-                            "message before proceeding.")
-                        beep()
+                        beep("Ankipandas seems to have found a collection in "
+                             "the trash folder. If that is not your intention "
+                             "cancel now. Waiting 10s for you to see this "
+                             "message before proceeding.")
                         cnt += 1
                         time.sleep(1)
                 Path.mkdir(Path("cache"), exist_ok=True)
@@ -1130,7 +1139,7 @@ threads of size {batchsize})")
                 whi("Ankipandas db loaded successfuly.")
 
                 if len(cards.index) == 0:
-                    beep()
+                    beep("Ankipandas database is of length 0")
                     raise Exception("Ankipandas database is of length 0")
 
                 # get only the right fields
@@ -1139,7 +1148,7 @@ threads of size {batchsize})")
                 mod2mid = akp.raw.get_model2mid(col.db)
 
                 if len(cards.index) == 0:
-                    beep()
+                    beep("Ankipandas database is of length 0")
                     raise Exception("Ankipandas database is of length 0")
 
                 to_notify = []
@@ -1202,9 +1211,7 @@ threads of size {batchsize})")
                     "Vectorizing dues cards using TFIDF")))
                 yel("Done vectorizing over whole deck!")
             except Exception as e:
-                red(f"Exception : {e}")
-                red("Using fallback method...")
-                beep()
+                beep(f"Exception : {e}\nUsing fallback method...")
                 use_fallback = True
 
         if (self.whole_deck_computation is False) or (use_fallback):
@@ -1216,10 +1223,9 @@ threads of size {batchsize})")
             df["VEC"] = [x for x in t_vec]
         else:
             if self.TFIDF_dim >= t_vec.shape[1] - 1:
-                red(f"Number of dimensions desired ({self.TFIDF_dim}) is "
-                    "higher than number of features ({t_vec.shape[1]}), "
-                    " taking the lowest value.")
-                beep()
+                beep(f"Number of dimensions desired ({self.TFIDF_dim}) is "
+                     "higher than number of features ({t_vec.shape[1]}), "
+                     " taking the lowest value.")
             self.TFIDF_dim = min(self.TFIDF_dim, t_vec.shape[1] - 1)
             yel(f"\nReducing dimensions to {self.TFIDF_dim} using SVD...",
                 end=" ")
@@ -1293,8 +1299,7 @@ threads of size {batchsize})")
                         printed = True
                         break
             if printed is False:
-                red("Couldn't find lowest values to print!")
-                beep()
+                beep("Couldn't find lowest values to print!")
             print("")
             pd.reset_option('display.max_colwidth')
         return True
@@ -1415,8 +1420,7 @@ threads of size {batchsize})")
             # then, correct overdue values to make sure they are negative
             correction = max(overdue.max(), 0) + 0.01
             if correction > 1:
-                red("This should probably not happen.")
-                beep()
+                beep("This should probably not happen.")
                 breakpoint()
             # my implementation of relative overdueness:
             # (intervals are positive, overdue are negative for due cards
@@ -1433,8 +1437,7 @@ threads of size {batchsize})")
                 assert np.sum(
                     ro < 0) == 0, "wrong values of relative overdueness"
             except Exception as e:
-                red(f"This should not happen: {str(e)}")
-                beep()
+                beep(f"This should not happen: {str(e)}")
                 breakpoint()
 
             # squishing values above some threashold
@@ -1486,8 +1489,7 @@ threads of size {batchsize})")
                         red("Appended tags 'urgent_reviews' to cards with "
                             "very low relative overdueness.")
                     except Exception as e:
-                        red(f"Error adding tags to urgent cards: {str(e)}")
-                        beep()
+                        beep(f"Error adding tags to urgent cards: {str(e)}")
 
             if not reference_order == "LIRO_mix":
                 df.loc[due, "ref"] = ro_cs
@@ -1595,8 +1597,7 @@ threads of size {batchsize})")
                                            include='all')
                 whi(f"Distance: {val}\n\n")
             except Exception as e:
-                red(f"Exception: {e}")
-                beep()
+                beep(f"Exception: {e}")
             pd.reset_option('display.float_format')
 
         # final check before computing optimal order:
@@ -1693,8 +1694,7 @@ threads of size {batchsize})")
                     red(pyfiglet.figlet_format(f"{sign}{ratio}%"))
 
         except Exception as e:
-            red(f"\nException: {e}")
-            beep()
+            beep(f"\nException: {e}")
 
         self.opti_rev_order = [int(x) for x in queue]
         self.df = df
@@ -1801,10 +1801,9 @@ threads of size {batchsize})")
             self.filtered_deck_name = filtered_deck_name
 
             while filtered_deck_name in self._call_anki(action="deckNames"):
-                red(f"\nFound existing filtered deck: {filtered_deck_name} "
-                    "You have to delete it manually, the cards will be "
-                    "returned to their original deck.")
-                beep()
+                beep(f"\nFound existing filtered deck: {filtered_deck_name} "
+                     "You have to delete it manually, the cards will be "
+                     "returned to their original deck.")
                 input("Done? >")
 
         whi("Creating deck containing the cards to review: "
@@ -1853,15 +1852,14 @@ threads of size {batchsize})")
                 red("Inconsistency! The deck does not contain the same cards "
                     " as opti_rev_order!")
                 pprint(diff)
-                red(f"\nNumber of inconsistent cards: {len(diff)}")
-                beep()
+                beep(f"\nNumber of inconsistent cards: {len(diff)}")
 
         yel("\nAsking anki to alter the due order...", end="")
         res = self._call_anki(action="setDueOrderOfFiltered",
                               cards=self.opti_rev_order)
         err = [x[1] for x in res if x[0] is False]
         if err:
-            beep()
+            beep(f"\nError when setting due order : {err}")
             raise(f"\nError when setting due order : {err}")
         else:
             yel(" Done!")
@@ -2408,5 +2406,5 @@ if __name__ == "__main__":
         red("\n\nRun finished. Opening console:\n(You can access the last \
 instance of AnnA by inspecting variable \"anna\")\n")
         import code
-        beep()
+        beep("Finished!")
         code.interact(local=locals())
