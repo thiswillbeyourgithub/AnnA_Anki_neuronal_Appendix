@@ -254,10 +254,9 @@ AnnA includes built-in methods you can run after instantiating the class. Note t
 * `save_df` saves the dataframe containing the cards and all other infos needed by AnnA as a pickle file. Used mainly for debugging. Files will be saved to the folder `DF_backups`
 
 ## TODO
-* use joblib caching
+* use joblib caching (especially useful for storing results of ML encoders like CLIP)
 * add an option to generate a reachability plot for the decks using an argument
-- use hierarchical clustering (quick because you already have the distance matrix) to have the full tree, then instead of using the TFIDF distance when computing the optimal order, use the "tree distance"
-* make this PEP8 compliant
+* use hierarchical clustering (quick because you already have the distance matrix) to have the full tree, then instead of using the TFIDF distance when computing the optimal order, use the "tree distance"
 * implement flagging urgent card instead of only tag or boost
 * investigate wether CLIP is a better vectorizer than what you used in the past
 * merge code from anki connect to make companion addon compatible with latest anki
