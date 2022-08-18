@@ -1116,14 +1116,11 @@ threads of size {batchsize})")
                     yel("Ankipandas will use anki collection found at "
                         f"{original_db}")
                 if "trash" in str(original_db).lower():
-                    cnt = 0
-                    while cnt <= 10:
-                        beep("Ankipandas seems to have found a collection in "
-                             "the trash folder. If that is not your intention "
-                             "cancel now. Waiting 10s for you to see this "
-                             "message before proceeding.")
-                        cnt += 1
-                        time.sleep(1)
+                    beep("Ankipandas seems to have found a collection in "
+                         "the trash folder. If that is not your intention "
+                         "cancel now. Waiting 10s for you to see this "
+                         "message before proceeding.")
+                    time.sleep(1)
                 Path.mkdir(Path("cache"), exist_ok=True)
                 name = f"{self.profile_name}_{self.deckname}".replace(" ", "_")
                 temp_db = copy(
