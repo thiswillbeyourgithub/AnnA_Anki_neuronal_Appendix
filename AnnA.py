@@ -108,7 +108,7 @@ def beep(message=None, **args):
     else:
         try:
             # create notification with error
-            red(message)
+            red("NOTIF: " + message)
             notification.notify(title="AnnA",
                                 message=message,
                                 timeout=0,
