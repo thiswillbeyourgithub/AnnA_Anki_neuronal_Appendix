@@ -4,7 +4,7 @@ prompt_toolkit >= 3.0.14
 python_Levenshtein >= 0.12.2
 beepy>=1.0.7
 
-pandas >= 1.2.3
+pandas == 1.2.3
 
 numpy >= 1.19.4
 sklearn >= 0.0
