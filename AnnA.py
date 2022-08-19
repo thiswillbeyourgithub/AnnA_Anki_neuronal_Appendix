@@ -773,8 +773,6 @@ threads of size {batchsize})")
 
     def _text_formatter(self, text):
         """
-        (This function is cached using joblib.Memory)
-
         process and formats each card's text, including :
         * html removal
         * acronym replacement
@@ -1034,7 +1032,7 @@ threads of size {batchsize})")
         # slower if not done by large batching
         tqdm.pandas(desc="Formating text", smoothing=0, unit=" card")
         self.df["text"] = self.df["comb_text"].progress_apply(
-            lambda x: self.mem.eval(self._text_formatter, x))
+            lambda x: self._text_formatter(x))
 
         # find short cards
         ind_short = []
@@ -1184,10 +1182,9 @@ threads of size {batchsize})")
                     new = ""
                     for i in indices_to_keep:
                         new += fields_list[i] + " "
-                    processed = self.mem.eval(self._text_formatter,
-                                             re.sub(self.stopw_compiled,
-                                                    " ",
-                                                    new))
+                    processed = self._text_formatter(re.sub(self.stopw_compiled,
+                                                            " ",
+                                                            new))
                     if len(processed) < 10 or self.append_tags:
                         tags = cards.loc[ind, "ntags"]
                         for t in tags:
