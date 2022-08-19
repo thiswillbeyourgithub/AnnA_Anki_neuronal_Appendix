@@ -255,7 +255,7 @@ AnnA includes built-in methods you can run after instantiating the class. Note t
 
 ## TODO
 * use joblib caching for text_formater function (necessary steps: add more argument to it to stop relying on self)
-* add an option to generate a reachability plot for the decks using an argument
+* add an option to generate a reachability plot for the decks using an argument (+add tqdm to OPTICS (I checked, it's easy) ; +do it with a timeout and in an external process)
 * use hierarchical clustering (quick because you already have the distance matrix) to have the full tree, then instead of using the TFIDF distance when computing the optimal order, use the "tree distance"
 * implement flagging urgent card instead of only tag or boost
 * investigate wether CLIP is a better vectorizer than what you used in the past
