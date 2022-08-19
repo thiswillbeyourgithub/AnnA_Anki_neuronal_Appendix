@@ -1033,9 +1033,8 @@ threads of size {batchsize})")
         # using multithreading is not faster, using multiprocess is probably
         # slower if not done by large batching
         tqdm.pandas(desc="Formating text", smoothing=0, unit=" card")
-        cached_tf = self.mem.cache(self._text_formatter)
         self.df["text"] = self.df["comb_text"].progress_apply(
-            lambda x: cached_tf(x))
+            lambda x: self.mem.eval(self._text_formatter, x))
 
         # find short cards
         ind_short = []
@@ -1177,7 +1176,6 @@ threads of size {batchsize})")
 
                 corpus = []
                 spacers_compiled = re.compile("_|-|/")
-                cached_tf = self.mem.cache(self._text_formatter)
                 for ind in tqdm(cards.index,
                                 desc=("Gathering and formating "
                                       f"{self.deckname}")):
@@ -1186,7 +1184,10 @@ threads of size {batchsize})")
                     new = ""
                     for i in indices_to_keep:
                         new += fields_list[i] + " "
-                    processed = cached_tf(re.sub(self.stopw_compiled, " ", new))
+                    processed = self.mem.eval(self._text_formatter,
+                                             re.sub(self.stopw_compiled,
+                                                    " ",
+                                                    new))
                     if len(processed) < 10 or self.append_tags:
                         tags = cards.loc[ind, "ntags"]
                         for t in tags:
