@@ -345,6 +345,9 @@ class AnnA:
         assert isinstance(disable_fuzz, bool)
         self.disable_fuzz = disable_fuzz
 
+        # initialize joblib caching
+        self.mem = Memory("./cache", mmap_mode="r", verbose=5)
+
         # additional processing of arguments
         if task != "filter_review_cards" and (
                 self.filtered_deck_name_template is not None):
@@ -781,6 +784,8 @@ threads of size {batchsize})")
 
     def _text_formatter(self, text):
         """
+        (This function is cached using joblib.Memory)
+
         process and formats each card's text, including :
         * html removal
         * acronym replacement
@@ -1039,8 +1044,9 @@ threads of size {batchsize})")
         # using multithreading is not faster, using multiprocess is probably
         # slower if not done by large batching
         tqdm.pandas(desc="Formating text", smoothing=0, unit=" card")
+        cached_tf = self.mem.cache(self._text_formatter)
         self.df["text"] = self.df["comb_text"].progress_apply(
-            lambda x: self._text_formatter(x))
+            lambda x: cached_tf(x))
 
         # find short cards
         ind_short = []
@@ -1182,7 +1188,7 @@ threads of size {batchsize})")
 
                 corpus = []
                 spacers_compiled = re.compile("_|-|/")
-                tf = self._text_formatter
+                cached_tf = self.mem.cache(self._text_formatter)
                 for ind in tqdm(cards.index,
                                 desc=("Gathering and formating "
                                       f"{self.deckname}")):
@@ -1191,7 +1197,7 @@ threads of size {batchsize})")
                     new = ""
                     for i in indices_to_keep:
                         new += fields_list[i] + " "
-                    processed = tf(re.sub(self.stopw_compiled, " ", new))
+                    processed = cached_tf(re.sub(self.stopw_compiled, " ", new))
                     if len(processed) < 10 or self.append_tags:
                         tags = cards.loc[ind, "ntags"]
                         for t in tags:
@@ -1247,7 +1253,6 @@ threads of size {batchsize})")
 
         yel("\nComputing distance matrix on all available cores (with cache)"
             "...")
-        self.mem = Memory("./cache", mmap_mode="r", verbose=5)
         cached_pd = self.mem.cache(pairwise_distances)
         self.df_dist = pd.DataFrame(columns=df.index,
                                     index=df.index,
