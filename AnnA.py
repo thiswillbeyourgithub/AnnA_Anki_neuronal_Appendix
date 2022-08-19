@@ -1249,7 +1249,7 @@ threads of size {batchsize})")
         """
         df = self.df
 
-        yel("\nComputing distance matrix on all available cores (with cache)"
+        yel("\nComputing distance matrix on all available cores (cached)"
             "...")
         cached_pd = self.mem.cache(pairwise_distances)
         self.df_dist = pd.DataFrame(columns=df.index,
@@ -1259,11 +1259,13 @@ threads of size {batchsize})")
                                         n_jobs=-1,
                                         metric="cosine"))
 
-        yel("Computing mean distance...")
+        yel("Computing mean and std of distance (cached)...")
         # ignore the diagonal of the distance matrix to get a sensible mean
         # value then scale the matrix:
-        mean_dist = round(np.nanmean(self.df_dist[self.df_dist != 0]), 2)
-        std_dist = round(np.nanstd(self.df_dist[self.df_dist != 0]), 2)
+        cached_mean = self.mem.cache(np.nanmean)
+        cached_std = self.mem.cache(np.nanstd)
+        mean_dist = round(cached_mean(self.df_dist[self.df_dist != 0]), 2)
+        std_dist = round(cached_std(self.df_dist[self.df_dist != 0]), 2)
         yel(f"Mean distance: {mean_dist}, std: {std_dist}\n")
 
         if self.skip_print_similar is False:
