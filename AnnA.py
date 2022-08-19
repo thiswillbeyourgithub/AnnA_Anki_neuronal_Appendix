@@ -1074,7 +1074,7 @@ threads of size {batchsize})")
                 ending = "...\n"
             else:
                 ending = "\n"
-            print(f" * {i} : {str(self.df.loc[i, 'text'])[0:max_length]}",
+            whi(f" * {i} : {str(self.df.loc[i, 'text'])[0:max_length]}",
                   end=ending)
         pd.reset_option('display.max_colwidth')
         print("\n")
@@ -1164,7 +1164,7 @@ threads of size {batchsize})")
                                 f"{mod}.Taking first 2 fields.")
                             ret = [0, 1]
                     else:
-                        print(mod)
+                        whi(mod)
                         best_models = sorted(
                             list(mod2mid.keys()),
                             key=lambda x: lev.ratio(x.lower(), mod.lower()))
@@ -1245,7 +1245,8 @@ threads of size {batchsize})")
         """
         df = self.df
 
-        print("\nComputing distance matrix on all available cores...")
+        yel("\nComputing distance matrix on all available cores (with cache)"
+            "...")
         self.mem = Memory("./cache", mmap_mode="r", verbose=100)
         cached_pd = self.mem.cache(pairwise_distances)
         self.df_dist = pd.DataFrame(columns=df.index,
@@ -1255,7 +1256,7 @@ threads of size {batchsize})")
                                         n_jobs=-1,
                                         metric="cosine"))
 
-        print("Computing mean distance...")
+        yel("Computing mean distance...")
         # ignore the diagonal of the distance matrix to get a sensible mean
         # value then scale the matrix:
         mean_dist = round(np.nanmean(self.df_dist[self.df_dist != 0]), 2)
@@ -1735,7 +1736,7 @@ threads of size {batchsize})")
              if exclude(x)]))
 
         if len(matched) == 0:
-            print("No acronym found in those cards.")
+            red("No acronym found in those cards.")
             return True
 
         for compiled in self.acronym_dict:
@@ -1744,12 +1745,12 @@ threads of size {batchsize})")
                     matched.remove(acr)
 
         if not matched:
-            print("All found acronyms were already replaced using the data "
+            yel("All found acronyms were already replaced using the data "
                   "in `acronym_list`.")
         else:
-            print("List of some acronyms still found:")
+            yel("List of some acronyms still found:")
             if exclude_OCR_text:
-                print("(Excluding OCR text)")
+                whi("(Excluding OCR text)")
             pprint(", ".join(random.choices(matched, k=min(5, len(matched)))))
         print("")
         return True
@@ -1841,8 +1842,8 @@ threads of size {batchsize})")
                             sortOrder=5,
                             createEmpty=False)
 
-            print("Checking that the content of filtered deck name is the "
-                  "same as the order inferred by AnnA...", end="")
+            yel("Checking that the content of filtered deck name is the "
+                "same as the order inferred by AnnA...", end="")
             cur_in_deck = self._call_anki(
                     action="findCards",
                     query=f"\"deck:{filtered_deck_name}\"")
@@ -1872,7 +1873,7 @@ threads of size {batchsize})")
         Only used for debugging.
         """
         order = self.opti_rev_order[:display_limit]
-        print(self.df.loc[order, "text"])
+        whi(self.df.loc[order, "text"])
         return True
 
     def save_df(self, df=None, out_name=None):
