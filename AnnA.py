@@ -121,7 +121,7 @@ def beep(message=None, **args):
         beepy.beep(sound, **args)
     except Exception:
         # retry sound if failed
-        time.sleep(0.2)
+        time.sleep(1)
         try:
             beepy.beep(sound, **args)
         except Exception:
