@@ -20,6 +20,7 @@ from prompt_toolkit import prompt
 from prompt_toolkit.completion import WordCompleter
 from plyer import notification
 
+from joblib import Memory
 import pandas as pd
 import numpy as np
 import Levenshtein as lev
@@ -1245,9 +1246,11 @@ threads of size {batchsize})")
         df = self.df
 
         print("\nComputing distance matrix on all available cores...")
+        self.mem = Memory("./cache", mmap_mode="r", verbose=100)
+        cached_pd = self.mem.cache(pairwise_distances)
         self.df_dist = pd.DataFrame(columns=df.index,
                                     index=df.index,
-                                    data=pairwise_distances(
+                                    data=cached_pd(
                                         [x for x in df[input_col]],
                                         n_jobs=-1,
                                         metric="cosine"))
