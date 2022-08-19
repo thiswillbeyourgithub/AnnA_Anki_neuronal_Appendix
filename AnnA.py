@@ -346,7 +346,7 @@ class AnnA:
         self.disable_fuzz = disable_fuzz
 
         # initialize joblib caching
-        self.mem = Memory("./cache", mmap_mode="r", verbose=5)
+        self.mem = Memory("./cache", mmap_mode="r", verbose=0)
 
         # additional processing of arguments
         if task != "filter_review_cards" and (
