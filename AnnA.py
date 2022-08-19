@@ -651,17 +651,6 @@ threads of size {batchsize})")
                                   completer=auto_complete)
         return deckname
 
-    def memoize(self, f):
-        """ store previous value to speed up vector retrieval
-        (40x speed up) """
-        memo = {}
-
-        def helper(x):
-            if x not in memo:
-                memo[x] = f(x)
-            return memo[x]
-        return helper
-
     def _init_dataFrame(self):
         """
         create a pandas DataFrame with the information gathered from
@@ -1181,7 +1170,7 @@ threads of size {batchsize})")
                     assert len(ret) != 0
                     return ret
 
-                m_gIoF = self.memoize(get_index_of_fields)
+                m_gIoF = self.mem.cache(get_index_of_fields)
 
                 for notification in list(set(to_notify)):
                     red(notification)
