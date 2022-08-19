@@ -1247,7 +1247,7 @@ threads of size {batchsize})")
 
         yel("\nComputing distance matrix on all available cores (with cache)"
             "...")
-        self.mem = Memory("./cache", mmap_mode="r", verbose=100)
+        self.mem = Memory("./cache", mmap_mode="r", verbose=5)
         cached_pd = self.mem.cache(pairwise_distances)
         self.df_dist = pd.DataFrame(columns=df.index,
                                     index=df.index,
