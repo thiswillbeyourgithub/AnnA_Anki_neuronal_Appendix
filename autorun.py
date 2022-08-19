@@ -3,7 +3,7 @@
 # if you have low memory, declare all the instance "a" instead
 # of a, then b, then c etc.
 
-ans = input("Press <ENTER> to launch AnnA")
+ans = input("Press <ENTER> to launch AnnA, anything else to exit")
 if ans != "":
     raise SystemExit()
 
