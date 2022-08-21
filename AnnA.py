@@ -714,14 +714,14 @@ threads of size {batchsize})")
             diff = len(rated_cards) - len(temp)
             if diff != 0:
                 yel("Removed overlap between rated cards and due cards: "
-                    "{diff} cards removed. Keeping {len(temp)} cards.\n")
+                    f"{diff} cards removed. Keeping {len(temp)} cards.\n")
                 rated_cards = temp
         self.due_cards = due_cards
         self.rated_cards = rated_cards
 
         if len(self.due_cards) < self.minimum_due:
             red(f"Number of due cards is {len(self.due_cards)} which is "
-                "less than threshold ({self.minimum_due}).\nStopping.")
+                f"less than threshold ({self.minimum_due}).\nStopping.")
             self.not_enough_cards = True
             return
         else:
@@ -1539,7 +1539,7 @@ threads of size {batchsize})")
             if previous_len - len(indTODO) == 0:
                 yel("No siblings found.")
             else:
-                red("Removed {previous_len-len(indTODO)} siblings cards "
+                red(f"Removed {previous_len-len(indTODO)} siblings cards "
                     f"out of {previous_len}.")
             assert len(indTODO) >= 0, "wrong length of indTODO"
         else:
