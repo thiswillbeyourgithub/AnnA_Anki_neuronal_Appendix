@@ -225,6 +225,14 @@ class AnnA:
                     isinstance(testint, int), (
                         "Invalid value for `target_deck_size`"))
         self.target_deck_size = target_deck_size
+        if target_deck_size in ["all", 1.0, "100%"] and (
+            task == "bury_excess_review_cards"):
+            beep("Arguments mean that all cards will be selected "
+                 "and none will be buried. It makes no sense."
+                 " Aborting.")
+            raise Exception("Arguments mean that all cards will be selected "
+                            "and none will be buried. It makes no sense."
+                            " Aborting.")
 
         assert max_deck_size is None or max_deck_size >= 1, (
             "Invalid value for `max_deck_size`")
