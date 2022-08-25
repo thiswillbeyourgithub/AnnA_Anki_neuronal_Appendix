@@ -1,3 +1,4 @@
+import copy
 import beepy
 import argparse
 import logging
@@ -1566,8 +1567,7 @@ threads of size {batchsize})")
         else:
             queue = []
 
-        duewsb = indTODO[:]  # copy of indTODO, used when computing
-        # improvement ratio
+        duewsb = copy.deepcopy(indTODO)  # for computing improvement ratio
 
         # parsing desired deck size:
         if isinstance(target_deck_size, str):
