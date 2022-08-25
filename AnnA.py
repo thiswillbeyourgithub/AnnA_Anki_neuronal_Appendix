@@ -179,7 +179,7 @@ class AnnA:
                  # vectorization:
                  vectorizer="TFIDF",  # can only be "TFIDF" but
                  # left for legacy reason
-                 TFIDF_dim=50,
+                 TFIDF_dim=10,
                  TFIDF_tokenize=True,
                  TFIDF_stem=False,
 
@@ -2315,11 +2315,11 @@ if __name__ == "__main__":
                         metavar="TFIDF_DIMENSIONS",
                         dest="TFIDF_dim",
                         type=int,
-                        default=50,
+                        default=10,
                         required=False,
                         help=(
                             "the number of dimension to keep using "
-                            "SVD Default is `50`, you cannot disable "
+                            "SVD Default is `10`, you cannot disable "
                             "dimension reduction for TF_IDF because that would "
                             "result in a sparse "
                             "matrix. (More information at "
