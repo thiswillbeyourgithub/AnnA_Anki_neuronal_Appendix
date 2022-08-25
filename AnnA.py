@@ -35,7 +35,7 @@ from sklearn.decomposition import TruncatedSVD
 from sklearn.preprocessing import StandardScaler
 
 import ankipandas as akp
-from shutil import copy
+import shutil
 
 # avoids annoying warning
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
@@ -1136,7 +1136,7 @@ threads of size {batchsize})")
                     time.sleep(1)
                 Path.mkdir(Path("cache"), exist_ok=True)
                 name = f"{self.profile_name}_{self.deckname}".replace(" ", "_")
-                temp_db = copy(
+                temp_db = shutil.copy(
                     original_db, f"./cache/{name.replace('/', '_')}")
                 col = akp.Collection(path=temp_db)
 
