@@ -1105,7 +1105,7 @@ threads of size {batchsize})")
         if self.low_power_mode is True:
             ngram_val = (1, 1)
         else:
-            ngram_val = (1, 3)
+            ngram_val = (2, 5)
 
         def init_vectorizer():
             """used to make sure the same statement is used to create
@@ -1115,7 +1115,7 @@ threads of size {batchsize})")
                                    tokenizer=self.tokenize,
                                    stop_words=None,
                                    ngram_range=ngram_val,
-                                   max_features=10_000,
+                                   max_features=1000,
                                    norm="l2")
         use_fallback = False
         if self.whole_deck_computation:
