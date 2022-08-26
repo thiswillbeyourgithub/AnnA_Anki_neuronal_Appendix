@@ -138,14 +138,14 @@ class AnnA:
 
     def __init__(self,
 
-                 # most important:
+                 # most important arguments:
                  deckname=None,
-                 # any of "lowest_interval", "relative overdueness",
-                 # "order_added"
                  reference_order="relative_overdueness",
+                 # any of "lowest_interval", "relative overdueness",
+                 # "order_added", "LIRO_mix"
+                 task="filter_review_cards",
                  # any of "filter_review_cards",
                  # "bury_excess_review_cards", "bury_excess_learning_cards"
-                 task="filter_review_cards",
                  target_deck_size="deck_config",
                  # format: 80%, "all", "deck_config"
                  max_deck_size=None,
