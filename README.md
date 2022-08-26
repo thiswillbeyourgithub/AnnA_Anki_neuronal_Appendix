@@ -254,7 +254,7 @@ AnnA includes built-in methods you can run after instantiating the class. Note t
 * `save_df` saves the dataframe containing the cards and all other infos needed by AnnA as a pickle file. Used mainly for debugging. Files will be saved to the folder `DF_backups`
 
 ## TODO
-* investigate if it's a good idea to scale the distance value between each new score
+* figure out if sublinear_tf is theoretiaclly better
 * find a solution to the curse of dimentionality : if you keep too many dimensions all distances are basically 1 apparently
 * log tqdm to file
 * refactor a bit the way optimal score is computed to allow printing of the inner mechanism and debugging

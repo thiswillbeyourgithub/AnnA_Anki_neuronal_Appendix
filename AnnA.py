@@ -1502,8 +1502,9 @@ threads of size {batchsize})")
                     if boost:
                         # scales the value to be relevant compared to
                         # distance factor
-                        ro_cs[due.index(x)] = n * \
-                            self.score_adjustment_factor[0]
+                        ro_cs[due.index(x)] += n * \
+                            np.mean(self.score_adjustment_factor)
+                            #  don't forget that n is negative
 
             if repicked:
                 red(f"{len(repicked)}/{len(due)} cards with too low "
