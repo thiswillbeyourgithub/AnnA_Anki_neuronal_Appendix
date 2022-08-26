@@ -1672,6 +1672,7 @@ threads of size {batchsize})")
             The content of 'queue' is the list of card_id in best review order.
             """
             #return np.min(array, axis=1)
+            #array = StandardScaler().fit_transform(array)
             minimum = 0.8 * np.min(array, axis=1)
             average = 0.1 * np.mean(array, axis=1)
             med = 0.1 * np.median(array, axis=1)
