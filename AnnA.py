@@ -182,7 +182,7 @@ class AnnA:
                  TFIDF_dim=50,
                  TFIDF_tokenize=True,
                  TFIDF_stem=False,
-                 dist_metric="cosine",
+                 dist_metric="cosine",  # 'RBF' or 'cosine'
 
                  whole_deck_computation=True,
                  profile_name=None,
