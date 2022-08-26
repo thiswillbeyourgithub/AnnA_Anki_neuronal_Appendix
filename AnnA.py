@@ -174,7 +174,7 @@ class AnnA:
                  skip_print_similar=False,
                  repick_task="boost",  # None, "addtag", "boost" or
                  # "boost&addtag"
-                 disable_fuzz=False,
+                 enable_fuzz=False,
 
                  # vectorization:
                  vectorizer="TFIDF",  # can only be "TFIDF" but
@@ -351,8 +351,8 @@ class AnnA:
                           ), "Invalid type for `field_mappings`"
         self.field_mappings = field_mappings
 
-        assert isinstance(disable_fuzz, bool)
-        self.disable_fuzz = disable_fuzz
+        assert isinstance(enable_fuzz, bool)
+        self.enable_fuzz = enable_fuzz
 
         # initialize joblib caching
         self.mem = Memory("./cache", mmap_mode="r", verbose=0)
@@ -1359,10 +1359,10 @@ threads of size {batchsize})")
         due = self.due_cards
         w1 = self.score_adjustment_factor[0]
         w2 = self.score_adjustment_factor[1]
-        if self.disable_fuzz:
-            w3 = 0
-        else:
+        if self.enable_fuzz:
             w3 = (w1 + w2) / 2 / 10
+        else:
+            w3 = 0
 
         # hardcoded settings
         display_stats = True
@@ -2361,8 +2361,8 @@ if __name__ == "__main__":
                             "distances between cards."
                             " (more information at "
                             "https://github.com/klieret/AnkiPandas)"))
-    parser.add_argument("--disable_fuzz",
-                        dest="disable_fuzz",
+    parser.add_argument("--enable_fuzz",
+                        dest="enable_fuzz",
                         default=False,
                         action="store_true",
                         required=False,
