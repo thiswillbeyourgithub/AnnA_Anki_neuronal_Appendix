@@ -1120,7 +1120,7 @@ threads of size {batchsize})")
                                    stop_words=None,
                                    ngram_range=ngram_val,
                                    max_features=10_000,
-                                   norm="l1",
+                                   norm="l2",
                                    sublinear_tf=True,
                                    )
         use_fallback = False
