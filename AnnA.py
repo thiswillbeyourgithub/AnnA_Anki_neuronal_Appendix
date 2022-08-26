@@ -30,7 +30,7 @@ from nltk.stem import PorterStemmer
 from tokenizers import Tokenizer
 
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics import pairwise_distances
+from sklearn.metrics import pairwise_distances, pairwise_kernels
 from sklearn.decomposition import TruncatedSVD
 from sklearn.preprocessing import StandardScaler
 
@@ -182,6 +182,7 @@ class AnnA:
                  TFIDF_dim=50,
                  TFIDF_tokenize=True,
                  TFIDF_stem=False,
+                 dist_metric="cosine",
 
                  whole_deck_computation=True,
                  profile_name=None,
@@ -307,6 +308,8 @@ class AnnA:
         assert TFIDF_stem + TFIDF_tokenize != 2
         self.TFIDF_stem = TFIDF_stem
         self.TFIDF_tokenize = TFIDF_tokenize
+        assert dist_metric.lower() in ["cosine", "rbf"], "Invalid 'dist_metric'"
+        self.dist_metric = dist_metric.lower()
 
         assert task in ["filter_review_cards",
                         "bury_excess_learning_cards",
@@ -1261,13 +1264,29 @@ threads of size {batchsize})")
 
         yel("\nComputing distance matrix on all available cores (cached)"
             "...")
-        cached_pd = self.mem.cache(pairwise_distances)
-        self.df_dist = pd.DataFrame(columns=df.index,
-                                    index=df.index,
-                                    data=cached_pd(
-                                        [x for x in df[input_col]],
-                                        n_jobs=-1,
-                                        metric="cosine"))
+        if self.dist_metric == "rbf":
+            red(f"EXPERIMENTAL: Using RBF kernel instead of cosine distance.")
+            cached_pd = self.mem.cache(pairwise_kernels)
+            sig = np.mean(np.std([x for x in df[input_col]], axis=1))
+            self.df_dist = pd.DataFrame(columns=df.index,
+                                        index=df.index,
+                                        data=cached_pd(
+                                            [x for x in df[input_col]],
+                                            n_jobs=-1,
+                                            metric="rbf",
+                                            gamma=1/(2*sig),
+                                            ))
+        elif self.dist_metric == "cosine":
+            cached_pd = self.mem.cache(pairwise_distances)
+            self.df_dist = pd.DataFrame(columns=df.index,
+                                        index=df.index,
+                                        data=cached_pd(
+                                            [x for x in df[input_col]],
+                                            n_jobs=-1,
+                                            metric="cosine",
+                                            ))
+        else:
+            raise ValueError("Invalid 'dist_metric' value")
 
         yel("Computing mean and std of distance (cached)...")
         # ignore the diagonal of the distance matrix to get a sensible mean
@@ -2360,6 +2379,17 @@ if __name__ == "__main__":
                             "used, and was made for English but can still be "
                             "useful for some other languages. Keep in mind that "
                             "this is the longest step when formatting text."))
+    parser.add_argument("--dist_metric",
+                        nargs=1,
+                        metavar="DIST_METRIC",
+                        dest="dist_metric",
+                        type=str,
+                        default="cosine",
+                        required=False,
+                        help=(
+                            "when computing the distance matrix, wether to "
+                            "use 'cosine' or 'rbf' metrics. Using RBF is "
+                            "highly experimental!"))
     parser.add_argument("--whole_deck_computation",
                         dest="whole_deck_computation",
                         default=True,
