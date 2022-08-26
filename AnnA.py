@@ -1339,7 +1339,7 @@ threads of size {batchsize})")
             Here's the gist:
             At each turn, the card from indTODO with the lowest score is
                 removed from indTODO and added to indQUEUE
-            The score is computed according to the formula:
+            The score is computed according to a formula like in this example:
                score of indTODO =
                ref -
                      [
@@ -1642,7 +1642,7 @@ threads of size {batchsize})")
             * Naturally, np.min is given more importance than np.mean
 
             Best candidates are cards with high combinator output.
-            The outut is added to the 'ref' of each indTODO card.
+            The outut is substracted to the 'ref' of each indTODO card.
 
             Hence, at each turn, the card from indTODO with the lowest
                 'w1*ref - w2*combinator' is removed from indTODO and added
