@@ -194,6 +194,7 @@ class AnnA:
         gc.collect()
 
         # init logging
+        self.log_level = log_level
         if log_level == 0:
             log.setLevel(logging.ERROR)
         elif log_level == 1:
