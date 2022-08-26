@@ -1650,9 +1650,15 @@ threads of size {batchsize})")
 
             The content of 'queue' is the list of card_id in best review order.
             """
-            return (0.6 * np.min(array, axis=1)) + \
-                   (0.3 * np.mean(array, axis=1)) + \
-                   (0.1 * np.median(array, axis=1))
+            #return np.min(array, axis=1)
+            minimum = 0.8 * np.min(array, axis=1)
+            average = 0.1 * np.mean(array, axis=1)
+            med = 0.1 * np.median(array, axis=1)
+            dist_score = minimum + average + med
+            if self.log_level >= 2:
+                avg = np.mean(dist_score) * self.score_adjustment_factor[1]
+                tqdm.write(f"DIST_SCORE: {avg:02f}")
+            return dist_score
 
         with tqdm(desc="Computing optimal review order",
                   unit=" card",
@@ -1660,6 +1666,10 @@ threads of size {batchsize})")
                   smoothing=0,
                   total=queue_size_goal + len(rated)) as pbar:
             while len(queue) < queue_size_goal:
+                if self.log_level >= 2:
+                    ref_avg = np.mean(df.loc[indTODO, "ref"].values) * w1
+                    sp = " " * 22
+                    tqdm.write(f"{sp}REF_SCORE: {ref_avg:02f}")
                 queue.append(indTODO[
                     (w1*df.loc[indTODO, "ref"].values -
                      w2*combinator(self.df_dist.loc[indTODO, indQUEUE].values
