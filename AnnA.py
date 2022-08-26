@@ -179,7 +179,7 @@ class AnnA:
                  # vectorization:
                  vectorizer="TFIDF",  # can only be "TFIDF" but
                  # left for legacy reason
-                 TFIDF_dim=10,
+                 TFIDF_dim=50,
                  TFIDF_tokenize=True,
                  TFIDF_stem=False,
 
@@ -1106,7 +1106,7 @@ threads of size {batchsize})")
         if self.low_power_mode is True:
             ngram_val = (1, 1)
         else:
-            ngram_val = (2, 5)
+            ngram_val = (1, 10)
 
         def init_vectorizer():
             """used to make sure the same statement is used to create
@@ -1116,7 +1116,7 @@ threads of size {batchsize})")
                                    tokenizer=self.tokenize,
                                    stop_words=None,
                                    ngram_range=ngram_val,
-                                   max_features=1000,
+                                   max_features=10_000,
                                    norm="l1")
         use_fallback = False
         if self.whole_deck_computation:
@@ -2326,11 +2326,11 @@ if __name__ == "__main__":
                         metavar="TFIDF_DIMENSIONS",
                         dest="TFIDF_dim",
                         type=int,
-                        default=10,
+                        default=50,
                         required=False,
                         help=(
                             "the number of dimension to keep using "
-                            "SVD Default is `10`, you cannot disable "
+                            "SVD Default is `50`, you cannot disable "
                             "dimension reduction for TF_IDF because that would "
                             "result in a sparse "
                             "matrix. (More information at "
