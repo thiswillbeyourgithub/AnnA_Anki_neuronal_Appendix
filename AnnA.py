@@ -1121,7 +1121,7 @@ threads of size {batchsize})")
                                    ngram_range=ngram_val,
                                    max_features=10_000,
                                    norm="l2",
-                                   sublinear_tf=False,
+                                   sublinear_tf=True,
                                    )
         use_fallback = False
         if self.whole_deck_computation:
