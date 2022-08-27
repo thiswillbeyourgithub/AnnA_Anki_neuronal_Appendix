@@ -1675,8 +1675,8 @@ threads of size {batchsize})")
             #return np.min(array, axis=1)
             array -= np.mean(array, axis=0)
             array /= np.std(array, axis=0)
-            minimum = 0.6 * np.min(array, axis=1)
-            average = 0.3 * np.mean(array, axis=1)
+            minimum = 0.8 * np.min(array, axis=1)
+            average = 0.1 * np.mean(array, axis=1)
             med = 0.1 * np.median(array, axis=1)
             dist_score = minimum + average + med
             if self.log_level >= 2:
