@@ -21,7 +21,7 @@ from prompt_toolkit import prompt
 from prompt_toolkit.completion import WordCompleter
 from plyer import notification
 
-from joblib import Memory
+from joblib import Memory, Parallel, delayed
 import pandas as pd
 import numpy as np
 import Levenshtein as lev
@@ -1291,11 +1291,23 @@ threads of size {batchsize})")
             raise ValueError("Invalid 'dist_metric' value")
 
         whi(f"Scaling each vertical row of the distance matrix...")
-        for x in tqdm(self.df_dist.index):
-            # simplified from MinMaxScaler formula because with now the min
-            # value is 0, and the target range is 0 to 1
+        lock = threading.Lock()
+        def minmaxscaling(x, lock):
+            """
+            simplified from MinMaxScaler formula because with now the min
+            value is 0, and the target range is 0 to 1
+            """
             maxval = self.df_dist[x].max()
-            self.df_dist[x] = self.df_dist[x] / maxval
+            with lock:
+                self.df_dist[x] = self.df_dist[x] / maxval
+            return
+        parallel = Parallel(backend="threading",
+                            pre_dispatch="all",
+                            n_jobs=-1,
+                            mmap_mode=None,
+                            max_nbytes=None)
+        parallel(delayed(minmaxscaling)(x=x,
+                                        lock=lock) for x in self.df_dist.index)
         # make sure the distances are positive otherwise it might reverse
         # the sorting logic for the negative values (i.e. favoring similar
         # cards)
