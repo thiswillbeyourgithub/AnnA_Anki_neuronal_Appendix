@@ -1290,6 +1290,13 @@ threads of size {batchsize})")
         else:
             raise ValueError("Invalid 'dist_metric' value")
 
+        whi(f"Centering and scaling each vertical row of the distance matrix...")
+        for x in tqdm(self.df_dist.index):
+            mu = self.df_dist[x].mean()
+            std = self.df_dist[x].std()
+            self.df_dist[x] = self.df_dist[x] - mu
+            self.df_dist[x] = self.df_dist[x] / std
+
         yel("Computing mean and std of distance (cached)...")
         # ignore the diagonal of the distance matrix to get a sensible mean
         # value then scale the matrix:
@@ -1673,8 +1680,6 @@ threads of size {batchsize})")
             The content of 'queue' is the list of card_id in best review order.
             """
             #return np.min(array, axis=1)
-            array -= np.mean(array, axis=0)
-            array /= np.std(array, axis=0)
             minimum = 0.8 * np.min(array, axis=1)
             average = 0.1 * np.mean(array, axis=1)
             med = 0.1 * np.median(array, axis=1)
