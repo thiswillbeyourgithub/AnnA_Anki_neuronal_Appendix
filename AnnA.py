@@ -1290,14 +1290,19 @@ threads of size {batchsize})")
         else:
             raise ValueError("Invalid 'dist_metric' value")
 
-        whi(f"Centering and scaling each vertical row of the distance matrix...")
+        whi(f"Scaling each vertical row of the distance matrix...")
         for x in tqdm(self.df_dist.index):
-            mu = self.df_dist[x].mean()
-            std = self.df_dist[x].std()
-            self.df_dist[x] = self.df_dist[x] - mu
-            self.df_dist[x] = self.df_dist[x] / std
+            # simplified from MinMaxScaler formula because with now the min
+            # value is 0, and the target range is 0 to 1
+            maxval = self.df_dist[x].max()
+            self.df_dist[x] = self.df_dist[x] / maxval
+        # make sure the distances are positive otherwise it might reverse
+        # the sorting logic for the negative values (i.e. favoring similar
+        # cards)
+        assert (self.df_dist.values.ravel() <= 0).sum() == 0, (
+            "Negative values in the distance matrix!")
 
-        yel("Computing mean and std of distance (cached)...")
+        yel("Computing mean and std of distance (cached)...\n(excluding diagonal)")
         # ignore the diagonal of the distance matrix to get a sensible mean
         # value then scale the matrix:
         cached_mean = self.mem.cache(np.nanmean)
@@ -1643,6 +1648,14 @@ threads of size {batchsize})")
             except Exception as e:
                 beep(f"Exception: {e}")
             pd.reset_option('display.float_format')
+
+        # minmaxscaling from 0 to 1
+        maxval = self.df.loc[due, "ref"].max()
+        minval = self.df.loc[due, "ref"].min()
+        self.df.loc[due, "ref"] = (self.df.loc[due, "ref"] - minval ) / (maxval - minval)
+        # checking that there are no negative values
+        assert (self.df_dist.values.ravel() <= 0).sum() == 0, (
+            "Negative values in the reference score!")
 
         # final check before computing optimal order:
         for x in ["interval", "ref", "due"]:
