@@ -1264,11 +1264,12 @@ threads of size {batchsize})")
         """
         df = self.df
 
-        yel("\nComputing distance matrix on all available cores (cached)"
+        yel("\nComputing distance matrix on all available cores"
             "...")
         if self.dist_metric == "rbf":
             red(f"EXPERIMENTAL: Using RBF kernel instead of cosine distance.")
-            cached_pd = self.mem.cache(pairwise_kernels)
+            #cached_pd = self.mem.cache(pairwise_kernels)
+            cached_pd = pairwise_kernels
             sig = np.mean(np.std([x for x in df[input_col]], axis=1))
             self.df_dist = pd.DataFrame(columns=df.index,
                                         index=df.index,
@@ -1279,7 +1280,8 @@ threads of size {batchsize})")
                                             gamma=1/(2*sig),
                                             ))
         elif self.dist_metric == "cosine":
-            cached_pd = self.mem.cache(pairwise_distances)
+            #cached_pd = self.mem.cache(pairwise_distances)
+            cached_pd = pairwise_distances
             self.df_dist = pd.DataFrame(columns=df.index,
                                         index=df.index,
                                         data=cached_pd(
@@ -1322,11 +1324,13 @@ threads of size {batchsize})")
         assert (self.df_dist.values.ravel() <= 0).sum() == 0, (
             "Negative values in the distance matrix!")
 
-        yel("Computing mean and std of distance (cached)...\n(excluding diagonal)")
+        yel("Computing mean and std of distance...\n(excluding diagonal)")
         # ignore the diagonal of the distance matrix to get a sensible mean
         # value then scale the matrix:
-        cached_mean = self.mem.cache(np.nanmean)
-        cached_std = self.mem.cache(np.nanstd)
+        # cached_mean = self.mem.cache(np.nanmean)
+        # cached_std = self.mem.cache(np.nanstd)
+        cached_mean = np.nanmean
+        cached_std = np.nanstd
         mean_dist = round(cached_mean(self.df_dist[self.df_dist != 0]), 2)
         std_dist = round(cached_std(self.df_dist[self.df_dist != 0]), 2)
         yel(f"Mean distance: {mean_dist}, std: {std_dist}\n")
