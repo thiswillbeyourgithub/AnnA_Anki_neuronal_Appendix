@@ -21,7 +21,7 @@ from prompt_toolkit import prompt
 from prompt_toolkit.completion import WordCompleter
 from plyer import notification
 
-from joblib import Memory, Parallel, delayed
+import joblib
 import pandas as pd
 import numpy as np
 import Levenshtein as lev
@@ -359,7 +359,7 @@ class AnnA:
         self.enable_fuzz = enable_fuzz
 
         # initialize joblib caching
-        self.mem = Memory("./cache", mmap_mode="r", verbose=0)
+        self.mem = joblib.Memory("./cache", mmap_mode="r", verbose=0)
 
         # additional processing of arguments
         if task != "filter_review_cards" and (
@@ -1301,13 +1301,21 @@ threads of size {batchsize})")
             with lock:
                 self.df_dist[x] = self.df_dist[x] / maxval
             return
-        parallel = Parallel(backend="threading",
-                            pre_dispatch="all",
-                            n_jobs=-1,
-                            mmap_mode=None,
-                            max_nbytes=None)
-        parallel(delayed(minmaxscaling)(x=x,
-                                        lock=lock) for x in self.df_dist.index)
+        tqdm_params = {"unit": "card",
+                       "desc": "Scaling",
+                       "leave": True,
+                       "ascii": False,
+                       "total": len(self.df_dist.index),
+                       }
+        parallel = ProgressParallel(backend="threading",
+                                    tqdm_params=tqdm_params,
+                                    pre_dispatch="all",
+                                    n_jobs=-1,
+                                    mmap_mode=None,
+                                    max_nbytes=None)
+        parallel(joblib.delayed(minmaxscaling)(
+            x=x,
+            lock=lock) for x in self.df_dist.index)
         # make sure the distances are positive otherwise it might reverse
         # the sorting logic for the negative values (i.e. favoring similar
         # cards)
@@ -1968,6 +1976,27 @@ threads of size {batchsize})")
         df.to_pickle("./.DataFrame_backups/" + name)
         print(f"Dataframe exported to {name}.")
         return True
+
+class ProgressParallel(joblib.Parallel):
+    """
+    simple subclass from joblib.Parallel with improved progress bar
+    """
+    def __init__(PP, tqdm_params, *args, **kwargs):
+        PP._tqdm_params = tqdm_params
+        super().__init__(*args, **kwargs)
+
+    def __call__(PP, *args, **kwargs):
+        with tqdm(**PP._tqdm_params) as PP._pbar:
+            return joblib.Parallel.__call__(PP, *args, **kwargs)
+
+    def print_progress(PP):
+        if "total" in PP._tqdm_params:
+            PP._pbar.total = PP._tqdm_params["total"]
+        else:
+            PP._pbar.total = PP.n_dispatched_tasks
+        PP._pbar.n = PP.n_completed_tasks
+        PP._pbar.refresh()
+
 
 
 # from https://gist.github.com/beniwohli/765262
