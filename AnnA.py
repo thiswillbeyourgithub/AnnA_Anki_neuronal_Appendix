@@ -1680,10 +1680,13 @@ threads of size {batchsize})")
 
         # minmaxscaling from 0 to 1
         maxval = self.df.loc[due, "ref"].max()
-        minval = self.df.loc[due, "ref"].min()
-        self.df.loc[due, "ref"] = (self.df.loc[due, "ref"] - minval ) / (maxval - minval)
+        if not maxval <= 0:  # don't check if actually all ref values are 0
+            # which means they are all equals and have been centerd and scaled)
+            minval = self.df.loc[due, "ref"].min()
+            self.df.loc[due, "ref"] = (self.df.loc[due, "ref"] - minval
+                    ) / (maxval - minval)
         # checking that there are no negative values
-        assert (self.df_dist.values.ravel() <= 0).sum() == 0, (
+        assert (self.df.loc[due, "ref"].ravel() < 0).sum() == 0, (
             "Negative values in the reference score!")
 
         # final check before computing optimal order:
