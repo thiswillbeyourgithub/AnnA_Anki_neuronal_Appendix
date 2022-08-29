@@ -1293,16 +1293,13 @@ threads of size {batchsize})")
             raise ValueError("Invalid 'dist_metric' value")
 
         whi(f"Scaling each vertical row of the distance matrix...")
-        lock = threading.Lock()
-        def minmaxscaling(x, lock):
+        def minmaxscaling(index, vector):
             """
             simplified from MinMaxScaler formula because with now the min
             value is 0, and the target range is 0 to 1
             """
-            maxval = self.df_dist[x].max()
-            with lock:
-                self.df_dist[x] = self.df_dist[x] / maxval
-            return
+            maxval = vector.max()
+            return [index, vector / maxval]
         tqdm_params = {"unit": "card",
                        "desc": "Scaling",
                        "leave": True,
@@ -1315,9 +1312,17 @@ threads of size {batchsize})")
                                     n_jobs=-1,
                                     mmap_mode=None,
                                     max_nbytes=None)
-        parallel(joblib.delayed(minmaxscaling)(
-            x=x,
-            lock=lock) for x in self.df_dist.index)
+        out_val = parallel(joblib.delayed(minmaxscaling)(
+            index=x,
+            vector=self.df_dist[x],
+            ) for x in self.df_dist.index)
+        indexes = [x[0] for x in out_val]
+        values = [x[1] for x in out_val]
+        # storing results
+        self.df_dist = pd.DataFrame(columns=indexes,
+                                    index=df.index,
+                                    data=values)
+
         # make sure the distances are positive otherwise it might reverse
         # the sorting logic for the negative values (i.e. favoring similar
         # cards)
