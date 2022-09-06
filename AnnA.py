@@ -1326,7 +1326,7 @@ threads of size {batchsize})")
         # make sure the distances are positive otherwise it might reverse
         # the sorting logic for the negative values (i.e. favoring similar
         # cards)
-        assert (self.df_dist.values.ravel() <= 0).sum() == 0, (
+        assert (self.df_dist.values.ravel() < 0).sum() == 0, (
             "Negative values in the distance matrix!")
 
         yel("Computing mean and std of distance...\n(excluding diagonal)")
