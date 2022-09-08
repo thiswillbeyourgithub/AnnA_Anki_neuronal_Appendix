@@ -897,13 +897,13 @@ threads of size {batchsize})")
             For example you can give more importance to field "Body" of a
             cloze than to the field "More"
         """
-        def _threaded_field_filter(df, index_list, lock, pbar,
+        def _threaded_field_filter(index_list, lock, pbar,
                                    stopw_compiled, spacers_compiled):
             """
             threaded call to speed up execution
             """
             for index in index_list:
-                card_model = df.loc[index, "modelName"]
+                card_model = self.df.loc[index, "modelName"]
                 target_model = []
                 fields_to_keep = []
 
@@ -933,11 +933,11 @@ threads of size {batchsize})")
                                 f". Selecting '{target_model[0]}'")
 
                 # concatenates the corresponding fields into one string:
-                field_list = list(df.loc[index, "fields"])
+                field_list = list(self.df.loc[index, "fields"])
                 if fields_to_keep == "take_first_fields":
                     fields_to_keep = ["", ""]
                     for f in field_list:
-                        order = df.loc[index, "fields"][f.lower()]["order"]
+                        order = self.df.loc[index, "fields"][f.lower()]["order"]
                         if order == 0:
                             fields_to_keep[0] = f
                         elif order == 1:
@@ -950,7 +950,7 @@ threads of size {batchsize})")
                 elif fields_to_keep == "take_all_fields":
                     fields_to_keep = sorted(
                         field_list, key=lambda x: int(
-                            df.loc[index, "fields"][x.lower()]["order"]))
+                            self.df.loc[index, "fields"][x.lower()]["order"]))
 
                 comb_text = ""
                 field_counter = {}
@@ -963,7 +963,7 @@ threads of size {batchsize})")
                         next_field = re.sub(
                             self.stopw_compiled,
                             " ",
-                            df.loc[index,
+                            self.df.loc[index,
                                    "fields"][f.lower()]["value"].strip())
                         if next_field != "":
                             comb_text = comb_text + next_field + ": "
@@ -971,14 +971,14 @@ threads of size {batchsize})")
                         with lock:
                             to_notify.append(
                                 f"Error when looking for field {e} in card "
-                                f"{df.loc[index, 'modelName']} identified as "
+                                f"{self.df.loc[index, 'modelName']} identified as "
                                 f"notetype {target_model}")
                 if comb_text[-2:] == ": ":
                     comb_text = comb_text[:-2]
 
                 # add tags to comb_text
                 if self.append_tags:
-                    tags = df.loc[index, "tags"].split(" ")
+                    tags = self.df.loc[index, "tags"].split(" ")
                     for t in tags:
                         if ("AnnA" not in t) and (
                                 t not in self.tags_to_ignore):
@@ -991,8 +991,9 @@ threads of size {batchsize})")
                             comb_text += " " + t
 
                 with lock:
-                    df.at[index, "comb_text"] = comb_text
+                    self.df.at[index, "comb_text"] = comb_text
                     pbar.update(1)
+            return None
 
         n = len(self.df.index)
         batchsize = n // 4 + 1
@@ -1009,8 +1010,7 @@ threads of size {batchsize})")
             for nb in range(0, n, batchsize):
                 sub_card_list = self.df.index[nb: nb + batchsize]
                 thread = threading.Thread(target=_threaded_field_filter,
-                                          args=(self.df,
-                                                sub_card_list,
+                                          args=(sub_card_list,
                                                 lock,
                                                 pbar,
                                                 self.stopw_compiled,
@@ -1033,8 +1033,7 @@ threads of size {batchsize})")
                     f"Found {sum(self.df.isna()['comb_text'])} null values "
                     "in comb_text: retrying")
                 thread = threading.Thread(target=_threaded_field_filter,
-                                          args=(self.df,
-                                                na_list,
+                                          args=(na_list,
                                                 lock,
                                                 pbar,
                                                 self.stopw_compiled,
