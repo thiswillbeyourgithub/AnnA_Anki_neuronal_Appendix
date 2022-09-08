@@ -1037,7 +1037,8 @@ threads of size {batchsize})")
                                                 na_list,
                                                 lock,
                                                 pbar,
-                                                self.stopw_compiled),
+                                                self.stopw_compiled,
+                                                spacers_compiled),
                                           daemon=False)
                 thread.start()
                 thread.join()
