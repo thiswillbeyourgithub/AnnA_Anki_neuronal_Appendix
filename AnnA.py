@@ -1562,7 +1562,7 @@ threads of size {batchsize})")
                     "relative overdueness (i.e. on the brink of being "
                     "forgotten) where found.")
                 if boost:
-                    red("Those cards were boosted to make sur you review them"
+                    red("Those cards were boosted to make sure you review them"
                         " soon.")
                 else:
                     red("Those cards were NOT boosted.")
