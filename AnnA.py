@@ -116,7 +116,7 @@ def beep(message=None, **args):
                                 timeout=0,
                                 )
         except Exception as err:
-            red(f"Error when creating notificaiton: '{err}'")
+            red(f"Error when creating notification: '{err}'")
 
     try:
         beepy.beep(sound, **args)
