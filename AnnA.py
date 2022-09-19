@@ -1798,8 +1798,8 @@ threads of size {batchsize})")
                     if ratio >= 0:
                         sign = "+"
                     else:
-                        sign = ""
-                    red(pyfiglet.figlet_format(f"{sign}{ratio}%"))
+                        sign = "-"
+                    red(pyfiglet.figlet_format(f"{sign}{abs(ratio)}%"))
 
         except Exception as e:
             beep(f"\nException: {e}")
