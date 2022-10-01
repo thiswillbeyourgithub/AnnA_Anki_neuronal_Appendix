@@ -1858,7 +1858,10 @@ threads of size {batchsize})")
             yel("List of some acronyms still found:")
             if exclude_OCR_text:
                 whi("(Excluding OCR text)")
-            pprint(", ".join(random.choices(matched, k=min(5, len(matched)))))
+            acr = random.choices(matched, k=min(5, len(matched)))
+            pprint(", ".join(acr))
+            beep(title="AnnA - acronyms", message=f"Acronyms: {acr}")
+
         print("")
         return True
 
