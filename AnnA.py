@@ -1853,7 +1853,7 @@ threads of size {batchsize})")
 
         if not matched:
             yel("All found acronyms were already replaced using the data "
-                  "in `acronym_list`.")
+                "in `acronym_list`.")
         else:
             yel("List of some acronyms still found:")
             if exclude_OCR_text:
