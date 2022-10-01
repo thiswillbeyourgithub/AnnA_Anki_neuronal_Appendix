@@ -1701,10 +1701,9 @@ threads of size {batchsize})")
 
         # final check before computing optimal order:
         for x in ["interval", "ref", "due"]:
-            assert np.sum(np.isnan(df.loc[rated, x].values)) == len(
-                rated), f"invalid treatment of rated cards, column : {x}"
-            assert np.sum(np.isnan(
-                df.loc[due, x].values)) == 0, (
+            assert np.sum(np.isnan(df.loc[rated, x].values)) == len(rated), (
+                    f"invalid treatment of rated cards, column : {x}")
+            assert np.sum(np.isnan(df.loc[due, x].values)) == 0, (
                     f"invalid treatment of due cards, column : {x}")
 
         def combinator(array):
