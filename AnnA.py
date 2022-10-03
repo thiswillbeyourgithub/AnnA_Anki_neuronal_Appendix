@@ -1691,12 +1691,15 @@ threads of size {batchsize})")
         # minmaxscaling from 0 to 1
         maxval = self.df.loc[due, "ref"].max()
         minval = self.df.loc[due, "ref"].min()
-        if maxval != minval:
-            if maxval > 0:  # don't check if actually all ref values are 0
-                # which means they are all equals and have been centered and scaled)
-                self.df.loc[due, "ref"] = (self.df.loc[due, "ref"] - minval
-                        ) / (maxval - minval)
-        # checking that there are no negative values
+        if np.isclose(maxval, minval):
+            red("Not doing minmaxscaling becausemaxval and minal are too "
+                "close. Setting 'ref' to 0")
+            self.df.loc[due, "ref"] = 0
+        elif maxval > 0:  # don't check if actually all ref values are 0
+            # which means they are all equals and have been centered and scaled)
+            self.df.loc[due, "ref"] = (self.df.loc[due, "ref"] - minval
+                    ) / (maxval - minval)
+        # checking that there are no negative ref values
         assert (self.df.loc[due, "ref"].ravel() < 0).sum() == 0, (
             "Negative values in the reference score!")
 
