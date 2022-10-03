@@ -1783,16 +1783,16 @@ threads of size {batchsize})")
                     yel("Not displaying Improvement Ratio because almost "
                         "all cards were included in the new queue.")
                 else:
-                    spread_queue = np.mean(
+                    spread_queue = np.sum(
                         self.df_dist.loc[queue, queue].values.ravel())
-                    spread_else = np.mean(
+                    spread_else = np.sum(
                         self.df_dist.loc[woAnnA, woAnnA].values.ravel())
 
-                    red("Mean of distance in the new queue:", end=" ")
+                    red("Sum of distance in the new queue:", end=" ")
                     yel(str(spread_queue))
                     red(f"Cards in common: {common} in a queue of "
                         f"{len(queue)} cards.")
-                    red("Mean of distance of the queue if you had not used "
+                    red("Sum of distance of the queue if you had not used "
                         " AnnA:", end=" ")
                     yel(str(spread_else))
 
