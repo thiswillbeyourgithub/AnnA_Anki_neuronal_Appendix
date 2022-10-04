@@ -417,7 +417,7 @@ class AnkiConnect:
         newDeckName = str(newDeckName)
         if newDeckName in deckList:
             return False  # deckname already taken
- 
+
         did = self.collection().decks.newDyn(newDeckName)
         d = self.collection().decks.current()
         d['terms'] = [[str(searchQuery), int(gatherCount), sortOrder]]
@@ -520,9 +520,18 @@ class AnkiConnect:
     def getCollectionCreationTime(self):
         try:
             return aqt.mw.col.crt
-        except:
+        except Exception:
             return False
 
+    @util.api()
+    def addTags(self, notes, tags, add=True):
+        self.startEditing()
+        self.collection().tags.bulkAdd(notes, tags, add)
+        self.stopEditing()
+
+    @util.api()
+    def cardsToNotes(self, cards):
+        return self.collection().db.list('select distinct nid from cards where id in ' + anki.utils.ids2str(cards))
 
 #
 # Entry

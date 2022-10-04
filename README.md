@@ -22,7 +22,7 @@ Here are different ways of looking at what AnnA can do for you in a few words:
 ## Note to readers
 0. The [dev branch](https://github.com/thiswillbeyourgithub/AnnA_Anki_neuronal_Appendix/tree/dev) is usually less outdated than the main branch.
 1. I would really like to integrate this into anki somehow but am not knowledgeable enough about how to do it, how to manage anki versions, how to handle different platforms etc. All help is much appreciated!
-2. This project communicates with anki using a fork of the addon [AnkiConnect](https://github.com/FooSoft/anki-connect) called [AnnA-companion](https://ankiweb.net/shared/info/447942356). Note that AnnA-companion was tested from anki 2.1.44 to 2.1.49 only.
+2. This project communicates with anki using a fork of the addon [AnkiConnect](https://github.com/FooSoft/anki-connect) called [AnnA-companion](https://ankiweb.net/shared/info/447942356). Note that AnnA-companion was tested from anki 2.1.44 to 2.1.54 only.
 3. Although I've been using it daily for months, I am still changing the code base almost every day, if you tried AnnA and were disappointed, maybe try it another time later. Major improvements are regularly made.
 4. In the past I implemented several vectorization methods. I now only kept [subword TF_IDF](https://en.wikipedia.org/wiki/Tf%E2%80%93idf). TF_IDF is known to be reliable, fast, very general (it does not assume anything about your cards and will work for just about any language, format, phrasing etc). TF_IDF works very well if you have large number of cards.
 5. If you want to know how I'm using this, take a look at [authors_routine.md](./authors_routine.md)
@@ -31,7 +31,7 @@ Here are different ways of looking at what AnnA can do for you in a few words:
 ## Other features
 * Code is PEP8 compliant, dynamically typed, all the functions have a detailed docstrings. Contributions are welcome, opening issues is encouraged and appreciated.
 * Keeps the OCR data of pictures in your cards, if you analyzed them beforehand using [AnkiOCR](https://github.com/cfculhane/AnkiOCR/).
-* Can automatically replace acronyms in your cards (e.g. 'PNO' can be replaced to "pneumothorax" if you tell it to), regexp are supported
+* Can automatically replace acronyms in your cards (e.g. 'PNO' can be replaced to "pneumothorax" if you tell it to), regexp are supported (if you want access to my homemade list of french medical acronyms, open an issue)
 * Can attribute more importance to some fields of some cards if needed.
 * Can be used to optimize the order of a deck of new cards, [read this thread to know more](https://github.com/thiswillbeyourgithub/AnnA_Anki_neuronal_Appendix/issues/14)
 * Previous feature like clustering, plotting, searching have been removed as I don't expect them to be useful to users. But the code was clean so if you need it for some reason don't hesitate to open an issue.
@@ -57,7 +57,7 @@ Here are different ways of looking at what AnnA can do for you in a few words:
 * **What is the current status of this project?** I use it daily but am still working on the code. You can expect breaking. I intend to keep developing until I have no free time left. Take a look at the TODO list of the dev branch if you want to know what's in the works. When in doubt, open an issue.
 * **Do you mind if I open an issue?** Not at all! It is very much encouraged, even just for a typo. That will at least make me happy. Of course PR are always welcome too.
 * **Can this be made into an anki addon instead of a python script?** I have never packaged things into anki addons so I'm not so sure. I heard that packaging complex modules into anki is a pain, and cross platform will be an issue. If you'd like to make this a reality, show yourself by opening an issue! I would really like this to be implemented into anki, and the search function would be pretty nice :)
-* **What version of anki does this run on?** I've been using AnnA from anki 2.1.44 and am currently on 2.1.49 Compatibility relies heavily on anki-connect. Please tell me if you run into issues.
+* **What version of anki does this run on?** I've been using AnnA from anki 2.1.44 and am currently on 2.1.54 Compatibility relies heavily on anki-connect. Please tell me if you run into issues.
 
 * **If I create a filtered deck using AnnA, how can I rebuild it?** You can't rebuilt it or empty it through anki directly as it would leave you with anki's order and not AnnA's. You have to delete the filtered deck then run the script. Hence, I suggest creating large filtered decks in advance. 
 * **I don't think the reviews I do on AnnA's filtered decks are saved, wtf?** It might be because you're using multiple device and are deleting the filtered deck on one of the device without syncing first.
@@ -69,10 +69,11 @@ Here are different ways of looking at what AnnA can do for you in a few words:
 * **What is "XXX - AnnA Optideck"?** The default name for the filtered deck created by AnnA. It contains the reviews in the best order for you.
 * **Why are there only reviews and no learning cards in the filtered decks?** When task is set to `filter_review_cards`, AnnA will fetch only review cards and not deal with learning cards. This is because I'm afraid of some weird behavior that would arise if I change the due order of learning cards. Whereas I can change it just find using review cards.
 * **Why does the progress bar of "Computing optimal review order" doesn't always start at 0?** It's just cosmetic. At each step of the loop, the next card to review is computed by comparing it against the previously added cards and the cards rated in the last few days. This means that each turn is slower than the last. So the progress bar begins with the number of cards rated in the past to indicate that. It took great care to optimize the loop so it should not really be an issue.
-* **Does AnnA take into account my card's tags ?** Partially, the 2 deepest level of each tags are appended at the end of the text and used like if it was part of the content of the card. Note that "_ - and /" are replaced by a space. For example : `a::b::c::d some::thing` will be turned into `c d some thing`.
+* **Does AnnA take into account my card's tags ?** If you set the argument `append_tags` to True, the 2 deepest level of each tags are appended at the end of the text and used like if it was part of the content of the card. Note that "_ - and /" are replaced by a space. For example : `a::b::c::d some::thing` will be turned into `c d some thing`.
 * **Why does the task "bury_excess_learning_cards" seem to ignore a few cards?** I decided to have this task not take into account cards that were failed today or the day before, those are usually top priority and I don't won't AnnA to bury them.
 * **How can I know AnnA is actually working and not burying random cards?** Good question, I tried to implement a metric called *Improvement ratio* that displays a score at the end of the run. It's a sort of sum of the distance between all cards in the new queue over the sum of the distance between all cards in what would have been the queue. It's not really indicative of anything beyond the fact that it's over 1 (=it helped) or under 1 (=it was detrimental). But the latter is kinda hard to get right because it depends on the reliability of `reference_order` in itself. I am especially doubtful of the meaning of the ratio when dealing with learning cards but so far it seems to work ok. Consider it a work in progress.
 * **I have underlined or put in bold the most important parts of my cards, does it matter?** Words that are put in bold or underlined are actually duplicated in the text, this gives them twice as much importance.
+* **What scheduler should I use with AnnA? Can I use the V3 scheduler?** I strongly suggest leaving the V1 as it messes with learning cards quite a lot. I personally use V2 and developed AnnA while using V2. I don't fully understand the changes in V3 and am not really certain that it works correctly with AnnA so I can't really say. I plan to investigate switching to V3 around October 2022.
 
 ## Getting started
 * First, **read this page in its entirety, this is a complicated piece of software and you don't want to use it irresponsibly on your cards. The [usage section](#Usage-and-arguments) is especially useful.**
@@ -88,125 +89,161 @@ Here are different ways of looking at what AnnA can do for you in a few words:
 * Open an issue telling me your remarks and suggestion
 
 ### Usage and arguments
-AnnA was made with customizability in mind. All the settings you might want to edit are arguments of the call of AnnA Class. Don't be frightened, many of those settings are rarely used and the default values should be good for almost anyone. Here are the arguments with the relevant explanation:
+AnnA was made with customizability in mind. All the settings you might want to edit are arguments of the call of AnnA Class. Don't be frightened, many of those settings are rarely used and the default values should be good for almost anyone. Here are the arguments with the relevant explanation.
 
 * `python3 ./AnnA.py  --help`:
 ```
-usage: AnnA.py [-h] --deckname DECKNAME --reference_order REF_ORDER --task TASK --target_deck_size TARGET_SIZE
-               [--stopwords_lang STOPLANG [STOPLANG ...]] [--rated_last_X_days RATED_LAST_X_DAYS]
-               [--score_adjustment_factor SCORE_ADJUSTMENT_FACTOR] --field_mapping FIELD_MAPPING_PATH
-               [--acronym_file ACRONYM_FILE_PATH] [--acronym_list [ACRONYM_LIST ...]]
-               [--minimum_due MINIMUM_DUE_CARDS] [--highjack_due_query HIGHJACK_DUE_QUERY]
-               [--highjack_rated_query HIGHJACK_RATED_QUERY] [--low_power_mode] [--log_level LOG_LEVEL]
-               [--replace_greek] [--keep_OCR] [--tags_to_ignore [TAGS_TO_IGNORE ...]] [--tags_separator TAGS_SEP]
-               [--fdeckname_template FILTER_DECK_NAME_TEMPLATE] [--show_banner] [--skip_print_similar]
-               [--vectorizer VECTORIZER] [--TFIDF_dim TFIDF_DIMENSIONS] [--TFIDF_tokenize] [--TFIDF_stem]
-               [--whole_deck_computation] [--profile_name PROFILE_NAME] [--keep_console_open]
+usage: AnnA.py [-h] --deckname DECKNAME [--reference_order REF_ORDER] --task TASK
+               --target_deck_size TARGET_SIZE [--stopwords_lang STOPLANG [STOPLANG ...]]
+               [--rated_last_X_days RATED_LAST_X_DAYS]
+               [--score_adjustment_factor SCORE_ADJUSTMENT_FACTOR]
+               [--field_mapping FIELD_MAPPING_PATH] [--acronym_file ACRONYM_FILE_PATH]
+               [--acronym_list [ACRONYM_LIST ...]] [--minimum_due MINIMUM_DUE_CARDS]
+               [--highjack_due_query HIGHJACK_DUE_QUERY]
+               [--highjack_rated_query HIGHJACK_RATED_QUERY] [--low_power_mode]
+               [--log_level LOG_LEVEL] [--replace_greek] [--keep_OCR] [--append_tags]
+               [--tags_to_ignore [TAGS_TO_IGNORE ...]] [--tags_separator TAGS_SEP]
+               [--fdeckname_template FILTER_DECK_NAME_TEMPLATE] [--show_banner]
+               [--skip_print_similar] [--vectorizer VECTORIZER]
+               [--TFIDF_dim TFIDF_DIMENSIONS] [--TFIDF_tokenize] [--TFIDF_stem]
+               [--whole_deck_computation] [--profile_name PROFILE_NAME]
+               [--keep_console_open]
 
 optional arguments:
   -h, --help            show this help message and exit
-  --deckname DECKNAME   the deck containing the cards you want to review. If you don't supply this value or make a
-                        mistake, AnnA will ask you to type in the deckname, with autocompletion enabled (use
-                        `<TAB>`). Default is `None`.
+  --deckname DECKNAME   the deck containing the cards you want to review. If you don't
+                        supply this value or make a mistake, AnnA will ask you to type in
+                        the deckname, with autocompletion enabled (use `<TAB>`). Default is
+                        `None`.
   --reference_order REF_ORDER
-                        either "relative_overdueness" or "lowest_interval". It is the reference used to sort the
-                        card before adjusting them using the similarity scores. Default is `"relative_overdueness"`.
-                        Keep in mind that my relative_overdueness is a reimplementation of the default overdueness
-                        of anki and is not absolutely exactly the same but should be a close approximation. If you
-                        find edge cases or have any idea, please open an issue.
-  --task TASK           can be "filter_review_cards", "bury_excess_learning_cards", "bury_excess_review_cards".
-                        Respectively to create a filtered deck with the cards, or bury only the similar learning
-                        cards (among other learning cards), or bury only the similar cards in review (among other
-                        review cards). Default is "`filter_review_cards`".
+                        either "relative_overdueness" or "lowest_interval". It is the
+                        reference used to sort the card before adjusting them using the
+                        similarity scores. Default is `"relative_overdueness"`. Keep in mind
+                        that my relative_overdueness is a reimplementation of the default
+                        overdueness of anki and is not absolutely exactly the same but
+                        should be a close approximation. If you find edge cases or have any
+                        idea, please open an issue.
+  --task TASK           can be "filter_review_cards", "bury_excess_learning_cards",
+                        "bury_excess_review_cards". Respectively to create a filtered deck
+                        with the cards, or bury only the similar learning cards (among other
+                        learning cards), or bury only the similar cards in review (among
+                        other review cards). Default is "`filter_review_cards`".
   --target_deck_size TARGET_SIZE
-                        indicates the size of the filtered deck to create. Can be the number of due cards like
-                        "100", a proportion of due cards like '80%' or '0.80', the word "all" or "deck_config" to
-                        use the deck's settings for max review. Default is `deck_config`.
+                        indicates the size of the filtered deck to create. Can be the number
+                        of due cards like "100", a proportion of due cards like '80%' or
+                        '0.80', the word "all" or "deck_config" to use the deck's settings
+                        for max review. Default is `deck_config`.
   --stopwords_lang STOPLANG [STOPLANG ...]
-                        a list of languages used to construct a list of stop words (i.e. words that will be ignored,
-                        like "I" or "be" in English). Default is `english french`.
+                        a list of languages used to construct a list of stop words (i.e.
+                        words that will be ignored, like "I" or "be" in English). Default is
+                        `english french`.
   --rated_last_X_days RATED_LAST_X_DAYS
-                        indicates the number of passed days to take into account when fetching past anki sessions.
-                        If you rated 500 cards yesterday, then you don't want your today cards to be too close to
-                        what you viewed yesterday, so AnnA will find the 500 cards you reviewed yesterday, and all
-                        the cards you rated before that, up to the number of days in rated_last_X_days value.
-                        Default is `4` (meaning rated today, and in the 3 days before today). A value of 0 or `None`
-                        will disable fetching those cards. A value of 1 will only fetch cards that were rated today.
-                        Not that this will include cards rated in the last X days, no matter if they are reviews or
-                        learnings. you can change this using "highjack_rated_query" argument.
+                        indicates the number of passed days to take into account when
+                        fetching past anki sessions. If you rated 500 cards yesterday, then
+                        you don't want your today cards to be too close to what you viewed
+                        yesterday, so AnnA will find the 500 cards you reviewed yesterday,
+                        and all the cards you rated before that, up to the number of days in
+                        rated_last_X_days value. Default is `4` (meaning rated today, and in
+                        the 3 days before today). A value of 0 or `None` will disable
+                        fetching those cards. A value of 1 will only fetch cards that were
+                        rated today. Not that this will include cards rated in the last X
+                        days, no matter if they are reviews or learnings. you can change
+                        this using "highjack_rated_query" argument.
   --score_adjustment_factor SCORE_ADJUSTMENT_FACTOR
-                        a tuple used to adjust the value of the reference order compared to how similar the cards
-                        are. Default is `(1, 5)`. For example: (1, 1.3) means that the algorithm will spread the
-                        similar cards farther apart.
+                        a tuple used to adjust the value of the reference order compared to
+                        how similar the cards are. Default is `(1, 5)`. For example: (1,
+                        1.3) means that the algorithm will spread the similar cards farther
+                        apart.
   --field_mapping FIELD_MAPPING_PATH
-                        path of file that indicates which field to keep from which note type and in which order.
-                        Default value is `field_mappings.py`. If empty or if no matching notetype was found, AnnA
-                        will only take into account the first 2 fields. If you assign a notetype to
-                        `["take_all_fields]`, AnnA will grab all fields of the notetype in the same order as they
-                        appear in Anki's interface.
+                        path of file that indicates which field to keep from which note type
+                        and in which order. Default value is `field_mappings.py`. If empty
+                        or if no matching notetype was found, AnnA will only take into
+                        account the first 2 fields. If you assign a notetype to
+                        `["take_all_fields]`, AnnA will grab all fields of the notetype in
+                        the same order as they appear in Anki's interface.
   --acronym_file ACRONYM_FILE_PATH
-                        a python file containing dictionaries that themselves contain acronyms to extend in the text
-                        of cards. For example `CRC` can be extended to `CRC (colorectal cancer)`. (The parenthesis
-                        are automatically added.) Default is `"acronym_file.py"`. The matching is case sensitive
-                        only if the key contains uppercase characters. The ".py" file extension is not mandatory.
+                        a python file containing dictionaries that themselves contain
+                        acronyms to extend in the text of cards. For example `CRC` can be
+                        extended to `CRC (colorectal cancer)`. (The parenthesis are
+                        automatically added.) Default is `"acronym_file.py"`. The matching
+                        is case sensitive only if the key contains uppercase characters. The
+                        ".py" file extension is not mandatory.
   --acronym_list [ACRONYM_LIST ...]
-                        a list of name of dictionaries to extract file supplied in `acronym_file`. Used to extend
-                        text, for instance `["AI_machine_learning", "medical_terms"]`. Default to None.
+                        a list of name of dictionaries to extract file supplied in
+                        `acronym_file`. Used to extend text, for instance
+                        `["AI_machine_learning", "medical_terms"]`. Default to None.
   --minimum_due MINIMUM_DUE_CARDS
-                        stops AnnA if the number of due cards is inferior to this value. Default is `15`.
+                        stops AnnA if the number of due cards is inferior to this value.
+                        Default is `5`.
   --highjack_due_query HIGHJACK_DUE_QUERY
-                        bypasses the browser query used to find the list of due cards. You can set it for example to
-                        `deck:"my_deck" is:due -rated:14 flag:1`. Default is `None`. **Keep in mind that, when
-                        highjacking queries, you have to specify the deck otherwise AnnA will compare your whole
+                        bypasses the browser query used to find the list of due cards. You
+                        can set it for example to `deck:"my_deck" is:due -rated:14 flag:1`.
+                        Default is `None`. **Keep in mind that, when highjacking queries,
+                        you have to specify the deck otherwise AnnA will compare your whole
                         collection.**
   --highjack_rated_query HIGHJACK_RATED_QUERY
-                        same idea as above, bypasses the query used to fetch rated cards in anki. Related to
-                        `highjack_due_query` although you can set only one of them. Default is `None`.
-  --low_power_mode      enable to reduce the computation needed for AnnA, making it usable for less powerful
-                        computers. Default to `False`. In more details, it mainly reduces the argument `ngram_range`
-                        for TFIDF, making it use unigrams instead of n-grams with n from 1 to 5. It also skips
-                        trying to find acronyms that were not replaced as well as identifying similar cards.
+                        same idea as above, bypasses the query used to fetch rated cards in
+                        anki. Related to `highjack_due_query` although you can set only one
+                        of them. Default is `None`.
+  --low_power_mode      enable to reduce the computation needed for AnnA, making it usable
+                        for less powerful computers. Default to `False`. In more details, it
+                        mainly reduces the argument `ngram_range` for TFIDF, making it use
+                        unigrams instead of n-grams with n from 1 to 3. It also skips trying
+                        to find acronyms that were not replaced as well as identifying
+                        similar cards.
   --log_level LOG_LEVEL
-                        can be any number between 0 and 2. Default is `2` to only print errors. 1 means print also
-                        useful information and >=2 means print everything. Messages are color coded so it might be
-                        better to leave it at 3 and just focus on colors.
-  --replace_greek       if True, all greek letters will be replaced with a spelled version. For example `σ` becomes
-                        `sigma`. Default is `True`.
+                        can be any number between 0 and 2. Default is `2` to only print
+                        errors. 1 means print also useful information and >=2 means print
+                        everything. Messages are color coded so it might be better to leave
+                        it at 3 and just focus on colors.
+  --replace_greek       if True, all greek letters will be replaced with a spelled version.
+                        For example `σ` becomes `sigma`. Default is `True`.
   --keep_OCR            if True, the OCR text extracted using the great AnkiOCR addon
-                        (https://github.com/cfculhane/AnkiOCR/) will be included in the card. Default is `True`.
+                        (https://github.com/cfculhane/AnkiOCR/) will be included in the
+                        card. Default is `True`.
+  --append_tags         Wether to append the 2 deepest tags to the cards content or to add
+                        no tags.
   --tags_to_ignore [TAGS_TO_IGNORE ...]
-                        a list of tags to ignore when appending tags to cards. Default is `None`, to ignore.
+                        a list of tags to ignore when appending tags to cards. Default is
+                        `None`, to ignore.
   --tags_separator TAGS_SEP
                         separator between levels of tags. Default to `::`.
   --fdeckname_template FILTER_DECK_NAME_TEMPLATE
-                        name template of the filtered deck to create. Only available if task is set to
-                        "filter_review_cards". Default is `None`.
-  --show_banner         used to display a nice banner when instantiating the collection. Default is `True`.
-  --skip_print_similar  default to `False`. Skip printing example of cards that are very similar or very different.
-                        This speeds up execution but can help figure out when something when wrong.
+                        name template of the filtered deck to create. Only available if task
+                        is set to "filter_review_cards". Default is `None`.
+  --show_banner         used to display a nice banner when instantiating the collection.
+                        Default is `True`.
+  --skip_print_similar  default to `False`. Skip printing example of cards that are very
+                        similar or very different. This speeds up execution but can help
+                        figure out when something when wrong.
   --vectorizer VECTORIZER
                         can nowadays only be set to "TFIDF", but kept for legacy reasons.
   --TFIDF_dim TFIDF_DIMENSIONS
-                        the number of dimension to keep using SVD Default is `100`, you cannot disable dimension
-                        reduction for TF_IDF because that would result in a sparse matrix. AnnA will automatically
-                        try a higher number of dimension if needed, up to 2000. (More information at https://scikit-
-                        learn.org/stable/modules/generated/sklearn.decomposition.TruncatedSVD.html).
-  --TFIDF_tokenize      default to `True`. Enable sub word tokenization, for example turn `hypernatremia` to `hyp +
-                        er + natr + emia`. The current tokenizer is `bert-base-multilingual-cased` and should work
-                        on just about any languages. You cannot enable both `TFIDF_tokenize` and `TFIDF_stem` but
-                        should absolutely enable at least one.
-  --TFIDF_stem          default to `False`. Wether to enable stemming of words. Currently the PorterStemmer is used,
-                        and was made for English but can still be useful for some other languages. Keep in mind that
-                        this is the longest step when formatting text.
+                        the number of dimension to keep using SVD Default is `100`, you
+                        cannot disable dimension reduction for TF_IDF because that would
+                        result in a sparse matrix.
+                        https://scikit-learn.org/stable/modules/generated/sklearn.decomposit
+                        ion.TruncatedSVD.html).
+  --TFIDF_tokenize      default to `True`. Enable sub word tokenization, for example turn
+                        `hypernatremia` to `hyp + er + natr + emia`. The current tokenizer
+                        is `bert-base-multilingual-cased` and should work on just about any
+                        languages. You cannot enable both `TFIDF_tokenize` and `TFIDF_stem`
+                        but should absolutely enable at least one.
+  --TFIDF_stem          default to `False`. Wether to enable stemming of words. Currently
+                        the PorterStemmer is used, and was made for English but can still be
+                        useful for some other languages. Keep in mind that this is the
+                        longest step when formatting text.
   --whole_deck_computation
-                        defaults to `True`. Use ankipandas to extract all text from the deck to feed into the
-                        vectorizer. Results in more accurate relative distances between cards. (more information at
+                        defaults to `True`. Use ankipandas to extract all text from the deck
+                        to feed into the vectorizer. Results in more accurate relative
+                        distances between cards. (more information at
                         https://github.com/klieret/AnkiPandas)
   --profile_name PROFILE_NAME
-                        defaults to `None`. Profile named used by ankipandas to find your collection. If None,
-                        ankipandas will use the most probable collection.
-  --keep_console_open   defaults to `False`. Set to True to open a python console after running.
-
+                        defaults to `None`. Profile named used by ankipandas to find your
+                        collection. If None, ankipandas will use the most probable
+                        collection.
+  --keep_console_open   defaults to `False`. Set to True to open a python console after
+                        running.
 ```
 
 AnnA includes built-in methods you can run after instantiating the class. Note that methods beginning with a "_" are not supposed to be called by the user and are reserved for backend use. Here's a list of sometimes useful methods:

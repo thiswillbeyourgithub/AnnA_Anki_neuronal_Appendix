@@ -11,22 +11,24 @@
 
 
 field_dic = {
-             "clozolkor": ["Header", "Header",
-                           "Body", "Body", "Body", "Body", "Body",
-                           "Hint",
-                           "More"],
-             # shameless plug: clozolkor is my own template,
-             # more info: https://github.com/thiswillbeyourgithub/Clozolkor
-             "image occlusion enhanced": ["Header", "Header",
+    "clozolkor": ["Header",
+                  "Body", "Body", "Body", "Body", "Body",
+                  "Hint",
+                  "More"],
+    # shameless plug: clozolkor is my own template,
+    # more info: https://github.com/thiswillbeyourgithub/Clozolkor
+    "image occlusion enhanced": ["Image", "Image", "Image",
+                                          "Header", "Header",
                                           "Footer", "Footer",
                                           "Remarks", "Remarks",
                                           "Extra 1", "Extra 1",
                                           "Extra 2", "Extra 2",
-                                          "Image"],
-             "basic": ["Front", "Back", "Hint"],
-             "basic (and reversed card)": ["Front", "Back"],
-             "spanish cards": ["Spanish", "English"],
-             "Spanish sentences cloze" : ["SpanishSentence", "EnglishSentence"],
-             "morse": ["Front", "mnemonic"],
-             "fallacy_bias": ["Name & Picture", "Summary", "Description"],
-             }
+                                          "Sources"],
+    "basic": ["Front", "Back", "Hint"],
+    "Basic (and reversed card)": ["Front", "Back"],
+    "spanish cards": ["Spanish", "English"],
+    "Spanish sentences cloze": ["SpanishSentence", "EnglishSentence"],
+    "____spanish sentence - Sans-serif-light": ["Front", "Back"],
+    "morse": ["Front", "mnemonic"],
+    "fallacy_bias": ["Name & Picture", "Summary", "Description"],
+}

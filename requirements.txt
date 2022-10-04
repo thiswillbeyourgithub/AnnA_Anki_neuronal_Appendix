@@ -1,14 +1,17 @@
-pyfiglet == 0.8.post1
-prompt_toolkit == 3.0.14
-python_Levenshtein == 0.12.2
+plyer >= 2.0.0
+pyfiglet >= 0.8.post1
+prompt_toolkit >= 3.0.14
+python_Levenshtein >= 0.12.2
+beepy>=1.0.7
 
 pandas == 1.2.3
+joblib >= 1.1.0
 
-numpy == 1.19.4
-sklearn == 0.0
-tqdm == 4.62.3
+numpy >= 1.19.4
+scikit-learn>=1.1.1
+tqdm >= 4.62.3
 
-nltk == 3.5
-tokenizers == 0.10.3
+nltk >= 3.5
+tokenizers >= 0.10.3
 
-ankipandas==0.3.10
+ankipandas>=0.3.10
