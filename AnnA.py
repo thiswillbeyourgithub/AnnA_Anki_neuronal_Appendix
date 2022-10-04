@@ -1084,7 +1084,7 @@ threads of size {batchsize})")
             " adjust formating issues:")
         pd.set_option('display.max_colwidth', 8000)
         max_length = 1000
-        sub_index = random.choices(self.df.index.tolist(), k=2)
+        sub_index = random.sample(self.df.index.tolist(), k=2)
         for i in sub_index:
             if len(self.df.loc[i, "text"]) > max_length:
                 ending = "...\n"
@@ -1861,7 +1861,7 @@ threads of size {batchsize})")
             yel("List of some acronyms still found:")
             if exclude_OCR_text:
                 whi("(Excluding OCR text)")
-            acr = random.choices(matched, k=min(5, len(matched)))
+            acr = random.sample(matched, k=min(5, len(matched)))
             pprint(", ".join(acr))
             beep(title="AnnA - acronyms", message=f"Acronyms: {acr}")
 
