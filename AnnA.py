@@ -377,14 +377,24 @@ class AnnA:
                     " is set to True")
 
         if TFIDF_tokenize:
+            # BERT tokenizer
             # from : https://huggingface.co/bert-base-multilingual-cased/
+            # self.tokenizer = Tokenizer.from_file(
+            #     "./bert-base-multilingual-cased_tokenizer.json")
+            #     )
+
+            # GPT tokenizer
             self.tokenizer = Tokenizer.from_file(
-                "./bert-base-multilingual-cased_tokenizer.json")
+                    "gpt_neox_20B_tokenizer.json")
+
             self.tokenizer.no_truncation()
             self.tokenizer.no_padding()
-            self.exclude_tkn = set(["[CLS]", "[SEP]"])
-            self.tokenize = lambda x: [x for x in self.tokenizer.encode(
-                x).tokens if x not in self.exclude_tkn]
+
+            # self.exclude_tkn = set(["[CLS]", "[SEP]"])
+            # self.tokenize = lambda x: [x for x in self.tokenizer.encode(
+            #     x).tokens if x not in self.exclude_tkn]
+            self.tokenize = lambda x: [x for x in self.tokenizer.encode(x).tokens]
+
         else:
             self.tokenize = lambda x: x
 
@@ -2456,6 +2466,7 @@ if __name__ == "__main__":
                             "tokenization, for example turn "
                             "`hypernatremia` to `hyp + er + natr + emia`. The "
                             "current tokenizer is `bert-base-multilingual-cased` "
+                            "or `gpt_neox_20B` "
                             "and should work on just about any languages. You "
                             "cannot enable both `TFIDF_tokenize` and "
                             "`TFIDF_stem` but should absolutely enable at least "
