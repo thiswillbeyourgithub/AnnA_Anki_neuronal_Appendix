@@ -1586,7 +1586,8 @@ threads of size {batchsize})")
         if reference_order == "LIRO_mix":
             assert 0 not in list(
                 np.isnan(df["ref"].values)), "missing ref value for some cards"
-            df.loc[due, "ref"] = (ro_cs + 2 * interval_cs) / 3
+            weights = [1, 4]
+            df.loc[due, "ref"] = (weights[0] * ro_cs + weights[1] * interval_cs) / sum(weights)
 
         assert len([x for x in rated if df.loc[x, "status"] != "rated"]
                    ) == 0, "all rated cards are not marked as rated"
@@ -2113,7 +2114,7 @@ if __name__ == "__main__":
                             "a close approximation. If you find edge cases or "
                             "have any idea, please open an issue. LIRO_mix is "
                             "simply the the weighted average of relative "
-                            "overdueness and lowest interval (2 times more "
+                            "overdueness and lowest interval (4 times more "
                             "important than RO) (after some post processing). I "
                             "created it as a compromise between old and new "
                             "courses. My implementation of relative overdueness "
