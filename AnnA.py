@@ -871,6 +871,18 @@ threads of size {batchsize})")
             for a, b in greek_alphabet_mapping.items():
                 text = re.sub(a, b, text)
 
+        # replace common french accents
+        text = text.replace(
+                "é", "e"
+                ).replace(
+                "è", "e"
+                ).replace(
+                "ê", "e"
+                ).replace(
+                "à", "a"
+                ).replace(
+                "ç", "c")
+
         # replace acronyms
         if self.acronym_file is not None:
             for compiled, new_word in self.acronym_dict.items():
