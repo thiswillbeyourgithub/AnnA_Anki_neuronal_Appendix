@@ -28,6 +28,7 @@ import Levenshtein as lev
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
 from tokenizers import Tokenizer
+from transformers import AutoTokenizer
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import pairwise_distances, pairwise_kernels
@@ -181,6 +182,7 @@ class AnnA:
                  # left for legacy reason
                  TFIDF_dim=50,
                  TFIDF_tokenize=True,
+                 tokenizer_model="bert",
                  TFIDF_stem=False,
                  dist_metric="cosine",  # 'RBF' or 'cosine'
 
@@ -309,6 +311,9 @@ class AnnA:
             "You have to enable either tokenization or stemming!")
         self.TFIDF_stem = TFIDF_stem
         self.TFIDF_tokenize = TFIDF_tokenize
+        assert tokenizer_model.lower() in ["bert", "gpt", "byt5"], (
+            "Wrong tokenizer model name!")
+        self.tokenizer_model = tokenizer_model
         assert dist_metric.lower() in ["cosine", "rbf"], "Invalid 'dist_metric'"
         self.dist_metric = dist_metric.lower()
 
@@ -378,24 +383,28 @@ class AnnA:
                     " is set to True")
 
         if TFIDF_tokenize:
-            # BERT tokenizer
-            # from : https://huggingface.co/bert-base-multilingual-cased/
-            # self.tokenizer = Tokenizer.from_file(
-            #     "./bert-base-multilingual-cased_tokenizer.json")
-            #     )
-
-            # GPT tokenizer
-            self.tokenizer = Tokenizer.from_file(
-                    "gpt_neox_20B_tokenizer.json")
-
-            self.tokenizer.no_truncation()
-            self.tokenizer.no_padding()
-
-            # self.exclude_tkn = set(["[CLS]", "[SEP]"])
-            # self.tokenize = lambda x: [x for x in self.tokenizer.encode(
-            #     x).tokens if x not in self.exclude_tkn]
-            self.tokenize = lambda x: [x for x in self.tokenizer.encode(x).tokens]
-
+            if self.tokenizer_model.lower() == "bert":
+                yel("Using BERT tokenizer.")
+                # from : https://huggingface.co/bert-base-multilingual-cased/
+                self.tokenizer = Tokenizer.from_file("./bert-base-multilingual-cased_tokenizer.json")
+                self.tokenizer.no_truncation()
+                self.tokenizer.no_padding()
+                self.exclude_tkn = set(["[CLS]", "[SEP]"])
+                self.tokenize = lambda x: [x
+                                           for x in self.tokenizer.encode(x).tokens
+                                           if x not in self.exclude_tkn]
+            elif self.tokenizer_model.lower() == "gpt":
+                yel("Using GPT tokenizer.")
+                self.tokenizer = Tokenizer.from_file("gpt_neox_20B_tokenizer.json")
+                self.tokenizer.no_truncation()
+                self.tokenizer.no_padding()
+                self.tokenize = lambda x: [x for x in self.tokenizer.encode(x).tokens]
+            elif self.tokenizer_model.lower() == "byt5":
+                yel("Using ByT5 tokenizer.")
+                self.tokenizer = AutoTokenizer.from_pretrained("google/byt5-large")
+                self.tokenize = lambda x: [x for x in self.tokenizer.encode(x, truncation=False, padding=False)]
+            else:
+                raise ValueError(f"Incorrect tokenizer_model: '{self.tokenizer_model}`")
         else:
             self.tokenize = lambda x: x
 
@@ -1132,7 +1141,7 @@ threads of size {batchsize})")
         if self.low_power_mode is True:
             ngram_val = (1, 1)
         else:
-            ngram_val = (1, 5)
+            ngram_val = (1, 3)
 
         def init_vectorizer():
             """used to make sure the same statement is used to create
@@ -2477,13 +2486,22 @@ if __name__ == "__main__":
                         help=(
                             "default to `True`. Enable sub word "
                             "tokenization, for example turn "
-                            "`hypernatremia` to `hyp + er + natr + emia`. The "
-                            "current tokenizer is `bert-base-multilingual-cased` "
-                            "or `gpt_neox_20B` "
-                            "and should work on just about any languages. You "
-                            "cannot enable both `TFIDF_tokenize` and "
+                            "`hypernatremia` to `hyp + er + natr + emia`."
+                            " You cannot enable both `TFIDF_tokenize` and "
                             "`TFIDF_stem` but should absolutely enable at least "
                             "one."))
+    parser.add_argument("--tokenizer_model",
+                        dest="tokenizer_model",
+                        default="bert",
+                        metavar="TOKENIZER_MODEL",
+                        required=False,
+                        help=(
+                            "default to `bert`. Model to use for tokenizing "
+                            "the text before running TFIDF. Possible values "
+                            "are 'bert', 'GPT', and 'byt5' which correspond "
+                            "respectivelly to `bert-base-multilingual-cased`, "
+                            "`gpt_neox_20B` and 'google/byt5-large`. They "
+                            "should work on just about any languages."))
     parser.add_argument("--TFIDF_stem",
                         dest="TFIDF_stem",
                         default=False,

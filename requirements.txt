@@ -13,5 +13,6 @@ tqdm >= 4.62.3
 
 nltk >= 3.5
 tokenizers >= 0.10.3
+transformers >= 4.22.2
 
 ankipandas>=0.3.10
