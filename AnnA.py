@@ -1388,8 +1388,8 @@ threads of size {batchsize})")
         signal.alarm(60)
         try:
             red("Printing the most semantically different cards:")
-            pd.set_option('display.max_colwidth', 80)
-            max_length = 100
+            pd.set_option('display.max_colwidth', 180)
+            max_length = 200
             maxs = np.where(self.df_dist.values == np.max(self.df_dist.values))
             maxs = [x for x in zip(maxs[0], maxs[1])]
             yel(f"* {str(self.df.loc[self.df.index[maxs[0][0]]].text)[0:max_length]}...")
