@@ -569,8 +569,8 @@ values. {e}")
                     'http://localhost:8775',
                     requestJson)))
         except (ConnectionRefusedError, urllib.error.URLError) as e:
-            beep(f"{e}: is Anki open and 'AnnA Companion addon' enabled?")
-            raise Exception(f"{e}: is Anki open and 'AnnA Companion addon' enabled?")
+            beep(f"{e}: is Anki open and 'AnnA Companion addon' enabled? Firewall issue?")
+            raise Exception(f"{e}: is Anki open and 'AnnA Companion addon' enabled? Firewall issue?")
 
         if len(response) != 2:
             beep('response has an unexpected number of fields')
