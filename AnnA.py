@@ -305,7 +305,8 @@ class AnnA:
         assert isinstance(TFIDF_stem, bool), "Invalid type of `TFIDF_stem`"
         assert isinstance(
             TFIDF_tokenize, bool), "Invalid type of `TFIDF_tokenize`"
-        assert TFIDF_stem + TFIDF_tokenize != 2
+        assert TFIDF_stem + TFIDF_tokenize not in [0, 2], (
+            "You have to enable either tokenization or stemming!")
         self.TFIDF_stem = TFIDF_stem
         self.TFIDF_tokenize = TFIDF_tokenize
         assert dist_metric.lower() in ["cosine", "rbf"], "Invalid 'dist_metric'"
