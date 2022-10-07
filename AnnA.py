@@ -310,7 +310,7 @@ class AnnA:
             "You have to enable either tokenization or stemming!")
         self.TFIDF_stem = TFIDF_stem
         self.TFIDF_tokenize = TFIDF_tokenize
-        assert tokenizer_model.lower() in ["bert", "gpt", "byt5"], (
+        assert tokenizer_model.lower() in ["bert", "gpt"], (
             "Wrong tokenizer model name!")
         self.tokenizer_model = tokenizer_model
         assert dist_metric.lower() in ["cosine", "rbf"], "Invalid 'dist_metric'"
@@ -376,7 +376,6 @@ class AnnA:
         if TFIDF_tokenize:
             if self.tokenizer_model.lower() == "bert":
                 yel("Using BERT tokenizer.")
-                # from : https://huggingface.co/bert-base-multilingual-cased/
                 self.tokenizer = Tokenizer.from_file("./bert-base-multilingual-cased_tokenizer.json")
                 self.tokenizer.no_truncation()
                 self.tokenizer.no_padding()
@@ -386,14 +385,10 @@ class AnnA:
                                            if x not in self.exclude_tkn]
             elif self.tokenizer_model.lower() == "gpt":
                 yel("Using GPT tokenizer.")
-                self.tokenizer = Tokenizer.from_file("gpt_neox_20B_tokenizer.json")
+                self.tokenizer = Tokenizer.from_file("./gpt_neox_20B_tokenizer.json")
                 self.tokenizer.no_truncation()
                 self.tokenizer.no_padding()
                 self.tokenize = lambda x: [x for x in self.tokenizer.encode(x).tokens]
-            elif self.tokenizer_model.lower() == "byt5":
-                yel("Using ByT5 tokenizer.")
-                self.tokenizer = AutoTokenizer.from_pretrained("google/byt5-large")
-                self.tokenize = lambda x: [x for x in self.tokenizer.encode(x, truncation=False, padding=False)]
             else:
                 raise ValueError(f"Incorrect tokenizer_model: '{self.tokenizer_model}`")
         else:
@@ -2467,9 +2462,9 @@ if __name__ == "__main__":
                         help=(
                             "default to `bert`. Model to use for tokenizing "
                             "the text before running TFIDF. Possible values "
-                            "are 'bert', 'GPT', and 'byt5' which correspond "
-                            "respectivelly to `bert-base-multilingual-cased`, "
-                            "`gpt_neox_20B` and 'google/byt5-large`. They "
+                            "are 'bert' and 'GPT' which correspond "
+                            "respectivelly to `bert-base-multilingual-cased`"
+                            " and `gpt_neox_20B` They "
                             "should work on just about any languages."))
     parser.add_argument("--TFIDF_stem",
                         dest="TFIDF_stem",
