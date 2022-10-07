@@ -1377,15 +1377,22 @@ threads of size {batchsize})")
 
         try:
             max_length = 200
-            pd.set_option('display.max_colwidth', 180)
-            red("Printing the most semantically different cards:")
             up_triangular = np.triu_indices(self.df_dist.shape[0], 1)
+            pd.set_option('display.max_colwidth', 180)
+
+            red("\nPrinting the most semantically different cards:")
             highest_value = np.amax(self.df_dist.values[up_triangular])
             coord_max = np.where(self.df_dist == highest_value)
             yel(f"* {str(self.df.loc[self.df.index[coord_max[0][0]]].text)[:max_length]}...")
             yel(f"* {str(self.df.loc[self.df.index[coord_max[1][0]]].text)[:max_length]}...")
 
-            red("Printing the most semantically (but distinct) similar cards:")
+            red("\nPrinting the median distance cards:")
+            median_value = np.median(self.df_dist.values[up_triangular].ravel())
+            coord_med = np.where(self.df_dist == median_value)
+            yel(f"* {str(self.df.loc[self.df.index[coord_med[0][0]]].text)[:max_length]}...")
+            yel(f"* {str(self.df.loc[self.df.index[coord_med[1][0]]].text)[:max_length]}...")
+
+            red("\nPrinting the most semantically (but distinct) similar cards:")
             lowest_non_zero_value = np.amin(
                     self.df_dist.values[up_triangular],
                     where=self.df_dist.values[up_triangular] != 0,
@@ -1394,13 +1401,13 @@ threads of size {batchsize})")
             yel(f"* {str(self.df.loc[self.df.index[coord_min[0][0]]].text)[:max_length]}...")
             yel(f"* {str(self.df.loc[self.df.index[coord_min[1][0]]].text)[:max_length]}...")
         except TimeoutError:
-            beep("Taking too long to find similar nonequal cards, skipping")
+            beep("Taking too long to locating similar nonequal cards, skipping")
         except Exception as err:
-            beep(f"Exception when finding similar cards: '{err}'")
+            beep(f"Exception when locating similar cards: '{err}'")
         finally:
             signal.alarm(0)
             pd.reset_option('display.max_colwidth')
-            print("")
+            whi("")
 
     def _compute_opti_rev_order(self):
         """
