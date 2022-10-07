@@ -814,6 +814,9 @@ threads of size {batchsize})")
                                       ).replace("&nbsp", " "
                                                 ).replace("\u001F", " ")
 
+        # remove email adress:
+        text = re.sub(r'\S+@\S+\.\S{2,3}', " ", text)
+
         # remove weird clozes
         text = re.sub(r"}}{{c\d+::", "", text)
 
