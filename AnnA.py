@@ -172,7 +172,6 @@ class AnnA:
                  filtered_deck_by_batch=False,
                  filtered_deck_batch_size=25,
                  show_banner=True,
-                 skip_print_similar=False,
                  repick_task="boost",  # None, "addtag", "boost" or
                  # "boost&addtag"
                  enable_fuzz=False,
@@ -334,10 +333,6 @@ class AnnA:
                           int), "Invalid type for `filtered_deck_batch_size`"
         self.filtered_deck_batch_size = filtered_deck_batch_size
 
-        assert isinstance(skip_print_similar,
-                          bool), "Invalid type for `skip_print_similar`"
-        self.skip_print_similar = skip_print_similar
-
         assert isinstance(whole_deck_computation,
                           bool), "Invalid type for `whole_deck_computation`"
         self.whole_deck_computation = whole_deck_computation
@@ -377,10 +372,6 @@ class AnnA:
                 red("Low power mode is activated, it is usually recommended "
                     "to set low values of TFIDF_dim (currently set at "
                     f"{TFIDF_dim} dimensions)")
-            if not self.skip_print_similar:
-                self.skip_print_similar = True
-                red("Enabling 'skip_print_similar' because 'low_power_mode' "
-                    " is set to True")
 
         if TFIDF_tokenize:
             if self.tokenizer_model.lower() == "bert":
@@ -1372,8 +1363,7 @@ threads of size {batchsize})")
         std_dist = round(cached_std(self.df_dist[self.df_dist != 0]), 2)
         yel(f"Mean distance: {mean_dist}, std: {std_dist}\n")
 
-        if self.skip_print_similar is False:
-            self._print_similar()
+        self._print_similar()
         return True
 
     def _print_similar(self):
@@ -1386,43 +1376,33 @@ threads of size {batchsize})")
             raise TimeoutError("Timed out. Not showing most similar cards")
         signal.signal(signal.SIGALRM, time_watcher)
         signal.alarm(60)
-        try:
-            red("Printing the most semantically different cards:")
-            pd.set_option('display.max_colwidth', 180)
-            max_length = 200
-            maxs = np.where(self.df_dist.values == np.max(self.df_dist.values))
-            maxs = [x for x in zip(maxs[0], maxs[1])]
-            yel(f"* {str(self.df.loc[self.df.index[maxs[0][0]]].text)[0:max_length]}...")
-            yel(f"* {str(self.df.loc[self.df.index[maxs[0][1]]].text)[0:max_length]}...")
-            print("")
 
-            lowest_values = [0]
-            printed = False
-            for i in range(9999):
-                if printed is True:
-                    break
-                lowest_values.append(self.df_dist.values[
-                    self.df_dist.values > max(lowest_values)].min())
-                mins = np.where(self.df_dist.values == lowest_values[-1])
-                mins = [x for x in zip(mins[0], mins[1]) if x[0] != x[1]]
-                random.shuffle(mins)
-                for pair in mins:
-                    text_1 = str(self.df.loc[self.df.index[pair[0]]].text)
-                    text_2 = str(self.df.loc[self.df.index[pair[1]]].text)
-                    if text_1 != text_2:
-                        red("Example among most semantically similar cards:")
-                        yel(f"* {text_1[0:max_length]}...")
-                        yel(f"* {text_2[0:max_length]}...")
-                        printed = True
-                        break
-            signal.alarm(0)
-            if printed is False:
-                beep("Couldn't find lowest values to print!")
-            print("")
-            pd.reset_option('display.max_colwidth')
+        try:
+            max_length = 200
+            pd.set_option('display.max_colwidth', 180)
+            red("Printing the most semantically different cards:")
+            up_triangular = np.triu_indices(self.df_dist.shape[0], 1)
+            highest_value = np.amax(self.df_dist.values[up_triangular])
+            coord_max = np.where(self.df_dist == highest_value)
+            yel(f"* {str(self.df.loc[self.df.index[coord_max[0][0]]].text)[:max_length]}...")
+            yel(f"* {str(self.df.loc[self.df.index[coord_max[1][0]]].text)[:max_length]}...")
+
+            red("Printing the most semantically (but distinct) similar cards:")
+            lowest_non_zero_value = np.amin(
+                    self.df_dist.values[up_triangular],
+                    where=self.df_dist.values[up_triangular] != 0,
+                    initial=highest_value)
+            coord_min = np.where(self.df_dist == lowest_non_zero_value)
+            yel(f"* {str(self.df.loc[self.df.index[coord_min[0][0]]].text)[:max_length]}...")
+            yel(f"* {str(self.df.loc[self.df.index[coord_min[1][0]]].text)[:max_length]}...")
         except TimeoutError:
-            red("Taking too long to find similar nonequal cards, skipping")
-        return True
+            beep("Taking too long to find similar nonequal cards, skipping")
+        except Exception as err:
+            beep(f"Exception when finding similar cards: '{err}'")
+        finally:
+            signal.alarm(0)
+            pd.reset_option('display.max_colwidth')
+            print("")
 
     def _compute_opti_rev_order(self):
         """
@@ -2330,8 +2310,7 @@ if __name__ == "__main__":
                             "reduces the argument `ngram_range` for TFIDF, "
                             "making it use unigrams instead of n-grams with n "
                             "from 1 to 3. It also skips trying to find acronyms "
-                            "that were not replaced as well as identifying "
-                            "similar cards."))
+                            "that were not replaced."))
     parser.add_argument("--log_level",
                         nargs=1,
                         metavar="LOG_LEVEL",
@@ -2430,16 +2409,6 @@ if __name__ == "__main__":
                         help=(
                             "used to display a nice banner when instantiating the"
                             " collection. Default is `True`."))
-    parser.add_argument("--skip_print_similar",
-                        dest="skip_print_similar",
-                        default=False,
-                        required=False,
-                        action="store_true",
-                        help=(
-                            "default to `False`. Skip printing example of "
-                            "cards that are very similar or very different. This "
-                            "speeds up execution but can help figure out when "
-                            "something when wrong."))
     parser.add_argument("--repick_task",
                         nargs=1,
                         metavar="REPICK_TASK",
