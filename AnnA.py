@@ -1558,19 +1558,20 @@ threads of size {batchsize})")
             boost = True if "boost" in self.repick_task else False
             repicked = []
             for x in due:
-                # if overdue at least equal to interval, then boost those cards
-                # for example, a card with interval 7 days, that is -15 days
-                # overdue is very ugent, n will be about -2 so this card will
-                # be boosted.
+                # if overdue at least equal to half the interval, then boost
+                # those cards.
+                # for example, a card with interval 7 days, that is 15 days
+                # overdue is very ugent, n will be about 15/7~=2 so this card
+                # will be boosted.
+                # note  that 'n' is negative
                 n = (overdue.loc[x] - correction) / \
                     (df.loc[x, "interval"] + correction)
-                if n <= -1 and df.loc[x, "interval"] >= 1 and (
+                if n <= -0.5 and df.loc[x, "interval"] >= 1 and (
                         overdue.loc[x] <= -1):
                     repicked.append(x)
                     if boost:
                         # scales the value to be relevant compared to
                         # distance factor
-                        # reminder: n is negative
                         ro_cs[due.index(x)] += n * \
                             np.mean(self.score_adjustment_factor)
 
