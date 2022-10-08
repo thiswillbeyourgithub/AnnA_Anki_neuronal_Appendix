@@ -880,7 +880,10 @@ threads of size {batchsize})")
                 ).replace(
                 "à", "a"
                 ).replace(
-                "ç", "c")
+                "ç", "c"
+                ).replace(
+                "ï", "i"
+                )
 
         # replace acronyms
         if self.acronym_file is not None:
