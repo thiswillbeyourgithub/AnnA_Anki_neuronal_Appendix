@@ -231,7 +231,7 @@ class AnnA:
         self.target_deck_size = target_deck_size
         if target_deck_size in ["all", 1.0, "100%"] and (
             task == "bury_excess_review_cards"):
-            beep("Arguments mean that all cards will be selected "
+            beep(f"{self.deckname} - Arguments mean that all cards will be selected "
                  "and none will be buried. It makes no sense."
                  " Aborting.")
             raise Exception("Arguments mean that all cards will be selected "
@@ -397,7 +397,7 @@ class AnnA:
         if self.acronym_file is not None and self.acronym_list is not None:
             file = Path(acronym_file)
             if not file.exists():
-                beep(f"Acronym file was not found: {acronym_file}")
+                beep(f"{self.deckname} - Acronym file was not found: {acronym_file}")
                 raise Exception(f"Acronym file was not found: {acronym_file}")
             else:
                 # importing acronym file
@@ -413,7 +413,7 @@ class AnnA:
 
                 # if empty file:
                 if len(acr_dict_list) == 0:
-                    beep(f"No dictionnary found in {acronym_file}")
+                    beep(f"{self.deckname} - No dictionnary found in {acronym_file}")
                     raise SystemExit()
 
                 if isinstance(self.acronym_list, str):
@@ -422,7 +422,7 @@ class AnnA:
                 missing = [x for x in self.acronym_list
                            if x not in acr_dict_list]
                 if missing:
-                    beep("Mising the following acronym dictionnary in "
+                    beep(f"{self.deckname} - Mising the following acronym dictionnary in "
                          f"{acronym_file}: {','.join(missing)}")
                     raise SystemExit()
 
@@ -430,7 +430,7 @@ class AnnA:
                                  if x in self.acronym_list]
 
                 if len(acr_dict_list) == 0:
-                    beep(f"No dictionnary from {self.acr_dict_list} "
+                    beep(f"{self.deckname} - No dictionnary from {self.acr_dict_list} "
                          f"found in {acronym_file}")
                     raise SystemExit()
 
@@ -1063,7 +1063,7 @@ threads of size {batchsize})")
                 thread.start()
                 thread.join()
                 if cnt > 10:
-                    beep("Error: restart anki then rerun AnnA.")
+                    beep(f"{self.deckname} - Error: restart anki then rerun AnnA.")
                     raise SystemExit()
             if cnt > 0:
                 yel(f"Succesfully corrected null combined texts on #{cnt} "
@@ -1156,7 +1156,7 @@ threads of size {batchsize})")
                     yel("Ankipandas will use anki collection found at "
                         f"{original_db}")
                 if "trash" in str(original_db).lower():
-                    beep("Ankipandas seems to have found a collection in "
+                    beep(f"{self.deckname} - Ankipandas seems to have found a collection in "
                          "the trash folder. If that is not your intention "
                          "cancel now. Waiting 10s for you to see this "
                          "message before proceeding.")
@@ -1176,7 +1176,7 @@ threads of size {batchsize})")
                 whi("Ankipandas db loaded successfuly.")
 
                 if len(cards.index) == 0:
-                    beep("Ankipandas database is of length 0")
+                    beep(f"{self.deckname} - Ankipandas database is of length 0")
                     raise Exception("Ankipandas database is of length 0")
 
                 # get only the right fields
@@ -1185,7 +1185,7 @@ threads of size {batchsize})")
                 mod2mid = akp.raw.get_model2mid(col.db)
 
                 if len(cards.index) == 0:
-                    beep("Ankipandas database is of length 0")
+                    beep(f"{self.deckname} - Ankipandas database is of length 0")
                     raise Exception("Ankipandas database is of length 0")
 
                 to_notify = []
@@ -1249,7 +1249,7 @@ threads of size {batchsize})")
                     "Vectorizing dues cards using TFIDF")))
                 yel("Done vectorizing over whole deck!")
             except Exception as e:
-                beep(f"Exception : {e}\nUsing fallback method...")
+                beep(f"{self.deckname} - Exception : {e}\nUsing fallback method...")
                 use_fallback = True
 
         if (self.whole_deck_computation is False) or (use_fallback):
@@ -1261,7 +1261,7 @@ threads of size {batchsize})")
             df["VEC"] = [x for x in t_vec]
         else:
             if self.TFIDF_dim >= t_vec.shape[1] - 1:
-                beep(f"Number of dimensions desired ({self.TFIDF_dim}) is "
+                beep(f"{self.deckname} - Number of dimensions desired ({self.TFIDF_dim}) is "
                      "higher than number of features ({t_vec.shape[1]}), "
                      " taking the lowest value.")
             self.TFIDF_dim = min(self.TFIDF_dim, t_vec.shape[1] - 1)
@@ -1401,9 +1401,9 @@ threads of size {batchsize})")
             yel(f"* {str(self.df.loc[self.df.index[coord_min[0][0]]].text)[:max_length]}...")
             yel(f"* {str(self.df.loc[self.df.index[coord_min[1][0]]].text)[:max_length]}...")
         except TimeoutError:
-            beep("Taking too long to locating similar nonequal cards, skipping")
+            beep(f"{self.deckname} - Taking too long to locating similar nonequal cards, skipping")
         except Exception as err:
-            beep(f"Exception when locating similar cards: '{err}'")
+            beep(f"{self.deckname} - Exception when locating similar cards: '{err}'")
         finally:
             signal.alarm(0)
             pd.reset_option('display.max_colwidth')
@@ -1525,7 +1525,7 @@ threads of size {batchsize})")
             # then, correct overdue values to make sure they are negative
             correction = max(overdue.max(), 0) + 0.01
             if correction > 1:
-                beep("This should probably not happen.")
+                beep(f"{self.deckname} - This should probably not happen.")
                 breakpoint()
             # my implementation of relative overdueness:
             # (intervals are positive, overdue are negative for due cards
@@ -1542,7 +1542,7 @@ threads of size {batchsize})")
                 assert np.sum(
                     ro < 0) == 0, "wrong values of relative overdueness"
             except Exception as e:
-                beep(f"This should not happen: {str(e)}")
+                beep(f"{self.deckname} - This should not happen: {str(e)}")
                 breakpoint()
 
             # squishing values above some threashold
@@ -1570,14 +1570,14 @@ threads of size {batchsize})")
                     if boost:
                         # scales the value to be relevant compared to
                         # distance factor
+                        # reminder: n is negative
                         ro_cs[due.index(x)] += n * \
                             np.mean(self.score_adjustment_factor)
-                            #  don't forget that n is negative
 
             if repicked:
-                red(f"{len(repicked)}/{len(due)} cards with too low "
-                    "relative overdueness (i.e. on the brink of being "
-                    "forgotten) where found.")
+                beep(f"{self.deckname} - {len(repicked)}/{len(due)} cards with too low "
+                     "relative overdueness (i.e. on the brink of being "
+                     "forgotten) where found.")
                 if boost:
                     red("Those cards were boosted to make sure you review them"
                         " soon.")
@@ -1595,11 +1595,12 @@ threads of size {batchsize})")
                         red("Appended tags 'urgent_reviews' to cards with "
                             "very low relative overdueness.")
                     except Exception as e:
-                        beep(f"Error adding tags to urgent cards: {str(e)}")
+                        beep(f"{self.deckname} - Error adding tags to urgent cards: {str(e)}")
 
             if not reference_order == "LIRO_mix":
                 df.loc[due, "ref"] = ro_cs
-        # mean of lowest interval and relative overdueness
+
+        # weighted mean of lowest interval and relative overdueness
         if reference_order == "LIRO_mix":
             assert 0 not in list(
                 np.isnan(df["ref"].values)), "missing ref value for some cards"
@@ -1703,7 +1704,7 @@ threads of size {batchsize})")
                                            include='all')
                 whi(f"Distance: {val}\n\n")
             except Exception as e:
-                beep(f"Exception: {e}")
+                beep(f"{self.deckname} - Exception: {e}")
             pd.reset_option('display.float_format')
 
         # minmaxscaling from 0 to 1
@@ -1823,7 +1824,7 @@ threads of size {batchsize})")
                     red(pyfiglet.figlet_format(f"{sign}{abs(ratio)}%"))
 
         except Exception as e:
-            beep(f"\nException: {e}")
+            beep(f"{self.deckname} - \nException: {e}")
 
         self.opti_rev_order = [int(x) for x in queue]
         self.df = df
@@ -1933,7 +1934,7 @@ threads of size {batchsize})")
             self.filtered_deck_name = filtered_deck_name
 
             while filtered_deck_name in self._call_anki(action="deckNames"):
-                beep(f"\nFound existing filtered deck: {filtered_deck_name} "
+                beep(f"{self.deckname} - \nFound existing filtered deck: {filtered_deck_name} "
                      "You have to delete it manually, the cards will be "
                      "returned to their original deck.")
                 input("Done? >")
@@ -1984,14 +1985,14 @@ threads of size {batchsize})")
                 red("Inconsistency! The deck does not contain the same cards "
                     " as opti_rev_order!")
                 pprint(diff)
-                beep(f"\nNumber of inconsistent cards: {len(diff)}")
+                beep(f"{self.deckname} - \nNumber of inconsistent cards: {len(diff)}")
 
         yel("\nAsking anki to alter the due order...", end="")
         res = self._call_anki(action="setDueOrderOfFiltered",
                               cards=self.opti_rev_order)
         err = [x[1] for x in res if x[0] is False]
         if err:
-            beep(f"\nError when setting due order : {err}")
+            beep(f"{self.deckname} - \nError when setting due order : {err}")
             raise(f"\nError when setting due order : {err}")
         else:
             yel(" Done!")
