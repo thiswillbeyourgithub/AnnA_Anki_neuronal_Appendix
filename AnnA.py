@@ -897,7 +897,6 @@ threads of size {batchsize})")
 
         # misc
         text = " ".join(text.split())  # multiple spaces
-        text = re.sub(r"\b[a-zA-Z]'(\w{2,})", r"\1", text)  # misc etc
 
         # optionnal stemmer
         if self.vectorizer == "TFIDF":
