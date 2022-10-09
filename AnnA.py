@@ -2089,7 +2089,7 @@ threads of size {batchsize})")
         edge_trace = go.Scatter(
             x=edge_x,
             y=edge_y,
-            line=dict(width=0.5, color='#888'),
+            line=dict(width=0.1, color='rgba(255, 0, 0, 0.5)'),
             hoverinfo='none',
             mode='lines')
 
@@ -2117,7 +2117,7 @@ threads of size {batchsize})")
 #                    xanchor='left',
 #                    titleside='right'
 #                ),
-                line_width=2))
+                line_width=1))
 
         whi("Creating plot...")
         fig = go.Figure(data=[node_trace, edge_trace],
@@ -2139,6 +2139,9 @@ threads of size {batchsize})")
                         )
                      )
         fig.show()
+
+        whi("Saving as plot.html")
+        fig.write_html("plot.html")
 
 
 class ProgressParallel(joblib.Parallel):
