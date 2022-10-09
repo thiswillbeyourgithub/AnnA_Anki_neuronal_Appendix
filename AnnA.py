@@ -1766,7 +1766,7 @@ threads of size {batchsize})")
             dist_score = minimum + average + med
             if self.log_level >= 2:
                 avg = np.mean(dist_score) * self.score_adjustment_factor[1]
-                tqdm.write(f"DIST_SCORE: {avg:02f}")
+                #tqdm.write(f"DIST_SCORE: {avg:02f}")
             return dist_score
 
         with tqdm(desc="Computing optimal review order",
@@ -1778,7 +1778,7 @@ threads of size {batchsize})")
                 if self.log_level >= 2:
                     ref_avg = np.mean(df.loc[indTODO, "ref"].values) * w1
                     sp = " " * 22
-                    tqdm.write(f"{sp}REF_SCORE: {ref_avg:02f}")
+                    #tqdm.write(f"{sp}REF_SCORE: {ref_avg:02f}")
                 queue.append(indTODO[
                     (w1*df.loc[indTODO, "ref"].values -
                      w2*combinator(self.df_dist.loc[indTODO, indQUEUE].values
