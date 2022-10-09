@@ -34,6 +34,8 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import pairwise_distances, pairwise_kernels
 from sklearn.decomposition import TruncatedSVD
 from sklearn.preprocessing import StandardScaler
+from sklearn.neighbors import kneighbors_graph
+import plotly.graph_objects as go
 
 import ankipandas as akp
 import shutil
@@ -182,6 +184,7 @@ class AnnA:
                  TFIDF_dim=50,
                  TFIDF_tokenize=True,
                  tokenizer_model="bert",
+                 plot_2D_embeddings=False,
                  TFIDF_stem=False,
                  dist_metric="cosine",  # 'RBF' or 'cosine'
 
@@ -303,6 +306,8 @@ class AnnA:
                           ), "Invalid type of `TFIDF_dim`"
         self.TFIDF_dim = TFIDF_dim
 
+        assert isinstance(plot_2D_embeddings, bool), "Invalid type of `plot_2D_embeddings`"
+        self._plot_2D_embeddings = plot_2D_embeddings
         assert isinstance(TFIDF_stem, bool), "Invalid type of `TFIDF_stem`"
         assert isinstance(
             TFIDF_tokenize, bool), "Invalid type of `TFIDF_tokenize`"
@@ -547,6 +552,11 @@ values. {e}")
             if task == "filter_review_cards":
                 self._bury_or_create_filtered()
 
+        if self._plot_2D_embeddings:
+            try:
+                self._plot_2D_embeddings()
+            except Exception as err:
+                err(f"Exception when plotting 2D embeddings: '{err}'")
         red(f"\nDone with task '{self.task}' on deck '{self.deckname}'")
         gc.collect()
 
@@ -1276,6 +1286,14 @@ threads of size {batchsize})")
 
             df["VEC"] = [x for x in t_red]
 
+            if self._plot_2D_embeddings:
+                try:
+                    svd = TruncatedSVD(n_components=2)
+                    t_embed = svd.fit_transform(t_vec)
+                    df["2D_embeddings"] = [x for x in t_embed]
+                except Exception as err:
+                    err(f"Error when computing 2D embeddings: '{err}'")
+
         self.df = df
         return True
 
@@ -1314,6 +1332,19 @@ threads of size {batchsize})")
                                             ))
         else:
             raise ValueError("Invalid 'dist_metric' value")
+
+        if self._plot_2D_embeddings:
+            try:
+                n_n = max(self.df_dist.shape[0] // 1000, 3)
+                yel(f"Computing '{n_n}' nearest neighbours per point...")
+                knn = kneighbors_graph(self.df_dist,
+                                       n_neighbors = n_n,
+                                       n_jobs=-1,
+                                       metric="precomputed",
+                                       include_self=False)
+                self.knn = knn
+            except Exception as err:
+                err(f"Error when computing KNN: '{err}'")
 
         whi(f"Scaling each vertical row of the distance matrix...")
         def minmaxscaling(index, vector):
@@ -1790,6 +1821,9 @@ threads of size {batchsize})")
         assert indQUEUE == rated + queue, (
                 "indQUEUE is not the sum of rated and queue lists")
 
+        self.df["action"] = "skipped_for_today"
+        self.df.loc[queue, "action"] = "will_review"
+
         try:
             if w1 == 0:
                 yel("Not showing distance without AnnA because you set "
@@ -2025,6 +2059,79 @@ threads of size {batchsize})")
         df.to_pickle("./.DataFrame_backups/" + name)
         print(f"Dataframe exported to {name}.")
         return True
+
+    def plot_2D_embeddings(self):
+        """
+        Create a 2D network plot of the deck.
+        """
+        assert self._plot_2D_embeddings
+        assert hasattr(self, "knn")
+        assert "2D_embeddings" in self.df.columns
+
+        whi("Computing edges...")
+        edge_x = []
+        edge_y = []
+        for i in tqdm(
+                range(self.knn.shape[0]),
+                desc="computing edges",
+                unit="point"):
+            ar = self.knn.getcol(i).toarray().squeeze()
+            neighbour_indices = np.where(ar == 1)[0]
+            for ni in neighbour_indices:
+                edge_x.append(self.df["2D_embeddings"].iloc[i][0])
+                edge_x.append(self.df["2D_embeddings"].iloc[ni][0])
+                edge_x.append(None)
+                edge_y.append(self.df["2D_embeddings"].iloc[i][1])
+                edge_y.append(self.df["2D_embeddings"].iloc[ni][1])
+                edge_y.append(None)
+
+        edge_trace = go.Scatter(
+            x=edge_x,
+            y=edge_y,
+            line=dict(width=0.5, color='#888'),
+            hoverinfo='none',
+            mode='lines')
+
+        node_trace = go.Scatter(
+            x=[x[0] for x in self.df["2D_embeddings"]]
+            y=[y[1] for y in self.df["2D_embeddings"]]
+            mode='markers',
+            hoverinfo=self.df[["cardId", "tags", "text", "status", "interval", "ref"]],
+            marker=dict(
+                showscale=True,
+                # colorscale options
+                #'Greys' | 'YlGnBu' | 'Greens' | 'YlOrRd' | 'Bluered' | 'RdBu' |
+                #'Reds' | 'Blues' | 'Picnic' | 'Rainbow' | 'Portland' | 'Jet' |
+                #'Hot' | 'Blackbody' | 'Earth' | 'Electric' | 'Viridis' |
+                colorscale='YlGnBu',
+                reversescale=True,
+                color=self.df["action"]
+                size=10,
+                colorbar=dict(
+                    thickness=15,
+                    title='Node Connections',
+                    xanchor='left',
+                    titleside='right'
+                ),
+                line_width=2))
+
+        fig = go.Figure(data=[edge_trace, node_trace],
+                     layout=go.Layout(
+                        title=f'<br>Network of {self.deckname}</br>',
+                        titlefont_size=18,
+                        showlegend=False,
+                        hovermode='closest',
+                        margin=dict(b=20,l=5,r=5,t=40),
+#                        annotations=[ dict(
+#                            text="Python code: <a href='https://plotly.com/ipython-notebooks/network-graphs/'> https://plotly.com/ipython-notebooks/network-graphs/</a>",
+#                            showarrow=False,
+#                            xref="paper", yref="paper",
+#                            x=0.005, y=-0.002 ) ],
+                        xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+                        yaxis=dict(showgrid=False, zeroline=False, showticklabels=False))
+                        )
+        fig.show()
+
 
 class ProgressParallel(joblib.Parallel):
     """
@@ -2480,6 +2587,14 @@ if __name__ == "__main__":
                             "respectivelly to `bert-base-multilingual-cased`"
                             " and `gpt_neox_20B` They "
                             "should work on just about any languages."))
+    parser.add_argument("--plot_2D_embeddings",
+                        dest="plot_2D_embeddings",
+                        default=False,
+                        action="store_true",
+                        required=False,
+                        help=(
+                            "default to `False`. Will compute 2D embeddins "
+                            "then create a 2D plots at the end."))
     parser.add_argument("--TFIDF_stem",
                         dest="TFIDF_stem",
                         default=False,
