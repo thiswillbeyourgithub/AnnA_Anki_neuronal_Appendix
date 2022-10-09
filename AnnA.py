@@ -1389,12 +1389,6 @@ threads of size {batchsize})")
             yel(f"* {str(self.df.loc[self.df.index[coord_max[0][0]]].text)[:max_length]}...")
             yel(f"* {str(self.df.loc[self.df.index[coord_max[1][0]]].text)[:max_length]}...")
 
-            red("\nPrinting the median distance cards:")
-            median_value = np.median(self.df_dist.values[up_triangular].ravel())
-            coord_med = np.where(self.df_dist == median_value)
-            yel(f"* {str(self.df.loc[self.df.index[coord_med[0][0]]].text)[:max_length]}...")
-            yel(f"* {str(self.df.loc[self.df.index[coord_med[1][0]]].text)[:max_length]}...")
-
             red("\nPrinting the most semantically (but distinct) similar cards:")
             lowest_non_zero_value = np.amin(
                     self.df_dist.values[up_triangular],
@@ -1403,6 +1397,12 @@ threads of size {batchsize})")
             coord_min = np.where(self.df_dist == lowest_non_zero_value)
             yel(f"* {str(self.df.loc[self.df.index[coord_min[0][0]]].text)[:max_length]}...")
             yel(f"* {str(self.df.loc[self.df.index[coord_min[1][0]]].text)[:max_length]}...")
+
+            red("\nPrinting the median distance cards:")
+            median_value = np.median(self.df_dist.values[up_triangular].ravel())
+            coord_med = np.where(self.df_dist == median_value)
+            yel(f"* {str(self.df.loc[self.df.index[coord_med[0][0]]].text)[:max_length]}...")
+            yel(f"* {str(self.df.loc[self.df.index[coord_med[1][0]]].text)[:max_length]}...")
         except TimeoutError:
             beep(f"{self.deckname} - Taking too long to locating similar nonequal cards, skipping")
         except Exception as err:
