@@ -554,9 +554,9 @@ values. {e}")
 
         if self._plot_2D_embeddings:
             try:
-                self._plot_2D_embeddings()
+                self.plot_2D_embeddings()
             except Exception as err:
-                err(f"Exception when plotting 2D embeddings: '{err}'")
+                red(f"Exception when plotting 2D embeddings: '{err}'")
         red(f"\nDone with task '{self.task}' on deck '{self.deckname}'")
         gc.collect()
 
@@ -1292,7 +1292,7 @@ threads of size {batchsize})")
                     t_embed = svd.fit_transform(t_vec)
                     df["2D_embeddings"] = [x for x in t_embed]
                 except Exception as err:
-                    err(f"Error when computing 2D embeddings: '{err}'")
+                    red(f"Error when computing 2D embeddings: '{err}'")
 
         self.df = df
         return True
@@ -1335,7 +1335,7 @@ threads of size {batchsize})")
 
         if self._plot_2D_embeddings:
             try:
-                n_n = max(self.df_dist.shape[0] // 1000, 3)
+                n_n = max(self.df_dist.shape[0] // 100, 3)
                 yel(f"Computing '{n_n}' nearest neighbours per point...")
                 knn = kneighbors_graph(self.df_dist,
                                        n_neighbors = n_n,
@@ -1344,7 +1344,7 @@ threads of size {batchsize})")
                                        include_self=False)
                 self.knn = knn
             except Exception as err:
-                err(f"Error when computing KNN: '{err}'")
+                red(f"Error when computing KNN: '{err}'")
 
         whi(f"Scaling each vertical row of the distance matrix...")
         def minmaxscaling(index, vector):
@@ -2092,11 +2092,14 @@ threads of size {batchsize})")
             hoverinfo='none',
             mode='lines')
 
+        whi("Adding nodes...")
+        self.df["x"] = [x[0] for x in self.df["2D_embeddings"]]
+        self.df["y"] = [y[1] for y in self.df["2D_embeddings"]]
         node_trace = go.Scatter(
-            x=[x[0] for x in self.df["2D_embeddings"]]
-            y=[y[1] for y in self.df["2D_embeddings"]]
+            x=self.df["x"],
+            y=self.df["y"],
             mode='markers',
-            hoverinfo=self.df[["cardId", "tags", "text", "status", "interval", "ref"]],
+            #hover_name=["tags", "text", "status", "interval", "ref", "modelName"],
             marker=dict(
                 showscale=True,
                 # colorscale options
@@ -2105,31 +2108,35 @@ threads of size {batchsize})")
                 #'Hot' | 'Blackbody' | 'Earth' | 'Electric' | 'Viridis' |
                 colorscale='YlGnBu',
                 reversescale=True,
-                color=self.df["action"]
+                color=[],
                 size=10,
-                colorbar=dict(
-                    thickness=15,
-                    title='Node Connections',
-                    xanchor='left',
-                    titleside='right'
-                ),
+#                colorbar=dict(
+#                    thickness=15,
+#                    title='Node Connections',
+#                    xanchor='left',
+#                    titleside='right'
+#                ),
                 line_width=2))
 
-        fig = go.Figure(data=[edge_trace, node_trace],
+        whi("Creating plot...")
+        fig = go.Figure(data=[node_trace, edge_trace],
                      layout=go.Layout(
                         title=f'<br>Network of {self.deckname}</br>',
                         titlefont_size=18,
                         showlegend=False,
                         hovermode='closest',
+                        #hoverdata=self.df["text"],
+                        #color=self.df["status"],
                         margin=dict(b=20,l=5,r=5,t=40),
 #                        annotations=[ dict(
 #                            text="Python code: <a href='https://plotly.com/ipython-notebooks/network-graphs/'> https://plotly.com/ipython-notebooks/network-graphs/</a>",
 #                            showarrow=False,
 #                            xref="paper", yref="paper",
 #                            x=0.005, y=-0.002 ) ],
-                        xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-                        yaxis=dict(showgrid=False, zeroline=False, showticklabels=False))
+#                        xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+#                        yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
                         )
+                     )
         fig.show()
 
 
