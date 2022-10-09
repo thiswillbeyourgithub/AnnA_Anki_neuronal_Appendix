@@ -1090,6 +1090,7 @@ threads of size {batchsize})")
         tqdm.pandas(desc="Formating text", smoothing=0, unit=" card")
         self.df["text"] = self.df["comb_text"].progress_apply(
             lambda x: self._text_formatter(x))
+        del self.df["comb_text"]
 
         # find short cards
         ind_short = []
