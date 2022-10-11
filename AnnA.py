@@ -1431,7 +1431,7 @@ threads of size {batchsize})")
 
             red("\nPrinting the median distance cards:")
             median_value = np.median(self.df_dist.values[up_triangular].ravel())
-            coord_med = np.where(self.df_dist == median_value)
+            coord_med = np.where(np.isclose(self.df_dist, median_value))
             yel(f"* {str(self.df.loc[self.df.index[coord_med[0][0]]].text)[:max_length]}...")
             yel(f"* {str(self.df.loc[self.df.index[coord_med[1][0]]].text)[:max_length]}...")
         except TimeoutError:
