@@ -176,7 +176,7 @@ class AnnA:
                  show_banner=True,
                  repick_task="boost",  # None, "addtag", "boost" or
                  # "boost&addtag"
-                 enable_fuzz=False,
+                 enable_fuzz=True,
 
                  # vectorization:
                  vectorizer="TFIDF",  # can only be "TFIDF" but
@@ -2642,7 +2642,7 @@ if __name__ == "__main__":
                             "https://github.com/klieret/AnkiPandas)"))
     parser.add_argument("--enable_fuzz",
                         dest="enable_fuzz",
-                        default=False,
+                        default=True,
                         action="store_true",
                         required=False,
                         help=(
@@ -2652,7 +2652,7 @@ if __name__ == "__main__":
                             "card. Note that this vector is multiplied by the "
                             "average of the score_adjustment_factor then divided "
                             "by 10 to make sure that it does not significatively "
-                            "alter results. Defaults to `False`."))
+                            "alter results. Defaults to `True`."))
     parser.add_argument("--profile_name",
                         nargs=1,
                         metavar="PROFILE_NAME",
