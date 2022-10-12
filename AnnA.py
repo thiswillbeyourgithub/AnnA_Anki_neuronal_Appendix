@@ -1395,6 +1395,10 @@ threads of size {batchsize})")
         std_dist = round(cached_std(self.df_dist[self.df_dist != 0]), 2)
         yel(f"Mean distance: {mean_dist}, std: {std_dist}\n")
 
+        # store mean distance for the fuzz factor
+        if self.enable_fuzz:
+            self.mean_dist = mean_dist
+
         self._print_similar()
         return True
 
@@ -1484,7 +1488,7 @@ threads of size {batchsize})")
         w1 = self.score_adjustment_factor[0]
         w2 = self.score_adjustment_factor[1]
         if self.enable_fuzz:
-            w3 = (w1 + w2) / 2 / 10
+            w3 = (w1 + w2) / 2 * self.mean_dist / 10
         else:
             w3 = 0
 
@@ -2650,9 +2654,10 @@ if __name__ == "__main__":
                             "order , otherwise a small random vector is added to "
                             "the reference_score and distance_score of each "
                             "card. Note that this vector is multiplied by the "
-                            "average of the score_adjustment_factor then divided "
-                            "by 10 to make sure that it does not significatively "
-                            "alter results. Defaults to `True`."))
+                            "average of the `score_adjustment_factor` then "
+                            "multiplied by the mean distance then "
+                            "divided by 10 to make sure that it does not "
+                            "overwhelm the other factors. Defaults to `True`."))
     parser.add_argument("--profile_name",
                         nargs=1,
                         metavar="PROFILE_NAME",
