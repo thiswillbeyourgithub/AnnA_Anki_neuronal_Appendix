@@ -2062,7 +2062,7 @@ threads of size {batchsize})")
                                                                  "h")[0:-3]
         name = f"{out_name}_{self.deckname}_{cur_time}.pickle"
         df.to_pickle("./.DataFrame_backups/" + name)
-        print(f"Dataframe exported to {name}.")
+        yel(f"Dataframe exported to {name}.")
         return True
 
     def plot_2D_embeddings(self):
