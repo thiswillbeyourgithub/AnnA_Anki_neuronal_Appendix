@@ -1035,6 +1035,7 @@ threads of size {batchsize})")
         threads = []
         to_notify = []
         spacers_compiled = re.compile("_|-|/")
+        self.df["comb_text"] = np.nan  # initialize the column to avoid race conditions
 
         with tqdm(total=n,
                   desc="Combining relevant fields",
