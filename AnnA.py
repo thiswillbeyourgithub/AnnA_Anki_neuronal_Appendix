@@ -1342,7 +1342,7 @@ threads of size {batchsize})")
 
         if self._plot_2D_embeddings:
             try:
-                n_n = max(self.df_dist.shape[0] // 100, 3)
+                n_n = max(self.df_dist.shape[0] // 1000, 3)  # 0.1% of neighbours
                 yel(f"Computing '{n_n}' nearest neighbours per point...")
                 knn = kneighbors_graph(self.df_dist,
                                        n_neighbors = n_n,
@@ -2117,16 +2117,16 @@ threads of size {batchsize})")
                 #'Greys' | 'YlGnBu' | 'Greens' | 'YlOrRd' | 'Bluered' | 'RdBu' |
                 #'Reds' | 'Blues' | 'Picnic' | 'Rainbow' | 'Portland' | 'Jet' |
                 #'Hot' | 'Blackbody' | 'Earth' | 'Electric' | 'Viridis' |
-                colorscale='YlGnBu',
+                colorscale='Jet',
                 reversescale=True,
-                color=[],
+                color=self.df["tags"].tolist(),
                 size=10,
-#                colorbar=dict(
-#                    thickness=15,
-#                    title='Node Connections',
-#                    xanchor='left',
-#                    titleside='right'
-#                ),
+                colorbar=dict(
+                    thickness=15,
+                    title='Node Connections',
+                    xanchor='left',
+                    titleside='right'
+                ),
                 line_width=1))
 
         whi("Creating plot...")
@@ -2136,16 +2136,16 @@ threads of size {batchsize})")
                         titlefont_size=18,
                         showlegend=False,
                         hovermode='closest',
-                        #hoverdata=self.df["text"],
-                        #color=self.df["status"],
+                        hoverdata=self.df["text"],
+                        color=self.df["status"],
                         margin=dict(b=20,l=5,r=5,t=40),
 #                        annotations=[ dict(
 #                            text="Python code: <a href='https://plotly.com/ipython-notebooks/network-graphs/'> https://plotly.com/ipython-notebooks/network-graphs/</a>",
 #                            showarrow=False,
 #                            xref="paper", yref="paper",
 #                            x=0.005, y=-0.002 ) ],
-#                        xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-#                        yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+                        xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+                        yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
                         )
                      )
         fig.show()
