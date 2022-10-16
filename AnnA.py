@@ -1761,6 +1761,12 @@ threads of size {batchsize})")
         # minmaxscaling from 0 to 1
         maxval = self.df.loc[due, "ref"].max()
         minval = self.df.loc[due, "ref"].min()
+        if minval < 0:
+            red("Minval value was under 0 so shifted 'ref' column to make "
+                "sure all values are positive.")
+            self.df.loc[due, "ref"] += abs(minval) + 0.1  # makes sure that values are above 0
+            maxval = self.df.loc[due, "ref"].max()
+            minval = self.df.loc[due, "ref"].min()
         if np.isclose(maxval, minval):
             red("Not doing minmaxscaling becausemaxval and minal are too "
                 "close. Setting 'ref' to 0")
