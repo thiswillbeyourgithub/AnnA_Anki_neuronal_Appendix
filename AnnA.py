@@ -2111,9 +2111,10 @@ threads of size {batchsize})")
         edge_trace = px.scatter(
             x=edge_x,
             y=edge_y,
-            line=dict(width=0.1, color='rgba(255, 0, 0, 0.5)'),
+            #line=dict(width=0.1, color='rgba(255, 0, 0, 0.5)'),
             hoverinfo='none',
-            mode='lines')
+            mode='lines'
+            )
 
         whi("Adding nodes...")
         self.df["x"] = [x[0] for x in self.df["2D_embeddings"]]
