@@ -1441,9 +1441,9 @@ threads of size {batchsize})")
 
             red("\nPrinting the median distance cards:")
             median_value = np.median(self.df_dist.values[up_triangular].ravel())
-            coord_med = []
+            coord_med = [[]]
             i = 1
-            while len(coord_med) == 0:
+            while len(coord_med[0]) == 0:
                 if i >= 1e08:
                     break
                 coord_med = np.where(np.isclose(self.df_dist, median_value, atol=1e-08*i))
