@@ -28,7 +28,6 @@ import Levenshtein as lev
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
 from tokenizers import Tokenizer
-from transformers import AutoTokenizer
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import pairwise_distances, pairwise_kernels
