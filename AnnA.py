@@ -50,7 +50,7 @@ signal.signal(signal.SIGINT, (lambda signal, frame: pdb.set_trace()))
 Path("logs.txt").touch(exist_ok=True)
 Path("logs.txt").write_text(
     "\n".join(
-        Path("logs.txt").read_text().split("\n")[-5000:]))
+        Path("logs.txt").read_text().split("\n")[-10_000:]))
 logging.basicConfig(filename="logs.txt",
                     filemode='a',
                     format=f"{time.asctime()}: %(message)s")
@@ -1441,7 +1441,13 @@ threads of size {batchsize})")
 
             red("\nPrinting the median distance cards:")
             median_value = np.median(self.df_dist.values[up_triangular].ravel())
-            coord_med = np.where(np.isclose(self.df_dist, median_value))
+            coord_med = []
+            i = 1
+            while len(coord_med) == 0:
+                if i >= 1e08:
+                    break
+                coord_med = np.where(np.isclose(self.df_dist, median_value, atol=1e-08*i))
+                i *= 1e1
             yel(f"* {str(self.df.loc[self.df.index[coord_med[0][0]]].text)[:max_length]}...")
             yel(f"* {str(self.df.loc[self.df.index[coord_med[1][0]]].text)[:max_length]}...")
         except TimeoutError:
