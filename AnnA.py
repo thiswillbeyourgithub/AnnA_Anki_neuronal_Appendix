@@ -36,6 +36,7 @@ from sklearn.decomposition import TruncatedSVD
 from sklearn.preprocessing import StandardScaler
 from sklearn.neighbors import kneighbors_graph
 import plotly.graph_objects as go
+import plotly.express as px
 
 import ankipandas as akp
 import shutil
@@ -2102,7 +2103,7 @@ threads of size {batchsize})")
                 edge_y.append(self.df["2D_embeddings"].iloc[ni][1])
                 edge_y.append(None)
 
-        edge_trace = go.Scatter(
+        edge_trace = px.scatter(
             x=edge_x,
             y=edge_y,
             line=dict(width=0.1, color='rgba(255, 0, 0, 0.5)'),
@@ -2112,20 +2113,22 @@ threads of size {batchsize})")
         whi("Adding nodes...")
         self.df["x"] = [x[0] for x in self.df["2D_embeddings"]]
         self.df["y"] = [y[1] for y in self.df["2D_embeddings"]]
-        node_trace = go.Scatter(
-            x=self.df["x"],
-            y=self.df["y"],
+        node_trace = px.scatter(
+            self.df,
+            x="x",
+            y="y",
             mode='markers',
-            #hover_name=["tags", "text", "status", "interval", "ref", "modelName"],
+            hover_name=["tags", "text", "status", "interval", "ref", "modelName"],
             marker=dict(
                 showscale=True,
                 # colorscale options
                 #'Greys' | 'YlGnBu' | 'Greens' | 'YlOrRd' | 'Bluered' | 'RdBu' |
                 #'Reds' | 'Blues' | 'Picnic' | 'Rainbow' | 'Portland' | 'Jet' |
                 #'Hot' | 'Blackbody' | 'Earth' | 'Electric' | 'Viridis' |
-                colorscale='Jet',
+                #colorscale='Jet',
                 reversescale=True,
-                color=self.df["tags"].tolist(),
+                color=["tags"],
+                color_discrete_sequence=px.colors.qualitative.G10,
                 size=10,
                 colorbar=dict(
                     thickness=15,
@@ -2136,24 +2139,23 @@ threads of size {batchsize})")
                 line_width=1))
 
         whi("Creating plot...")
-        fig = go.Figure(data=[node_trace, edge_trace],
-                     layout=go.Layout(
-                        title=f'<br>Network of {self.deckname}</br>',
-                        titlefont_size=18,
-                        showlegend=False,
-                        hovermode='closest',
-                        hoverdata=self.df["text"],
-                        color=self.df["status"],
-                        margin=dict(b=20,l=5,r=5,t=40),
+        fig = go.Figure(data=[node_trace, edge_trace])
+        fig.update_layout(
+                title=f'<br>Network of {self.deckname}</br>',
+                titlefont_size=18,
+                showlegend=False,
+                hovermode='closest',
+                hoverdata=self.df["text"],
+                color=self.df["status"],
+                margin=dict(b=20,l=5,r=5,t=40),
 #                        annotations=[ dict(
 #                            text="Python code: <a href='https://plotly.com/ipython-notebooks/network-graphs/'> https://plotly.com/ipython-notebooks/network-graphs/</a>",
 #                            showarrow=False,
 #                            xref="paper", yref="paper",
 #                            x=0.005, y=-0.002 ) ],
-                        xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-                        yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-                        )
-                     )
+                xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+                yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+                )
         fig.show()
 
         whi("Saving as plot.html")
