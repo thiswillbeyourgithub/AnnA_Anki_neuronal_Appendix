@@ -1104,7 +1104,7 @@ threads of size {batchsize})")
             if len(self.df.loc[ind, "text"]) < 10:
                 ind_short.append(ind)
         if ind_short:
-            yel(f"\n{len(ind_short)} cards contain less than 10 characters"
+            yel(f"\n{len(ind_short)} cards contain less than 10 characters "
                 f"after formatting: {','.join([str(x) for x in ind_short])}")
             if self.append_tags is False:
                 red("Appending tags to those cards despite setting "
