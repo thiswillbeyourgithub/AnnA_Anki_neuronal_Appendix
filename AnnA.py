@@ -1595,7 +1595,7 @@ threads of size {batchsize})")
                 beep(f"{self.deckname} - This should not happen: {str(e)}")
                 breakpoint()
 
-            # squishing values above some threashold
+            # squishing values above some threshold
             limit = np.percentile(ro, 75)
             ro[ro > limit] = limit + np.log(ro[ro > limit]) - 2.7
             # clipping extreme values
@@ -1813,7 +1813,7 @@ threads of size {batchsize})")
             dist_score = minimum + average + med
             if self.log_level >= 2:
                 avg = np.mean(dist_score) * self.score_adjustment_factor[1]
-                #tqdm.write(f"DIST_SCORE: {avg:02f}")
+                # tqdm.write(f"DIST_SCORE: {avg:02f}")
             return dist_score
 
         with tqdm(desc="Computing optimal review order",
@@ -1822,10 +1822,10 @@ threads of size {batchsize})")
                   smoothing=0,
                   total=queue_size_goal + len(rated)) as pbar:
             while len(queue) < queue_size_goal:
-                if self.log_level >= 2:
-                    ref_avg = np.mean(df.loc[indTODO, "ref"].values) * w1
-                    sp = " " * 22
-                    #tqdm.write(f"{sp}REF_SCORE: {ref_avg:02f}")
+                # if self.log_level >= 2:
+                    # ref_avg = np.mean(df.loc[indTODO, "ref"].values) * w1
+                    # sp = " " * 22
+                    # tqdm.write(f"{sp}REF_SCORE: {ref_avg:02f}")
                 queue.append(indTODO[
                     (w1*df.loc[indTODO, "ref"].values -
                      w2*combinator(self.df_dist.loc[indTODO, indQUEUE].values
