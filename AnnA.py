@@ -112,6 +112,8 @@ def beep(message=None, **args):
         red("BEEP")  # at least produce a written message
     else:
         try:
+            if not isinstance(message, str):
+                message = str(message)
             # create notification with error
             red("NOTIF: " + message)
             notification.notify(title="AnnA",
