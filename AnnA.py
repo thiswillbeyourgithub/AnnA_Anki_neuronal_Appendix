@@ -183,7 +183,7 @@ class AnnA:
                  # vectorization:
                  vectorizer="TFIDF",  # can only be "TFIDF" but
                  # left for legacy reason
-                 TFIDF_dim=50,
+                 TFIDF_dim="auto",
                  TFIDF_tokenize=True,
                  tokenizer_model="bert",
                  plot_2D_embeddings=False,
@@ -304,8 +304,10 @@ class AnnA:
             stopwords_lang, list), "Invalid type of var `stopwords_lang`"
         self.stopwords_lang = stopwords_lang
 
-        assert isinstance(TFIDF_dim, (int, type(None))
+        assert isinstance(TFIDF_dim, (int, type(None), str)
                           ), "Invalid type of `TFIDF_dim`"
+        if isinstance(TFIDF_dim, str):
+            assert TFIDF_dim == "auto", "Invalid value for `TFIDF_dim`"
         self.TFIDF_dim = TFIDF_dim
 
         assert isinstance(plot_2D_embeddings, bool), "Invalid type of `plot_2D_embeddings`"
@@ -375,7 +377,7 @@ class AnnA:
             red("Ignoring argument 'filtered_deck_name_template' because "
                 "'task' is not set to 'filter_review_cards'.")
         if low_power_mode and TFIDF_dim is not None:
-            if TFIDF_dim > 50:
+            if isinstance(TFIDF_dim, str) or TFIDF_dim > 50:
                 red("Low power mode is activated, it is usually recommended "
                     "to set low values of TFIDF_dim (currently set at "
                     f"{TFIDF_dim} dimensions)")
@@ -1278,6 +1280,37 @@ threads of size {batchsize})")
               "Vectorizing using TFIDF")))
         if self.TFIDF_dim is None:
             df["VEC"] = [x for x in t_vec]
+        elif self.TFIDF_dim == "auto":
+            # explanation : trying to do a dimensions reduction on the vectors
+            # but trying up to 10 times to find the right value that keeps
+            # between 75% and 85% of variance. Under that the information
+            # starts to get lost and over that cards can tend to
+            # all be equidistant (I think).
+            trial = 0
+            desired_variance_kept = 80
+            red("Iteratively computing dimension reduction until "
+                f"{desired_variance_kept}% of variance is kept.")
+            while True:
+                self.TFIDF_dim = min(self.TFIDF_dim, t_vec.shape[1] - 1)
+                yel(f"\nReducing dimensions to {self.TFIDF_dim} using SVD...", end= " ")
+                svd = TruncatedSVD(n_components=self.TFIDF_dim)
+                t_red = svd.fit_transform(t_vec)
+                evr = round(sum(svd.explained_variance_ratio_) * 100, 1)
+                trial += 1
+                if abs(evr - desired_variance_kept) <= 5:
+                    break
+                elif trial >= 10:
+                    beep(f"Tried {trial} times to find the right number of dimensions, stopping.")
+                    break
+                else:
+                    offset = desired_variance_kept - evr
+                    # multiply or divide by 2 every 20% of difference
+                    self.TFIDF_dim *= 2**(offset/20)
+                    self.TFIDF_dim = int(max(2, min(self.TFIDF_dim, 1999)))
+                    red(f"Explained variance ratio is only {evr}% ("
+                        "retrying up to 10 times to get closer to "
+                        f"{desired_variance_kept}%)", end= " ")
+                    continue
         else:
             if self.TFIDF_dim >= t_vec.shape[1] - 1:
                 beep(f"{self.deckname} - Number of dimensions desired ({self.TFIDF_dim}) is "
@@ -2588,12 +2621,13 @@ if __name__ == "__main__":
                         nargs=1,
                         metavar="TFIDF_DIMENSIONS",
                         dest="TFIDF_dim",
-                        type=int,
-                        default=50,
+                        default="auto",
                         required=False,
                         help=(
                             "the number of dimension to keep using "
-                            "SVD Default is `50`, you cannot disable "
+                            "SVD. If 'auto' will automatically find the "
+                            "best number of dimensions to keep 80% of the "
+                            "variance. Default is `auto`, you cannot disable "
                             "dimension reduction for TF_IDF because that would "
                             "result in a sparse "
                             "matrix. (More information at "
