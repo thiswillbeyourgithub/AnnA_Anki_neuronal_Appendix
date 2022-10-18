@@ -1304,7 +1304,7 @@ threads of size {batchsize})")
                     offset = desired_variance_kept - evr
                     # multiply or divide by 2 every 20% of difference
                     self.TFIDF_dim *= 2**(offset/20)
-                    if np.random.random() >= 0.5:
+                    if self.TFIDF_dim <= 50 and np.random.random() >= 0.5:
                         self.TFIDF_dim += 1  # tries to avoid periodical loops
                     self.TFIDF_dim = int(max(2, min(self.TFIDF_dim, 1999)))
                     red(f"Explained variance ratio is only {evr}% ("
