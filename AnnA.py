@@ -1290,6 +1290,7 @@ threads of size {batchsize})")
             desired_variance_kept = 80
             red("Iteratively computing dimension reduction until "
                 f"{desired_variance_kept}% of variance is kept.")
+            self.TFIDF_dim = min(50, t_vec.shape[1] - 1)
             while True:
                 self.TFIDF_dim = min(self.TFIDF_dim, t_vec.shape[1] - 1)
                 yel(f"\nReducing dimensions to {self.TFIDF_dim} using SVD...", end= " ")
@@ -1311,6 +1312,9 @@ threads of size {batchsize})")
                         "retrying up to 10 times to get closer to "
                         f"{desired_variance_kept}%)", end= " ")
                     continue
+            yel(f"Explained variance ratio after SVD with {self.TFIDF_dim} dims on Tf_idf: {evr}%")
+            df["VEC"] = [x for x in t_red]
+
         else:
             if self.TFIDF_dim >= t_vec.shape[1] - 1:
                 beep(f"{self.deckname} - Number of dimensions desired ({self.TFIDF_dim}) is "
