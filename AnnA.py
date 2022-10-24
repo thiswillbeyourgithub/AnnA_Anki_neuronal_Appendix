@@ -376,11 +376,6 @@ class AnnA:
                 self.filtered_deck_name_template is not None):
             red("Ignoring argument 'filtered_deck_name_template' because "
                 "'task' is not set to 'filter_review_cards'.")
-        if low_power_mode and TFIDF_dim is not None:
-            if isinstance(TFIDF_dim, str) or TFIDF_dim > 50:
-                red("Low power mode is activated, it is usually recommended "
-                    "to set low values of TFIDF_dim (currently set at "
-                    f"{TFIDF_dim} dimensions)")
 
         if TFIDF_tokenize:
             if self.tokenizer_model.lower() == "bert":
