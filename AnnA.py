@@ -2124,7 +2124,7 @@ threads of size {batchsize})")
             x=edge_x,
             y=edge_y,
             #line=dict(width=0.1, color='rgba(255, 0, 0, 0.5)'),
-            hoverinfo='none',
+            #hoverinfo='none',
             mode='lines'
             )
 
@@ -2603,7 +2603,9 @@ if __name__ == "__main__":
                             "the number of dimension to keep using "
                             "SVD. If 'auto' will automatically find the "
                             "best number of dimensions to keep 80% of the "
-                            "variance. Default is `auto`, you cannot disable "
+                            "variance. If an int, will do like 'auto' but "
+                            "starting from the supplied value. "
+                            "Default is `auto`, you cannot disable "
                             "dimension reduction for TF_IDF because that would "
                             "result in a sparse "
                             "matrix. (More information at "
