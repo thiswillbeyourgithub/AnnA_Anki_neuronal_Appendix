@@ -1277,7 +1277,7 @@ threads of size {batchsize})")
               "Vectorizing using TFIDF")))
         if self.TFIDF_dim is None:
             df["VEC"] = [x for x in t_vec]
-        elif self.TFIDF_dim == "auto":
+        else:
             # explanation : trying to do a dimensions reduction on the vectors
             # but trying up to 10 times to find the right value that keeps
             # between 75% and 85% of variance. Under that the information
@@ -1287,7 +1287,11 @@ threads of size {batchsize})")
             desired_variance_kept = 80
             red("Iteratively computing dimension reduction until "
                 f"{desired_variance_kept}% of variance is kept.")
-            self.TFIDF_dim = min(50, t_vec.shape[1] - 1)
+
+            # start either from the user supplied value or from the highest
+            # possible number up to 50
+            if self.TFIDF_dim == "auto":
+                self.TFIDF_dim = min(50, t_vec.shape[1] - 1)
             while True:
                 self.TFIDF_dim = min(self.TFIDF_dim, t_vec.shape[1] - 1)
                 yel(f"\nReducing dimensions to {self.TFIDF_dim} using SVD...", end= " ")
@@ -1313,29 +1317,6 @@ threads of size {batchsize})")
                     continue
             yel(f"Explained variance ratio after SVD with {self.TFIDF_dim} dims on Tf_idf: {evr}%")
             df["VEC"] = [x for x in t_red]
-
-        else:
-            if self.TFIDF_dim >= t_vec.shape[1] - 1:
-                beep(f"{self.deckname} - Number of dimensions desired ({self.TFIDF_dim}) is "
-                     "higher than number of features ({t_vec.shape[1]}), "
-                     " taking the lowest value.")
-            self.TFIDF_dim = min(self.TFIDF_dim, t_vec.shape[1] - 1)
-            yel(f"\nReducing dimensions to {self.TFIDF_dim} using SVD...",
-                end=" ")
-            svd = TruncatedSVD(n_components=self.TFIDF_dim)
-            t_red = svd.fit_transform(t_vec)
-            evr = round(sum(svd.explained_variance_ratio_) * 100, 1)
-            yel(f"Explained variance ratio after SVD on Tf_idf: {evr}%")
-
-            df["VEC"] = [x for x in t_red]
-
-            if self._plot_2D_embeddings:
-                try:
-                    svd = TruncatedSVD(n_components=2)
-                    t_embed = svd.fit_transform(t_vec)
-                    df["2D_embeddings"] = [x for x in t_embed]
-                except Exception as err:
-                    red(f"Error when computing 2D embeddings: '{err}'")
 
         self.df = df
         return True
