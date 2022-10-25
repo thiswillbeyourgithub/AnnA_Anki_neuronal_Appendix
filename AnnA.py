@@ -1156,7 +1156,7 @@ threads of size {batchsize})")
                                    tokenizer=self.tokenize,
                                    stop_words=None,
                                    ngram_range=ngram_val,
-                                   max_features=10_000,
+                                   max_features=min(len(df.index) // 2, 10_000),
                                    norm="l2",
                                    sublinear_tf=True,
                                    )
