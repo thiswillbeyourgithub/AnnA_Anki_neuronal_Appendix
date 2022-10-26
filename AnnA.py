@@ -1450,7 +1450,7 @@ threads of size {batchsize})")
             red("\nPrinting the most semantically (but distinct) similar cards:")
             lowest_non_zero_value = np.amin(
                     self.df_dist.values[up_triangular],
-                    where=self.df_dist.values[up_triangular] != 0,
+                    where=np.isclose(self.df_dist.values[up_triangular], 0),
                     initial=highest_value)
             coord_min = np.where(self.df_dist == lowest_non_zero_value)
             yel(f"* {str(self.df.loc[self.df.index[coord_min[0][0]]].text)[:max_length]}...")
