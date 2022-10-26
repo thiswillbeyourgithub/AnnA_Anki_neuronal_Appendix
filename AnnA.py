@@ -1633,7 +1633,7 @@ threads of size {batchsize})")
                 # note  that 'n' is negative
                 n = (overdue.loc[x] - correction) / \
                     (df.loc[x, "interval"] + correction)
-                if n <= -0.5 and df.loc[x, "interval"] >= 1 and (
+                if n <= -0.25 and df.loc[x, "interval"] >= 1 and (
                         overdue.loc[x] <= -1):
                     repicked.append(x)
                     if boost:
