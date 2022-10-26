@@ -558,7 +558,6 @@ values. {e}")
                 red(f"Exception when plotting 2D embeddings: '{err}'")
                 import traceback
                 red("\n".join(traceback.format_stack()))
-                red(traceback.extract_stack())
         red(f"\nDone with task '{self.task}' on deck '{self.deckname}'")
         gc.collect()
 
@@ -1370,7 +1369,6 @@ threads of size {batchsize})")
                 red(f"Error when computing KNN: '{err}'")
                 import traceback
                 red("\n".join(traceback.format_stack()))
-                red(traceback.extract_stack())
 
         whi(f"Scaling each vertical row of the distance matrix...")
         def minmaxscaling(index, vector):
