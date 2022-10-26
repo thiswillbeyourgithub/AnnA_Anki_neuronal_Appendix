@@ -1154,6 +1154,7 @@ threads of size {batchsize})")
             return TfidfVectorizer(strip_accents="ascii",
                                    lowercase=False,
                                    tokenizer=self.tokenize,
+                                   token_pattern=None,
                                    stop_words=None,
                                    ngram_range=ngram_val,
                                    max_features=min(len(df.index) // 2, 10_000),
