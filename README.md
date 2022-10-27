@@ -18,6 +18,7 @@ Here are different ways of looking at what AnnA can do for you in a few words:
 * When you have too many learning cards and fear that some of them are too similar, use this to automatically review a subset of them.
 * AnnA helps to avoid reviewing **similar** cards on the same day.
 * AnnA allows to reduce the number of daily reviews while increasing (and not keeping the same) retention.
+* AnnA allows to automatically write in each note which other notes are its semantic neighbours.
 
 ## Note to readers
 0. The [dev branch](https://github.com/thiswillbeyourgithub/AnnA_Anki_neuronal_Appendix/tree/dev) is usually less outdated than the main branch.
