@@ -533,9 +533,28 @@ class AnkiConnect:
     def cardsToNotes(self, cards):
         return self.collection().db.list('select distinct nid from cards where id in ' + anki.utils.ids2str(cards))
 
-#
-# Entry
-#
+    @util.api()
+    def updateNoteFields(self, note):
+        ankiNote = self.getNote(note['id'])
+
+        self.startEditing()
+        for name, value in note['fields'].items():
+            if name in ankiNote:
+                ankiNote[name] = value
+
+        audioObjectOrList = note.get('audio')
+        self.addMedia(ankiNote, audioObjectOrList, util.MediaType.Audio)
+
+        videoObjectOrList = note.get('video')
+        self.addMedia(ankiNote, videoObjectOrList, util.MediaType.Video)
+
+        pictureObjectOrList = note.get('picture')
+        self.addMedia(ankiNote, pictureObjectOrList, util.MediaType.Picture)
+
+        ankiNote.flush()
+
+        self.collection().autosave()
+        self.stopEditing()
+
 
 ac = AnkiConnect()
-

@@ -172,6 +172,7 @@ class AnnA:
                  append_tags=True,
                  tags_to_ignore=None,
                  tags_separator="::",
+                 add_knn_to_field=True,
                  filtered_deck_name_template=None,
                  filtered_deck_by_batch=False,
                  filtered_deck_batch_size=25,
@@ -289,6 +290,9 @@ class AnnA:
             tags_to_ignore = []
         self.tags_to_ignore = tags_to_ignore
 
+        assert isinstance(add_knn_to_field, bool), (
+                "Invalid type of `add_knn_to_field`")
+        self.add_knn_to_field = add_knn_to_field
         assert isinstance(
             tags_separator, str), "Invalid type of `tags_separator`"
         self.tags_separator = tags_separator
@@ -1355,20 +1359,21 @@ threads of size {batchsize})")
         else:
             raise ValueError("Invalid 'dist_metric' value")
 
-        if self._plot_2D_embeddings:
-            try:
-                n_n = max(self.df_dist.shape[0] // 1000, 3)  # 0.1% of neighbours
+        try:
+            if self.add_knn_to_field or self.plot_2D_embeddings:
+                n_n = max(self.df_dist.shape[0] // 1000, 10)  # 0.1% of neighbours
                 yel(f"Computing '{n_n}' nearest neighbours per point...")
-                knn = kneighbors_graph(self.df_dist,
-                                       n_neighbors = n_n,
-                                       n_jobs=-1,
-                                       metric="precomputed",
-                                       include_self=False)
-                self.knn = knn
-            except Exception as err:
-                red(f"Error when computing KNN: '{err}'")
-                import traceback
-                red("\n".join(traceback.format_stack()))
+                self.knn = kneighbors_graph(
+                        self.df_dist,
+                        n_neighbors = n_n,
+                        n_jobs=-1,
+                        metric="precomputed",
+                        include_self=True)
+                if self.add_knn_to_field:
+                    yel("Adding neighbour of each note to the card.")
+                    self._do_add_knn_to_note()
+        except Exception as err:
+            red(f"Error when computing KNN: '{err}'")
 
         whi(f"Scaling each vertical row of the distance matrix...")
         def minmaxscaling(index, vector):
@@ -1424,6 +1429,41 @@ threads of size {batchsize})")
 
         self._print_similar()
         return True
+
+    def _do_add_knn_to_note(self):
+        """
+        if the model card contains the field 'KNN_neighbours', replace its
+        content by a query that can be used to find the neighbour of the
+        given note.
+        """
+        for i in tqdm(
+                range(self.knn.shape[0]),
+                desc="Writing neighbours to notes",
+                unit="card"):
+            cardId = self.df.index[i]
+            if "KNN_neighbours" not in self.df.loc[cardId, "fields"].keys():
+                continue
+            knn_ar = self.knn.getcol(i).toarray().squeeze()
+            neighbour_indices = np.where(knn_ar == 1)[0]
+            neighbours_nid = [self.df.loc[self.df.index[ind], "note"]
+                              for ind in np.argwhere(neighbour_indices == 1)]
+            new_content = "nid:" + ",".join(neighbours_nid)
+            noteId = self.df.loc[cardId, "note"],
+            self._call_anki(
+                    action="addTags",
+                    notes=[noteId],
+                    tags="AnnA::added_KNN")
+            self._call_anki(
+                    action="updateNoteFields",
+                    note={
+                        "id": noteId,
+                        "fields": {
+                            "KNN_neighbours": new_content
+                            }
+                        }
+                    )
+            break  # testing: do only one round
+        yel("Finished adding neighbours to notes.")
 
     def _print_similar(self):
         """ finds two cards deemed very similar (but not equal) and print
@@ -2539,6 +2579,15 @@ if __name__ == "__main__":
                         required=False,
                         help=(
                             "separator between levels of tags. Default to `::`."))
+    parser.add_argument("--add_knn_to_field",
+                        action="store_true",
+                        dest="add_knn_to_field",
+                        default=True,
+                        required=False,
+                        help=(
+                            "Wether to add a query to find the K nearest"
+                            "neighbour of a given card to a new field "
+                            "called 'KNN_neighbours'"))
     parser.add_argument("--filtered_deck_name_template",
                         nargs=1,
                         metavar="FILTER_DECK_NAME_TEMPLATE",
