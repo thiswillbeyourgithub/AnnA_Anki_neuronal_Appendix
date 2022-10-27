@@ -1450,11 +1450,12 @@ threads of size {batchsize})")
             red("\nPrinting the most semantically (but distinct) similar cards:")
             lowest_non_zero_value = np.amin(
                     self.df_dist.values[up_triangular],
-                    where=np.isclose(self.df_dist.values[up_triangular], 0),
+                    where=self.df_dist.values[up_triangular] >= 0.05,
                     initial=highest_value)
             coord_min = np.where(self.df_dist == lowest_non_zero_value)
             yel(f"* {str(self.df.loc[self.df.index[coord_min[0][0]]].text)[:max_length]}...")
             yel(f"* {str(self.df.loc[self.df.index[coord_min[1][0]]].text)[:max_length]}...")
+            yel(f"(distance: {lowest_non_zero_value})")
 
             red("\nPrinting the median distance cards:")
             median_value = np.median(self.df_dist.values[up_triangular].ravel())
