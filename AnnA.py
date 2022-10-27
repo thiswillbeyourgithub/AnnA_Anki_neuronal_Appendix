@@ -1654,8 +1654,9 @@ threads of size {batchsize})")
                     red("Those cards were NOT boosted.")
                 if "addtag" in self.repick_task:
                     today_date = time.asctime()
-                    notes = self._call_anki(
-                        action="cardsToNotes", cards=repicked)
+                    notes = []
+                    for card in repicked:
+                        notes.append(self.df.loc[card, "note"])
                     new_tag = ("AnnA::urgent_reviews::session_of_"
                                f"{today_date.replace(' ', '_')}")
                     try:
