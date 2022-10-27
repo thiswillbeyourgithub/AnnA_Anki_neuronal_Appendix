@@ -2696,6 +2696,7 @@ if __name__ == "__main__":
                         action="store_true",
                         required=False,
                         help=(
+                            "EXPERIMENTAL AND UNFINISHED. "
                             "default to `False`. Will compute 2D embeddins "
                             "then create a 2D plots at the end."))
     parser.add_argument("--TFIDF_stem",
