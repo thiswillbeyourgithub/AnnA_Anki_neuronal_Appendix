@@ -2167,6 +2167,33 @@ threads of size {batchsize})")
         assert hasattr(self, "knn")
         assert "2D_embeddings" in self.df.columns
 
+
+        # networkx test #####################################################
+        beep("Testing using networkx")
+        import networkx as nx
+        import matplotlib.pyplot as plt
+        G = nx.Graph()
+        # add all nodes
+        for cid in tqdm(self.df.index, desc="adding nodes", unit="node"):
+            nid = self.df.loc[cid, "note"]
+            G.add_node(nid)
+        # add all edges
+        for i in tqdm(
+                range(self.knn.shape[0]),
+                desc="computing edges",
+                unit="card"):
+            knn_ar = self.knn.getcol(i).toarray().squeeze()
+            neighbour_indices = np.where(knn_ar == 1)[0]
+            neighbours_nid = [self.df.loc[self.df.index[ind], "note"]
+                              for ind in np.argwhere(neighbour_indices == 1)]
+            noteId = self.df.loc[self.df.index[i], "note"],
+            for n_nid in neighbours_nid:
+                G.add_edge(noteId, n_nid)
+        nx.draw(G, with_labels=True)
+        plt.show()
+        # done networkx #####################################################
+
+
         whi("Computing edges...")
         edge_x = []
         edge_y = []
