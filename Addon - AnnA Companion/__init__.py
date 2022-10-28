@@ -116,7 +116,7 @@ class AnkiConnect:
                         break
 
             if method is None:
-                raise Exception('unsupported action')
+                raise Exception('unsupported action. You addon version is probably outdated.')
             else:
                 reply['result'] = methodInst(**params)
 
