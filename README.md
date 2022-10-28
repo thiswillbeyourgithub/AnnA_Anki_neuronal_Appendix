@@ -256,9 +256,10 @@ AnnA includes built-in methods you can run after instantiating the class. Note t
 * `save_df` saves the dataframe containing the cards and all other infos needed by AnnA as a pickle file. Used mainly for debugging. Files will be saved to the folder `DF_backups`
 
 ## TODO
+* add picture and documentation to the knn feature
+* log tqdm to file
 * figure out if sublinear_tf is theoreticaly better
 * find a solution to the curse of dimentionality : if you keep too many dimensions all distances are basically 1 apparently
-* log tqdm to file
 * refactor a bit the way optimal score is computed to allow printing of the inner mechanism and debugging
 * use joblib caching for text_formater function (necessary steps: add more argument to it to stop relying on self)
 * add an option to generate a reachability plot for the decks using an argument (+add tqdm to OPTICS (I checked, it's easy) ; +do it with a timeout and in an external process)
