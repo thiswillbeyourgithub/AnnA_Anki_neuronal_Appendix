@@ -464,7 +464,7 @@ multiple times in acronym dictionnary, keeping only the last one.")
                 notifs = list(set(notifs))
                 if notifs:
                     for n in notifs:
-                        red(n)
+                        beep(n)
                 self.acronym_dict = compiled_dic
         else:
             self.acronym_dict = {}
@@ -478,7 +478,7 @@ multiple times in acronym dictionnary, keeping only the last one.")
                     self.field_mappings.replace(".py", ""))
                 self.field_dic = imp.field_dic
             except Exception as e:
-                red(f"Error with field mapping file, will use default \
+                beep(f"Error with field mapping file, will use default \
 values. {e}")
                 self.field_dic = {"dummyvalue": "dummyvalue"}
 
@@ -496,8 +496,8 @@ values. {e}")
                 stops += [ps.stem(x) for x in stops]
             self.stops = list(set(stops))
         except Exception as e:
-            red(f"Error when extracting stop words: {e}")
-            red("Setting stop words list to None.")
+            beep(f"Error when extracting stop words: {e}\n\n"
+                 "Setting stop words list to None.")
             self.stops = None
         self.stopw_compiled = re.compile("\b" + "\b|\b".join(
             self.stops) + "\b", flags=(
@@ -559,10 +559,10 @@ values. {e}")
             try:
                 self.plot_2D_embeddings()
             except Exception as err:
-                red(f"Exception when plotting 2D embeddings: '{err}'")
+                beep(f"Exception when plotting 2D embeddings: '{err}'")
                 import traceback
-                red("\n".join(traceback.format_stack()))
-        red(f"\nDone with task '{self.task}' on deck '{self.deckname}'")
+                beep("\n".join(traceback.format_stack()))
+        beep(f"\nDone with task '{self.task}' on deck '{self.deckname}'")
         gc.collect()
 
     @classmethod
@@ -671,7 +671,7 @@ threads of size {batchsize})")
         decklist = self._call_anki(action="deckNames") + ["*"]
         if deckname is not None:
             if deckname not in decklist:
-                red("Couldn't find this deck.")
+                beep("Couldn't find this deck.")
                 deckname = None
         if deckname is None:
             auto_complete = WordCompleter(decklist,
@@ -702,7 +702,7 @@ threads of size {batchsize})")
         anki (via the bridge addon) such as card fields, tags, intervals, etc
         """
         if self.highjack_due_query is not None:
-            red("Highjacking due card list:")
+            beep("Highjacking due card list:")
             query = self.highjack_due_query
             red(" >  '" + query + "'")
             due_cards = self._call_anki(action="findCards", query=query)
@@ -726,7 +726,7 @@ threads of size {batchsize})")
 
         rated_cards = []
         if self.highjack_rated_query is not None:
-            red("Highjacking rated card list:")
+            beep("Highjacking rated card list:")
             query = self.highjack_rated_query
             red(" >  '" + query + "'")
             rated_cards = self._call_anki(action="findCards", query=query)
@@ -754,8 +754,8 @@ threads of size {batchsize})")
         self.rated_cards = rated_cards
 
         if len(self.due_cards) < self.minimum_due:
-            red(f"Number of due cards is {len(self.due_cards)} which is "
-                f"less than threshold ({self.minimum_due}).\nStopping.")
+            beep(f"Number of due cards is {len(self.due_cards)} which is "
+                 f"less than threshold ({self.minimum_due}).\nStopping.")
             self.not_enough_cards = True
             return
         else:
@@ -784,10 +784,10 @@ threads of size {batchsize})")
                 list_cardInfo[i]["status"] = "rated"
             else:
                 list_cardInfo[i]["status"] = "ERROR"
-                red(f"Error processing card with ID {card['cardId']}")
+                beep(f"Error processing card with ID {card['cardId']}")
 
         if len(list_cardInfo) != len(list(set(combined_card_list))):
-            red("Error: duplicate cards in DataFrame!\nExiting.")
+            beep("Error: duplicate cards in DataFrame!\nExiting.")
             pdb.set_trace()
 
         self.df = pd.DataFrame().append(list_cardInfo,
@@ -1370,10 +1370,9 @@ threads of size {batchsize})")
                         metric="precomputed",
                         include_self=True)
                 if self.add_knn_to_field:
-                    yel("Adding neighbour of each note to the card.")
                     self._do_add_knn_to_note()
         except Exception as err:
-            red(f"Error when computing KNN: '{err}'")
+            beep(f"Error when computing KNN: '{err}'")
 
         whi(f"Scaling each vertical row of the distance matrix...")
         def minmaxscaling(index, vector):
@@ -1436,6 +1435,7 @@ threads of size {batchsize})")
         content by a query that can be used to find the neighbour of the
         given note.
         """
+        red("Adding the list of neighbours to each note.")
         try:
             modified_nid = []
             new_content_list = []
