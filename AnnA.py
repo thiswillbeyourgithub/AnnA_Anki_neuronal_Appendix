@@ -1436,34 +1436,51 @@ threads of size {batchsize})")
         content by a query that can be used to find the neighbour of the
         given note.
         """
-        for i in tqdm(
-                range(self.knn.shape[0]),
-                desc="Writing neighbours to notes",
-                unit="card"):
-            cardId = self.df.index[i]
-            if "KNN_neighbours" not in self.df.loc[cardId, "fields"].keys():
-                continue
-            knn_ar = self.knn.getcol(i).toarray().squeeze()
-            neighbour_indices = np.where(knn_ar == 1)[0]
-            neighbours_nid = [self.df.loc[self.df.index[ind], "note"]
-                              for ind in np.argwhere(neighbour_indices == 1)]
-            new_content = "nid:" + ",".join(neighbours_nid)
-            noteId = self.df.loc[cardId, "note"],
+        try:
+            modified_nid = []
+            new_content_list = []
+            for i in tqdm(
+                    range(self.knn.shape[0]),
+                    desc="Colecting neighbours of notes",
+                    unit="card"):
+                cardId = self.df.index[i]
+                if "KNN_neighbours".lower() not in self.df.loc[cardId, "fields"].keys():
+                    continue
+                noteId = int(self.df.loc[cardId, "note"])
+                if noteId in modified_nid:
+                    continue
+
+                knn_ar = self.knn.getcol(i).toarray().squeeze()
+                neighbour_indices = np.where(knn_ar == 1)[0]
+                neighbours_nid = [str(self.df.loc[self.df.index[ind], "note"])
+                                  for ind in neighbour_indices]
+                new_content = "nid:" + ",".join(neighbours_nid)
+                modified_nid.append(noteId)
+                new_content_list.append(new_content)
+            whi("Sending new field value to Anki (1/2)...")
+            tags_added = False
             self._call_anki(
                     action="addTags",
-                    notes=[noteId],
+                    notes=modified_nid,
                     tags="AnnA::added_KNN")
+            tags_added = True
+            whi("Sending new field value to Anki (2/2)...")
+            assert len(new_content_list) == len(modified_nid)
             self._call_anki(
-                    action="updateNoteFields",
-                    note={
-                        "id": noteId,
-                        "fields": {
-                            "KNN_neighbours": new_content
-                            }
-                        }
+                    action="update_KNN_field",
+                    notes=modified_nid,
+                    new_field_value=new_content_list,
                     )
-            break  # testing: do only one round
-        yel("Finished adding neighbours to notes.")
+            whi("Done!")
+            yel("Finished adding neighbours to notes.")
+        except Exception:
+            # add a tag to indicate that those cards where modified
+            beep("Error when adding neighbour list to notes!")
+            if modified_nid and not tags_added:
+                self._call_anki(
+                        action="addTags",
+                        notes=modified_nid,
+                        tags="AnnA::added_KNN")
 
     def _print_similar(self):
         """ finds two cards deemed very similar (but not equal) and print

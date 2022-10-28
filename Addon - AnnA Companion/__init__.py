@@ -534,25 +534,12 @@ class AnkiConnect:
         return self.collection().db.list('select distinct nid from cards where id in ' + anki.utils.ids2str(cards))
 
     @util.api()
-    def updateNoteFields(self, note):
-        ankiNote = self.getNote(note['id'])
-
+    def update_KNN_field(self, notes=None, new_field_value=None):
         self.startEditing()
-        for name, value in note['fields'].items():
-            if name in ankiNote:
-                ankiNote[name] = value
-
-        audioObjectOrList = note.get('audio')
-        self.addMedia(ankiNote, audioObjectOrList, util.MediaType.Audio)
-
-        videoObjectOrList = note.get('video')
-        self.addMedia(ankiNote, videoObjectOrList, util.MediaType.Video)
-
-        pictureObjectOrList = note.get('picture')
-        self.addMedia(ankiNote, pictureObjectOrList, util.MediaType.Picture)
-
-        ankiNote.flush()
-
+        for i in range(len(notes)):
+            ankiNote = self.getNote(notes[i])
+            ankiNote["KNN_neighbours"] = new_field_value[i]
+            ankiNote.flush()
         self.collection().autosave()
         self.stopEditing()
 
