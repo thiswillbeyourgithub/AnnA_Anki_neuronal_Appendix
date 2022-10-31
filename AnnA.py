@@ -824,10 +824,15 @@ threads of size {batchsize})")
         * greek replacement
         * OCR text extractor
         """
-        text = text.replace("&amp;", "&"
-                            ).replace("+++", " important "
-                                      ).replace("&nbsp", " "
-                                                ).replace("\u001F", " ")
+        text = text.replace(
+                "&amp;", "&"
+                ).replace(
+                "+++", " important "
+                ).replace(
+                "&nbsp", " "
+                ).replace(
+                "\u001F", " "
+                )
 
         # remove email adress:
         text = re.sub(r'\S+@\S+\.\S{2,3}', " ", text)
