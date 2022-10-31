@@ -315,7 +315,7 @@ class AnnA:
         self.TFIDF_dim = TFIDF_dim
 
         assert isinstance(plot_2D_embeddings, bool), "Invalid type of `plot_2D_embeddings`"
-        self._plot_2D_embeddings = plot_2D_embeddings
+        self.plot_2D_embeddings = plot_2D_embeddings
         assert isinstance(TFIDF_stem, bool), "Invalid type of `TFIDF_stem`"
         assert isinstance(
             TFIDF_tokenize, bool), "Invalid type of `TFIDF_tokenize`"
@@ -555,9 +555,9 @@ values. {e}")
             if task == "filter_review_cards":
                 self._bury_or_create_filtered()
 
-        if self._plot_2D_embeddings:
+        if self.plot_2D_embeddings:
             try:
-                self.plot_2D_embeddings()
+                self._do_2D_plots()
             except Exception as err:
                 beep(f"Exception when plotting 2D embeddings: '{err}'")
                 import traceback
@@ -1471,7 +1471,6 @@ threads of size {batchsize})")
                     notes=modified_nid,
                     new_field_value=new_content_list,
                     )
-            whi("Done!")
             yel("Finished adding neighbours to notes.")
         except Exception:
             # add a tag to indicate that those cards where modified
@@ -2159,13 +2158,13 @@ threads of size {batchsize})")
         yel(f"Dataframe exported to {name}.")
         return True
 
-    def plot_2D_embeddings(self):
+    def _do_2D_plots(self):
         """
         Create a 2D network plot of the deck.
         """
-        assert self._plot_2D_embeddings
-        assert hasattr(self, "knn")
-        assert "2D_embeddings" in self.df.columns
+        assert self.plot_2D_embeddings, "invalid arguments!"
+        assert hasattr(self, "knn"), "no knn in attribute!"
+        assert "2D_embeddings" in self.df.columns, "no x/y columns in df!"
 
 
         # networkx test #####################################################
