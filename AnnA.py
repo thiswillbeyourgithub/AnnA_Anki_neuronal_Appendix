@@ -1453,7 +1453,14 @@ threads of size {batchsize})")
                     continue
 
                 knn_ar = self.knn.getcol(i).toarray().squeeze()
-                neighbour_indices = np.where(knn_ar == 1)[0]
+                neighbour_indices = list(np.where(knn_ar == 1)[0])
+                neighbour_indices = sorted(
+                        neighbour_indices,
+                        key=lambda x: float(self.df_dist.loc[cardId,
+                                                             self.df.index[x]
+                                                             ]
+                                                             ),
+                        )
                 neighbours_nid = [str(self.df.loc[self.df.index[ind], "note"])
                                   for ind in neighbour_indices]
                 new_content = "nid:" + ",".join(neighbours_nid)
