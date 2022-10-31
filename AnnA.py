@@ -898,6 +898,8 @@ threads of size {batchsize})")
                 "ç", "c"
                 ).replace(
                 "ï", "i"
+                ).replace(
+                "ù", "u"
                 )
 
         # replace acronyms
