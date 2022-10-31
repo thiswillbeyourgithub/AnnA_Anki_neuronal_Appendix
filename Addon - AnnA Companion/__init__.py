@@ -534,7 +534,7 @@ class AnkiConnect:
         return self.collection().db.list('select distinct nid from cards where id in ' + anki.utils.ids2str(cards))
 
     @util.api()
-    def update_KNN_field(self, notes=None, new_field_value=None):
+    def update_KNN_field(self, notes, new_field_value):
         self.startEditing()
         for i in range(len(notes)):
             ankiNote = self.getNote(notes[i])
