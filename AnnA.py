@@ -1270,7 +1270,7 @@ threads of size {batchsize})")
                     corpus.append(processed)
 
                 vectorizer = init_vectorizer()
-                vectorizer.fit(tqdm(corpus, desc="Vectorizing whole deck"))
+                vectorizer.fit(tqdm(corpus + df["text"].tolist(), desc="Vectorizing whole deck"))
                 t_vec = vectorizer.transform(tqdm(df["text"],
                                                   desc=(
                     "Vectorizing dues cards using TFIDF")))
