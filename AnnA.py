@@ -1349,23 +1349,19 @@ threads of size {batchsize})")
             "...")
         if self.dist_metric == "rbf":
             red(f"EXPERIMENTAL: Using RBF kernel instead of cosine distance.")
-            #cached_pd = self.mem.cache(pairwise_kernels)
-            cached_pd = pairwise_kernels
             sig = np.mean(np.std([x for x in df[input_col]], axis=1))
             self.df_dist = pd.DataFrame(columns=df.index,
                                         index=df.index,
-                                        data=cached_pd(
+                                        data=pairwise_kernels(
                                             [x for x in df[input_col]],
                                             n_jobs=-1,
                                             metric="rbf",
                                             gamma=1/(2*sig),
                                             ))
         elif self.dist_metric == "cosine":
-            #cached_pd = self.mem.cache(pairwise_distances)
-            cached_pd = pairwise_distances
             self.df_dist = pd.DataFrame(columns=df.index,
                                         index=df.index,
-                                        data=cached_pd(
+                                        data=pairwise_distances(
                                             [x for x in df[input_col]],
                                             n_jobs=-1,
                                             metric="cosine",
@@ -1428,12 +1424,8 @@ threads of size {batchsize})")
         yel("Computing mean and std of distance...\n(excluding diagonal)")
         # ignore the diagonal of the distance matrix to get a sensible mean
         # value then scale the matrix:
-        # cached_mean = self.mem.cache(np.nanmean)
-        # cached_std = self.mem.cache(np.nanstd)
-        cached_mean = np.nanmean
-        cached_std = np.nanstd
-        mean_dist = round(cached_mean(self.df_dist[self.df_dist != 0]), 2)
-        std_dist = round(cached_std(self.df_dist[self.df_dist != 0]), 2)
+        mean_dist = round(np.nanmean(self.df_dist[self.df_dist != 0]), 2)
+        std_dist = round(np.nanstd(self.df_dist[self.df_dist != 0]), 2)
         yel(f"Mean distance: {mean_dist}, std: {std_dist}\n")
 
         # store mean distance for the fuzz factor
