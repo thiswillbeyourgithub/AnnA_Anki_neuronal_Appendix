@@ -1156,7 +1156,10 @@ threads of size {batchsize})")
         """
         df = self.df
 
-        ngram_val = (1, 1)
+        if not self.low_power_mode:
+            ngram_val = (1, 5)
+        else:
+            ngram_val = (1, 1)
 
         def init_vectorizer():
             """used to make sure the same statement is used to create
@@ -2578,7 +2581,7 @@ if __name__ == "__main__":
                             "enable to reduce the computation needed for "
                             "AnnA, making it usable for less powerful computers. "
                             "Default to `False`. It skips trying to find acronyms "
-                            "that were not replaced."))
+                            "that were not replaced and reduces the ngram range."))
     parser.add_argument("--log_level",
                         nargs=1,
                         metavar="LOG_LEVEL",
