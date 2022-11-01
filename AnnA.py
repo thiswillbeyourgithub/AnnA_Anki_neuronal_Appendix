@@ -1361,12 +1361,12 @@ threads of size {batchsize})")
                                             metric="rbf",
                                             gamma=1/(2*sig),
                                             ))
-            # TODO: I think rbf distance distances
-            # are more of a similarity and should be reverted
-            beep("TESTING: correcting rbf to be a distance instead of "
-                 "a similarity.")
-            self.df_dist *= -1
-            self.df_dist += np.amin(self.df_dist)
+            # turn the similarity into a distance
+            max_val = np.amax(self.df_dist)
+            self.df_dist /= max_val  # normalize values
+            self.df_dist *= -1  # dist = 1 - similarity
+            self.df_dist += 1
+            # TODO: check that this works
         elif self.dist_metric == "cosine":
             self.df_dist = pd.DataFrame(columns=df.index,
                                         index=df.index,
