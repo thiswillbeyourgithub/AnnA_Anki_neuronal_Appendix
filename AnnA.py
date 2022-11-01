@@ -1454,17 +1454,16 @@ threads of size {batchsize})")
                     continue
                 noteId = int(self.df.loc[cardId, "note"])
                 if noteId in modified_nid:
-                    continue
+                    continue  # skipped because a card of this note was
+                    # already processed
 
                 knn_ar = self.knn.getcol(i).toarray().squeeze()
                 neighbour_indices = list(np.where(knn_ar == 1)[0])
                 neighbour_indices = sorted(
                         neighbour_indices,
-                        key=lambda x: float(self.df_dist.loc[cardId,
-                                                             self.df.index[x]
-                                                             ]
-                                                             ),
-                        )
+                        key=lambda x: float(self.df_dist.loc[
+                            cardId, self.df.index[x]]),
+                        reverse=False)
                 neighbours_nid = [str(self.df.loc[self.df.index[ind], "note"])
                                   for ind in neighbour_indices]
                 new_content = "nid:" + ",".join(neighbours_nid)
