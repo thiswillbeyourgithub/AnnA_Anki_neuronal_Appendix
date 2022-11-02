@@ -386,21 +386,21 @@ class AnnA:
                 "'task' is not set to 'filter_review_cards'.")
 
         if TFIDF_tokenize:
+            self.exclude_tkn = set(["[CLS]", "[SEP]"])
             if self.tokenizer_model.lower() in ["bert", "both"]:
                 yel("Using BERT tokenizer.")
-                self.tokenizer = Tokenizer.from_file("./bert-base-multilingual-cased_tokenizer.json")
-                self.tokenizer.no_truncation()
-                self.tokenizer.no_padding()
-                self.exclude_tkn = set(["[CLS]", "[SEP]"])
+                self.tokenizer_bert = Tokenizer.from_file("./bert-base-multilingual-cased_tokenizer.json")
+                self.tokenizer_bert.no_truncation()
+                self.tokenizer_bert.no_padding()
                 self.tokenize_bert = lambda x: [x
                                            for x in self.tokenizer.encode(x).tokens
                                            if x not in self.exclude_tkn]
                 self.tokenize = self.tokenize_bert
             if self.tokenizer_model.lower() in ["gpt", "both"]:
                 yel("Using GPT tokenizer.")
-                self.tokenizer = Tokenizer.from_file("./gpt_neox_20B_tokenizer.json")
-                self.tokenizer.no_truncation()
-                self.tokenizer.no_padding()
+                self.tokenizer_gpt = Tokenizer.from_file("./gpt_neox_20B_tokenizer.json")
+                self.tokenizer_gpt.no_truncation()
+                self.tokenizer_gpt.no_padding()
                 self.tokenize_gpt = lambda x: [x for x in self.tokenizer.encode(x).tokens]
                 self.tokenize = self.tokenize_gpt
             if self.tokenizer_model.lower() == "both":
