@@ -1525,9 +1525,10 @@ threads of size {batchsize})")
             yel(f"* {str(self.df.loc[self.df.index[coord_max[1][0]]].text)[:max_length]}...")
 
             red("\nPrinting the most semantically (but distinct) similar cards:")
+            q_limit = self.df_dist.quantile((len(self.df_dist.index) + 1) * 1.1 / len(self.df_dist.index) ** 2)
             lowest_non_zero_value = np.amin(
                     self.df_dist.values[up_triangular],
-                    where=self.df_dist.values[up_triangular] >= 0.05,
+                    where=self.df_dist.values[up_triangular] >= q_limit,
                     initial=highest_value)
             coord_min = np.where(self.df_dist == lowest_non_zero_value)
             yel(f"* {str(self.df.loc[self.df.index[coord_min[0][0]]].text)[:max_length]}...")
