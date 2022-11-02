@@ -324,7 +324,7 @@ class AnnA:
             "You have to enable either tokenization or stemming!")
         self.TFIDF_stem = TFIDF_stem
         self.TFIDF_tokenize = TFIDF_tokenize
-        assert tokenizer_model.lower() in ["bert", "gpt"], (
+        assert tokenizer_model.lower() in ["bert", "gpt", "both"], (
             "Wrong tokenizer model name!")
         self.tokenizer_model = tokenizer_model
         assert dist_metric.lower() in ["cosine", "rbf"], "Invalid 'dist_metric'"
@@ -386,23 +386,26 @@ class AnnA:
                 "'task' is not set to 'filter_review_cards'.")
 
         if TFIDF_tokenize:
-            if self.tokenizer_model.lower() == "bert":
+            if self.tokenizer_model.lower() in ["bert", "both"]:
                 yel("Using BERT tokenizer.")
                 self.tokenizer = Tokenizer.from_file("./bert-base-multilingual-cased_tokenizer.json")
                 self.tokenizer.no_truncation()
                 self.tokenizer.no_padding()
                 self.exclude_tkn = set(["[CLS]", "[SEP]"])
-                self.tokenize = lambda x: [x
+                self.tokenize_bert = lambda x: [x
                                            for x in self.tokenizer.encode(x).tokens
                                            if x not in self.exclude_tkn]
-            elif self.tokenizer_model.lower() == "gpt":
+                self.tokenize = self.tokenize_bert
+            if self.tokenizer_model.lower() in ["gpt", "both"]:
                 yel("Using GPT tokenizer.")
                 self.tokenizer = Tokenizer.from_file("./gpt_neox_20B_tokenizer.json")
                 self.tokenizer.no_truncation()
                 self.tokenizer.no_padding()
-                self.tokenize = lambda x: [x for x in self.tokenizer.encode(x).tokens]
-            else:
-                raise ValueError(f"Incorrect tokenizer_model: '{self.tokenizer_model}`")
+                self.tokenize_gpt = lambda x: [x for x in self.tokenizer.encode(x).tokens]
+                self.tokenize = self.tokenize_gpt
+            if self.tokenizer_model.lower() == "both":
+                yel("Using both GPT and BERT tokenizers.")
+                self.tokenize = lambda x: self.tokenize_gpt(x) + self.tokenize_bert(x)
         else:
             self.tokenize = lambda x: x
 
@@ -2792,7 +2795,8 @@ if __name__ == "__main__":
                             "are 'bert' and 'GPT' which correspond "
                             "respectivelly to `bert-base-multilingual-cased`"
                             " and `gpt_neox_20B` They "
-                            "should work on just about any languages."))
+                            "should work on just about any languages. Use "
+                            "'Both' to concatenate both tokenizers. (experimental)"))
     parser.add_argument("--plot_2D_embeddings",
                         dest="plot_2D_embeddings",
                         default=False,
