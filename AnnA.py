@@ -1329,7 +1329,7 @@ threads of size {batchsize})")
                     continue
             yel(f"Explained variance ratio after SVD with {self.TFIDF_dim} dims on Tf_idf: {evr}%")
             df["VEC"] = [x for x in t_red]
-        if self._plot_2D_embeddings:
+        if self.plot_2D_embeddings:
             try:
                 yel("Computing 2D embeddings for the plot...")
                 svd = TruncatedSVD(n_components=2)

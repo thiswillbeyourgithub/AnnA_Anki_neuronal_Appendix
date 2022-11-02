@@ -16,3 +16,6 @@ tokenizers >= 0.10.3
 transformers >= 4.22.2
 
 ankipandas>=0.3.10
+
+matplotlib>=3.6.1
+networkx>=2.8.7
