@@ -180,6 +180,7 @@ class AnnA:
                  repick_task="boost",  # None, "addtag", "boost" or
                  # "boost&addtag"
                  enable_fuzz=True,
+                 resort_by_dist=True,
 
                  # vectorization:
                  vectorizer="TFIDF",  # can only be "TFIDF" but
@@ -369,8 +370,11 @@ class AnnA:
                           ), "Invalid type for `field_mappings`"
         self.field_mappings = field_mappings
 
-        assert isinstance(enable_fuzz, bool)
+        assert isinstance(enable_fuzz, bool), "Invalid type for 'enable_fuzz'"
         self.enable_fuzz = enable_fuzz
+
+        assert isinstance(resort_by_dist, bool), "Invalid type for 'resort_by_dist'"
+        self.resort_by_dist = resort_by_dist
 
         # initialize joblib caching
         self.mem = joblib.Memory("./cache", mmap_mode="r", verbose=0)
@@ -1944,6 +1948,36 @@ threads of size {batchsize})")
         self.df["action"] = "skipped_for_today"
         self.df.loc[queue, "action"] = "will_review"
 
+        # reordering by best order
+        try:
+            if self.task == "filter_review_cards" and self.resort_by_dist:
+                red("Reordering before creating the filtered deck to maximize distance...")
+                new_queue = []
+                to_process = [q for q in queue]
+                for i, q in enumerate(tqdm(queue, desc="reordering filtered deck")):
+                    if i == 0:
+                        new_queue.append(to_process.pop(i))
+                        continue
+                    score = w2 * combinator(
+                            self.df_dist.loc[to_process, new_queue].values)
+                    # taking argmax because there is no minus sign
+                    new_queue.append(to_process.pop(score.argmax()))
+                assert len(to_process) == 0, "to_process is not empty!"
+                assert len(list(set(queue))) == len(list(set(new_queue))), (
+                        "Invalid length of new queue!")
+                assert len(list(set(new_queue))) == len(new_queue), (
+                        "Duplicates in new queue!")
+                assert len(
+                        [x for x in new_queue if x not in queue]
+                        ) == 0, "Queue mismatch!"
+                assert len(
+                        [x for x in new_queue if x in queue]
+                        ) == len(new_queue), "Queue mismatch!"
+                assert sum(queue) == sum(new_queue), "Queue sum differ!"
+                queue = new_queue
+        except Exception as e:
+            beep(f"{self.deckname} - \nException when reordering: {e}")
+
         try:
             if w1 == 0:
                 yel("Not showing distance without AnnA because you set "
@@ -2816,6 +2850,22 @@ if __name__ == "__main__":
                             "multiplied by the mean distance then "
                             "divided by 10 to make sure that it does not "
                             "overwhelm the other factors. Defaults to `True`."))
+    parser.add_argument("--resort_by_dist",
+                        dest="resort_by_dist",
+                        default=True,
+                        action="store_true",
+                        required=False,
+                        help=(
+                            "Recomputing the best order of the cards in the "
+                            "filtered deck without taking into account the "
+                            "reference score. This is useful if you are sure to "
+                            "review the entierety of the filtered deck today as it "
+                            "will minimize similarity between cards. If "
+                            "you are not sure you will finish the "
+                            "deck, it can be best to set to False to make sure "
+                            "you review first the most urgent cards. This "
+                            "feature is active only if you set the task to '"
+                            "filter_review_cards'. Default to True."))
     parser.add_argument("--profile_name",
                         nargs=1,
                         metavar="PROFILE_NAME",
