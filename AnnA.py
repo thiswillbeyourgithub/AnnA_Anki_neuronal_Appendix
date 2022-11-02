@@ -1388,11 +1388,13 @@ threads of size {batchsize})")
                                             gamma=1/(2*sig),
                                             ))
             # turn the similarity into a distance
+            # apply log to hopefully reduce the spread
+            tqdm.pandas(desc="Applying log", smoothing=0, unit=" card")
+            self.df_dist = self.df_dist.progress_apply(lambda x: np.log(1+x))
             max_val = np.amax(self.df_dist)
-            self.df_dist /= max_val  # normalize values
-            self.df_dist *= -1  # dist = 1 - similarity
+            self.df_dist /= -max_val  # normalize values then make negative
+            # add 1 to get: "dist = 1 - similarity"
             self.df_dist += 1
-            # TODO: check that this works
         elif self.dist_metric == "cosine":
             self.df_dist = pd.DataFrame(columns=df.index,
                                         index=df.index,
@@ -1719,9 +1721,9 @@ threads of size {batchsize})")
 
             # squishing values above some threshold
             limit = np.percentile(ro, 75)
-            ro[ro > limit] = limit + np.log(ro[ro > limit]) - 2.7
+            ro[ro > limit] = limit + np.log(1 + ro[ro > limit])
             # clipping extreme values
-            ro_clipped = np.clip(ro, 0, 2*limit)
+            ro_clipped = np.clip(ro, 0, 2 * limit)
             # centering and scaling
             ro_cs = StandardScaler().fit_transform(
                     ro_clipped.values.reshape(-1, 1))
