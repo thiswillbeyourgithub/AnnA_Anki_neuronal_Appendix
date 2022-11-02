@@ -2196,8 +2196,8 @@ threads of size {batchsize})")
         G = nx.Graph()
         # add all nodes
         for cid in tqdm(self.df.index, desc="adding nodes", unit="node"):
-            nid = self.df.loc[cid, "note"]
-            G.add_node(nid)
+            G.add_node(self.df.loc[cid, "note"])
+
         # add all edges
         for i in tqdm(
                 range(self.knn.shape[0]),
@@ -2205,9 +2205,9 @@ threads of size {batchsize})")
                 unit="card"):
             knn_ar = self.knn.getcol(i).toarray().squeeze()
             neighbour_indices = np.where(knn_ar == 1)[0]
-            neighbours_nid = [self.df.loc[self.df.index[ind], "note"]
+            neighbours_nid = [int(self.df.loc[self.df.index[ind], "note"])
                               for ind in np.argwhere(neighbour_indices == 1)]
-            noteId = self.df.loc[self.df.index[i], "note"],
+            noteId = int(self.df.loc[self.df.index[i], "note"])
             for n_nid in neighbours_nid:
                 G.add_edge(noteId, n_nid)
         nx.draw(G, with_labels=True)
