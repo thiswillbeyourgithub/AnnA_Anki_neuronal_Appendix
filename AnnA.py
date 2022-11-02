@@ -189,7 +189,7 @@ class AnnA:
                  tokenizer_model="bert",
                  plot_2D_embeddings=False,
                  TFIDF_stem=False,
-                 dist_metric="cosine",  # 'RBF' or 'cosine'
+                 dist_metric="RBF",  # 'RBF' or 'cosine'
 
                  whole_deck_computation=True,
                  profile_name=None,
@@ -2780,12 +2780,12 @@ if __name__ == "__main__":
                         metavar="DIST_METRIC",
                         dest="dist_metric",
                         type=str,
-                        default="cosine",
+                        default="RBF",
                         required=False,
                         help=(
                             "when computing the distance matrix, wether to "
                             "use 'cosine' or 'rbf' metrics. Using RBF is "
-                            "highly experimental!"))
+                            "experimental but should work!"))
     parser.add_argument("--whole_deck_computation",
                         dest="whole_deck_computation",
                         default=True,
