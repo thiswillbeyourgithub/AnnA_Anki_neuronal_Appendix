@@ -2652,7 +2652,11 @@ if __name__ == "__main__":
                         help=(
                             "Wether to add a query to find the K nearest"
                             "neighbour of a given card to a new field "
-                            "called 'KNN_neighbours'"))
+                            "called 'KNN_neighbours'. Be careful not to "
+                            "overwrite the fields by running AnnA "
+                            "several times in a row! For example by first "
+                            "burying learning cards then filtering "
+                            "review cards."))
     parser.add_argument("--filtered_deck_name_template",
                         nargs=1,
                         metavar="FILTER_DECK_NAME_TEMPLATE",
