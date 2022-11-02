@@ -1018,12 +1018,7 @@ threads of size {batchsize})")
                             self.df.loc[index, "fields"][x.lower()]["order"]))
 
                 comb_text = ""
-                field_counter = {}
                 for f in fields_to_keep:
-                    if f in field_counter:
-                        field_counter[f] += 1
-                    else:
-                        field_counter[f] = 1
                     try:
                         next_field = re.sub(
                             self.stopw_compiled,
