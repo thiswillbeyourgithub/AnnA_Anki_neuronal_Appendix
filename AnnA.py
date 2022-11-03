@@ -512,7 +512,7 @@ values. {e}")
 
         # actual execution
         self.deckname = self._deckname_check(deckname)
-        yel(f"Selected deck: {self.deckname}\n")
+        red(f"Selected deck: {self.deckname}\n")
         self.deck_config = self._call_anki(action="getDeckConfig",
                                            deck=self.deckname)
         if self.target_deck_size == "deck_config":
