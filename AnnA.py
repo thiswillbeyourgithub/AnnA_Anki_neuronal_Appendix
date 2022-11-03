@@ -540,7 +540,7 @@ values. {e}")
             self._compute_card_vectors()
             self._compute_distance_matrix()
             self._compute_opti_rev_order()
-            self._bury_or_create_filtered(task=task)
+            self._bury_or_create_filtered()
         else:
             yel("Task : created filtered deck containing review cards")
             self._init_dataFrame()
@@ -2107,9 +2107,7 @@ threads of size {batchsize})")
         print("")
         return True
 
-    def _bury_or_create_filtered(self,
-                                 filtered_deck_name_template=None,
-                                 task=None):
+    def _bury_or_create_filtered(self):
         """
         Either bury cards that are not in the optimal queue or create a
             filtered deck containing the cards to review in optimal order.
