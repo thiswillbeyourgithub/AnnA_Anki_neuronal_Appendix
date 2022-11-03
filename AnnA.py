@@ -172,7 +172,7 @@ class AnnA:
                  append_tags=True,
                  tags_to_ignore=None,
                  tags_separator="::",
-                 add_knn_to_field=True,
+                 add_KNN_to_field=False,
                  filtered_deck_name_template=None,
                  filtered_deck_by_batch=False,
                  filtered_deck_batch_size=25,
@@ -2716,10 +2716,10 @@ if __name__ == "__main__":
                         required=False,
                         help=(
                             "separator between levels of tags. Default to `::`."))
-    parser.add_argument("--add_knn_to_field",
+    parser.add_argument("--add_KNN_to_field",
                         action="store_true",
-                        dest="add_knn_to_field",
-                        default=True,
+                        dest="add_KNN_to_field",
+                        default=False,
                         required=False,
                         help=(
                             "Wether to add a query to find the K nearest"
