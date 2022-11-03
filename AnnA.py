@@ -1455,9 +1455,10 @@ threads of size {batchsize})")
 
         yel("Computing mean and std of distance...\n(excluding diagonal)")
         # ignore the diagonal of the distance matrix to get a sensible mean
-        # value then scale the matrix:
-        mean_dist = round(np.nanmean(self.df_dist[self.df_dist != 0]), 2)
-        std_dist = round(np.nanstd(self.df_dist[self.df_dist != 0]), 2)
+        # and std value:
+        up_triangular = np.triu_indices(self.df_dist.shape[0], 1)
+        mean_dist = round(np.nanmean(self.df_dist.values[up_triangular]), 2)
+        std_dist = round(np.nanstd(self.df_dist.values[up_triangular]), 2)
         yel(f"Mean distance: {mean_dist}, std: {std_dist}\n")
 
         # store mean distance for the fuzz factor
