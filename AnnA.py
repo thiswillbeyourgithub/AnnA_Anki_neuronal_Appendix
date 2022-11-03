@@ -147,7 +147,7 @@ class AnnA:
                  deckname=None,
                  reference_order="relative_overdueness",
                  # any of "lowest_interval", "relative overdueness",
-                 # "order_added", "LIRO_mix"
+                 # "order_added", "LIRO_mix", "just_add_KNN"
                  task="filter_review_cards",
                  # any of "filter_review_cards",
                  # "bury_excess_review_cards", "bury_excess_learning_cards"
@@ -291,9 +291,9 @@ class AnnA:
             tags_to_ignore = []
         self.tags_to_ignore = tags_to_ignore
 
-        assert isinstance(add_knn_to_field, bool), (
-                "Invalid type of `add_knn_to_field`")
-        self.add_knn_to_field = add_knn_to_field
+        assert isinstance(add_KNN_to_field, bool), (
+                "Invalid type of `add_KNN_to_field`")
+        self.add_KNN_to_field = add_KNN_to_field
         assert isinstance(
             tags_separator, str), "Invalid type of `tags_separator`"
         self.tags_separator = tags_separator
@@ -332,7 +332,8 @@ class AnnA:
 
         assert task in ["filter_review_cards",
                         "bury_excess_learning_cards",
-                        "bury_excess_review_cards"], "Invalid value for `task`"
+                        "bury_excess_review_cards",
+                        "just_add_KNN"], "Invalid value for `task`"
         self.task = task
 
         assert isinstance(filtered_deck_name_template, (str, type(
@@ -540,8 +541,10 @@ values. {e}")
             self._compute_card_vectors()
             self._compute_distance_matrix()
             self._compute_opti_rev_order()
+            self._compute_KNN()
+            self._do_add_KNN_to_note
             self._bury_or_create_filtered()
-        else:
+        elif task == "filter_review_cards":
             yel("Task : created filtered deck containing review cards")
             self._init_dataFrame()
             if self.not_enough_cards is True:
@@ -555,8 +558,29 @@ values. {e}")
             self._compute_card_vectors()
             self._compute_distance_matrix()
             self._compute_opti_rev_order()
-            if task == "filter_review_cards":
-                self._bury_or_create_filtered()
+            self._compute_KNN()
+            self._do_add_KNN_to_note
+            self._bury_or_create_filtered()
+        elif task == "just_add_KNN":
+            yel("Task : find the nearest neighbour of each note and "
+                "add it to a field.")
+            whi("(Setting 'rated_last_X_days' to None)")
+            self.rated_last_X_days = None
+            self._init_dataFrame()
+            if self.not_enough_cards is True:
+                return
+            self._format_card()
+            if self.low_power_mode:
+                red("Not printing acronyms because low_power_mode is set to "
+                    "'True'")
+            else:
+                self._print_acronyms()
+            self._compute_card_vectors()
+            self._compute_distance_matrix()
+            self._compute_KNN()
+            self._do_add_KNN_to_note
+        else:
+            raise ValueError(f"Invalid task value: {task}")
 
         if self.plot_2D_embeddings:
             try:
@@ -744,6 +768,13 @@ threads of size {batchsize})")
             whi(" >  '" + query + "'")
             due_cards = self._call_anki(action="findCards", query=query)
             whi(f"Found {len(due_cards)} learning cards...\n")
+
+        elif self.task == "just_add_KNN":
+            yel("Getting all card list except suspended...")
+            query = (f"\"deck:{self.deckname}\" -is:suspended")
+            whi(" >  '" + query + "'")
+            due_cards = self._call_anki(action="findCards", query=query)
+            whi(f"Found {len(due_cards)} cards...\n")
 
         rated_cards = []
         if self.highjack_rated_query is not None:
@@ -1404,21 +1435,6 @@ threads of size {batchsize})")
 
         self.df_dist = self.df_dist.sort_index()
 
-        try:
-            if self.add_knn_to_field or self.plot_2D_embeddings:
-                n_n = max(self.df_dist.shape[0] // 100, 10)  # 1% of neighbours
-                yel(f"Computing '{n_n}' nearest neighbours per point...")
-                self.knn = kneighbors_graph(
-                        self.df_dist,
-                        n_neighbors = n_n,
-                        n_jobs=-1,
-                        metric="precomputed",
-                        include_self=True)
-                if self.add_knn_to_field:
-                    self._do_add_knn_to_note()
-        except Exception as err:
-            beep(f"Error when computing KNN: '{err}'")
-
         whi(f"Scaling each vertical row of the distance matrix...")
         def minmaxscaling(index, vector):
             """
@@ -1471,12 +1487,37 @@ threads of size {batchsize})")
         self._print_similar()
         return True
 
-    def _do_add_knn_to_note(self):
+    def _compute_KNN(self):
+        """
+        Compute the K nearest neighbour of each note of the distance matrix.
+        This is used to then fill the field "KNN_neighbours" of those notes
+        so that you can quickly know the neighbour of any given card straight
+        into anki without having to use AnnA.
+        """
+        if not (self.add_KNN_to_field or self.plot_2D_embeddings or self.task == "just_add_KNN"):
+            whi("Computing KNN matrix is not needed by those arguments.")
+            return
+        try:
+            n_n = max(self.df_dist.shape[0] // 100, 10)  # 1% of neighbours
+            yel(f"Computing '{n_n}' nearest neighbours per point...")
+            self.knn = kneighbors_graph(
+                    self.df_dist,
+                    n_neighbors=n_n,
+                    n_jobs=-1,
+                    metric="precomputed",
+                    include_self=True)
+        except Exception as err:
+            beep(f"Error when computing KNN: '{err}'")
+
+    def _do_add_KNN_to_note(self):
         """
         if the model card contains the field 'KNN_neighbours', replace its
         content by a query that can be used to find the neighbour of the
         given note.
         """
+        if not (self.add_KNN_to_field or self.task == "just_add_KNN"):
+            whi("Not adding KNN to note field because of arguments.")
+            return
         red("Adding the list of neighbours to each note.")
         try:
             modified_nid = []
@@ -2131,7 +2172,7 @@ threads of size {batchsize})")
             and AnnA will just bury some cards that are too similar to cards
             that you will review.
         """
-        if task in ["bury_excess_learning_cards", "bury_excess_review_cards"]:
+        if self.task in ["bury_excess_learning_cards", "bury_excess_review_cards"]:
             to_keep = self.opti_rev_order
             to_bury = [x for x in self.due_cards if x not in to_keep]
             assert len(to_bury) < len(
@@ -2362,6 +2403,7 @@ threads of size {batchsize})")
         signal.alarm(0)  # turn off timeout
 
 
+
 class ProgressParallel(joblib.Parallel):
     """
     simple subclass from joblib.Parallel with improved progress bar
@@ -2489,11 +2531,14 @@ if __name__ == "__main__":
                         help=(
                             "can be \"filter_review_cards\", "
                             "\"bury_excess_learning_cards\", "
-                            "\"bury_excess_review_cards\". Respectively to create "
+                            "\"bury_excess_review_cards\", \"add_KNN_to_field\""
+                            ". Respectively to create "
                             "a filtered deck with the cards, or bury only the "
                             "similar learning cards (among other learning cards), "
                             "or bury only the similar cards in review (among "
-                            "other review cards). Default is "
+                            "other review cards) or just find the nearest "
+                            "neighbours of each note and save it to the field "
+                            "'KNN_neighbours' of each note. Default is "
                             "\"`filter_review_cards`\"."))
     parser.add_argument("--target_deck_size",
                         nargs=1,
@@ -2726,7 +2771,11 @@ if __name__ == "__main__":
                             "overwrite the fields by running AnnA "
                             "several times in a row! For example by first "
                             "burying learning cards then filtering "
-                            "review cards."))
+                            "review cards. This argument is to be used if "
+                            "you want to find the KNN only for the cards of "
+                            "the deck in question and that are currently due."
+                            " If you want to run this on the complete deck "
+                            "you should use the 'task' argument."))
     parser.add_argument("--filtered_deck_name_template",
                         nargs=1,
                         metavar="FILTER_DECK_NAME_TEMPLATE",
