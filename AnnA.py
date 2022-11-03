@@ -386,28 +386,24 @@ class AnnA:
                 "'task' is not set to 'filter_review_cards'.")
 
         if TFIDF_tokenize:
-            self.exclude_tkn = set(["[CLS]", "[SEP]"])
             if self.tokenizer_model.lower() in ["bert", "both"]:
-                yel("Using BERT tokenizer.")
+                yel("Will use BERT as tokenizer.")
                 self.tokenizer_bert = Tokenizer.from_file("./bert-base-multilingual-cased_tokenizer.json")
                 self.tokenizer_bert.no_truncation()
                 self.tokenizer_bert.no_padding()
-                self.tokenize_bert = lambda x: [x
-                                           for x in self.tokenizer.encode(x).tokens
-                                           if x not in self.exclude_tkn]
-                self.tokenize = self.tokenize_bert
+                self.tokenize = self._bert_tokenize
             if self.tokenizer_model.lower() in ["gpt", "both"]:
-                yel("Using GPT tokenizer.")
+                yel("Will use GPT as tokenizer.")
                 self.tokenizer_gpt = Tokenizer.from_file("./gpt_neox_20B_tokenizer.json")
                 self.tokenizer_gpt.no_truncation()
                 self.tokenizer_gpt.no_padding()
-                self.tokenize_gpt = lambda x: [x for x in self.tokenizer.encode(x).tokens]
-                self.tokenize = self.tokenize_gpt
+                self.tokenize = self._gpt_tokenize
             if self.tokenizer_model.lower() == "both":
-                yel("Using both GPT and BERT tokenizers.")
-                self.tokenize = lambda x: self.tokenize_gpt(x) + self.tokenize_bert(x)
+                yel("Using both GPT and BERT as tokenizers.")
+                self.tokenize = lambda x: self._gpt_tokenize(x) + self._bert_tokenize(x)
         else:
-            self.tokenize = lambda x: x
+            # dummy tokenizer
+            self.tokenize = lambda x: x.replace("<NEWFIELD>", " ").strip().split(" ")
 
         if self.acronym_file is not None and self.acronym_list is not None:
             file = Path(acronym_file)
@@ -669,6 +665,23 @@ threads of size {batchsize})")
                             key=lambda x: x["cardId"],
                             reverse=False)
             return r_list
+
+    def _bert_tokenize(self, input_text):
+        """
+        This tokenizer had to be put in a specific method to remove the
+        unused CLS and SEP tokens.
+        """
+        output = []
+        for t in input_text.split("<NEWFIELD>"):
+            output.extend(self.tokenizer_bert.encode(t).tokens)
+        output = list(filter(lambda x: x not in ["[CLS]", "[SEP]"], output))
+        return output
+
+    def _gpt_tokenize(self, input_text):
+        output = []
+        for t in input_text.split("<NEWFIELD>"):
+            output.extend(self.tokenizer_gpt.encode(t).tokens)
+        return output
 
     def _deckname_check(self, deckname):
         """
@@ -1018,15 +1031,16 @@ threads of size {batchsize})")
                             self.df.loc[index,
                                    "fields"][f.lower()]["value"].strip())
                         if next_field != "":
-                            comb_text = comb_text + next_field + ": "
+                            comb_text = comb_text + next_field + " <NEWFIELD> "
                     except KeyError as e:
                         with lock:
                             to_notify.append(
                                 f"Error when looking for field {e} in card "
                                 f"{self.df.loc[index, 'modelName']} identified as "
                                 f"notetype {target_model}")
-                if comb_text[-2:] == ": ":
-                    comb_text = comb_text[:-2]
+                comb_text = comb_text.strip()
+                if comb_text.endswith("<NEWFIELD>"):
+                    comb_text = comb_text[:-10].strip()
 
                 # add tags to comb_text
                 if self.append_tags:
@@ -1112,7 +1126,12 @@ threads of size {batchsize})")
         # slower if not done by large batching
         tqdm.pandas(desc="Formating text", smoothing=0, unit=" card")
         self.df["text"] = self.df["comb_text"].progress_apply(
-            lambda x: self._text_formatter(x))
+            lambda x: " <NEWFIELD> ".join(
+                [
+                    self._text_formatter(y) for y in x.split("<NEWFIELD>")
+                    ]
+                ).strip()
+            )
         del self.df["comb_text"]
 
         # find short cards
