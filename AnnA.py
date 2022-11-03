@@ -1737,14 +1737,20 @@ threads of size {batchsize})")
                 # note  that 'n' is negative
                 n = (overdue.loc[x] - correction) / \
                     (df.loc[x, "interval"] + correction)
-                if n <= -0.25 and df.loc[x, "interval"] >= 1 and (
-                        overdue.loc[x] <= -1):
+                if (n <= -0.25 and df.loc[x, "interval"] > 1 and (
+                        overdue.loc[x] <= -1)) or (df.loc[x, "interval"] <= 1):
                     repicked.append(x)
                     if boost:
                         # scales the value to be relevant compared to
                         # distance factor
-                        ro_cs[due.index(x)] += n * \
-                            np.mean(self.score_adjustment_factor)
+                        if df.loc[x, "interval"] <= 1:
+                            # if short interval: boost by a fixed amount
+                            # (somewhat arbitrary)
+                            ro_cs[due.index(x)] += -5 * \
+                                np.mean(self.score_adjustment_factor)
+                        else:
+                            ro_cs[due.index(x)] += n * \
+                                np.mean(self.score_adjustment_factor)
 
             if repicked:
                 beep(f"{self.deckname} - {len(repicked)}/{len(due)} cards with too low "
