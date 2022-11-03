@@ -565,6 +565,7 @@ values. {e}")
                 beep(f"Exception when plotting 2D embeddings: '{err}'")
                 import traceback
                 beep("\n".join(traceback.format_stack()))
+            signal.alarm(0)  # turn off timeout
         beep(f"\nDone with task '{self.task}' on deck '{self.deckname}'")
         gc.collect()
 
@@ -2242,6 +2243,13 @@ threads of size {batchsize})")
         assert hasattr(self, "knn"), "no knn in attribute!"
         assert "2D_embeddings" in self.df.columns, "no x/y columns in df!"
 
+        # add a timeout to make sure it doesn't get stuck
+        def time_watcher(signum, frame):
+            "used to issue a timeout"
+            raise TimeoutError("Timed out. Not finishing 2D plots.")
+        signal.signal(signal.SIGALRM, time_watcher)
+        signal.alarm(120)
+
 
         # networkx test #####################################################
         beep("Testing using networkx")
@@ -2344,6 +2352,7 @@ threads of size {batchsize})")
 
         whi("Saving as plot.html")
         fig.write_html("plot.html")
+        signal.alarm(0)  # turn off timeout
 
 
 class ProgressParallel(joblib.Parallel):
