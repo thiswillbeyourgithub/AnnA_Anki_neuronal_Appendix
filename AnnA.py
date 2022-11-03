@@ -2767,7 +2767,8 @@ if __name__ == "__main__":
                         help=(
                             "Wether to add a query to find the K nearest"
                             "neighbour of a given card to a new field "
-                            "called 'Nearest_neighbours'. Be careful not to "
+                            "called 'Nearest_neighbours' (only if already "
+                            "present in the model). Be careful not to "
                             "overwrite the fields by running AnnA "
                             "several times in a row! For example by first "
                             "burying learning cards then filtering "
