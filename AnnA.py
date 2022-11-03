@@ -2273,6 +2273,7 @@ threads of size {batchsize})")
             for n_nid in neighbours_nid:
                 G.add_edge(noteId, n_nid)
         nx.draw(G, with_labels=True)
+        plt.savefig(f"2D plot - {self.deckname}.png")
         plt.show()
         # done networkx #####################################################
 
