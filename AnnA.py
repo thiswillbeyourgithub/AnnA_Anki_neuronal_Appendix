@@ -1490,7 +1490,7 @@ threads of size {batchsize})")
     def _compute_KNN(self):
         """
         Compute the K nearest neighbour of each note of the distance matrix.
-        This is used to then fill the field "KNN_neighbours" of those notes
+        This is used to then fill the field "Nearest_neighbours" of those notes
         so that you can quickly know the neighbour of any given card straight
         into anki without having to use AnnA.
         """
@@ -1511,7 +1511,7 @@ threads of size {batchsize})")
 
     def _do_add_KNN_to_note(self):
         """
-        if the model card contains the field 'KNN_neighbours', replace its
+        if the model card contains the field 'Nearest_neighbours', replace its
         content by a query that can be used to find the neighbour of the
         given note.
         """
@@ -1527,7 +1527,7 @@ threads of size {batchsize})")
                     desc="Colecting neighbours of notes",
                     unit="card"):
                 cardId = self.df.index[i]
-                if "KNN_neighbours".lower() not in self.df.loc[cardId, "fields"].keys():
+                if "Nearest_neighbours".lower() not in self.df.loc[cardId, "fields"].keys():
                     continue
                 noteId = int(self.df.loc[cardId, "note"])
                 if noteId in modified_nid:
@@ -2538,7 +2538,7 @@ if __name__ == "__main__":
                             "or bury only the similar cards in review (among "
                             "other review cards) or just find the nearest "
                             "neighbours of each note and save it to the field "
-                            "'KNN_neighbours' of each note. Default is "
+                            "'Nearest_neighbours' of each note. Default is "
                             "\"`filter_review_cards`\"."))
     parser.add_argument("--target_deck_size",
                         nargs=1,
@@ -2767,7 +2767,7 @@ if __name__ == "__main__":
                         help=(
                             "Wether to add a query to find the K nearest"
                             "neighbour of a given card to a new field "
-                            "called 'KNN_neighbours'. Be careful not to "
+                            "called 'Nearest_neighbours'. Be careful not to "
                             "overwrite the fields by running AnnA "
                             "several times in a row! For example by first "
                             "burying learning cards then filtering "

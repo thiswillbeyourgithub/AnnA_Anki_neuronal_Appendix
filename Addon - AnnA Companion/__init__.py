@@ -538,8 +538,8 @@ class AnkiConnect:
         self.startEditing()
         for i in range(len(notes)):
             ankiNote = self.getNote(notes[i])
-            if ankiNote["KNN_neighbours"] != new_field_value[i]:
-                ankiNote["KNN_neighbours"] = new_field_value[i]
+            if ankiNote["Nearest_neighbours"] != new_field_value[i]:
+                ankiNote["Nearest_neighbours"] = new_field_value[i]
                 ankiNote.flush()
         self.collection().autosave()
         self.stopEditing()
