@@ -1402,6 +1402,8 @@ threads of size {batchsize})")
         else:
             raise ValueError("Invalid 'dist_metric' value")
 
+        self.df_dist = self.df_dist.sort_index()
+
         try:
             if self.add_knn_to_field or self.plot_2D_embeddings:
                 n_n = max(self.df_dist.shape[0] // 100, 10)  # 1% of neighbours
