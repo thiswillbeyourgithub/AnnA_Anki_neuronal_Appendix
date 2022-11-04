@@ -2296,19 +2296,22 @@ threads of size {batchsize})")
         signal.signal(signal.SIGALRM, time_watcher)
         signal.alarm(120)
 
-
         # networkx test #####################################################
         beep("Testing using networkx")
+
+        self.plot_dir = Path("NetworkX_plots")
+        self.plot_dir.mkdir(exist_ok=True)
         import networkx as nx
         import matplotlib.pyplot as plt
-        G = nx.Graph()
-        # add all nodes
-        already_added_nodes = []
+        from networkx.drawing.nx_pydot import write_dot
+        G = nx.MultiGraph()
+        positions = {}
+
+        # add nodes
         for cid in tqdm(self.df.index, desc="adding nodes", unit="node"):
             nid = self.df.loc[cid, "note"]
-            if nid not in already_added_nodes:
-                already_added_nodes.append(nid)
-                G.add_node(nid)
+            G.add_node(nid)
+            positions[nid] = tuple(self.df.loc[cid, "2D_embeddings"])
 
         # add all edges
         for i in tqdm(
@@ -2322,10 +2325,40 @@ threads of size {batchsize})")
             noteId = int(self.df.loc[self.df.index[i], "note"])
             for n_nid in neighbours_nid:
                 G.add_edge(noteId, n_nid)
-        nx.draw(G, with_labels=False)
-        plt.savefig(f"2D plot - {self.deckname}.png")
-        plt.show()
+
+        # 2D embeddings layout
+        whi("Drawing embedding network...")
+        nx.draw(G, with_labels=True, pos=positions)
+        plt.savefig(f"{self.plot_dir}/Embeddings {self.deckname}.png", dpi=300)
+        write_dot(G, f'{self.plot_dir}/Embeddings {self.deckname}.dot')
+        whi("Saved embeddings layout!")
+
+        # spring layout
+        whi("Drawing spring layout network...")
+        n = len(positions.keys())
+        nx.draw(G,
+                with_labels=True,
+                pos=nx.spring_layout(
+                    G,
+                    k=1 / np.sqrt(n),  # repulsive force
+                    pos=positions,  # initial positions is the 2D embeddings
+                    # fixed=None,  # keep those nodes at their starting position
+                    iterations=50,  # default to 50
+                    weight="weight",  # edge attribute that holds the weight
+                    # scale=1,
+                    # center=None,
+                    dim=2,  # dimension of layout
+                    seed=4242,
+                    )
+                )
+        plt.savefig(f"{self.plot_dir}/Spring {self.deckname}.png", dpi=300)
+        write_dot(G, f'{self.plot_dir}/Spring {self.deckname}.dot')
+        whi("Saved spring layout!")
+
+        signal.alarm(0)
         return  # don't proceed with plotly
+        # TODO importing to plotly: https://github.com/roholazandie/graph_drawing/blob/master/plotly_visualize.py
+
         # done networkx #####################################################
 
 
