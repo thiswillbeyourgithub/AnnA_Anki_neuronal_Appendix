@@ -543,7 +543,7 @@ values. {e}")
             self._compute_distance_matrix()
             self._compute_opti_rev_order()
             self._compute_KNN()
-            self._do_add_KNN_to_note
+            self._do_add_KNN_to_note()
             self._bury_or_create_filtered()
         elif task == "filter_review_cards":
             red("Task : created filtered deck containing review cards")
@@ -560,7 +560,7 @@ values. {e}")
             self._compute_distance_matrix()
             self._compute_opti_rev_order()
             self._compute_KNN()
-            self._do_add_KNN_to_note
+            self._do_add_KNN_to_note()
             self._bury_or_create_filtered()
         elif task == "just_add_KNN":
             red("Task : find the nearest neighbour of each note and "
@@ -579,7 +579,7 @@ values. {e}")
             self._compute_card_vectors()
             self._compute_distance_matrix()
             self._compute_KNN()
-            self._do_add_KNN_to_note
+            self._do_add_KNN_to_note()
         else:
             raise ValueError(f"Invalid task value: {task}")
 
@@ -2285,6 +2285,7 @@ threads of size {batchsize})")
         """
         Create a 2D network plot of the deck.
         """
+        red("Creating 2D plots...")
         assert self.plot_2D_embeddings, "invalid arguments!"
         assert hasattr(self, "knn"), "no knn in attribute!"
         assert "2D_embeddings" in self.df.columns, "no x/y columns in df!"
