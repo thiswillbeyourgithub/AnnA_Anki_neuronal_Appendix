@@ -2183,10 +2183,8 @@ threads of size {batchsize})")
             return True
         else:
             if self.filtered_deck_name_template is not None:
-                filtered_deck_name_template = self.filtered_deck_name_template
-            if filtered_deck_name_template is not None:
                 filtered_deck_name = str(
-                    filtered_deck_name_template + f" - {self.deckname}")
+                    self.filtered_deck_name_template + f" - {self.deckname}")
                 filtered_deck_name = filtered_deck_name.replace("::", "_")
             else:
                 filtered_deck_name = f"{self.deckname} - AnnA Optideck"
