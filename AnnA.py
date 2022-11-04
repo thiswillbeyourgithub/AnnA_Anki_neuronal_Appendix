@@ -527,9 +527,9 @@ values. {e}")
             # bypasses most of the code to bury learning cards
             # directly in the deck without creating filtered decks
             if task == "bury_excess_learning_cards":
-                yel("Task : bury some learning cards")
+                red("Task : bury some learning cards")
             elif task == "bury_excess_review_cards":
-                yel("Task : bury some reviews\n")
+                red("Task : bury some reviews\n")
             self._init_dataFrame()
             if self.not_enough_cards is True:
                 return
@@ -546,7 +546,7 @@ values. {e}")
             self._do_add_KNN_to_note
             self._bury_or_create_filtered()
         elif task == "filter_review_cards":
-            yel("Task : created filtered deck containing review cards")
+            red("Task : created filtered deck containing review cards")
             self._init_dataFrame()
             if self.not_enough_cards is True:
                 return
@@ -563,7 +563,7 @@ values. {e}")
             self._do_add_KNN_to_note
             self._bury_or_create_filtered()
         elif task == "just_add_KNN":
-            yel("Task : find the nearest neighbour of each note and "
+            red("Task : find the nearest neighbour of each note and "
                 "add it to a field.")
             whi("(Setting 'rated_last_X_days' to None)")
             self.rated_last_X_days = None
