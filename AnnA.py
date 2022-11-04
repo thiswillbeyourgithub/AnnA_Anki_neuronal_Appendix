@@ -1224,9 +1224,11 @@ threads of size {batchsize})")
                                    token_pattern=None,
                                    stop_words=None,
                                    ngram_range=ngram_val,
-                                   max_features=min(len(df.index) // 2, 10_000),
                                    norm="l2",
                                    sublinear_tf=True,
+                                   max_features=min(len(df.index) // 2, 10_000),
+                                   max_df=0.95,  # ignore words present in more than X% of documents
+                                   min_df=5,  # ignore words than appear less than n times
                                    )
         use_fallback = False
         if self.whole_deck_computation:
