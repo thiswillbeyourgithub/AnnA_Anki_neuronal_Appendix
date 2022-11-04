@@ -2322,9 +2322,10 @@ threads of size {batchsize})")
             noteId = int(self.df.loc[self.df.index[i], "note"])
             for n_nid in neighbours_nid:
                 G.add_edge(noteId, n_nid)
-        nx.draw(G, with_labels=True)
+        nx.draw(G, with_labels=False)
         plt.savefig(f"2D plot - {self.deckname}.png")
         plt.show()
+        return  # don't proceed with plotly
         # done networkx #####################################################
 
 
