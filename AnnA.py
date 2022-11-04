@@ -2303,8 +2303,12 @@ threads of size {batchsize})")
         import matplotlib.pyplot as plt
         G = nx.Graph()
         # add all nodes
+        already_added_nodes = []
         for cid in tqdm(self.df.index, desc="adding nodes", unit="node"):
-            G.add_node(self.df.loc[cid, "note"])
+            nid = self.df.loc[cid, "note"]
+            if nid not in already_added_nodes:
+                already_added_nodes.append(nid)
+                G.add_node(nid)
 
         # add all edges
         for i in tqdm(
