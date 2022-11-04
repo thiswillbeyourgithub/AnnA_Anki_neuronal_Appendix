@@ -2303,7 +2303,6 @@ threads of size {batchsize})")
         self.plot_dir.mkdir(exist_ok=True)
         import networkx as nx
         import matplotlib.pyplot as plt
-        from networkx.drawing.nx_pydot import write_dot
         G = nx.MultiGraph()
         positions = {}
 
@@ -2328,9 +2327,16 @@ threads of size {batchsize})")
 
         # 2D embeddings layout
         whi("Drawing embedding network...")
-        nx.draw(G, with_labels=True, pos=positions)
+        nx.draw(G,
+                with_labels=True,
+                pos=positions,
+                alpha=0.8,
+                width=0.5,
+                font_size=5,
+                label="test label",
+                )
         plt.savefig(f"{self.plot_dir}/Embeddings {self.deckname}.png", dpi=300)
-        write_dot(G, f'{self.plot_dir}/Embeddings {self.deckname}.dot')
+        nx.drawing.nx_pydot.write_dot(G, f'{self.plot_dir}/Embeddings {self.deckname}.dot')
         whi("Saved embeddings layout!")
 
         # spring layout
@@ -2349,94 +2355,102 @@ threads of size {batchsize})")
                     # center=None,
                     dim=2,  # dimension of layout
                     seed=4242,
-                    )
+                    ),
+                alpha=0.8,
+                width=0.5,
+                font_size=5,
+                label="test label",
                 )
         plt.savefig(f"{self.plot_dir}/Spring {self.deckname}.png", dpi=300)
-        write_dot(G, f'{self.plot_dir}/Spring {self.deckname}.dot')
+        nx.drawing.nx_pydit.write_dot(G, f'{self.plot_dir}/Spring {self.deckname}.dot')
         whi("Saved spring layout!")
 
-        signal.alarm(0)
-        return  # don't proceed with plotly
-        # TODO importing to plotly: https://github.com/roholazandie/graph_drawing/blob/master/plotly_visualize.py
+        beep("Finished networkx!")
+
+        # TODO : import to plotly using:
+        # https://github.com/roholazandie/graph_drawing/blob/master/plotly_visualize.py
+        # play with 3 dimensions instead of 2
+
+
+
 
         # done networkx #####################################################
 
+        # whi("Computing edges...")
+        # edge_x = []
+        # edge_y = []
+        # for i in tqdm(
+        #         range(self.knn.shape[0]),
+        #         desc="computing edges",
+        #         unit="point"):
+        #     ar = self.knn.getcol(i).toarray().squeeze()
+        #     neighbour_indices = np.where(ar == 1)[0]
+        #     for ni in neighbour_indices:
+        #         edge_x.append(self.df["2D_embeddings"].iloc[i][0])
+        #         edge_x.append(self.df["2D_embeddings"].iloc[ni][0])
+        #         edge_x.append(None)
+        #         edge_y.append(self.df["2D_embeddings"].iloc[i][1])
+        #         edge_y.append(self.df["2D_embeddings"].iloc[ni][1])
+        #         edge_y.append(None)
 
-        whi("Computing edges...")
-        edge_x = []
-        edge_y = []
-        for i in tqdm(
-                range(self.knn.shape[0]),
-                desc="computing edges",
-                unit="point"):
-            ar = self.knn.getcol(i).toarray().squeeze()
-            neighbour_indices = np.where(ar == 1)[0]
-            for ni in neighbour_indices:
-                edge_x.append(self.df["2D_embeddings"].iloc[i][0])
-                edge_x.append(self.df["2D_embeddings"].iloc[ni][0])
-                edge_x.append(None)
-                edge_y.append(self.df["2D_embeddings"].iloc[i][1])
-                edge_y.append(self.df["2D_embeddings"].iloc[ni][1])
-                edge_y.append(None)
+        # edge_trace = px.scatter(
+        #     x=edge_x,
+        #     y=edge_y,
+        #     #line=dict(width=0.1, color='rgba(255, 0, 0, 0.5)'),
+        #     #hoverinfo='none',
+        #     mode='lines'
+        #     )
 
-        edge_trace = px.scatter(
-            x=edge_x,
-            y=edge_y,
-            #line=dict(width=0.1, color='rgba(255, 0, 0, 0.5)'),
-            #hoverinfo='none',
-            mode='lines'
-            )
+        # whi("Adding nodes...")
+        # self.df["x"] = [x[0] for x in self.df["2D_embeddings"]]
+        # self.df["y"] = [y[1] for y in self.df["2D_embeddings"]]
+        # node_trace = px.scatter(
+        #     self.df,
+        #     x="x",
+        #     y="y",
+        #     mode='markers',
+        #     hover_name=["tags", "text", "status", "interval", "ref", "modelName"],
+        #     marker=dict(
+        #         showscale=True,
+        #         # colorscale options
+        #         #'Greys' | 'YlGnBu' | 'Greens' | 'YlOrRd' | 'Bluered' | 'RdBu' |
+        #         #'Reds' | 'Blues' | 'Picnic' | 'Rainbow' | 'Portland' | 'Jet' |
+        #         #'Hot' | 'Blackbody' | 'Earth' | 'Electric' | 'Viridis' |
+        #         #colorscale='Jet',
+        #         reversescale=True,
+        #         color=["tags"],
+        #         color_discrete_sequence=px.colors.qualitative.G10,
+        #         size=10,
+        #         colorbar=dict(
+        #             thickness=15,
+        #             title='Node Connections',
+        #             xanchor='left',
+        #             titleside='right'
+        #         ),
+        #         line_width=1))
 
-        whi("Adding nodes...")
-        self.df["x"] = [x[0] for x in self.df["2D_embeddings"]]
-        self.df["y"] = [y[1] for y in self.df["2D_embeddings"]]
-        node_trace = px.scatter(
-            self.df,
-            x="x",
-            y="y",
-            mode='markers',
-            hover_name=["tags", "text", "status", "interval", "ref", "modelName"],
-            marker=dict(
-                showscale=True,
-                # colorscale options
-                #'Greys' | 'YlGnBu' | 'Greens' | 'YlOrRd' | 'Bluered' | 'RdBu' |
-                #'Reds' | 'Blues' | 'Picnic' | 'Rainbow' | 'Portland' | 'Jet' |
-                #'Hot' | 'Blackbody' | 'Earth' | 'Electric' | 'Viridis' |
-                #colorscale='Jet',
-                reversescale=True,
-                color=["tags"],
-                color_discrete_sequence=px.colors.qualitative.G10,
-                size=10,
-                colorbar=dict(
-                    thickness=15,
-                    title='Node Connections',
-                    xanchor='left',
-                    titleside='right'
-                ),
-                line_width=1))
+        # whi("Creating plot...")
+        # fig = go.Figure(data=[node_trace, edge_trace])
+        # fig.update_layout(
+        #         title=f'<br>Network of {self.deckname}</br>',
+        #         titlefont_size=18,
+        #         showlegend=False,
+        #         hovermode='closest',
+        #         hoverdata=self.df["text"],
+        #         color=self.df["status"],
+        #         margin=dict(b=20,l=5,r=5,t=40),
+        #                  annotations=[ dict(
+        #                      text="Python code: <a href='https://plotly.com/ipython-notebooks/network-graphs/'> https://plotly.com/ipython-notebooks/network-graphs/</a>",
+        #                      showarrow=False,
+        #                      xref="paper", yref="paper",
+        #                      x=0.005, y=-0.002 ) ],
+        #         xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+        #         yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+        #         )
+        # fig.show()
 
-        whi("Creating plot...")
-        fig = go.Figure(data=[node_trace, edge_trace])
-        fig.update_layout(
-                title=f'<br>Network of {self.deckname}</br>',
-                titlefont_size=18,
-                showlegend=False,
-                hovermode='closest',
-                hoverdata=self.df["text"],
-                color=self.df["status"],
-                margin=dict(b=20,l=5,r=5,t=40),
-#                        annotations=[ dict(
-#                            text="Python code: <a href='https://plotly.com/ipython-notebooks/network-graphs/'> https://plotly.com/ipython-notebooks/network-graphs/</a>",
-#                            showarrow=False,
-#                            xref="paper", yref="paper",
-#                            x=0.005, y=-0.002 ) ],
-                xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-                yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-                )
-        fig.show()
-
-        whi("Saving as plot.html")
-        fig.write_html("plot.html")
+        # whi("Saving as plot.html")
+        # fig.write_html("plot.html")
         signal.alarm(0)  # turn off timeout
 
 
