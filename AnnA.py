@@ -488,6 +488,7 @@ values. {e}")
 
         try:
             stops = []
+            stops.append("<NEWFIELD>")
             for lang in self.stopwords_lang:
                 stops += stopwords.words(lang)
             if self.TFIDF_tokenize:
