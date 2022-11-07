@@ -19,3 +19,4 @@ ankipandas>=0.3.10
 
 matplotlib>=3.6.1
 networkx>=2.8.7
+pydot>=1.4.2

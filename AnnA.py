@@ -2304,7 +2304,7 @@ threads of size {batchsize})")
             "used to issue a timeout"
             raise TimeoutError("Timed out. Not finishing 2D plots.")
         signal.signal(signal.SIGALRM, time_watcher)
-        signal.alarm(120)
+        signal.alarm(1800)
 
         # networkx test #####################################################
         beep("Testing using networkx")
@@ -2320,9 +2320,11 @@ threads of size {batchsize})")
         for cid in tqdm(self.df.index, desc="adding nodes", unit="node"):
             nid = self.df.loc[cid, "note"]
             G.add_node(nid)
-            positions[nid] = tuple(self.df.loc[cid, "2D_embeddings"])
+            print(list(self.df.loc[cid, "2D_embeddings"]))
+            positions[nid] = list(self.df.loc[cid, "2D_embeddings"])
 
         # add all edges
+        all_edges = {}
         for i in tqdm(
                 range(self.knn.shape[0]),
                 desc="computing edges",
@@ -2333,17 +2335,30 @@ threads of size {batchsize})")
                               for ind in np.argwhere(neighbour_indices == 1)]
             noteId = int(self.df.loc[self.df.index[i], "note"])
             for n_nid in neighbours_nid:
-                G.add_edge(noteId, n_nid)
+                smallest = min(noteId, n_nid)
+                largest = max(noteId, n_nid)
+                if smallest not in all_edges:
+                    all_edges[smallest] = {largest: 1}
+                else:
+                    if largest not in all_edges[smallest]:
+                        all_edges[smallest][largest] = 1
+                    else:
+                        all_edges[smallest][largest] += 1
+
+        for k, v in tqdm(all_edges.items(), desc="adding edges"):
+            for sub_k, sub_v in all_edges.items():
+                G.add_edge(k, sub_k, {"weight": sub_v})
 
         # 2D embeddings layout
         whi("Drawing embedding network...")
         nx.draw(G,
-                with_labels=True,
+                with_labels=False,
                 pos=positions,
-                alpha=0.8,
-                width=0.5,
+                alpha=0.6,
+                width=1,
+                node_size=10,
                 font_size=5,
-                label="test label",
+                # label="test label",
                 )
         plt.savefig(f"{self.plot_dir}/Embeddings {self.deckname}.png", dpi=300)
         nx.drawing.nx_pydot.write_dot(G, f'{self.plot_dir}/Embeddings {self.deckname}.dot')
@@ -2353,33 +2368,36 @@ threads of size {batchsize})")
         whi("Drawing spring layout network...")
         n = len(positions.keys())
         nx.draw(G,
-                with_labels=True,
+                with_labels=False,
                 pos=nx.spring_layout(
                     G,
-                    k=1 / np.sqrt(n),  # repulsive force
+                    k=1 / np.sqrt(n) * 5,  # repulsive force
                     pos=positions,  # initial positions is the 2D embeddings
                     # fixed=None,  # keep those nodes at their starting position
                     iterations=50,  # default to 50
-                    weight="weight",  # edge attribute that holds the weight
+                    # weight="weight",  # edge attribute that holds the weight
                     # scale=1,
-                    # center=None,
+                    # center=None,  # center on a specific node
                     dim=2,  # dimension of layout
                     seed=4242,
                     ),
-                alpha=0.8,
-                width=0.5,
+                alpha=0.6,
+                width=1,
+                node_size=10,
                 font_size=5,
-                label="test label",
+                # label="test label",
                 )
         plt.savefig(f"{self.plot_dir}/Spring {self.deckname}.png", dpi=300)
-        nx.drawing.nx_pydit.write_dot(G, f'{self.plot_dir}/Spring {self.deckname}.dot')
+        nx.drawing.nx_pydot.write_dot(G, f'{self.plot_dir}/Spring {self.deckname}.dot')
         whi("Saved spring layout!")
 
         beep("Finished networkx!")
 
-        # TODO : import to plotly using:
-        # https://github.com/roholazandie/graph_drawing/blob/master/plotly_visualize.py
-        # play with 3 dimensions instead of 2
+        # TODO :
+        # * add color by date of note creation
+        # * import to plotly using:
+        #   https://github.com/roholazandie/graph_drawing/blob/master/plotly_visualize.py
+        # * play with 3 dimensions instead of 2
 
 
 
