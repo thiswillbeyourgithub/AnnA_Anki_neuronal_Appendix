@@ -1508,7 +1508,7 @@ threads of size {batchsize})")
             whi("Computing KNN matrix is not needed by those arguments.")
             return
         try:
-            n_n = max(self.df_dist.shape[0] // 100, 10)  # 1% of neighbours
+            n_n = min(25, max(self.df_dist.shape[0] // 100, 10))  # 1% of neighbours
             yel(f"Computing '{n_n}' nearest neighbours per point...")
             self.knn = kneighbors_graph(
                     self.df_dist,
