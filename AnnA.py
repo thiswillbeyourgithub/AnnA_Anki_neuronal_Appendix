@@ -1994,9 +1994,9 @@ threads of size {batchsize})")
 
             The content of 'queue' is the list of card_id in best review order.
             """
-            minimum = 1.0 * np.min(array, axis=1)
-            average = 0.0 * np.mean(array, axis=1)
-            med = 0.0 * np.median(array, axis=1)
+            minimum = 0.9 * np.min(array, axis=1)
+            average = 0.05 * np.mean(array, axis=1)
+            med = 0.05 * np.median(array, axis=1)
             dist_score = minimum + average + med
             if self.log_level >= 2:
                 avg = np.mean(dist_score) * self.score_adjustment_factor[1]
