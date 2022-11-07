@@ -1556,14 +1556,14 @@ threads of size {batchsize})")
                 new_content = "nid:" + ",".join(neighbours_nid)
                 modified_nid.append(noteId)
                 new_content_list.append(new_content)
-            whi("Sending new field value to Anki (1/2)...")
+            whi("Sending new field value to Anki (tagging)...")
             tags_added = False
             self._call_anki(
                     action="addTags",
                     notes=modified_nid,
                     tags="AnnA::added_KNN")
             tags_added = True
-            whi("Sending new field value to Anki (2/2)...")
+            whi("Sending new field value to Anki...")
             assert len(new_content_list) == len(modified_nid)
             self._call_anki(
                     action="update_KNN_field",
