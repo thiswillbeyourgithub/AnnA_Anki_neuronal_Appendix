@@ -2038,10 +2038,9 @@ threads of size {batchsize})")
                     if i == 0:
                         new_queue.append(to_process.pop(i))
                         continue
-                    score = w2 * combinator(
+                    score = - w2 * combinator(
                             self.df_dist.loc[to_process, new_queue].values)
-                    # taking argmax because there is no minus sign
-                    new_queue.append(to_process.pop(score.argmax()))
+                    new_queue.append(to_process.pop(score.argmin()))
                 assert len(to_process) == 0, "to_process is not empty!"
                 assert len(list(set(queue))) == len(list(set(new_queue))), (
                         "Invalid length of new queue!")
