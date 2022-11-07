@@ -473,6 +473,13 @@ multiple times in acronym dictionnary, keeping only the last one.")
         else:
             self.acronym_dict = {}
 
+        for compiled, value in self.acronym_dict.items():
+            for compiled2, value2 in self.acronym_dict.items():
+                if compiled == compiled2:
+                    continue
+                if re.match(compiled, value2) or re.match(compiled2, value):
+                    beep(f"Find plausible duplicate acronym: '{compiled}' and '{compiled2}'")
+
         if self.field_mappings is not None:
             f = Path(self.field_mappings)
             try:
