@@ -2114,7 +2114,7 @@ threads of size {batchsize})")
         if not len(self.acronym_dict.keys()):
             return True
 
-        full_text = " ".join(self.df["text"].tolist()).replace("'", " ")
+        full_text = " ".join(self.df["text"].tolist()).replace("'", " ").replace("<NEWFIELD>", " ")
         if exclude_OCR_text:
             ocr = re.findall("[A-Z][A-Z0-9]{2,}",
                              string=self.OCR_content,
