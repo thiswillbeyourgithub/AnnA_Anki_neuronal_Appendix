@@ -192,7 +192,7 @@ class AnnA:
                  TFIDF_stem=False,
                  dist_metric="RBF",  # 'RBF' or 'cosine'
 
-                 whole_deck_computation=True,
+                 whole_deck_computation=False,
                  profile_name=None,
                  ):
 
@@ -2974,11 +2974,11 @@ if __name__ == "__main__":
                             "experimental but should work!"))
     parser.add_argument("--whole_deck_computation",
                         dest="whole_deck_computation",
-                        default=True,
+                        default=False,
                         required=False,
                         action="store_true",
                         help=(
-                            "defaults to `True`. Use ankipandas to "
+                            "defaults to `False`. Use ankipandas to "
                             "extract all text from the deck to feed into the "
                             "vectorizer. Results in more accurate relative "
                             "distances between cards."
