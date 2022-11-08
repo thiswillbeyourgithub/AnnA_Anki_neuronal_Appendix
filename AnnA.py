@@ -2452,8 +2452,10 @@ threads of size {batchsize})")
                     else:
                         all_edges[smallest][largest] += 1
 
-        for k, v in tqdm(all_edges.items(), desc="adding edges", file=self.t_strm):
-            for sub_k, sub_v in all_edges.items():
+        for k, v in tqdm(all_edges.items(),
+                         desc="adding edges",
+                         file=self.t_strm):
+            for sub_k, sub_v in all_edges[k].items():
                 G.add_edge(k, sub_k, {"weight": sub_v})
 
         # 2D embeddings layout
