@@ -1,3 +1,4 @@
+import traceback
 import copy
 import beepy
 import argparse
@@ -640,8 +641,7 @@ class AnnA:
                 self._do_2D_plots()
             except Exception as err:
                 beep(f"Exception when plotting 2D embeddings: '{err}'")
-                import traceback
-                beep("\n".join(traceback.format_stack()))
+                red(traceback.format_exc())
             signal.alarm(0)  # turn off timeout
         beep(f"\nDone with task '{self.task}' on deck '{self.deckname}'")
         gc.collect()
