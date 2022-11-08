@@ -500,19 +500,22 @@ class AnnA:
 
             # checking if acronyms overlap, this can be intentionnal
             to_notify = []
+            acronyms_overlapping = {}
             for compiled, value in compiled_dic.items():
                 for compiled2, value2 in compiled_dic.items():
-                    if compiled == compiled2:
+                    if compiled.pattern == compiled2.pattern:
                         continue
-                    if re.match(compiled,
-                                value2) or re.match(compiled2,
-                                                    value):
-                        first, second = sorted([compiled.pattern,
-                                                compiled2.pattern])
-                        to_notify.append(f"  * '{first}' and '{second}'")
+                    if re.match(compiled, value2):
+                        if compiled.pattern not in acronyms_overlapping:
+                            acronyms_overlapping[
+                                    compiled.pattern] = [compiled2]
+                        else:
+                            acronyms_overlapping[compiled.pattern].append(compiled2)
+                        to_notify.append(f"  * '{compiled.pattern}' matches "
+                                         f"value of '{compiled2.pattern}'")
             to_notify = sorted(set(to_notify))
             if to_notify:
-                red(f"\nFound {len(to_notify)} plausible duplicate or "
+                red(f"\nFound {len(to_notify)} "
                     "overlapping "
                     "acronym patterns (this can be intentional):")
                 for notif in to_notify:
@@ -520,8 +523,10 @@ class AnnA:
                 print("\n")
 
             self.acronym_dict = compiled_dic
+            self.acronyms_overlapping = acronyms_overlapping
         else:
             self.acronym_dict = {}
+            self.acronyms_overlapping = {}
 
         # load field mappings
         if self.field_mappings is not None:
@@ -1023,13 +1028,24 @@ threads of size {batchsize})")
 
         # replace acronyms
         if self.acronym_file is not None:
-            for compiled, new_word in self.acronym_dict.items():
-                text = re.sub(compiled,
-                              lambda string:
-                              self._regexp_acronym_replacer(string,
-                                                            compiled,
-                                                            new_word),
-                              text)
+            for regex, new_value in self.acronym_dict.items():
+                if re.match(regex, text):
+                    text = re.sub(regex,
+                                  lambda in_string:
+                                  self._regexp_acronym_replacer(in_string,
+                                                                regex,
+                                                                new_value),
+                                  text)
+
+                    # if overlapping patterns, apply sequentially
+                    if regex.pattern in self.acronyms_overlapping:
+                        for regex2 in self.acronyms_overlapping[regex.pattern]:
+                            new_value2 = self.acronym_dict[regex2]
+                            text = re.sub(regex2,
+                                          lambda in_string:
+                                          self._regexp_acronym_replacer(
+                                              in_string, regex2, new_value2),
+                                          text)
 
         # misc
         text = " ".join(text.split())  # multiple spaces
