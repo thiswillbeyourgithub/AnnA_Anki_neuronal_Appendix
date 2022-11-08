@@ -1,9 +1,11 @@
-plyer >= 2.0.0
-pyfiglet >= 0.8.post1
-prompt_toolkit >= 3.0.14
-python_Levenshtein >= 0.12.2
-beepy>=1.0.7
+plyer >= 2.0.0  # for notification, can help to install dbus-python too
+pyfiglet >= 0.8.post1   # for banner
+prompt_toolkit >= 3.0.14  # for autocomplete prompt
+python_Levenshtein >= 0.12.2  # to correct for field mapping and note type spelling errors
+beepy>=1.0.7  # make a beeping sound
+ankipandas>=0.3.10  # to load the anki collection
 
+# datascience and computation
 pandas == 1.2.3
 joblib >= 1.1.0
 
@@ -15,8 +17,7 @@ nltk >= 3.5
 tokenizers >= 0.10.3
 transformers >= 4.22.2
 
-ankipandas>=0.3.10
-
+# 2D plot
 matplotlib>=3.6.1
 networkx>=2.8.7
 pydot>=1.4.2
