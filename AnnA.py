@@ -206,7 +206,8 @@ class AnnA:
 
         gc.collect()
 
-        # init logging
+        # init logging #######################################################
+
         self.log_level = log_level
         if log_level == 0:
             log.setLevel(logging.ERROR)
@@ -217,7 +218,8 @@ class AnnA:
         else:
             log.setLevel(logging.INFO)
 
-        # loading arguments and proceed to check correct values
+        # loading arguments and proceed to check correct values ##############
+
         assert isinstance(
             replace_greek, bool), "Invalid type of `replace_greek`"
         self.replace_greek = replace_greek
@@ -241,9 +243,9 @@ class AnnA:
                         "Invalid value for `target_deck_size`"))
         self.target_deck_size = target_deck_size
         if target_deck_size in ["all", 1.0, "100%"] and (
-            task == "bury_excess_review_cards"):
-            beep(f"{self.deckname} - Arguments mean that all cards will be selected "
-                 "and none will be buried. It makes no sense."
+                task == "bury_excess_review_cards"):
+            beep(f"{self.deckname} - Arguments mean that all cards "
+                 "will be selected and none will be buried. It makes no sense."
                  " Aborting.")
             raise Exception("Arguments mean that all cards will be selected "
                             "and none will be buried. It makes no sense."
@@ -319,7 +321,8 @@ class AnnA:
             assert TFIDF_dim == "auto", "Invalid value for `TFIDF_dim`"
         self.TFIDF_dim = TFIDF_dim
 
-        assert isinstance(plot_2D_embeddings, bool), "Invalid type of `plot_2D_embeddings`"
+        assert isinstance(plot_2D_embeddings, bool), (
+            "Invalid type of `plot_2D_embeddings`")
         self.plot_2D_embeddings = plot_2D_embeddings
         assert isinstance(TFIDF_stem, bool), "Invalid type of `TFIDF_stem`"
         assert isinstance(
@@ -331,7 +334,8 @@ class AnnA:
         assert tokenizer_model.lower() in ["bert", "gpt", "both"], (
             "Wrong tokenizer model name!")
         self.tokenizer_model = tokenizer_model
-        assert dist_metric.lower() in ["cosine", "rbf"], "Invalid 'dist_metric'"
+        assert dist_metric.lower() in ["cosine", "rbf"], (
+            "Invalid 'dist_metric'")
         self.dist_metric = dist_metric.lower()
 
         assert task in ["filter_review_cards",
@@ -378,121 +382,141 @@ class AnnA:
         assert isinstance(enable_fuzz, bool), "Invalid type for 'enable_fuzz'"
         self.enable_fuzz = enable_fuzz
 
-        assert isinstance(resort_by_dist, bool), "Invalid type for 'resort_by_dist'"
+        assert isinstance(resort_by_dist, bool), (
+            "Invalid type for 'resort_by_dist'")
         self.resort_by_dist = resort_by_dist
 
         # initialize joblib caching
-        self.mem = joblib.Memory("./cache", mmap_mode="r", verbose=0)
+        # self.mem = joblib.Memory("./cache", mmap_mode="r", verbose=0)
 
-        # additional processing of arguments
+        # additional processing of arguments #################################
+
         if task != "filter_review_cards" and (
                 self.filtered_deck_name_template is not None):
             red("Ignoring argument 'filtered_deck_name_template' because "
                 "'task' is not set to 'filter_review_cards'.")
 
+        # load tokenizers
         if TFIDF_tokenize:
             if self.tokenizer_model.lower() in ["bert", "both"]:
                 yel("Will use BERT as tokenizer.")
-                self.tokenizer_bert = Tokenizer.from_file("./bert-base-multilingual-cased_tokenizer.json")
+                self.tokenizer_bert = Tokenizer.from_file(
+                    "./bert-base-multilingual-cased_tokenizer.json")
                 self.tokenizer_bert.no_truncation()
                 self.tokenizer_bert.no_padding()
                 self.tokenize = self._bert_tokenize
             if self.tokenizer_model.lower() in ["gpt", "both"]:
                 yel("Will use GPT as tokenizer.")
-                self.tokenizer_gpt = Tokenizer.from_file("./gpt_neox_20B_tokenizer.json")
+                self.tokenizer_gpt = Tokenizer.from_file(
+                    "./gpt_neox_20B_tokenizer.json")
                 self.tokenizer_gpt.no_truncation()
                 self.tokenizer_gpt.no_padding()
                 self.tokenize = self._gpt_tokenize
             if self.tokenizer_model.lower() == "both":
                 yel("Using both GPT and BERT as tokenizers.")
-                self.tokenize = lambda x: self._gpt_tokenize(x) + self._bert_tokenize(x)
+                self.tokenize = lambda x: self._gpt_tokenize(
+                        x) + self._bert_tokenize(x)
         else:
-            # dummy tokenizer
-            self.tokenize = lambda x: x.replace("<NEWFIELD>", " ").strip().split(" ")
+            # create dummy tokenizer
+            self.tokenize = lambda x: x.replace("<NEWFIELD>", " ").strip(
+                    ).split(" ")
 
+        # load acronyms
         if self.acronym_file is not None and self.acronym_list is not None:
             file = Path(acronym_file)
             if not file.exists():
-                beep(f"{self.deckname} - Acronym file was not found: {acronym_file}")
+                beep(f"{self.deckname} - Acronym file was not "
+                     f"found: {acronym_file}")
                 raise Exception(f"Acronym file was not found: {acronym_file}")
+
+            # importing acronym file
+            if ".py" in acronym_file:
+                acr_mod = importlib.import_module(acronym_file.replace(
+                    ".py", ""))
             else:
-                # importing acronym file
-                if ".py" in acronym_file:
-                    acr_mod = importlib.import_module(acronym_file.replace(
-                        ".py", ""))
-                else:
-                    acr_mod = importlib.import_module(acronym_file)
+                acr_mod = importlib.import_module(acronym_file)
 
-                # getting acronym dictionnary list
-                acr_dict_list = [x for x in dir(acr_mod)
-                                 if not x.startswith("_")]
+            # getting acronym dictionnary list
+            acr_dict_list = [x for x in dir(acr_mod)
+                             if not x.startswith("_")]
 
-                # if empty file:
-                if len(acr_dict_list) == 0:
-                    beep(f"{self.deckname} - No dictionnary found in {acronym_file}")
-                    raise SystemExit()
+            # if empty file:
+            if len(acr_dict_list) == 0:
+                beep(f"{self.deckname} - No dictionnary found "
+                     f"in {acronym_file}")
+                raise SystemExit()
 
-                if isinstance(self.acronym_list, str):
-                    self.acronym_list = [self.acronym_list]
+            if isinstance(self.acronym_list, str):
+                self.acronym_list = [self.acronym_list]
 
-                missing = [x for x in self.acronym_list
-                           if x not in acr_dict_list]
-                if missing:
-                    beep(f"{self.deckname} - Mising the following acronym dictionnary in "
-                         f"{acronym_file}: {','.join(missing)}")
-                    raise SystemExit()
+            missing = [x for x in self.acronym_list
+                       if x not in acr_dict_list]
+            if missing:
+                beep(f"{self.deckname} - Mising the following acronym "
+                     "dictionnary in "
+                     f"{acronym_file}: {','.join(missing)}")
+                raise SystemExit()
 
-                acr_dict_list = [x for x in acr_dict_list
-                                 if x in self.acronym_list]
+            acr_dict_list = [x for x in acr_dict_list
+                             if x in self.acronym_list]
 
-                if len(acr_dict_list) == 0:
-                    beep(f"{self.deckname} - No dictionnary from {self.acr_dict_list} "
-                         f"found in {acronym_file}")
-                    raise SystemExit()
+            if len(acr_dict_list) == 0:
+                beep(f"{self.deckname} - No dictionnary from "
+                     f"{self.acr_dict_list} "
+                     f"found in {acronym_file}")
+                raise SystemExit()
 
-                compiled_dic = {}
-                notifs = []
-                for item in acr_dict_list:
-                    acronym_dict = eval(f"acr_mod.{item}")
-                    for ac in acronym_dict:
-                        if ac.lower() == ac:
-                            compiled = re.compile(r"\b" + ac + r"\b",
-                                                  flags=(re.IGNORECASE |
-                                                         re.MULTILINE |
-                                                         re.DOTALL))
-                        else:
-                            compiled = re.compile(r"\b" + ac + r"\b",
-                                                  flags=(
-                                                      re.MULTILINE |
-                                                      re.DOTALL))
-                        if compiled in compiled_dic:
-                            notifs.append(f"Pattern '{compiled}' found \
-multiple times in acronym dictionnary, keeping only the last one.")
-                        compiled_dic[compiled] = acronym_dict[ac]
-                notifs = list(set(notifs))
-                if notifs:
-                    for n in notifs:
-                        beep(n)
-                self.acronym_dict = compiled_dic
+            compiled_dic = {}
+            notifs = []
+            for item in acr_dict_list:
+                acronym_dict = eval(f"acr_mod.{item}")
+                for ac in acronym_dict:
+                    if ac.lower() == ac:
+                        compiled = re.compile(r"\b" + ac + r"\b",
+                                              flags=(re.IGNORECASE |
+                                                     re.MULTILINE |
+                                                     re.DOTALL))
+                    else:
+                        compiled = re.compile(r"\b" + ac + r"\b",
+                                              flags=(
+                                                  re.MULTILINE |
+                                                  re.DOTALL))
+                    if compiled in compiled_dic:
+                        notifs.append(
+                                f"Pattern '{compiled}' found "
+                                "multiple times in acronym dictionnary, "
+                                "keeping only the last one.")
+                    compiled_dic[compiled] = acronym_dict[ac]
+            notifs = sorted(set(notifs))
+            if notifs:
+                for n in notifs:
+                    beep(n)
+
+            # checking if acronyms overlap, this can be intentionnal
+            to_notify = []
+            for compiled, value in compiled_dic.items():
+                for compiled2, value2 in compiled_dic.items():
+                    if compiled == compiled2:
+                        continue
+                    if re.match(compiled,
+                                value2) or re.match(compiled2,
+                                                    value):
+                        first, second = sorted([compiled.pattern,
+                                                compiled2.pattern])
+                        to_notify.append(f"  * '{first}' and '{second}'")
+            to_notify = sorted(set(to_notify))
+            if to_notify:
+                red(f"Found {len(to_notify)} plausible duplicate or "
+                    "overlapping "
+                    "acronym patterns (this can be intentional):")
+                for notif in to_notify:
+                    yel(notif)
+
+            self.acronym_dict = compiled_dic
         else:
             self.acronym_dict = {}
 
-        # checking if acronyms overlap, this can be intentionnal
-        to_notify = []
-        for compiled, value in self.acronym_dict.items():
-            for compiled2, value2 in self.acronym_dict.items():
-                if compiled == compiled2:
-                    continue
-                if re.match(compiled, value2) or re.match(compiled2, value):
-                    first, second = sorted([compiled.pattern, compiled2.pattern])
-                    to_notify.append(f"  * '{first}' and '{second}'")
-        to_notify = sorted(set(to_notify))
-        if to_notify:
-            beep(f"Found {len(to_notify)} plausible duplicate or overlapping "
-                 "acronym patterns (this can be intentional):")
-            for notif in to_notify:
-                yel(notif)
-
+        # load field mappings
         if self.field_mappings is not None:
             f = Path(self.field_mappings)
             try:
@@ -502,10 +526,11 @@ multiple times in acronym dictionnary, keeping only the last one.")
                     self.field_mappings.replace(".py", ""))
                 self.field_dic = imp.field_dic
             except Exception as e:
-                beep(f"Error with field mapping file, will use default \
-values. {e}")
+                beep(f"Error with field mapping file, will use "
+                     f"default values. {e}")
                 self.field_dic = {"dummyvalue": "dummyvalue"}
 
+        # load stop words
         try:
             stops = []
             stops.append("<NEWFIELD>")
@@ -532,11 +557,15 @@ values. {e}")
                 "boost" in self.repick_task), (
                     "Invalid value for `self.repick_task`")
 
-        # actual execution
+        # actual execution ###################################################
+
+        # load or ask for deckname
         self.deckname = self._deckname_check(deckname)
         red(f"Selected deck: {self.deckname}\n")
         self.deck_config = self._call_anki(action="getDeckConfig",
                                            deck=self.deckname)
+
+        # load deck settings if needed
         if self.target_deck_size == "deck_config":
             self.target_deck_size = str(self.deck_config["rev"]["perDay"])
             yel("Set 'target_deck_size' to deck's value: "
@@ -565,6 +594,7 @@ values. {e}")
             self._compute_KNN()
             self._do_add_KNN_to_note()
             self._bury_or_create_filtered()
+
         elif task == "filter_review_cards":
             red("Task : created filtered deck containing review cards")
             self._init_dataFrame()
@@ -582,6 +612,7 @@ values. {e}")
             self._compute_KNN()
             self._do_add_KNN_to_note()
             self._bury_or_create_filtered()
+
         elif task == "just_add_KNN":
             red("Task : find the nearest neighbour of each note and "
                 "add it to a field.")
@@ -600,6 +631,7 @@ values. {e}")
             self._compute_distance_matrix()
             self._compute_KNN()
             self._do_add_KNN_to_note()
+
         else:
             raise ValueError(f"Invalid task value: {task}")
 
