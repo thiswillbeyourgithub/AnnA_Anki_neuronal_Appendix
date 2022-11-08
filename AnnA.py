@@ -477,12 +477,21 @@ multiple times in acronym dictionnary, keeping only the last one.")
         else:
             self.acronym_dict = {}
 
+        # checking if acronyms overlap, this can be intentionnal
+        to_notify = []
         for compiled, value in self.acronym_dict.items():
             for compiled2, value2 in self.acronym_dict.items():
                 if compiled == compiled2:
                     continue
                 if re.match(compiled, value2) or re.match(compiled2, value):
-                    beep(f"Find plausible duplicate acronym: '{compiled}' and '{compiled2}'")
+                    first, second = sorted([compiled.pattern, compiled2.pattern])
+                    to_notify.append(f"  * '{first}' and '{second}'")
+        to_notify = sorted(set(to_notify))
+        if to_notify:
+            beep(f"Found {len(to_notify)} plausible duplicate or overlapping "
+                 "acronym patterns (this can be intentional):")
+            for notif in to_notify:
+                yel(notif)
 
         if self.field_mappings is not None:
             f = Path(self.field_mappings)
