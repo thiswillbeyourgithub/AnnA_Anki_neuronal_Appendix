@@ -512,7 +512,7 @@ class AnnA:
                         to_notify.append(f"  * '{first}' and '{second}'")
             to_notify = sorted(set(to_notify))
             if to_notify:
-                red(f"Found {len(to_notify)} plausible duplicate or "
+                red(f"\nFound {len(to_notify)} plausible duplicate or "
                     "overlapping "
                     "acronym patterns (this can be intentional):")
                 for notif in to_notify:
