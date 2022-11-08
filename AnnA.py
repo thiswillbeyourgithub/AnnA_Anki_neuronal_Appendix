@@ -1132,6 +1132,8 @@ threads of size {batchsize})")
                     fields_to_keep = sorted(
                         field_list, key=lambda x: int(
                             self.df.loc[index, "fields"][x.lower()]["order"]))
+                    if "Nearest_neighbours" in field_list:
+                        field_list.remove("Nearest_neighbours")
 
                 comb_text = ""
                 for f in fields_to_keep:
