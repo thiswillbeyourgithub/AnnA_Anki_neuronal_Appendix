@@ -512,6 +512,7 @@ class AnnA:
                     "acronym patterns (this can be intentional):")
                 for notif in to_notify:
                     yel(notif)
+                print("\n")
 
             self.acronym_dict = compiled_dic
         else:
