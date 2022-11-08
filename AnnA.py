@@ -1027,15 +1027,19 @@ threads of size {batchsize})")
                 )
 
         # replace acronyms
+        already_replaced = []
         if self.acronym_file is not None:
             for regex, new_value in self.acronym_dict.items():
                 if re.match(regex, text):
-                    text = re.sub(regex,
-                                  lambda in_string:
-                                  self._regexp_acronym_replacer(in_string,
-                                                                regex,
-                                                                new_value),
-                                  text)
+                    if regex not in already_replaced:
+                        # only replace once but still apply the overlapping
+                        # acronyms if needed
+                        text = re.sub(regex,
+                                      lambda in_string:
+                                      self._regexp_acronym_replacer(in_string,
+                                                                    regex,
+                                                                    new_value),
+                                      text)
 
                     # if overlapping patterns, apply sequentially
                     if regex.pattern in self.acronyms_overlapping:
@@ -1046,6 +1050,7 @@ threads of size {batchsize})")
                                           self._regexp_acronym_replacer(
                                               in_string, regex2, new_value2),
                                           text)
+                            already_replaced.append(regex2)
 
         # misc
         text = " ".join(text.split())  # multiple spaces
