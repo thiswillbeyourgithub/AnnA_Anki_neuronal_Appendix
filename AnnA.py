@@ -109,16 +109,20 @@ def beep(message=None, **args):
     sound = "error"  # default sound
 
     if message is None:
-        red("BEEP")  # at least produce a written message
+        red("  ############")
+        red("  ### BEEP ###")  # at least produce a written message
+        red("  ############")
     else:
         try:
-            if not isinstance(message, str):
+            if isinstance(message, list):
+                message = "".join(message)
+            elif not isinstance(message, str):
                 message = str(message)
             # create notification with error
             red("NOTIF: " + message)
             notification.notify(title="AnnA",
                                 message=message,
-                                timeout=0,
+                                timeout=-1,
                                 )
         except Exception as err:
             red(f"Error when creating notification: '{err}'")
@@ -132,7 +136,7 @@ def beep(message=None, **args):
             beepy.beep(sound, **args)
         except Exception:
             red("Failed to beep twice.")
-    time.sleep(1)  # avoid too close beeps in a row
+    time.sleep(0.5)  # avoid too close beeps in a row
 
 
 class AnnA:
