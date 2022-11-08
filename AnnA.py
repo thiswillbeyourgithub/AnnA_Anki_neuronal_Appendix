@@ -35,8 +35,8 @@ from sklearn.metrics import pairwise_distances, pairwise_kernels
 from sklearn.decomposition import TruncatedSVD
 from sklearn.preprocessing import StandardScaler
 from sklearn.neighbors import kneighbors_graph
-import plotly.graph_objects as go
-import plotly.express as px
+# import plotly.graph_objects as go
+# import plotly.express as px
 
 import ankipandas as akp
 import shutil
@@ -661,8 +661,10 @@ class AnnA:
                     'http://localhost:8775',
                     requestJson)))
         except (ConnectionRefusedError, urllib.error.URLError) as e:
-            beep(f"{str(e)}: is Anki open and 'AnnA Companion addon' enabled? Firewall issue?")
-            raise Exception(f"{str(e)}: is Anki open and 'AnnA Companion addon' enabled? Firewall issue?")
+            beep(f"{str(e)}: is Anki open and 'AnnA Companion addon' "
+                 "enabled? Firewall issue?")
+            raise Exception(f"{str(e)}: is Anki open and 'AnnA Companion "
+                            "addon' enabled? Firewall issue?")
 
         if len(response) != 2:
             beep('response has an unexpected number of fields')
@@ -1087,7 +1089,8 @@ threads of size {batchsize})")
                 if fields_to_keep == "take_first_fields":
                     fields_to_keep = ["", ""]
                     for f in field_list:
-                        order = self.df.loc[index, "fields"][f.lower()]["order"]
+                        order = self.df.loc[index,
+                                            "fields"][f.lower()]["order"]
                         if order == 0:
                             fields_to_keep[0] = f
                         elif order == 1:
@@ -1109,14 +1112,15 @@ threads of size {batchsize})")
                             self.stopw_compiled,
                             " ",
                             self.df.loc[index,
-                                   "fields"][f.lower()]["value"].strip())
+                                        "fields"][f.lower()]["value"].strip())
                         if next_field != "":
                             comb_text = comb_text + next_field + " <NEWFIELD> "
                     except KeyError as e:
                         with lock:
                             to_notify.append(
                                 f"Error when looking for field {e} in card "
-                                f"{self.df.loc[index, 'modelName']} identified as "
+                                f"{self.df.loc[index, 'modelName']} "
+                                "identified as "
                                 f"notetype {target_model}")
                 comb_text = comb_text.strip()
                 if comb_text.endswith("<NEWFIELD>"):
@@ -1192,15 +1196,16 @@ threads of size {batchsize})")
                 thread.start()
                 thread.join()
                 if cnt > 10:
-                    beep(f"{self.deckname} - Error: restart anki then rerun AnnA.")
+                    beep(f"{self.deckname} - Error: restart anki then"
+                         "rerun AnnA.")
                     raise SystemExit()
             if cnt > 0:
                 yel(f"Succesfully corrected null combined texts on #{cnt} "
                     "trial.")
 
         to_notify = list(set(to_notify))
-        for notification in to_notify:
-            beep(notification)
+        for notif in to_notify:
+            beep(notif)
 
         # using multithreading is not faster, using multiprocess is probably
         # slower if not done by large batching
@@ -1247,7 +1252,7 @@ threads of size {batchsize})")
             else:
                 ending = "\n"
             whi(f" * {i} : {str(self.df.loc[i, 'text'])[0:max_length]}",
-                  end=ending)
+                end=ending)
         pd.reset_option('display.max_colwidth')
         print("\n")
         self.df = self.df.sort_index()
@@ -1278,9 +1283,12 @@ threads of size {batchsize})")
                                    ngram_range=ngram_val,
                                    norm="l2",
                                    sublinear_tf=True,
-                                   max_features=min(len(df.index) // 2, 10_000),
-                                   max_df=0.95,  # ignore words present in more than X% of documents
-                                   min_df=5,  # ignore words than appear less than n times
+                                   max_features=min(10_000,
+                                                    len(df.index) // 2),
+                                   max_df=0.95,  # ignore words present in
+                                   # more than X% of documents
+                                   min_df=5,  # ignore words than appear
+                                   # less than n times
                                    )
         use_fallback = False
         if self.whole_deck_computation:
@@ -1294,7 +1302,8 @@ threads of size {batchsize})")
                     yel("Ankipandas will use anki collection found at "
                         f"{original_db}")
                 if "trash" in str(original_db).lower():
-                    beep(f"{self.deckname} - Ankipandas seems to have found a collection in "
+                    beep(f"{self.deckname} - Ankipandas seems to have "
+                         "found a collection in "
                          "the trash folder. If that is not your intention "
                          "cancel now. Waiting 10s for you to see this "
                          "message before proceeding.")
@@ -1314,7 +1323,8 @@ threads of size {batchsize})")
                 whi("Ankipandas db loaded successfuly.")
 
                 if len(cards.index) == 0:
-                    beep(f"{self.deckname} - Ankipandas database is of length 0")
+                    beep(f"{self.deckname} - Ankipandas database"
+                         "is of length 0")
                     raise Exception("Ankipandas database is of length 0")
 
                 # get only the right fields
@@ -1323,7 +1333,8 @@ threads of size {batchsize})")
                 mod2mid = akp.raw.get_model2mid(col.db)
 
                 if len(cards.index) == 0:
-                    beep(f"{self.deckname} - Ankipandas database is of length 0")
+                    beep(f"{self.deckname} - Ankipandas database"
+                         "is of length 0")
                     raise Exception("Ankipandas database is of length 0")
 
                 to_notify = []
@@ -1354,8 +1365,8 @@ threads of size {batchsize})")
 
                 m_gIoF = self.memoize(get_index_of_fields)
 
-                for notification in list(set(to_notify)):
-                    red(notification)
+                for notif in list(set(to_notify)):
+                    red(notif)
 
                 corpus = []
                 spacers_compiled = re.compile("_|-|/")
@@ -1367,9 +1378,8 @@ threads of size {batchsize})")
                     new = ""
                     for i in indices_to_keep:
                         new += fields_list[i] + " "
-                    processed = self._text_formatter(re.sub(self.stopw_compiled,
-                                                            " ",
-                                                            new))
+                    processed = self._text_formatter(re.sub(
+                        self.stopw_compiled, " ", new))
                     if len(processed) < 10 or self.append_tags:
                         tags = cards.loc[ind, "ntags"]
                         for t in tags:
@@ -1381,13 +1391,15 @@ threads of size {batchsize})")
                     corpus.append(processed)
 
                 vectorizer = init_vectorizer()
-                vectorizer.fit(tqdm(corpus + df["text"].tolist(), desc="Vectorizing whole deck"))
+                vectorizer.fit(tqdm(corpus + df["text"].tolist(),
+                                    desc="Vectorizing whole deck"))
                 t_vec = vectorizer.transform(tqdm(df["text"],
                                                   desc=(
                     "Vectorizing dues cards using TFIDF")))
                 yel("Done vectorizing over whole deck!")
             except Exception as e:
-                beep(f"{self.deckname} - Exception : {e}\nUsing fallback method...")
+                beep(f"{self.deckname} - Exception : {e}\nUsing "
+                     "fallback method...")
                 use_fallback = True
 
         if (self.whole_deck_computation is False) or (use_fallback):
@@ -1414,7 +1426,8 @@ threads of size {batchsize})")
                 self.TFIDF_dim = min(50, t_vec.shape[1] - 1)
             while True:
                 self.TFIDF_dim = min(self.TFIDF_dim, t_vec.shape[1] - 1)
-                yel(f"\nReducing dimensions to {self.TFIDF_dim} using SVD...", end= " ")
+                yel(f"\nReducing dimensions to {self.TFIDF_dim} using SVD...",
+                    end=" ")
                 svd = TruncatedSVD(n_components=self.TFIDF_dim)
                 t_red = svd.fit_transform(t_vec)
                 evr = round(sum(svd.explained_variance_ratio_) * 100, 1)
@@ -1422,7 +1435,8 @@ threads of size {batchsize})")
                 if abs(evr - desired_variance_kept) <= 5:
                     break
                 elif trial >= 10:
-                    beep(f"Tried {trial} times to find the right number of dimensions, stopping.")
+                    yel(f"Tried {trial} times to find the right number of "
+                        "dimensions, carrying on.")
                     break
                 else:
                     offset = desired_variance_kept - evr
@@ -1433,9 +1447,10 @@ threads of size {batchsize})")
                     self.TFIDF_dim = int(max(2, min(self.TFIDF_dim, 1999)))
                     yel(f"Explained variance ratio is only {evr}% ("
                         "retrying up to 10 times to get closer to "
-                        f"{desired_variance_kept}%)", end= " ")
+                        f"{desired_variance_kept}%)", end=" ")
                     continue
-            yel(f"Explained variance ratio after SVD with {self.TFIDF_dim} dims on Tf_idf: {evr}%")
+            yel(f"Explained variance ratio after SVD with {self.TFIDF_dim} "
+                f"dims on Tf_idf: {evr}%")
             df["VEC"] = [x for x in t_red]
         if self.plot_2D_embeddings:
             try:
@@ -1459,7 +1474,6 @@ threads of size {batchsize})")
         yel("\nComputing distance matrix on all available cores"
             "...")
         if self.dist_metric == "rbf":
-            red(f"EXPERIMENTAL: Using RBF kernel instead of cosine distance.")
             sig = np.mean(np.std([x for x in df[input_col]], axis=1))
             self.df_dist = pd.DataFrame(columns=df.index,
                                         index=df.index,
@@ -1490,7 +1504,8 @@ threads of size {batchsize})")
 
         self.df_dist = self.df_dist.sort_index()
 
-        whi(f"Scaling each vertical row of the distance matrix...")
+        whi("Scaling each vertical row of the distance matrix...")
+
         def minmaxscaling(index, vector):
             """
             simplified from MinMaxScaler formula because with now the min
@@ -1498,6 +1513,7 @@ threads of size {batchsize})")
             """
             maxval = vector.max()
             return [index, vector / maxval]
+
         tqdm_params = {"unit": "card",
                        "desc": "Scaling",
                        "leave": True,
@@ -1549,11 +1565,13 @@ threads of size {batchsize})")
         so that you can quickly know the neighbour of any given card straight
         into anki without having to use AnnA.
         """
-        if not (self.add_KNN_to_field or self.plot_2D_embeddings or self.task == "just_add_KNN"):
+        if not ((self.add_KNN_to_field or self.plot_2D_embeddings) or (
+                self.task == "just_add_KNN")):
             whi("Computing KNN matrix is not needed by those arguments.")
             return
         try:
-            n_n = min(25, max(self.df_dist.shape[0] // 100, 10))  # 1% of neighbours
+            # 1% of neighbors, bounded by 10 and 25
+            n_n = min(25, max(self.df_dist.shape[0] // 100, 10))
             yel(f"Computing '{n_n}' nearest neighbours per point...")
             self.knn = kneighbors_graph(
                     self.df_dist,
@@ -1582,7 +1600,8 @@ threads of size {batchsize})")
                     desc="Colecting neighbours of notes",
                     unit="card"):
                 cardId = self.df.index[i]
-                if "Nearest_neighbours".lower() not in self.df.loc[cardId, "fields"].keys():
+                if "Nearest_neighbours".lower() not in self.df.loc[
+                        cardId, "fields"].keys():
                     continue
                 noteId = int(self.df.loc[cardId, "note"])
                 if noteId in modified_nid:
@@ -1645,35 +1664,47 @@ threads of size {batchsize})")
             red("\nPrinting the most semantically different cards:")
             highest_value = np.amax(self.df_dist.values[up_triangular])
             coord_max = np.where(self.df_dist == highest_value)
-            yel(f"* {str(self.df.loc[self.df.index[coord_max[0][0]]].text)[:max_length]}...")
-            yel(f"* {str(self.df.loc[self.df.index[coord_max[1][0]]].text)[:max_length]}...")
+            one = self.df.loc[self.df.index[coord_max[0][0]]].text[:max_length]
+            two = self.df.loc[self.df.index[coord_max[1][0]]].text[:max_length]
+            yel(f"* {one}...")
+            yel(f"* {two}...")
 
-            red("\nPrinting the 1% most semantically but distinct similar cards:")
-            quantile_limit = np.quantile(self.df_dist.values[up_triangular].ravel(), 0.01)
+            red("\nPrinting the 1% most semantically but distinct similar "
+                "cards:")
+            quantile_limit = np.quantile(
+                    self.df_dist.values[up_triangular].ravel(), 0.01)
             lowest_non_zero_value = np.amin(
                     self.df_dist.values[up_triangular],
                     where=self.df_dist.values[up_triangular] >= quantile_limit,
                     initial=highest_value)
             coord_min = np.where(self.df_dist == lowest_non_zero_value)
-            yel(f"* {str(self.df.loc[self.df.index[coord_min[0][0]]].text)[:max_length]}...")
-            yel(f"* {str(self.df.loc[self.df.index[coord_min[1][0]]].text)[:max_length]}...")
-            yel(f"(distance: {lowest_non_zero_value})")
+            one = self.df.loc[self.df.index[coord_min[0][0]]].text[:max_length]
+            two = self.df.loc[self.df.index[coord_min[1][0]]].text[:max_length]
+            yel(f"* {one}...")
+            yel(f"* {two}...")
+            whi(f"    (distance: {lowest_non_zero_value})")
 
             red("\nPrinting the median distance cards:")
-            median_value = np.median(self.df_dist.values[up_triangular].ravel())
+            median_value = np.median(self.df_dist.values[up_triangular].ravel(
+                ))
             coord_med = [[]]
             i = 1
             while len(coord_med[0]) == 0:
                 if i >= 1e08:
                     break
-                coord_med = np.where(np.isclose(self.df_dist, median_value, atol=1e-08*i))
+                coord_med = np.where(np.isclose(
+                    self.df_dist, median_value, atol=1e-08*i))
                 i *= 1e1
-            yel(f"* {str(self.df.loc[self.df.index[coord_med[0][0]]].text)[:max_length]}...")
-            yel(f"* {str(self.df.loc[self.df.index[coord_med[1][0]]].text)[:max_length]}...")
+            one = self.df.loc[self.df.index[coord_med[0][0]]].text[:max_length]
+            two = self.df.loc[self.df.index[coord_med[1][0]]].text[:max_length]
+            yel(f"* {one}...")
+            yel(f"* {two}...")
         except TimeoutError:
-            beep(f"{self.deckname} - Taking too long to locating similar nonequal cards, skipping")
+            beep(f"{self.deckname} - Taking too long to locating similar "
+                 "nonequal cards, skipping")
         except Exception as err:
-            beep(f"{self.deckname} - Exception when locating similar cards: '{err}'")
+            beep(f"{self.deckname} - Exception when locating similar "
+                 f"cards: '{err}'")
         finally:
             signal.alarm(0)
             pd.reset_option('display.max_colwidth')
@@ -1852,7 +1883,8 @@ threads of size {batchsize})")
                                 np.mean(self.score_adjustment_factor)
 
             if repicked:
-                beep(f"{self.deckname} - {len(repicked)}/{len(due)} cards with too low "
+                beep(f"{self.deckname} - {len(repicked)}/{len(due)} cards "
+                     "with too low "
                      "relative overdueness (i.e. on the brink of being "
                      "forgotten) where found.")
                 if boost:
@@ -1873,7 +1905,8 @@ threads of size {batchsize})")
                         red("Appended tags 'urgent_reviews' to cards with "
                             "very low relative overdueness.")
                     except Exception as e:
-                        beep(f"{self.deckname} - Error adding tags to urgent cards: {str(e)}")
+                        beep(f"{self.deckname} - Error adding tags to urgent "
+                             f"cards: {str(e)}")
 
             if not reference_order == "LIRO_mix":
                 df.loc[due, "ref"] = ro_cs
@@ -1883,7 +1916,8 @@ threads of size {batchsize})")
             assert 0 not in list(
                 np.isnan(df["ref"].values)), "missing ref value for some cards"
             weights = [1, 4]
-            df.loc[due, "ref"] = (weights[0] * ro_cs + weights[1] * interval_cs) / sum(weights)
+            df.loc[due, "ref"] = (weights[0] * ro_cs + weights[1] * interval_cs
+                                  ) / sum(weights)
 
         assert len([x for x in rated if df.loc[x, "status"] != "rated"]
                    ) == 0, "all rated cards are not marked as rated"
@@ -1976,7 +2010,7 @@ threads of size {batchsize})")
                         f" {(w1*df.loc[due, 'ref']).describe()}\n")
                 else:
                     whi("Not showing statistics of the reference score, you "
-                        f"set its adjustment weight to 0")
+                        "set its adjustment weight to 0")
                 val = pd.DataFrame(data=w2*self.df_dist.values.ravel(),
                                    columns=['distance matrix']).describe(
                                            include='all')
@@ -1991,7 +2025,8 @@ threads of size {batchsize})")
         if minval < 0:
             red("Minval value was under 0 so shifted 'ref' column to make "
                 "sure all values are positive.")
-            self.df.loc[due, "ref"] += abs(minval) + 0.1  # makes sure that values are above 0
+            # makes sure that values are above 0:
+            self.df.loc[due, "ref"] += abs(minval) + 0.1
             maxval = self.df.loc[due, "ref"].max()
             minval = self.df.loc[due, "ref"].min()
         if np.isclose(maxval, minval):
@@ -1999,9 +2034,9 @@ threads of size {batchsize})")
                 "close. Setting 'ref' to 0")
             self.df.loc[due, "ref"] = 0
         elif maxval > 0:  # don't check if actually all ref values are 0
-            # which means they are all equals and have been centered and scaled)
+            # which means they are all equals and have been centered and scaled
             self.df.loc[due, "ref"] = (self.df.loc[due, "ref"] - minval
-                    ) / (maxval - minval)
+                                       ) / (maxval - minval)
         # checking that there are no negative ref values
         assert (self.df.loc[due, "ref"].ravel() < 0).sum() == 0, (
             "Negative values in the reference score!")
@@ -2044,9 +2079,9 @@ threads of size {batchsize})")
             average = 0.05 * np.mean(array, axis=1)
             med = 0.05 * np.median(array, axis=1)
             dist_score = minimum + average + med
-            if self.log_level >= 2:
-                avg = np.mean(dist_score) * self.score_adjustment_factor[1]
-                # tqdm.write(f"DIST_SCORE: {avg:02f}")
+            # if self.log_level >= 2:
+            #    avg = np.mean(dist_score) * self.score_adjustment_factor[1]
+            #    tqdm.write(f"DIST_SCORE: {avg:02f}")
             return dist_score
 
         with tqdm(desc="Computing optimal review order",
@@ -2056,14 +2091,15 @@ threads of size {batchsize})")
                   total=queue_size_goal + len(rated)) as pbar:
             while len(queue) < queue_size_goal:
                 # if self.log_level >= 2:
-                    # ref_avg = np.mean(df.loc[indTODO, "ref"].values) * w1
-                    # sp = " " * 22
-                    # tqdm.write(f"{sp}REF_SCORE: {ref_avg:02f}")
+                #     ref_avg = np.mean(df.loc[indTODO, "ref"].values) * w1
+                #     sp = " " * 22
+                #     tqdm.write(f"{sp}REF_SCORE: {ref_avg:02f}")
                 queue.append(indTODO[
                     (w1*df.loc[indTODO, "ref"].values -
                      w2*combinator(self.df_dist.loc[indTODO, indQUEUE].values
-                         ) + \
+                                   ) + (
                      w3*np.random.rand(1, len(indTODO))
+                     )
                      ).argmin()])
                 indQUEUE.append(indTODO.pop(indTODO.index(queue[-1])))
                 pbar.update(1)
@@ -2077,10 +2113,12 @@ threads of size {batchsize})")
         # reordering by best order
         try:
             if self.task == "filter_review_cards" and self.resort_by_dist:
-                red("Reordering before creating the filtered deck to maximize distance...")
+                red("Reordering before creating the filtered deck "
+                    "to maximize distance...")
                 new_queue = []
                 to_process = [q for q in queue]
-                for i, q in enumerate(tqdm(queue, desc="reordering filtered deck")):
+                for i, q in enumerate(tqdm(queue,
+                                           desc="reordering filtered deck")):
                     if i == 0:
                         new_queue.append(to_process.pop(i))
                         continue
@@ -2159,7 +2197,8 @@ threads of size {batchsize})")
         if not len(self.acronym_dict.keys()):
             return True
 
-        full_text = " ".join(self.df["text"].tolist()).replace("'", " ").replace("<NEWFIELD>", " ")
+        full_text = " ".join(self.df["text"].tolist()).replace(
+                "'", " ").replace("<NEWFIELD>", " ")
         if exclude_OCR_text:
             ocr = re.findall("[A-Z][A-Z0-9]{2,}",
                              string=self.OCR_content,
@@ -2227,7 +2266,8 @@ threads of size {batchsize})")
             and AnnA will just bury some cards that are too similar to cards
             that you will review.
         """
-        if self.task in ["bury_excess_learning_cards", "bury_excess_review_cards"]:
+        if self.task in ["bury_excess_learning_cards",
+                         "bury_excess_review_cards"]:
             to_keep = self.opti_rev_order
             to_bury = [x for x in self.due_cards if x not in to_keep]
             assert len(to_bury) < len(
@@ -2246,7 +2286,8 @@ threads of size {batchsize})")
             self.filtered_deck_name = filtered_deck_name
 
             while filtered_deck_name in self._call_anki(action="deckNames"):
-                beep(f"{self.deckname} - \nFound existing filtered deck: {filtered_deck_name} "
+                beep(f"{self.deckname} - \nFound existing filtered "
+                     f"deck: {filtered_deck_name} "
                      "You have to delete it manually, the cards will be "
                      "returned to their original deck.")
                 input("Done? >")
@@ -2297,7 +2338,8 @@ threads of size {batchsize})")
                 red("Inconsistency! The deck does not contain the same cards "
                     " as opti_rev_order!")
                 pprint(diff)
-                beep(f"{self.deckname} - \nNumber of inconsistent cards: {len(diff)}")
+                beep(f"{self.deckname} - \nNumber of inconsistent cards: "
+                     f"{len(diff)}")
 
         yel("\nAsking anki to alter the due order...", end="")
         res = self._call_anki(action="setDueOrderOfFiltered",
@@ -2305,7 +2347,7 @@ threads of size {batchsize})")
         err = [x[1] for x in res if x[0] is False]
         if err:
             beep(f"{self.deckname} - \nError when setting due order : {err}")
-            raise(f"\nError when setting due order : {err}")
+            raise Exception(f"\nError when setting due order : {err}")
         else:
             yel(" Done!")
             return True
@@ -2406,7 +2448,8 @@ threads of size {batchsize})")
                 # label="test label",
                 )
         plt.savefig(f"{self.plot_dir}/Embeddings {self.deckname}.png", dpi=300)
-        nx.drawing.nx_pydot.write_dot(G, f'{self.plot_dir}/Embeddings {self.deckname}.dot')
+        nx.drawing.nx_pydot.write_dot(
+                G, f'{self.plot_dir}/Embeddings {self.deckname}.dot')
         whi("Saved embeddings layout!")
 
         # spring layout
@@ -2433,7 +2476,8 @@ threads of size {batchsize})")
                 # label="test label",
                 )
         plt.savefig(f"{self.plot_dir}/Spring {self.deckname}.png", dpi=300)
-        nx.drawing.nx_pydot.write_dot(G, f'{self.plot_dir}/Spring {self.deckname}.dot')
+        nx.drawing.nx_pydot.write_dot(
+                G, f'{self.plot_dir}/Spring {self.deckname}.dot')
         whi("Saved spring layout!")
 
         beep("Finished networkx!")
@@ -2527,7 +2571,6 @@ threads of size {batchsize})")
         signal.alarm(0)  # turn off timeout
 
 
-
 class ProgressParallel(joblib.Parallel):
     """
     simple subclass from joblib.Parallel with improved progress bar
@@ -2547,7 +2590,6 @@ class ProgressParallel(joblib.Parallel):
             PP._pbar.total = PP.n_dispatched_tasks
         PP._pbar.n = PP.n_completed_tasks
         PP._pbar.refresh()
-
 
 
 # from https://gist.github.com/beniwohli/765262
@@ -2615,7 +2657,8 @@ if __name__ == "__main__":
                         help=(
                             "the deck containing the cards you want to "
                             "review. If you don't supply this value or make a "
-                            "mistake, AnnA will ask you to type in the deckname, "
+                            "mistake, AnnA will ask you to type in the "
+                            "deckname, "
                             "with autocompletion enabled (use `<TAB>`). "
                             "Default is `None`."))
     parser.add_argument("--reference_order",
@@ -3120,8 +3163,8 @@ if __name__ == "__main__":
     args.pop("console_mode")
     anna = AnnA(**args)
     if console_mode:
-        red("\n\nRun finished. Opening console:\n(You can access the last \
-instance of AnnA by inspecting variable \"anna\")\n")
+        red("\n\nRun finished. Opening console:\n(You can access the last "
+            "instance of AnnA by inspecting variable \"anna\")\n")
         import code
         beep("Finished!")
         code.interact(local=locals())
