@@ -1276,7 +1276,7 @@ threads of size {batchsize})")
         yel("\n\nPrinting 2 random samples of your formated text, to help "
             " adjust formating issues:")
         pd.set_option('display.max_colwidth', 8000)
-        max_length = 1000
+        max_length = 10000
         sub_index = random.sample(self.df.index.tolist(), k=2)
         for i in sub_index:
             if len(self.df.loc[i, "text"]) > max_length:
