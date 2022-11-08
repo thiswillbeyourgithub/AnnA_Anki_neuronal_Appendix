@@ -14,6 +14,7 @@ import urllib.request
 import pyfiglet
 from pprint import pprint
 from tqdm import tqdm
+from tqdm_logger import TqdmLogger
 import re
 import importlib
 from pathlib import Path
@@ -218,6 +219,10 @@ class AnnA:
             log.setLevel(logging.DEBUG)
         else:
             log.setLevel(logging.INFO)
+
+        # logger for tqdm progress bars
+        self.t_strm = TqdmLogger("logs.txt")
+        self.t_strm.reset()
 
         # loading arguments and proceed to check correct values ##############
 
@@ -695,7 +700,7 @@ class AnnA:
             card_id = [card_id]
         if len(card_id) < 50:
             r_list = []
-            for card in tqdm(card_id):
+            for card in tqdm(card_id, file=self.t_strm):
                 r_list.extend(self._call_anki(action="cardsInfo",
                                               cards=[card]))
             return r_list
@@ -724,6 +729,7 @@ threads of size {batchsize})")
                       dynamic_ncols=True,
                       desc="Done threads",
                       delay=2,
+                      file=self.t_strm,
                       smoothing=0) as pbar:
                 for nb in range(0, len(card_id), batchsize):
                     cnt += 1
@@ -1161,6 +1167,7 @@ threads of size {batchsize})")
         with tqdm(total=n,
                   desc="Combining relevant fields",
                   smoothing=0,
+                  file=self.t_strm,
                   unit=" card") as pbar:
             for nb in range(0, n, batchsize):
                 sub_card_list = self.df.index[nb: nb + batchsize]
@@ -1210,7 +1217,8 @@ threads of size {batchsize})")
 
         # using multithreading is not faster, using multiprocess is probably
         # slower if not done by large batching
-        tqdm.pandas(desc="Formating text", smoothing=0, unit=" card")
+        tqdm.pandas(desc="Formating text", smoothing=0, unit=" card",
+                    file=self.t_strm)
         self.df["text"] = self.df["comb_text"].progress_apply(
             lambda x: " <NEWFIELD> ".join(
                 [
@@ -1373,7 +1381,8 @@ threads of size {batchsize})")
                 spacers_compiled = re.compile("_|-|/")
                 for ind in tqdm(cards.index,
                                 desc=("Gathering and formating "
-                                      f"{self.deckname}")):
+                                      f"{self.deckname}"),
+                                file=self.t_strm):
                     indices_to_keep = m_gIoF(cards.loc[ind, "nmodel"])
                     fields_list = cards.loc[ind, "nflds"]
                     new = ""
@@ -1393,10 +1402,12 @@ threads of size {batchsize})")
 
                 vectorizer = init_vectorizer()
                 vectorizer.fit(tqdm(corpus + df["text"].tolist(),
-                                    desc="Vectorizing whole deck"))
+                                    desc="Vectorizing whole deck"),
+                                    file=self.t_strm)
                 t_vec = vectorizer.transform(tqdm(df["text"],
                                                   desc=(
-                    "Vectorizing dues cards using TFIDF")))
+                    "Vectorizing dues cards using TFIDF"),
+                                                  file=self.t_strm))
                 yel("Done vectorizing over whole deck!")
             except Exception as e:
                 beep(f"{self.deckname} - Exception : {e}\nUsing "
@@ -1407,7 +1418,8 @@ threads of size {batchsize})")
             vectorizer = init_vectorizer()
             t_vec = vectorizer.fit_transform(tqdm(df["text"],
                                                   desc=(
-              "Vectorizing using TFIDF")))
+              "Vectorizing using TFIDF"),
+                                                  file=self.t_strm))
         if self.TFIDF_dim is None:
             df["VEC"] = [x for x in t_vec]
         else:
@@ -1486,7 +1498,8 @@ threads of size {batchsize})")
                                             ))
             # turn the similarity into a distance
             # apply log to hopefully reduce the spread
-            tqdm.pandas(desc="Applying log", smoothing=0, unit=" card")
+            tqdm.pandas(desc="Applying log", smoothing=0, unit=" card",
+                        file=self.t_strm)
             self.df_dist = self.df_dist.progress_apply(lambda x: np.log(1+x))
             max_val = np.amax(self.df_dist)
             self.df_dist /= -max_val  # normalize values then make negative
@@ -1520,6 +1533,7 @@ threads of size {batchsize})")
                        "leave": True,
                        "ascii": False,
                        "total": len(self.df_dist.index),
+                       "file": self.t_strm,
                        }
         parallel = ProgressParallel(backend="threading",
                                     tqdm_params=tqdm_params,
@@ -1599,6 +1613,7 @@ threads of size {batchsize})")
             for i in tqdm(
                     range(self.knn.shape[0]),
                     desc="Colecting neighbours of notes",
+                    file=self.t_strm,
                     unit="card"):
                 cardId = self.df.index[i]
                 if "Nearest_neighbours".lower() not in self.df.loc[
@@ -2089,6 +2104,7 @@ threads of size {batchsize})")
                   unit=" card",
                   initial=len(rated),
                   smoothing=0,
+                  file=self.t_strm,
                   total=queue_size_goal + len(rated)) as pbar:
             while len(queue) < queue_size_goal:
                 # if self.log_level >= 2:
@@ -2119,6 +2135,7 @@ threads of size {batchsize})")
                 new_queue = []
                 to_process = [q for q in queue]
                 for i, q in enumerate(tqdm(queue,
+                                           file=self.t_strm,
                                            desc="reordering filtered deck")):
                     if i == 0:
                         new_queue.append(to_process.pop(i))
@@ -2405,7 +2422,8 @@ threads of size {batchsize})")
         positions = {}
 
         # add nodes
-        for cid in tqdm(self.df.index, desc="adding nodes", unit="node"):
+        for cid in tqdm(self.df.index, desc="adding nodes", unit="node",
+                        file=self.t_strm):
             nid = self.df.loc[cid, "note"]
             G.add_node(nid)
             print(list(self.df.loc[cid, "2D_embeddings"]))
@@ -2416,6 +2434,7 @@ threads of size {batchsize})")
         for i in tqdm(
                 range(self.knn.shape[0]),
                 desc="computing edges",
+                file=self.t_strm,
                 unit="card"):
             knn_ar = self.knn.getcol(i).toarray().squeeze()
             neighbour_indices = np.where(knn_ar == 1)[0]
@@ -2433,7 +2452,7 @@ threads of size {batchsize})")
                     else:
                         all_edges[smallest][largest] += 1
 
-        for k, v in tqdm(all_edges.items(), desc="adding edges"):
+        for k, v in tqdm(all_edges.items(), desc="adding edges", file=self.t_strm):
             for sub_k, sub_v in all_edges.items():
                 G.add_edge(k, sub_k, {"weight": sub_v})
 

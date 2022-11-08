@@ -12,6 +12,7 @@ joblib >= 1.1.0
 numpy >= 1.19.4
 scikit-learn>=1.1.1
 tqdm >= 4.62.3
+tqdm_logger >= 1.0.1
 
 nltk >= 3.5
 tokenizers >= 0.10.3
