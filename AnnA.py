@@ -2465,21 +2465,30 @@ threads of size {batchsize})")
                 unit="card"):
             knn_ar = self.knn.getcol(i).toarray().squeeze()
             neighbour_indices = np.where(knn_ar == 1)[0]
+            # sort neighbour by distance
+            neighbour_indices = sorted(
+                    neighbour_indices,
+                    key=lambda x: float(self.df_dist.loc[
+                        self.df.index[i], self.df.index[x]]),
+                    reverse=False)
             neighbours_nid = [int(self.df.loc[self.df.index[ind], "note"])
                               for ind in neighbour_indices]
             noteId = int(self.df.loc[self.df.index[i], "note"])
-            for n_nid in neighbours_nid:
+            total_w = len(neighbour_indices)
+            for ii, n_nid in enumerate(neighbours_nid):
                 if noteId == n_nid:
                     continue  # skip self neighbouring
                 smallest = min(noteId, n_nid)
                 largest = max(noteId, n_nid)
+                # new weight is of decreasing importance
+                new_w = (total_w - ii + 1) / total_w
                 if smallest not in all_edges:
-                    all_edges[smallest] = {largest: 1}
+                    all_edges[smallest] = {largest: new_w}
                 else:
                     if largest not in all_edges[smallest]:
-                        all_edges[smallest][largest] = 1
+                        all_edges[smallest][largest] = new_w
                     else:
-                        all_edges[smallest][largest] += 1
+                        all_edges[smallest][largest] += new_w
 
         # add each edge to the graph
         for k, v in tqdm(all_edges.items(),
