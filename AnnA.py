@@ -557,9 +557,8 @@ class AnnA:
                 [temp.extend(self.tokenize(x)) for x in stops]
                 stops.extend(temp)
             elif self.TFIDF_stem:
-                global ps
-                ps = PorterStemmer()
-                stops += [ps.stem(x) for x in stops]
+                self.ps = PorterStemmer()
+                stops += [self.ps.stem(x) for x in stops]
             self.stops = list(set(stops))
         except Exception as e:
             beep(f"Error when extracting stop words: {e}\n\n"
@@ -1062,7 +1061,7 @@ threads of size {batchsize})")
         # optionnal stemmer
         if self.vectorizer == "TFIDF":
             if self.TFIDF_stem is True:
-                text = " ".join([ps.stem(x) for x in text.split()])
+                text = " ".join([self.ps.stem(x) for x in text.split()])
 
         return text
 
