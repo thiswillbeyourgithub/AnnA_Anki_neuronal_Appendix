@@ -534,15 +534,33 @@ class AnkiConnect:
         return self.collection().db.list('select distinct nid from cards where id in ' + anki.utils.ids2str(cards))
 
     @util.api()
-    def update_KNN_field(self, notes, new_field_value):
-        self.startEditing()
+    def update_KNN_field(self, notes=None, new_field_value=None):
+        editing_started = False
         for i in range(len(notes)):
             ankiNote = self.getNote(notes[i])
             if ankiNote["Nearest_neighbours"] != new_field_value[i]:
+                if not editing_started:
+                    self.startEditing()
+                    editing_started = True
                 ankiNote["Nearest_neighbours"] = new_field_value[i]
                 ankiNote.flush()
-        self.collection().autosave()
-        self.stopEditing()
+        if editing_started:
+            self.collection().autosave()
+            self.stopEditing()
+
+    @util.api()
+    def guiBrowse(self, query=None):
+        browser = aqt.dialogs.open('Browser', self.window())
+        browser.activateWindow()
+
+        if query is not None:
+            browser.form.searchEdit.lineEdit().setText(query)
+            if hasattr(browser, 'onSearch'):
+                browser.onSearch()
+            else:
+                browser.onSearchActivated()
+
+        return self.findCards(query)
 
 
 ac = AnkiConnect()
