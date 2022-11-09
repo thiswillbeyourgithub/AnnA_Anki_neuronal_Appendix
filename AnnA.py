@@ -2628,6 +2628,23 @@ threads of size {batchsize})")
                                             zeroline=False,
                                             showticklabels=False)))
 
+        # import dash
+        # import dash_core_components as dcc
+        # import dash_html_components as html #Create the app
+        # app = dash.Dash()
+        # app.layout = html.Div([
+        #     dcc.Graph(figure=fig)
+        # ])
+        # @app.callback()
+        # def open_browser(*args, **kwargs):
+        #     """open anki browser when a point is clicked"""
+        #     print("in")
+        #     breakpoint()
+        #     pid = points.point_inds[0]
+        #     nid = computed_layout.keys()[pid]
+        #     self._call_anki(action="guiBrowse", query=f"nid:{nid}")
+        #app.run_server(debug=True, use_reloader=False)
+
         offpy(fig,
               filename=f"{self.plot_dir}/{title}.html",
               auto_open=True,
