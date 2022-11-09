@@ -36,8 +36,9 @@ from sklearn.metrics import pairwise_distances, pairwise_kernels
 from sklearn.decomposition import TruncatedSVD
 from sklearn.preprocessing import StandardScaler
 from sklearn.neighbors import kneighbors_graph
-# import plotly.graph_objects as go
-# import plotly.express as px
+
+import networkx as nx
+import matplotlib.pyplot as plt
 
 import ankipandas as akp
 import shutil
@@ -2432,28 +2433,29 @@ threads of size {batchsize})")
             "used to issue a timeout"
             raise TimeoutError("Timed out. Not finishing 2D plots.")
         signal.signal(signal.SIGALRM, time_watcher)
-        signal.alarm(1800)
+        signal.alarm(180)  # 3 minutes
 
-        # networkx test #####################################################
-        beep("Testing using networkx")
-
+        # NetworkX plot #####################################################
         self.plot_dir = Path("NetworkX_plots")
         self.plot_dir.mkdir(exist_ok=True)
-        import networkx as nx
-        import matplotlib.pyplot as plt
         G = nx.MultiGraph()
         positions = {}
+        node_colours = []
+        all_edges = {}
+
+        # to bind each tags to a color
+        self.df["colors"] = self.df["tags"].factorize()[0]
 
         # add nodes
         for cid in tqdm(self.df.index, desc="adding nodes", unit="node",
                         file=self.t_strm):
             nid = self.df.loc[cid, "note"]
-            G.add_node(nid)
-            print(list(self.df.loc[cid, "2D_embeddings"]))
-            positions[nid] = list(self.df.loc[cid, "2D_embeddings"])
+            G.add_node(nid)  # duplicate nodes are ignored by networkx
+            if nid not in positions:
+                positions[nid] = list(self.df.loc[cid, "2D_embeddings"])
+                node_colours.append(self.df.loc[cid, "colors"])
 
-        # add all edges
-        all_edges = {}
+        # create a dict containing all edges and their weights
         for i in tqdm(
                 range(self.knn.shape[0]),
                 desc="computing edges",
@@ -2462,9 +2464,11 @@ threads of size {batchsize})")
             knn_ar = self.knn.getcol(i).toarray().squeeze()
             neighbour_indices = np.where(knn_ar == 1)[0]
             neighbours_nid = [int(self.df.loc[self.df.index[ind], "note"])
-                              for ind in np.argwhere(neighbour_indices == 1)]
+                              for ind in neighbour_indices]
             noteId = int(self.df.loc[self.df.index[i], "note"])
             for n_nid in neighbours_nid:
+                if noteId == n_nid:
+                    continue  # skip self neighbouring
                 smallest = min(noteId, n_nid)
                 largest = max(noteId, n_nid)
                 if smallest not in all_edges:
@@ -2475,144 +2479,79 @@ threads of size {batchsize})")
                     else:
                         all_edges[smallest][largest] += 1
 
+        # add each edge to the graph
         for k, v in tqdm(all_edges.items(),
                          desc="adding edges",
                          file=self.t_strm):
             for sub_k, sub_v in all_edges[k].items():
-                G.add_edge(k, sub_k, {"weight": sub_v})
+                G.add_edge(k, sub_k, weight=sub_v)
+
+        # only draw edges above threshold
+        p = 0.1  # proportion of edge to draw
+        edge_to_draw = []
+        while len(edge_to_draw) <= 5:  # repeat to make sure to have enough
+            edge_to_draw = [edg
+                            for edg in G.edges.data()
+                            if random.random() <= p]
 
         # 2D embeddings layout
+        start = time.time()
         whi("Drawing embedding network...")
         nx.draw(G,
                 with_labels=False,
                 pos=positions,
-                alpha=0.6,
-                width=1,
-                node_size=10,
+                alpha=0.7,
+                node_size=9,
+                width=0.3,
                 font_size=5,
-                # label="test label",
+                # node_shape=".",
+                node_color=node_colours,
+                cmap="tab20b",
+                edgelist=edge_to_draw,
                 )
         plt.savefig(f"{self.plot_dir}/Embeddings {self.deckname}.png", dpi=300)
         nx.drawing.nx_pydot.write_dot(
                 G, f'{self.plot_dir}/Embeddings {self.deckname}.dot')
-        whi("Saved embeddings layout!")
+        whi(f"Saved embeddings layout in {int(time.time()-start)}s!")
 
         # spring layout
+        n = len(node_colours)
+        start = time.time()
         whi("Drawing spring layout network...")
-        n = len(positions.keys())
         nx.draw(G,
                 with_labels=False,
                 pos=nx.spring_layout(
                     G,
-                    k=1 / np.sqrt(n) * 5,  # repulsive force
+                    k=1 / np.sqrt(n),  # repulsive force
                     pos=positions,  # initial positions is the 2D embeddings
                     # fixed=None,  # keep those nodes at their starting position
                     iterations=50,  # default to 50
-                    # weight="weight",  # edge attribute that holds the weight
                     # scale=1,
                     # center=None,  # center on a specific node
                     dim=2,  # dimension of layout
                     seed=4242,
+                    threshold=1e-5,  # stop iterating when errors goes below, 1e-4 by default
                     ),
-                alpha=0.6,
-                width=1,
-                node_size=10,
+                alpha=0.7,
+                node_size=9,
+                width=0.3,
                 font_size=5,
-                # label="test label",
+                # node_shape=".",
+                node_color=node_colours,
+                cmap="tab20b",
+                edgelist=edge_to_draw,
                 )
         plt.savefig(f"{self.plot_dir}/Spring {self.deckname}.png", dpi=300)
         nx.drawing.nx_pydot.write_dot(
                 G, f'{self.plot_dir}/Spring {self.deckname}.dot')
-        whi("Saved spring layout!")
-
-        beep("Finished networkx!")
+        whi(f"Saved spring layout in {int(time.time()-start)}s!")
+        whi("Finished 2D plots")
 
         # TODO :
-        # * add color by date of note creation
         # * import to plotly using:
         #   https://github.com/roholazandie/graph_drawing/blob/master/plotly_visualize.py
         # * play with 3 dimensions instead of 2
 
-
-
-
-        # done networkx #####################################################
-
-        # whi("Computing edges...")
-        # edge_x = []
-        # edge_y = []
-        # for i in tqdm(
-        #         range(self.knn.shape[0]),
-        #         desc="computing edges",
-        #         unit="point"):
-        #     ar = self.knn.getcol(i).toarray().squeeze()
-        #     neighbour_indices = np.where(ar == 1)[0]
-        #     for ni in neighbour_indices:
-        #         edge_x.append(self.df["2D_embeddings"].iloc[i][0])
-        #         edge_x.append(self.df["2D_embeddings"].iloc[ni][0])
-        #         edge_x.append(None)
-        #         edge_y.append(self.df["2D_embeddings"].iloc[i][1])
-        #         edge_y.append(self.df["2D_embeddings"].iloc[ni][1])
-        #         edge_y.append(None)
-
-        # edge_trace = px.scatter(
-        #     x=edge_x,
-        #     y=edge_y,
-        #     #line=dict(width=0.1, color='rgba(255, 0, 0, 0.5)'),
-        #     #hoverinfo='none',
-        #     mode='lines'
-        #     )
-
-        # whi("Adding nodes...")
-        # self.df["x"] = [x[0] for x in self.df["2D_embeddings"]]
-        # self.df["y"] = [y[1] for y in self.df["2D_embeddings"]]
-        # node_trace = px.scatter(
-        #     self.df,
-        #     x="x",
-        #     y="y",
-        #     mode='markers',
-        #     hover_name=["tags", "text", "status", "interval", "ref", "modelName"],
-        #     marker=dict(
-        #         showscale=True,
-        #         # colorscale options
-        #         #'Greys' | 'YlGnBu' | 'Greens' | 'YlOrRd' | 'Bluered' | 'RdBu' |
-        #         #'Reds' | 'Blues' | 'Picnic' | 'Rainbow' | 'Portland' | 'Jet' |
-        #         #'Hot' | 'Blackbody' | 'Earth' | 'Electric' | 'Viridis' |
-        #         #colorscale='Jet',
-        #         reversescale=True,
-        #         color=["tags"],
-        #         color_discrete_sequence=px.colors.qualitative.G10,
-        #         size=10,
-        #         colorbar=dict(
-        #             thickness=15,
-        #             title='Node Connections',
-        #             xanchor='left',
-        #             titleside='right'
-        #         ),
-        #         line_width=1))
-
-        # whi("Creating plot...")
-        # fig = go.Figure(data=[node_trace, edge_trace])
-        # fig.update_layout(
-        #         title=f'<br>Network of {self.deckname}</br>',
-        #         titlefont_size=18,
-        #         showlegend=False,
-        #         hovermode='closest',
-        #         hoverdata=self.df["text"],
-        #         color=self.df["status"],
-        #         margin=dict(b=20,l=5,r=5,t=40),
-        #                  annotations=[ dict(
-        #                      text="Python code: <a href='https://plotly.com/ipython-notebooks/network-graphs/'> https://plotly.com/ipython-notebooks/network-graphs/</a>",
-        #                      showarrow=False,
-        #                      xref="paper", yref="paper",
-        #                      x=0.005, y=-0.002 ) ],
-        #         xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-        #         yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-        #         )
-        # fig.show()
-
-        # whi("Saving as plot.html")
-        # fig.write_html("plot.html")
         signal.alarm(0)  # turn off timeout
 
 
