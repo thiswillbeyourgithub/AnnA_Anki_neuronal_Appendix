@@ -930,7 +930,7 @@ threads of size {batchsize})")
                 if string.group(i + 1) is not None:
                     new_w = new_w.replace('\\' + str(i + 1),
                                           string.group(i + 1))
-        out = string.group(0) + f" {new_w} "
+        out = string.group(0) + f" ({new_w})"
         return out
 
     def _store_OCR(self, matched):
