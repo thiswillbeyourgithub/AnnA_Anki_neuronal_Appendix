@@ -256,6 +256,7 @@ AnnA includes built-in methods you can run after instantiating the class. Note t
 * `save_df` saves the dataframe containing the cards and all other infos needed by AnnA as a pickle file. Used mainly for debugging. Files will be saved to the folder `DF_backups`
 
 ## TODO
+* see if using graphviz instead of networkx to compute layout is faster
 * add picture and documentation to the knn feature
 * when loading the acronyms, see if any acronym dict value is matched by an acronym key and tell it to the user
 * refactor a bit the way optimal score is computed to allow printing of the inner mechanism and debugging
@@ -289,6 +290,7 @@ AnnA includes built-in methods you can run after instantiating the class. Note t
 * [A post about class based tf idf by Maarten Grootendorst on Towardsdatascience](https://towardsdatascience.com/creating-a-class-based-tf-idf-with-scikit-learn-caea7b15b858)
 * [The authors of sentence-bert and their very informative website](https://github.com/UKPLab/sentence-transformers)
 * [The author of the addon anki-connect](https://github.com/FooSoft/anki-connect), as this project was indispensable when developing this addon. The companion addon is a reduced fork from anki-connect.
+* [This plotly script that leverages NetworkX](https://github.com/roholazandie/graph_drawing) by github user [roholazandie](https://github.com/roholazandie) and the PR to make compatible with recent plotly versions by [anthng](https://github.com/anthng)
 
 ## Crazy ideas 
 ### The following is kept as legacy but was made while working on the ancestor of AnnA, don't judge please.

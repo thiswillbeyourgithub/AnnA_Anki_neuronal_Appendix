@@ -39,6 +39,9 @@ from sklearn.neighbors import kneighbors_graph
 
 import networkx as nx
 import matplotlib.pyplot as plt
+from plotly.colors import qualitative
+from plotly.offline import plot as offpy
+from plotly.graph_objs import (Scatter, scatter, Figure, Layout, layout)
 
 import ankipandas as akp
 import shutil
@@ -2487,7 +2490,7 @@ threads of size {batchsize})")
                 G.add_edge(k, sub_k, weight=sub_v)
 
         # only draw edges above threshold
-        p = 0.1  # proportion of edge to draw
+        p = 0.05  # proportion of edge to draw
         edge_to_draw = []
         while len(edge_to_draw) <= 5:  # repeat to make sure to have enough
             edge_to_draw = [edg
@@ -2514,29 +2517,29 @@ threads of size {batchsize})")
                 G, f'{self.plot_dir}/Embeddings {self.deckname}.dot')
         whi(f"Saved embeddings layout in {int(time.time()-start)}s!")
 
-        # spring layout
+        # computing spring layout
         n = len(node_colours)
         start = time.time()
         whi("Drawing spring layout network...")
+        layout_position = nx.spring_layout(
+                G,
+                k=1 / np.sqrt(n) * 10,  # repulsive force
+                pos=positions,  # initial positions is the 2D embeddings
+                iterations=50,  # default to 50
+                # fixed=None,  # keep those nodes at their starting position
+                # center=None,  # center on a specific node
+                dim=2,  # dimension of layout
+                seed=4242,
+                threshold=1e-3,  # stop goes below, default 1e-4
+                )
+        whi("Finished computing positions")
         nx.draw(G,
                 with_labels=False,
-                pos=nx.spring_layout(
-                    G,
-                    k=1 / np.sqrt(n),  # repulsive force
-                    pos=positions,  # initial positions is the 2D embeddings
-                    # fixed=None,  # keep those nodes at their starting position
-                    iterations=50,  # default to 50
-                    # scale=1,
-                    # center=None,  # center on a specific node
-                    dim=2,  # dimension of layout
-                    seed=4242,
-                    threshold=1e-5,  # stop iterating when errors goes below, 1e-4 by default
-                    ),
+                pos=layout_position,
                 alpha=0.7,
                 node_size=9,
                 width=0.3,
                 font_size=5,
-                # node_shape=".",
                 node_color=node_colours,
                 cmap="tab20b",
                 edgelist=edge_to_draw,
@@ -2545,13 +2548,107 @@ threads of size {batchsize})")
         nx.drawing.nx_pydot.write_dot(
                 G, f'{self.plot_dir}/Spring {self.deckname}.dot')
         whi(f"Saved spring layout in {int(time.time()-start)}s!")
+
+        # Plotly #############################################################
+        whi("Creating plotly graph...")
+        start = time.time()
+        edge_trace = Scatter(
+            x=[],
+            y=[],
+            opacity=0.3,
+            line=scatter.Line(color='rgba(136, 136, 136, .8)'),
+            hoverinfo='none',
+            mode='lines'
+            )
+
+        for edge in tqdm(G.edges.data(),
+                         desc="Adding edges",
+                         file=self.t_strm):
+            if edge in edge_to_draw:
+                x0, y0 = layout_position[edge[0]]
+                x1, y1 = layout_position[edge[1]]
+                edge_trace['x'] += tuple([x0, x1, None])
+                edge_trace['y'] += tuple([y0, y1, None])
+                if edge[2]["weight"] >= 2:
+                    # doubles the traces when weight is high
+                    edge_trace['x'] += tuple([x0, x1, None])
+                    edge_trace['y'] += tuple([y0, y1, None])
+
+        node_trace = Scatter(
+            x=[],
+            y=[],
+            text=[],
+            mode='markers',
+            textfont=dict(family='Calibri (Body)', size=25, color='black'),
+            # opacity=0.1,
+            # hoverinfo='text',
+            marker=dict(
+                showscale=True,
+                colorscale=qualitative.Dark24,
+                reversescale=True,
+                color=node_colours,
+                # size=[15] * len(G.nodes()),
+                # colorbar=dict(
+                #     thickness=15,
+                #     title='Node Connections',
+                #     xanchor='left',
+                #     titleside='right'
+                # ),
+                line=dict(width=2)))
+
+        for node in tqdm(G.nodes(), desc="Adding nodes", file=self.t_strm):
+            x, y = layout_position[node]
+            node_trace['x'] += tuple([x])
+            node_trace['y'] += tuple([y])
+
+        for nid in tqdm(positions.keys(),
+                        desc="Adding node labels",
+                        file=self.t_strm):
+            new_content = []
+            content = self.df.loc[self.df["note"] == nid, "text"].tolist()[0]
+            wrap_limit = 100
+            while len(content) > wrap_limit:
+                new_content.append(content[:wrap_limit])
+                content = content[wrap_limit:]
+            new_content.append(content)
+            wrapped = "<br>".join(new_content)
+            tag = self.df.loc[self.df["note"] == nid, "tags"].tolist()[0]
+            node_trace['text'] += tuple([
+                "<br>"
+                f"<b>nid:</b>{nid}<br>"
+                f"<b>tag:</b>{tag}"
+                "<br>"
+                f"<b>Content:</b>{wrapped}"
+                ])
+
+        fig = Figure(data=[node_trace, edge_trace],
+                     layout=Layout(
+                         title=f'<br>{self.deckname}</br>',
+                         titlefont=dict(size=25),
+                         showlegend=True,
+                         # width=1500,
+                         # height=800,
+                         hovermode='closest',
+                         # margin=dict(b=20, l=350, r=5, t=200),
+                         # annotations=[dict(
+                         #     text="",
+                         #     showarrow=False,
+                         #     xref="paper", yref="paper",
+                         #     x=0.005, y=-0.002)],
+                         xaxis=layout.XAxis(showgrid=False,
+                                            zeroline=False,
+                                            showticklabels=False),
+                         yaxis=layout.YAxis(showgrid=False,
+                                            zeroline=False,
+                                            showticklabels=False)))
+
+        offpy(fig,
+              filename=f"{self.plot_dir}/Plotly {self.deckname}.html",
+              auto_open=True,
+              show_link=True)
+        whi(f"Saved plotly in {int(time.time()-start)}s!")
+
         whi("Finished 2D plots")
-
-        # TODO :
-        # * import to plotly using:
-        #   https://github.com/roholazandie/graph_drawing/blob/master/plotly_visualize.py
-        # * play with 3 dimensions instead of 2
-
         signal.alarm(0)  # turn off timeout
 
 
