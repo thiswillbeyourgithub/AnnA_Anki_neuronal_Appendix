@@ -2497,20 +2497,11 @@ threads of size {batchsize})")
             for sub_k, sub_v in all_edges[k].items():
                 G.add_edge(k, sub_k, weight=sub_v)
 
-        # only draw edges above threshold
-        p = 0.05  # proportion of edge to draw
-        edges_to_draw = []
-        while len(edges_to_draw) <= 5:  # repeat to make sure to have enough
-            edges_to_draw = [edg
-                            for edg in G.edges.data()
-                            if random.random() <= p]
-
         # 2D embeddings layout
         start = time.time()
         whi("Drawing embedding network...")
         self._do_plotly(G=G,
                         computed_layout=positions,
-                        edges_to_draw=edges_to_draw,
                         node_colours=node_colours,
                         title=f"{self.deckname} - embeddings"
                         )
@@ -2536,7 +2527,6 @@ threads of size {batchsize})")
         whi(f"Finished computing spring layout in {int(time.time()-start)}s")
         self._do_plotly(G=G,
                         computed_layout=layout_spring,
-                        edges_to_draw=edges_to_draw,
                         node_colours=node_colours,
                         title=f"{self.deckname} - spring"
                         )
@@ -2550,7 +2540,6 @@ threads of size {batchsize})")
     def _do_plotly(self,
                    G,
                    computed_layout,
-                   edges_to_draw,
                    node_colours,
                    title):
         """
@@ -2564,6 +2553,14 @@ threads of size {batchsize})")
             hoverinfo='none',
             mode='lines'
             )
+
+        # only draw edges above threshold
+        p = 0.05  # proportion of edge to draw
+        edges_to_draw = []
+        while len(edges_to_draw) <= 5:  # repeat to make sure to have enough
+            edges_to_draw = [edg
+                             for edg in G.edges.data()
+                             if random.random() <= p]
 
         for edge in tqdm(G.edges.data(),
                          desc="Adding edges",
