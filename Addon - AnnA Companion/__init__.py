@@ -482,6 +482,14 @@ class AnkiConnect:
         return buried
 
     @util.api()
+    def deckNameFromId(self, deckId):
+        deck = self.collection().decks.get(deckId)
+        if deck is None:
+            raise Exception('deck was not found: {}'.format(deckId))
+
+        return deck['name']
+
+    @util.api()
     def cardsInfo(self, cards):
         result = []
         for cid in cards:
@@ -498,6 +506,7 @@ class AnkiConnect:
                 result.append({
                     'cardId': card.id,
                     'fields': fields,
+                    'deckName': self.deckNameFromId(card.did),
                     'modelName': model['name'],
                     'tags': note.tags,
                     'interval': card.ivl,

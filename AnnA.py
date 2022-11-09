@@ -2445,7 +2445,7 @@ threads of size {batchsize})")
         all_edges = {}
 
         # to bind each tags to a color
-        self.df["colors"] = self.df["tags"].factorize()[0]
+        self.df["colors"] = self.df["deckName"].factorize()[0]
 
         # add nodes
         for cid in tqdm(self.df.index, desc="adding nodes", unit="node",
