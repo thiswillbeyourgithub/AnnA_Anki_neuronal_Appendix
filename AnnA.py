@@ -657,7 +657,7 @@ class AnnA:
                 beep(f"Exception when plotting 2D embeddings: '{err}'")
                 red(traceback.format_exc())
             signal.alarm(0)  # turn off timeout
-        beep(f"\nDone with task '{self.task}' on deck '{self.deckname}'")
+        red(f"Done with task '{self.task}' on deck '{self.deckname}'")
         gc.collect()
 
     @classmethod
