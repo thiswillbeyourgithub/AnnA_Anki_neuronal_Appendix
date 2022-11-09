@@ -2437,7 +2437,6 @@ threads of size {batchsize})")
         signal.signal(signal.SIGALRM, time_watcher)
         signal.alarm(180)  # 3 minutes
 
-        # NetworkX plot #####################################################
         self.plot_dir = Path("NetworkX_plots")
         self.plot_dir.mkdir(exist_ok=True)
         G = nx.MultiGraph()
@@ -2515,14 +2514,14 @@ threads of size {batchsize})")
         whi("Drawing spring layout network...")
         layout_spring = nx.spring_layout(
                 G,
-                k=1 / np.sqrt(n) * 10,  # repulsive force
+                k=1 / np.sqrt(n),  # repulsive force
                 pos=positions,  # initial positions is the 2D embeddings
                 iterations=50,  # default to 50
                 # fixed=None,  # keep those nodes at their starting position
                 # center=None,  # center on a specific node
                 dim=2,  # dimension of layout
                 seed=4242,
-                threshold=1e-3,  # stop goes below, default 1e-4
+                threshold=1e-5,  # stop goes below, default 1e-4
                 )
         whi(f"Finished computing spring layout in {int(time.time()-start)}s")
         self._do_plotly(G=G,
@@ -2563,7 +2562,7 @@ threads of size {batchsize})")
                              if random.random() <= p]
 
         for edge in tqdm(G.edges.data(),
-                         desc="Adding edges",
+                         desc="plotting edges",
                          file=self.t_strm):
             if edge in edges_to_draw:
                 x0, y0 = computed_layout[edge[0]]
@@ -2597,7 +2596,7 @@ threads of size {batchsize})")
                 # ),
                 line=dict(width=2)))
 
-        for node in tqdm(G.nodes(), desc="Adding nodes", file=self.t_strm):
+        for node in tqdm(G.nodes(), desc="plotting nodes", file=self.t_strm):
             x, y = computed_layout[node]
             node_trace['x'] += tuple([x])
             node_trace['y'] += tuple([y])
