@@ -1918,11 +1918,11 @@ threads of size {batchsize})")
                         if df.loc[x, "interval"] <= 1:
                             # if short interval: boost by a fixed amount
                             # (somewhat arbitrary)
-                            ro_cs[due.index(x)] += -5 * \
-                                np.mean(self.score_adjustment_factor)
+                            ro_cs[due.index(x)] += -1 - abs(
+                                    5 * np.mean(self.score_adjustment_factor))
                         else:
-                            ro_cs[due.index(x)] += n * \
-                                np.mean(self.score_adjustment_factor)
+                            ro_cs[due.index(x)] += -1 - abs(
+                                    n * np.mean(self.score_adjustment_factor))
 
             if repicked:
                 beep(f"{self.deckname} - {len(repicked)}/{len(due)} cards "
