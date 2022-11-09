@@ -1320,10 +1320,10 @@ threads of size {batchsize})")
                                    sublinear_tf=True,
                                    max_features=min(10_000,
                                                     len(df.index) // 2),
-                                   max_df=0.95,  # ignore words present in
+                                   max_df=0.99,  # ignore words present in
                                    # more than X% of documents
-                                   min_df=5,  # ignore words than appear
-                                   # less than n times
+                                   # min_df=2,  # ignore words than appear
+                                   # # less than n times
                                    )
         use_fallback = False
         if self.whole_deck_computation:
