@@ -1,3 +1,4 @@
+import textwrap
 import traceback
 import copy
 import beepy
@@ -38,7 +39,6 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.neighbors import kneighbors_graph
 
 import networkx as nx
-import matplotlib.pyplot as plt
 from plotly.colors import qualitative
 from plotly.offline import plot as offpy
 from plotly.graph_objs import (Scatter, scatter, Figure, Layout, layout)
@@ -2491,37 +2491,30 @@ threads of size {batchsize})")
 
         # only draw edges above threshold
         p = 0.05  # proportion of edge to draw
-        edge_to_draw = []
-        while len(edge_to_draw) <= 5:  # repeat to make sure to have enough
-            edge_to_draw = [edg
+        edges_to_draw = []
+        while len(edges_to_draw) <= 5:  # repeat to make sure to have enough
+            edges_to_draw = [edg
                             for edg in G.edges.data()
                             if random.random() <= p]
 
         # 2D embeddings layout
         start = time.time()
         whi("Drawing embedding network...")
-        nx.draw(G,
-                with_labels=False,
-                pos=positions,
-                alpha=0.7,
-                node_size=9,
-                width=0.3,
-                font_size=5,
-                # node_shape=".",
-                node_color=node_colours,
-                cmap="tab20b",
-                edgelist=edge_to_draw,
-                )
-        plt.savefig(f"{self.plot_dir}/Embeddings {self.deckname}.png", dpi=300)
-        nx.drawing.nx_pydot.write_dot(
-                G, f'{self.plot_dir}/Embeddings {self.deckname}.dot')
+        self._do_plotly(G=G,
+                        computed_layout=positions,
+                        edges_to_draw=edges_to_draw,
+                        node_colours=node_colours,
+                        title=f"{self.deckname} - embeddings"
+                        )
         whi(f"Saved embeddings layout in {int(time.time()-start)}s!")
+        nx.drawing.nx_pydot.write_dot(
+                G, f'{self.plot_dir}/{self.deckname} - embeddings.dot')
 
         # computing spring layout
         n = len(node_colours)
         start = time.time()
         whi("Drawing spring layout network...")
-        layout_position = nx.spring_layout(
+        layout_spring = nx.spring_layout(
                 G,
                 k=1 / np.sqrt(n) * 10,  # repulsive force
                 pos=positions,  # initial positions is the 2D embeddings
@@ -2532,26 +2525,29 @@ threads of size {batchsize})")
                 seed=4242,
                 threshold=1e-3,  # stop goes below, default 1e-4
                 )
-        whi("Finished computing positions")
-        nx.draw(G,
-                with_labels=False,
-                pos=layout_position,
-                alpha=0.7,
-                node_size=9,
-                width=0.3,
-                font_size=5,
-                node_color=node_colours,
-                cmap="tab20b",
-                edgelist=edge_to_draw,
-                )
-        plt.savefig(f"{self.plot_dir}/Spring {self.deckname}.png", dpi=300)
-        nx.drawing.nx_pydot.write_dot(
-                G, f'{self.plot_dir}/Spring {self.deckname}.dot')
+        whi(f"Finished computing spring layout in {int(time.time()-start)}s")
+        self._do_plotly(G=G,
+                        computed_layout=layout_spring,
+                        edges_to_draw=edges_to_draw,
+                        node_colours=node_colours,
+                        title=f"{self.deckname} - spring"
+                        )
         whi(f"Saved spring layout in {int(time.time()-start)}s!")
+        nx.drawing.nx_pydot.write_dot(
+                G, f'{self.plot_dir}/{self.deckname} - spring.dot')
 
-        # Plotly #############################################################
-        whi("Creating plotly graph...")
-        start = time.time()
+        whi("Finished 2D plots")
+        signal.alarm(0)  # turn off timeout
+
+    def _do_plotly(self,
+                   G,
+                   computed_layout,
+                   edges_to_draw,
+                   node_colours,
+                   title):
+        """
+        Create 2D plotly plot from networkx graph.
+        """
         edge_trace = Scatter(
             x=[],
             y=[],
@@ -2564,15 +2560,15 @@ threads of size {batchsize})")
         for edge in tqdm(G.edges.data(),
                          desc="Adding edges",
                          file=self.t_strm):
-            if edge in edge_to_draw:
-                x0, y0 = layout_position[edge[0]]
-                x1, y1 = layout_position[edge[1]]
+            if edge in edges_to_draw:
+                x0, y0 = computed_layout[edge[0]]
+                x1, y1 = computed_layout[edge[1]]
                 edge_trace['x'] += tuple([x0, x1, None])
                 edge_trace['y'] += tuple([y0, y1, None])
-                if edge[2]["weight"] >= 2:
-                    # doubles the traces when weight is high
-                    edge_trace['x'] += tuple([x0, x1, None])
-                    edge_trace['y'] += tuple([y0, y1, None])
+                # if edge[2]["weight"] >= 2:
+                #     # doubles the traces when weight is high
+                #     edge_trace['x'] += tuple([x0, x1, None])
+                #     edge_trace['y'] += tuple([y0, y1, None])
 
         node_trace = Scatter(
             x=[],
@@ -2597,44 +2593,34 @@ threads of size {batchsize})")
                 line=dict(width=2)))
 
         for node in tqdm(G.nodes(), desc="Adding nodes", file=self.t_strm):
-            x, y = layout_position[node]
+            x, y = computed_layout[node]
             node_trace['x'] += tuple([x])
             node_trace['y'] += tuple([y])
 
-        for nid in tqdm(positions.keys(),
-                        desc="Adding node labels",
-                        file=self.t_strm):
-            new_content = []
-            content = self.df.loc[self.df["note"] == nid, "text"].tolist()[0]
-            wrap_limit = 100
-            while len(content) > wrap_limit:
-                new_content.append(content[:wrap_limit])
-                content = content[wrap_limit:]
-            new_content.append(content)
-            wrapped = "<br>".join(new_content)
-            tag = self.df.loc[self.df["note"] == nid, "tags"].tolist()[0]
+            content = self.df.loc[self.df["note"] == node, "text"].tolist()[0]
+            tag = self.df.loc[self.df["note"] == node, "tags"].tolist()[0]
             node_trace['text'] += tuple([
                 "<br>"
-                f"<b>nid:</b>{nid}<br>"
-                f"<b>tag:</b>{tag}"
+                f"<b>nid:</b>{node}<br>"
+                f"<b>tag:</b>{'<br>'.join(textwrap.wrap(tag, width=60))}"
                 "<br>"
-                f"<b>Content:</b>{wrapped}"
+                f"<b>Content:</b>{'<br>'.join(textwrap.wrap(content, width=60))}"
                 ])
 
         fig = Figure(data=[node_trace, edge_trace],
                      layout=Layout(
-                         title=f'<br>{self.deckname}</br>',
+                         title=f'<br>{title}</br>',
                          titlefont=dict(size=25),
                          showlegend=True,
                          # width=1500,
                          # height=800,
                          hovermode='closest',
                          # margin=dict(b=20, l=350, r=5, t=200),
-                         # annotations=[dict(
-                         #     text="",
-                         #     showarrow=False,
-                         #     xref="paper", yref="paper",
-                         #     x=0.005, y=-0.002)],
+                         annotations=[dict(
+                             text="",
+                             showarrow=False,
+                             xref="paper", yref="paper",
+                             x=0.005, y=-0.002)],
                          xaxis=layout.XAxis(showgrid=False,
                                             zeroline=False,
                                             showticklabels=False),
@@ -2643,13 +2629,9 @@ threads of size {batchsize})")
                                             showticklabels=False)))
 
         offpy(fig,
-              filename=f"{self.plot_dir}/Plotly {self.deckname}.html",
+              filename=f"{self.plot_dir}/{title}.html",
               auto_open=True,
               show_link=True)
-        whi(f"Saved plotly in {int(time.time()-start)}s!")
-
-        whi("Finished 2D plots")
-        signal.alarm(0)  # turn off timeout
 
 
 class ProgressParallel(joblib.Parallel):
