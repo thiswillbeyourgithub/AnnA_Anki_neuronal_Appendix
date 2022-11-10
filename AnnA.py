@@ -2603,8 +2603,10 @@ threads of size {batchsize})")
 
             content = self.df.loc[self.df["note"] == node, "text"].tolist()[0]
             tag = self.df.loc[self.df["note"] == node, "tags"].tolist()[0]
+            deck = self.df.loc[self.df["note"] == node, "deckName"].tolist()[0]
             node_trace['text'] += tuple([
                 "<br>"
+                f"<b>deck:</b>{'<br>'.join(textwrap.wrap(deck, width=60))}"
                 f"<b>nid:</b>{node}<br>"
                 f"<b>tag:</b>{'<br>'.join(textwrap.wrap(tag, width=60))}"
                 "<br>"
