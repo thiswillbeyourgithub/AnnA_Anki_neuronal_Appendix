@@ -2522,7 +2522,7 @@ threads of size {batchsize})")
                 # center=None,  # center on a specific node
                 dim=2,  # dimension of layout
                 seed=4242,
-                threshold=1e-5,  # stop goes below, default 1e-4
+                threshold=1e-4,  # stop goes below, default 1e-4
                 )
         whi(f"Finished computing spring layout in {int(time.time()-start)}s")
         self._do_plotly(G=G,
