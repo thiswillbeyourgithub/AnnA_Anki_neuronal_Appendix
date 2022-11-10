@@ -1612,7 +1612,7 @@ threads of size {batchsize})")
             return
         try:
             # 1% of neighbors, bounded
-            n_n = min(50, max(self.df_dist.shape[0] // 100, 5))
+            n_n = min(20, max(self.df_dist.shape[0] // 100, 5))
             yel(f"Computing '{n_n}' nearest neighbours per point...")
             self.knn = kneighbors_graph(
                     self.df_dist,
