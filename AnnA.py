@@ -1303,9 +1303,9 @@ threads of size {batchsize})")
         df = self.df
 
         if not self.low_power_mode:
-            ngram_val = (1, 5)
+            ngram_val = (2, 6)
         else:
-            ngram_val = (1, 3)
+            ngram_val = (2, 4)
 
         def init_vectorizer():
             """used to make sure the same statement is used to create
