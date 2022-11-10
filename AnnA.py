@@ -1950,6 +1950,8 @@ threads of size {batchsize})")
                         beep(f"{self.deckname} - Error adding tags to urgent "
                              f"cards: {str(e)}")
 
+            self.repicked = repicked  # store to use when resorting the cards
+
             if not reference_order == "LIRO_mix":
                 df.loc[due, "ref"] = ro_cs
 
@@ -2158,8 +2160,10 @@ threads of size {batchsize})")
             if self.task == "filter_review_cards" and self.resort_by_dist:
                 red("Reordering before creating the filtered deck "
                     "to maximize distance...")
-                new_queue = []
-                to_process = [q for q in queue]
+                whi("But starts by the cards needing to be boosted)")
+                new_queue = [q for q in queue if q in self.repicked]
+                to_process = [q for q in queue if q not in new_queue]
+                assert len(new_queue) + len(to_process) == len(queue)
                 for i, q in enumerate(tqdm(queue,
                                            file=self.t_strm,
                                            desc="reordering filtered deck")):
