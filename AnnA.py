@@ -2435,7 +2435,7 @@ threads of size {batchsize})")
             "used to issue a timeout"
             raise TimeoutError("Timed out. Not finishing 2D plots.")
         signal.signal(signal.SIGALRM, time_watcher)
-        signal.alarm(180)  # 3 minutes
+        signal.alarm(300)  # 5 minutes
 
         self.plot_dir = Path("NetworkX_plots")
         self.plot_dir.mkdir(exist_ok=True)
