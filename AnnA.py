@@ -2889,8 +2889,10 @@ if __name__ == "__main__":
                             "value is `field_mappings.py`. If empty or if no "
                             "matching notetype was found, AnnA will only take "
                             "into account the first 2 fields. If you assign a "
-                            "notetype to `[\"take_all_fields]`, AnnA will grab "
-                            "all fields of the notetype in the same order as they"
+                            "notetype to `[\"take_all_fields]`, AnnA "
+                            "will grab "
+                            "all fields of the notetype in the same "
+                            "order as they"
                             " appear in Anki's interface."))
     parser.add_argument("--acronym_file",
                         nargs=1,
@@ -2900,8 +2902,10 @@ if __name__ == "__main__":
                         required=False,
                         help=(
                             "a python file containing dictionaries that "
-                            "themselves contain acronyms to extend in the text "
-                            "of cards. For example `CRC` can be extended to `CRC "
+                            "themselves contain acronyms to extend in "
+                            "the text "
+                            "of cards. For example `CRC` can be extended "
+                            "to `CRC "
                             "(colorectal cancer)`. (The parenthesis are "
                             "automatically added.) Default is "
                             "`\"acronym_file.py\"`. The matching is case "
@@ -2917,8 +2921,8 @@ if __name__ == "__main__":
                         required=False,
                         help=(
                             "a comma separated list of name of dictionaries "
-                            "to extract file\ supplied in `acronym_file`. Used "
-                            "to extend text, for instance "
+                            "to extract file supplied in `acronym_file`. "
+                            "Used to extend text, for instance "
                             "`AI_machine_learning,medical_terms`. Default to "
                             "None."))
     parser.add_argument("--minimum_due",
@@ -2940,7 +2944,8 @@ if __name__ == "__main__":
                         help=(
                             "bypasses the browser query used to find the "
                             "list of due cards. You can set it for example to "
-                            "`deck:\"my_deck\" is:due -rated:14 flag:1`. Default "
+                            "`deck:\"my_deck\" is:due -rated:14 flag:1`. "
+                            "Default "
                             "is `None`. **Keep in mind that, when highjacking "
                             "queries, you have to specify the deck otherwise "
                             "AnnA will compare your whole collection.**"))
@@ -2953,7 +2958,8 @@ if __name__ == "__main__":
                         help=(
                             "same idea as above, bypasses the query used "
                             "to fetch rated cards in anki. Related to "
-                            "`highjack_due_query` although you can set only one "
+                            "`highjack_due_query` although you can set "
+                            "only one "
                             "of them. Default is `None`."))
     parser.add_argument("--low_power_mode",
                         dest="low_power_mode",
@@ -2962,9 +2968,12 @@ if __name__ == "__main__":
                         required=False,
                         help=(
                             "enable to reduce the computation needed for "
-                            "AnnA, making it usable for less powerful computers. "
-                            "Default to `False`. It skips trying to find acronyms "
-                            "that were not replaced and reduces the ngram range."))
+                            "AnnA, making it usable for less powerful "
+                            "computers. "
+                            "Default to `False`. It skips trying to find "
+                            "acronyms "
+                            "that were not replaced and reduces the "
+                            "ngram range."))
     parser.add_argument("--log_level",
                         nargs=1,
                         metavar="LOG_LEVEL",
@@ -2974,9 +2983,11 @@ if __name__ == "__main__":
                         required=False,
                         help=(
                             "can be any number between 0 and 2. Default is "
-                            "`2` to only print errors. 1 means print also useful "
+                            "`2` to only print errors. 1 means print "
+                            "also useful "
                             "information and >=2 means print everything. "
-                            "Messages are color coded so it might be better to "
+                            "Messages are color coded so it might be better "
+                            "to "
                             "leave it at 3 and just focus on colors."))
     parser.add_argument("--replace_greek",
                         action="store_true",
@@ -3004,7 +3015,8 @@ if __name__ == "__main__":
                         action="store_true",
                         help=(
                             "Wether to append the 2 deepest tags to the "
-                            "cards content or to add no tags. Default to `True`."))
+                            "cards content or to add no tags. Default "
+                            "to `True`."))
     parser.add_argument("--tags_to_ignore",
                         nargs="*",
                         metavar="TAGS_TO_IGNORE",
@@ -3014,7 +3026,8 @@ if __name__ == "__main__":
                         required=False,
                         help=(
                             "a comma separated list of tags to ignore when "
-                            "appending tags to cards. This is not a list of tags "
+                            "appending tags to cards. This is not a "
+                            "list of tags "
                             "whose card should be ignored! Default is `None "
                             "(i.e. disabled)."))
     parser.add_argument("--tags_separator",
@@ -3025,7 +3038,8 @@ if __name__ == "__main__":
                         type=str,
                         required=False,
                         help=(
-                            "separator between levels of tags. Default to `::`."))
+                            "separator between levels of tags. Default "
+                            "to `::`."))
     parser.add_argument("--add_KNN_to_field",
                         action="store_true",
                         dest="add_KNN_to_field",
@@ -3079,8 +3093,9 @@ if __name__ == "__main__":
                         default=True,
                         required=False,
                         help=(
-                            "used to display a nice banner when instantiating the"
-                            " collection. Default is `True`."))
+                            "used to display a nice banner when "
+                            "instantiating the "
+                            "collection. Default is `True`."))
     parser.add_argument("--repick_task",
                         nargs=1,
                         metavar="REPICK_TASK",
@@ -3089,11 +3104,16 @@ if __name__ == "__main__":
                         required=False,
                         help=(
                             "Define what happens to cards deemed urgent "
-                            "in 'relative_overdueness' ref mode. If contains "
-                            "'boost', those cards will have a boost in priority "
-                            "to make sure you will review them ASAP. If contains "
-                            "'addtag' a tag indicating which card is urgent will "
-                            "be added at the end of the run. Disable by setting "
+                            "in 'relative_overdueness' ref mode. If "
+                            "contains "
+                            "'boost', those cards will have a boost in "
+                            "priority "
+                            "to make sure you will review them ASAP. If "
+                            "contains "
+                            "'addtag' a tag indicating which card is urgent "
+                            "will "
+                            "be added at the end of the run. Disable by "
+                            "setting "
                             "it to None. Default is `boost`."))
     parser.add_argument("--vectorizer",
                         nargs=1,
@@ -3118,10 +3138,12 @@ if __name__ == "__main__":
                             "variance. If an int, will do like 'auto' but "
                             "starting from the supplied value. "
                             "Default is `auto`, you cannot disable "
-                            "dimension reduction for TF_IDF because that would "
-                            "result in a sparse "
+                            "dimension reduction for TF_IDF because "
+                            "that would result in a sparse "
                             "matrix. (More information at "
-                            "https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.TruncatedSVD.html)."))
+                            "https://scikit-learn.org/stable/modules/"
+                            "generated/sklearn.decomposition.Trunca"
+                            "tedSVD.html)."))
     parser.add_argument("--TFIDF_tokenize",
                         dest="TFIDF_tokenize",
                         default=True,
@@ -3132,7 +3154,8 @@ if __name__ == "__main__":
                             "tokenization, for example turn "
                             "`hypernatremia` to `hyp + er + natr + emia`."
                             " You cannot enable both `TFIDF_tokenize` and "
-                            "`TFIDF_stem` but should absolutely enable at least "
+                            "`TFIDF_stem` but should absolutely enable "
+                            "at least "
                             "one."))
     parser.add_argument("--tokenizer_model",
                         dest="tokenizer_model",
@@ -3146,7 +3169,8 @@ if __name__ == "__main__":
                             "respectivelly to `bert-base-multilingual-cased`"
                             " and `gpt_neox_20B` They "
                             "should work on just about any languages. Use "
-                            "'Both' to concatenate both tokenizers. (experimental)"))
+                            "'Both' to concatenate both tokenizers. "
+                            "(experimental)"))
     parser.add_argument("--plot_2D_embeddings",
                         dest="plot_2D_embeddings",
                         default=False,
@@ -3163,10 +3187,11 @@ if __name__ == "__main__":
                         required=False,
                         help=(
                             "default to `False`. Wether to enable "
-                            "stemming of words. Currently the PorterStemmer is "
-                            "used, and was made for English but can still be "
-                            "useful for some other languages. Keep in mind that "
-                            "this is the longest step when formatting text."))
+                            "stemming of words. Currently the PorterStemmer "
+                            "is used, and was made for English but can still "
+                            "be useful for some other languages. Keep in "
+                            "mind that this is the longest step when "
+                            "formatting text."))
     parser.add_argument("--dist_metric",
                         nargs=1,
                         metavar="DIST_METRIC",
@@ -3176,8 +3201,8 @@ if __name__ == "__main__":
                         required=False,
                         help=(
                             "when computing the distance matrix, wether to "
-                            "use 'cosine' or 'rbf' metrics. Using RBF is "
-                            "experimental but should work!"))
+                            "use 'cosine' or 'rbf' metrics. Changing this "
+                            "should not affect the results significantly."))
     parser.add_argument("--whole_deck_computation",
                         dest="whole_deck_computation",
                         default=False,
@@ -3197,13 +3222,15 @@ if __name__ == "__main__":
                         required=False,
                         help=(
                             "Disable fuzzing when computing optimal "
-                            "order , otherwise a small random vector is added to "
+                            "order , otherwise a small random vector is "
+                            "added to "
                             "the reference_score and distance_score of each "
                             "card. Note that this vector is multiplied by the "
                             "average of the `score_adjustment_factor` then "
                             "multiplied by the mean distance then "
                             "divided by 10 to make sure that it does not "
-                            "overwhelm the other factors. Defaults to `True`."))
+                            "overwhelm the other factors. Defaults "
+                            "to `True`."))
     parser.add_argument("--resort_by_dist",
                         dest="resort_by_dist",
                         default=True,
@@ -3212,11 +3239,14 @@ if __name__ == "__main__":
                         help=(
                             "Recomputing the best order of the cards in the "
                             "filtered deck without taking into account the "
-                            "reference score. This is useful if you are sure to "
-                            "review the entierety of the filtered deck today as it "
+                            "reference score. This is useful if you are "
+                            "sure to "
+                            "review the entierety of the filtered deck "
+                            "today as it "
                             "will minimize similarity between cards. If "
                             "you are not sure you will finish the "
-                            "deck, it can be best to set to False to make sure "
+                            "deck, it can be best to set to False to make "
+                            "sure "
                             "you review first the most urgent cards. This "
                             "feature is active only if you set the task to '"
                             "filter_review_cards'. Default to True."))
