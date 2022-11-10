@@ -197,7 +197,7 @@ class AnnA:
                  # left for legacy reason
                  TFIDF_dim="auto",
                  TFIDF_tokenize=True,
-                 tokenizer_model="both",
+                 tokenizer_model="bert",
                  plot_2D_embeddings=False,
                  TFIDF_stem=False,
                  dist_metric="RBF",  # 'RBF' or 'cosine'
@@ -3120,11 +3120,11 @@ if __name__ == "__main__":
                             "one."))
     parser.add_argument("--tokenizer_model",
                         dest="tokenizer_model",
-                        default="both",
+                        default="bert",
                         metavar="TOKENIZER_MODEL",
                         required=False,
                         help=(
-                            "default to `both`. Model to use for tokenizing "
+                            "default to `bert`. Model to use for tokenizing "
                             "the text before running TFIDF. Possible values "
                             "are 'bert' and 'GPT' which correspond "
                             "respectivelly to `bert-base-multilingual-cased`"
