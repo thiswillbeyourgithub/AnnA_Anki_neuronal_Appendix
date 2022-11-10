@@ -2164,14 +2164,23 @@ threads of size {batchsize})")
                 whi("But starts by the cards needing to be boosted)")
                 new_queue = [q for q in queue if q in self.repicked]
                 to_process = [q for q in queue if q not in self.repicked]
+
+                # sort by urgency
+                new_queue = sorted(new_queue,
+                                   key=lambda x: self.df.loc[x, "ref"],
+                                   reverse=False)  # ascending order
+
+                # tell proportion
                 if new_queue:
                     proportion = int(len(new_queue) / len(queue) * 100)
                     yel(f"{proportion}% of the new filtered deck will be "
                         "boosted cards.")
+
                 assert set(new_queue) & set(to_process) == set(), (
                         "queue construction failed!")
                 assert set(new_queue) | set(to_process) == set(queue), (
                         "queue construction failed! #2")
+
                 pbar = tqdm(total=len(to_process),
                             file=self.t_strm,
                             desc="reordering filtered deck")
@@ -2181,18 +2190,10 @@ threads of size {batchsize})")
                             self.df_dist.loc[to_process, new_queue].values)
                     new_queue.append(to_process.pop(score.argmin()))
                 pbar.close()
-                assert len(to_process) == 0, "to_process is not empty!"
-                assert len(list(set(queue))) == len(list(set(new_queue))), (
-                        "Invalid length of new queue!")
-                assert len(list(set(new_queue))) == len(new_queue), (
-                        "Duplicates in new queue!")
-                assert len(
-                        [x for x in new_queue if x not in queue]
-                        ) == 0, "Queue mismatch!"
-                assert len(
-                        [x for x in new_queue if x in queue]
-                        ) == len(new_queue), "Queue mismatch!"
-                assert sum(queue) == sum(new_queue), "Queue sum differ!"
+
+                assert len(set()) == 0, "to_process is not empty!"
+                assert len(set(new_queue) & set(queue)) == len(queue), (
+                        "Invalid new queues!")
                 queue = new_queue
         except Exception as e:
             beep(f"{self.deckname} - Exception when reordering: {e}")
