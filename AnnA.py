@@ -1938,7 +1938,8 @@ threads of size {batchsize})")
                     today_date = time.asctime()
                     notes = []
                     for card in repicked:
-                        notes.append(self.df.loc[card, "note"])
+                        notes.append(int(self.df.loc[card, "note"]))
+                    notes = list(set(notes))  # remove duplicates
                     new_tag = ("AnnA::urgent_reviews::session_of_"
                                f"{today_date.replace(' ', '_')}")
                     try:
