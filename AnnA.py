@@ -2473,14 +2473,13 @@ threads of size {batchsize})")
             neighbours_nid = [int(self.df.loc[self.df.index[ind], "note"])
                               for ind in neighbour_indices]
             noteId = int(self.df.loc[self.df.index[i], "note"])
-            total_w = len(neighbour_indices)
             for ii, n_nid in enumerate(neighbours_nid):
                 if noteId == n_nid:
                     continue  # skip self neighbouring
                 smallest = min(noteId, n_nid)
                 largest = max(noteId, n_nid)
                 # new weight is of decreasing importance
-                new_w = (total_w - ii + 1) / total_w
+                new_w = 1 / self.df_dist.loc[self.df.index[i], n_nid]
                 if smallest not in all_edges:
                     all_edges[smallest] = {largest: new_w}
                 else:
