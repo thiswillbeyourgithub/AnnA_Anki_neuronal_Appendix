@@ -2163,17 +2163,24 @@ threads of size {batchsize})")
                     "to maximize distance...")
                 whi("But starts by the cards needing to be boosted)")
                 new_queue = [q for q in queue if q in self.repicked]
-                to_process = [q for q in queue if q not in new_queue]
-                assert len(new_queue) + len(to_process) == len(queue)
-                for i, q in enumerate(tqdm(queue,
-                                           file=self.t_strm,
-                                           desc="reordering filtered deck")):
-                    if i == 0:
-                        new_queue.append(to_process.pop(i))
-                        continue
+                to_process = [q for q in queue if q not in self.repicked]
+                if new_queue:
+                    proportion = int(len(new_queue) / len(queue) * 100)
+                    yel(f"{proportion}% of the new filtered deck will be "
+                        "boosted cards.")
+                assert set(new_queue) & set(to_process) == set(), (
+                        "queue construction failed!")
+                assert set(new_queue) | set(to_process) == set(queue), (
+                        "queue construction failed! #2")
+                pbar = tqdm(total=len(to_process),
+                            file=self.t_strm,
+                            desc="reordering filtered deck")
+                while to_process:
+                    pbar.update(1)
                     score = - w2 * combinator(
                             self.df_dist.loc[to_process, new_queue].values)
                     new_queue.append(to_process.pop(score.argmin()))
+                pbar.close()
                 assert len(to_process) == 0, "to_process is not empty!"
                 assert len(list(set(queue))) == len(list(set(new_queue))), (
                         "Invalid length of new queue!")
@@ -2188,7 +2195,7 @@ threads of size {batchsize})")
                 assert sum(queue) == sum(new_queue), "Queue sum differ!"
                 queue = new_queue
         except Exception as e:
-            beep(f"{self.deckname} - \nException when reordering: {e}")
+            beep(f"{self.deckname} - Exception when reordering: {e}")
 
         try:
             if w1 == 0:
