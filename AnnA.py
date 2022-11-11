@@ -1511,7 +1511,6 @@ threads of size {batchsize})")
                                    "min_dist": 0.01,
                                    "low_memory":  True,
                                    "densmap": True,
-                                   "tqdm_kwds": {"file": self.t_strm},
                                    }
                     U = umap.umap_.UMAP(**umap_kwargs)
                     t_embed = U.fit_transform(t_vec)
