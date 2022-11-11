@@ -2493,7 +2493,7 @@ threads of size {batchsize})")
         self.df["colors"] = self.df["deckName"].factorize()[0]
 
         # add nodes
-        for cid in tqdm(self.df.index, desc="adding nodes", unit="node",
+        for cid in tqdm(self.df.index, desc="Adding nodes", unit="node",
                         file=self.t_strm):
             nid = self.df.loc[cid, "note"]
             G.add_node(nid)  # duplicate nodes are ignored by networkx
@@ -2504,7 +2504,7 @@ threads of size {batchsize})")
         # create a dict containing all edges and their weights
         for i in tqdm(
                 range(self.knn.shape[0]),
-                desc="computing edges",
+                desc="Computing edges",
                 file=self.t_strm,
                 unit="card"):
             knn_ar = self.knn.getcol(i).toarray().squeeze()
@@ -2537,7 +2537,7 @@ threads of size {batchsize})")
 
         # add each edge to the graph
         for k, v in tqdm(all_edges.items(),
-                         desc="adding edges",
+                         desc="Adding edges",
                          file=self.t_strm):
             for sub_k, sub_v in all_edges[k].items():
                 G.add_edge(k, sub_k, weight=sub_v)
@@ -2608,7 +2608,7 @@ threads of size {batchsize})")
                              if random.random() <= p]
 
         for edge in tqdm(G.edges.data(),
-                         desc="plotting edges",
+                         desc="Plotting edges",
                          file=self.t_strm):
             if edge in edges_to_draw:
                 x0, y0 = computed_layout[edge[0]]
@@ -2653,8 +2653,11 @@ threads of size {batchsize})")
             node_trace['text'] += tuple([
                 "<br>"
                 f"<b>deck:</b>{'<br>'.join(textwrap.wrap(deck, width=60))}"
+                "<br>"
                 f"<b>nid:</b>{node}<br>"
+                "<br>"
                 f"<b>tag:</b>{'<br>'.join(textwrap.wrap(tag, width=60))}"
+                "<br>"
                 "<br>"
                 f"<b>Content:</b>{'<br>'.join(textwrap.wrap(content, width=60))}"
                 ])
