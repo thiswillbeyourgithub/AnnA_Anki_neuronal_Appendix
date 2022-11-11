@@ -2598,7 +2598,7 @@ threads of size {batchsize})")
             # hoverinfo='text',
             marker=dict(
                 showscale=True,
-                colorscale=qualitative.Dark24,
+                colorscale=qualitative.Light24,
                 reversescale=True,
                 color=node_colours,
                 # size=[15] * len(G.nodes()),
