@@ -1557,7 +1557,9 @@ threads of size {batchsize})")
         tqdm_params = {"unit": "card",
                        "desc": "Scaling",
                        "leave": True,
-                       "ascii": False,
+                       "mininterval": 1,
+                       #"miniter": 5,
+                       "ascii": True,
                        "total": len(self.df_dist.index),
                        "file": self.t_strm,
                        }
