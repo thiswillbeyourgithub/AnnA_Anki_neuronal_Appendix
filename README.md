@@ -257,6 +257,7 @@ AnnA includes built-in methods you can run after instantiating the class. Note t
 
 ## TODO
 * see if using graphviz instead of networkx to compute layout is faster
+* switch to using Fire instead of argparse and move all the documentation to the docstring
 * add picture and documentation to the knn feature
 * when loading the acronyms, see if any acronym dict value is matched by an acronym key and tell it to the user
 * refactor a bit the way optimal score is computed to allow printing of the inner mechanism and debugging
