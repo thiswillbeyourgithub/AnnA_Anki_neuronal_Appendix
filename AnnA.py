@@ -1742,13 +1742,17 @@ threads of size {batchsize})")
             yel(f"* {one}...")
             yel(f"* {two}...")
 
-            red("\nPrinting the 1% most semantically but distinct similar "
+            red("\nPrinting the most semantically but distinct similar "
                 "cards:")
+            # the diagonal is the minimum of distance so we are looking for
+            # the distance that is just higher
+            q_diagonal = (self.df_dist.shape[0] + 1) / (
+                    self.df_dist.shape[0] ** 2 / 2)
             quantile_limit = np.quantile(
-                    self.df_dist.values[up_triangular].ravel(), 0.01)
+                    self.df_dist.values[up_triangular].ravel(), q_diagonal)
             lowest_non_zero_value = np.amin(
                     self.df_dist.values[up_triangular],
-                    where=self.df_dist.values[up_triangular] >= quantile_limit,
+                    where=self.df_dist.values[up_triangular] > quantile_limit,
                     initial=highest_value)
             coord_min = np.where(self.df_dist == lowest_non_zero_value)
             one = self.df.loc[self.df.index[coord_min[0][0]]].text[:max_length]
