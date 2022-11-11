@@ -2683,6 +2683,7 @@ class ProgressParallel(joblib.Parallel):
     def __init__(PP, tqdm_params, *args, **kwargs):
         PP._tqdm_params = tqdm_params
         super().__init__(*args, **kwargs)
+        PP._latest_progress_printed = time.time()
 
     def __call__(PP, *args, **kwargs):
         with tqdm(**PP._tqdm_params) as PP._pbar:
@@ -2694,7 +2695,11 @@ class ProgressParallel(joblib.Parallel):
         else:
             PP._pbar.total = PP.n_dispatched_tasks
         PP._pbar.n = PP.n_completed_tasks
-        PP._pbar.refresh()
+
+        # only print progress every second:
+        if abs(time.time() - PP._latest_progress_printed) >= 1:
+            PP._pbar.refresh()
+            PP._latest_progress_printed = time.time()
 
 
 # from https://gist.github.com/beniwohli/765262
