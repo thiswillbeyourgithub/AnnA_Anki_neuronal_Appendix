@@ -1495,8 +1495,35 @@ threads of size {batchsize})")
         if self.plot_2D_embeddings:
             try:
                 yel("Computing 2D embeddings for the plot...")
-                svd = TruncatedSVD(n_components=2)
-                t_embed = svd.fit_transform(t_vec)
+
+                #TODO: test with UMAP
+                try:
+                    whi("Trying with UMAP first.")
+                    import umap.umap_
+                    umap_kwargs = {"n_jobs": -1,
+                                   "verbose": 1,
+                                   "n_components": 2,
+                                   "metric": "cosine",
+                                   "init": 'spectral',  # TODO: try, 'pca'
+                                   "random_state": 42,
+                                   "transform_seed": 42,
+                                   "n_neighbors": 5,
+                                   "min_dist": 0.01,
+                                   "low_memory":  True,
+                                   "densmap": True,
+                                   "tqdm_kwds": {"file": self.t_strm},
+                                   }
+                    U = umap.umap_.UMAP(**umap_kwargs)
+                    t_embed = U.fit_transform(t_vec)
+
+                except Exception as err:
+                    beep(f"Exception with UMAP: '{err}'")
+                    red(traceback.format_exc())
+
+                    yel("Using SVD...")
+                    svd = TruncatedSVD(n_components=2)
+                    t_embed = svd.fit_transform(t_vec)
+
                 df["2D_embeddings"] = [x for x in t_embed]
             except Exception as err:
                 beep(f"Error when computing 2D embeddings: '{err}'")
