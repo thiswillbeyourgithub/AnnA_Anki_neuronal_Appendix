@@ -2198,19 +2198,31 @@ threads of size {batchsize})")
                 red("Reordering before creating the filtered deck "
                     "to maximize distance...")
                 whi("But starts by the cards needing to be boosted)")
-                new_queue = [q for q in queue if q in self.repicked]
-                to_process = [q for q in queue if q not in self.repicked]
+                new_queue = [queue[0]]
+                to_process = [q for q in queue[1:]]
 
-                # sort by urgency
-                new_queue = sorted(new_queue,
-                                   key=lambda x: self.df.loc[x, "ref"],
-                                   reverse=False)  # ascending order
-
-                # tell proportion
-                if new_queue:
-                    proportion = int(len(new_queue) / len(queue) * 100)
-                    yel(f"{proportion}% of the new filtered deck will be "
+                # tell proportion to the user
+                n = len([q for q in self.repicked if q in queue])
+                if n > 0:
+                    proportion = int(n / len(queue) * 100)
+                    yel(f"The filtered deck will contain {proportion}% of "
                         "boosted cards.")
+
+                # create a new column like the reference score but -50 .
+                # the non repicked cards have their reference set at 50
+                # In effect, this forces repicked repicked cards to appear
+                # first in the filtered deck and only then the non repicked
+                # cards. But while still maximizing distance throughout the
+                # reviews.
+                self.df["ref_filtered"] = self.df["ref"] - 50
+                self.df.loc[[q
+                             for q in to_process
+                             if q not in self.repicked
+                             ], "ref_filtered"] = 50
+
+                # not reusing adjustment score 'w2' because it could overpower
+                # the arbitrary 50 limit of 'ref_filtered'.
+                sign = 1 if w2 > 0 else -1
 
                 assert set(new_queue) & set(to_process) == set(), (
                         "queue construction failed!")
@@ -2222,8 +2234,10 @@ threads of size {batchsize})")
                             desc="reordering filtered deck")
                 while to_process:
                     pbar.update(1)
-                    score = - w2 * combinator(
-                            self.df_dist.loc[to_process, new_queue].values)
+                    score = self.df.loc[to_process, "ref_filtered"] - (
+                            sign * combinator(
+                                self.df_dist.loc[to_process, new_queue].values
+                            ))
                     new_queue.append(to_process.pop(score.argmin()))
                 pbar.close()
 
