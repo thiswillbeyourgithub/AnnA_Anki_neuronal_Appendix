@@ -1831,6 +1831,7 @@ threads of size {batchsize})")
             w3 = (w1 + w2) / 2 * self.mean_dist / 10
         else:
             w3 = 0
+        self.repicked = []
 
         # hardcoded settings
         display_stats = True
