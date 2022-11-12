@@ -2651,16 +2651,16 @@ threads of size {batchsize})")
                 colorscale=qualitative.Light24,
                 reversescale=True,
                 color=node_colours,
-                # size=[15] * len(G.nodes()),
-                # colorbar=dict(
-                #     thickness=15,
-                #     title='Node Connections',
-                #     xanchor='left',
-                #     titleside='right'
-                # ),
-                line=dict(width=2)))
+                size=15,
+                colorbar=dict(
+                    thickness=12,
+                    title='Categories',
+                    xanchor='left',
+                    titleside='right'
+                ),
+                line=dict(width=5)))
 
-        for node in tqdm(G.nodes(), desc="plotting nodes", file=self.t_strm):
+        for node in tqdm(G.nodes(), desc="Plotting nodes", file=self.t_strm):
             x, y = computed_layout[node]
             node_trace['x'] += tuple([x])
             node_trace['y'] += tuple([y])
