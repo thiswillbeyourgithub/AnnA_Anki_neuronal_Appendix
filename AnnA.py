@@ -180,7 +180,7 @@ class AnnA:
                  replace_greek=True,
                  keep_OCR=True,
                  append_tags=True,
-                 tags_to_ignore=None,
+                 tags_to_ignore=["AnnA"],
                  tags_separator="::",
                  add_KNN_to_field=False,
                  filtered_deck_name_template=None,
@@ -303,8 +303,15 @@ class AnnA:
         assert isinstance(append_tags, bool), "Invalid type of `append_tags`"
         self.append_tags = append_tags
 
-        if tags_to_ignore is None:
+        if tags_to_ignore is None or tags_to_ignore == "":
             tags_to_ignore = []
+        if not isinstance(tags_to_ignore, list):
+            assert "[" in tags_to_ignore, "missing '[' in 'tags_to_ignore'"
+            tags_to_ignore = tags_to_ignore.replace("[", "").replace("]", "").strip()
+            tags_to_ignore = [
+                    re.compile(".*" + t.strip() + ".*")
+                    for t in tags_to_ignore.split(",")
+                    ]
         self.tags_to_ignore = tags_to_ignore
 
         assert isinstance(add_KNN_to_field, bool), (
@@ -1171,15 +1178,20 @@ threads of size {batchsize})")
                 if self.append_tags:
                     tags = self.df.loc[index, "tags"].split(" ")
                     for t in tags:
-                        if ("AnnA" not in t) and (
-                                t not in self.tags_to_ignore):
-                            # replaces _ - and / by a space and keep only
-                            # the last 2 levels of each tags:
-                            t = re.sub(
-                                spacers_compiled,
-                                " ",
-                                " ".join(t.split(self.tags_separator)[-2:]))
-                            comb_text += " " + t
+                        skip_tag = False
+                        for tags_to_ignore in self.tags_to_ignore:
+                            if tags_to_ignore.match(t):
+                                skip_tag = True
+                                break
+                        if skip_tag:
+                            continue
+                        # replaces _ - and / by a space and keep only
+                        # the last 2 levels of each tags:
+                        t = re.sub(
+                            spacers_compiled,
+                            " ",
+                            " ".join(t.split(self.tags_separator)[-2:]))
+                        comb_text += " " + t
 
                 with lock:
                     self.df.at[index, "comb_text"] = comb_text
@@ -3097,15 +3109,16 @@ if __name__ == "__main__":
                         nargs="*",
                         metavar="TAGS_TO_IGNORE",
                         dest="tags_to_ignore",
-                        default=None,
+                        default="[AnnA]",
                         type=str,
                         required=False,
                         help=(
-                            "a comma separated list of tags to ignore when "
+                            "a comma separated list of regexp of tags to "
+                            "ignore when "
                             "appending tags to cards. This is not a "
                             "list of tags "
-                            "whose card should be ignored! Default is `None "
-                            "(i.e. disabled)."))
+                            "whose card should be ignored! Default is "
+                            "'[AnnA]'. Set to None to disable it."))
     parser.add_argument("--tags_separator",
                         nargs=1,
                         metavar="TAGS_SEP",
