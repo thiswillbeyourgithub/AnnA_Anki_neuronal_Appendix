@@ -1999,7 +1999,13 @@ threads of size {batchsize})")
                 else:
                     red("Those cards were NOT boosted.")
                 if "addtag" in self.repick_task:
-                    today_date = time.asctime()
+                    # format time like 'Sun Nov 13 2022' (i.e. remove the
+                    # time of day)
+                    today_date = " ".join(
+                            [t
+                             for t in time.ctime().split(" ")
+                             if ":" not in t]
+                            )
                     notes = []
                     for card in repicked:
                         notes.append(int(self.df.loc[card, "note"]))
