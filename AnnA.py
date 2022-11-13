@@ -1515,10 +1515,10 @@ threads of size {batchsize})")
                                    "init": 'spectral',  # TODO: try, 'pca'
                                    "random_state": 42,
                                    "transform_seed": 42,
-                                   "n_neighbors": 5,
+                                   "n_neighbors": 20,
                                    "min_dist": 0.01,
-                                   "low_memory":  True,
-                                   "densmap": True,
+                                   "low_memory":  False,
+                                   "densmap": False,
                                    }
                     U = umap.umap_.UMAP(**umap_kwargs)
                     t_embed = U.fit_transform(t_vec)
