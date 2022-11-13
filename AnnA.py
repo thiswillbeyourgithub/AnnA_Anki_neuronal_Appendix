@@ -111,7 +111,7 @@ set_global_logging_level(logging.ERROR,
                           "tensorflow", "sklearn", "nltk"])
 
 
-def beep(message=None, **args):
+def _beep(message=None, **args):
     sound = "error"  # default sound
 
     if message is None:
@@ -254,7 +254,7 @@ class AnnA:
         self.target_deck_size = target_deck_size
         if target_deck_size in ["all", 1.0, "100%"] and (
                 task == "bury_excess_review_cards"):
-            beep(f"{self.deckname} - Arguments mean that all cards "
+            beep(f"Arguments mean that all cards "
                  "will be selected and none will be buried. It makes no sense."
                  " Aborting.")
             raise Exception("Arguments mean that all cards will be selected "
@@ -401,6 +401,20 @@ class AnnA:
 
         # additional processing of arguments #################################
 
+        # load or ask for deckname
+        self.deckname = self._deckname_check(deckname)
+        red(f"Selected deck: {self.deckname}\n")
+        self.deck_config = self._call_anki(action="getDeckConfig",
+                                           deck=self.deckname)
+
+        def beep(x):
+            "simple overloading to display the deckname"
+            try:
+                return _beep(f"{self.deckname}: {x}")
+            except Exception:
+                return _beep(x)
+        global beep
+
         if task != "filter_review_cards" and (
                 self.filtered_deck_name_template is not None):
             red("Ignoring argument 'filtered_deck_name_template' because "
@@ -435,7 +449,7 @@ class AnnA:
         if self.acronym_file is not None and self.acronym_list is not None:
             file = Path(acronym_file)
             if not file.exists():
-                beep(f"{self.deckname} - Acronym file was not "
+                beep(f"Acronym file was not "
                      f"found: {acronym_file}")
                 raise Exception(f"Acronym file was not found: {acronym_file}")
 
@@ -452,7 +466,7 @@ class AnnA:
 
             # if empty file:
             if len(acr_dict_list) == 0:
-                beep(f"{self.deckname} - No dictionnary found "
+                beep(f"No dictionnary found "
                      f"in {acronym_file}")
                 raise SystemExit()
 
@@ -462,7 +476,7 @@ class AnnA:
             missing = [x for x in self.acronym_list
                        if x not in acr_dict_list]
             if missing:
-                beep(f"{self.deckname} - Mising the following acronym "
+                beep(f"Mising the following acronym "
                      "dictionnary in "
                      f"{acronym_file}: {','.join(missing)}")
                 raise SystemExit()
@@ -471,7 +485,7 @@ class AnnA:
                              if x in self.acronym_list]
 
             if len(acr_dict_list) == 0:
-                beep(f"{self.deckname} - No dictionnary from "
+                beep(f"No dictionnary from "
                      f"{self.acr_dict_list} "
                      f"found in {acronym_file}")
                 raise SystemExit()
@@ -573,12 +587,6 @@ class AnnA:
                     "Invalid value for `self.repick_task`")
 
         # actual execution ###################################################
-
-        # load or ask for deckname
-        self.deckname = self._deckname_check(deckname)
-        red(f"Selected deck: {self.deckname}\n")
-        self.deck_config = self._call_anki(action="getDeckConfig",
-                                           deck=self.deckname)
 
         # load deck settings if needed
         if self.target_deck_size == "deck_config":
@@ -1230,7 +1238,7 @@ threads of size {batchsize})")
                 thread.start()
                 thread.join()
                 if cnt > 10:
-                    beep(f"{self.deckname} - Error: restart anki then"
+                    beep(f"Error: restart anki then"
                          "rerun AnnA.")
                     raise SystemExit()
             if cnt > 0:
@@ -1337,7 +1345,7 @@ threads of size {batchsize})")
                     yel("Ankipandas will use anki collection found at "
                         f"{original_db}")
                 if "trash" in str(original_db).lower():
-                    beep(f"{self.deckname} - Ankipandas seems to have "
+                    beep(f"Ankipandas seems to have "
                          "found a collection in "
                          "the trash folder. If that is not your intention "
                          "cancel now. Waiting 10s for you to see this "
@@ -1358,7 +1366,7 @@ threads of size {batchsize})")
                 whi("Ankipandas db loaded successfuly.")
 
                 if len(cards.index) == 0:
-                    beep(f"{self.deckname} - Ankipandas database"
+                    beep(f"Ankipandas database"
                          "is of length 0")
                     raise Exception("Ankipandas database is of length 0")
 
@@ -1368,7 +1376,7 @@ threads of size {batchsize})")
                 mod2mid = akp.raw.get_model2mid(col.db)
 
                 if len(cards.index) == 0:
-                    beep(f"{self.deckname} - Ankipandas database"
+                    beep(f"Ankipandas database"
                          "is of length 0")
                     raise Exception("Ankipandas database is of length 0")
 
@@ -1436,7 +1444,7 @@ threads of size {batchsize})")
                                                   file=self.t_strm))
                 yel("Done vectorizing over whole deck!")
             except Exception as e:
-                beep(f"{self.deckname} - Exception : {e}\nUsing "
+                beep(f"Exception : {e}\nUsing "
                      "fallback method...")
                 use_fallback = True
 
@@ -1777,10 +1785,10 @@ threads of size {batchsize})")
             yel(f"* {one}...")
             yel(f"* {two}...")
         except TimeoutError:
-            beep(f"{self.deckname} - Taking too long to locating similar "
+            beep(f"Taking too long to locating similar "
                  "nonequal cards, skipping")
         except Exception as err:
-            beep(f"{self.deckname} - Exception when locating similar "
+            beep(f"Exception when locating similar "
                  f"cards: '{err}'")
         finally:
             signal.alarm(0)
@@ -1904,7 +1912,7 @@ threads of size {batchsize})")
             # then, correct overdue values to make sure they are negative
             correction = max(overdue.max(), 0) + 0.01
             if correction > 1:
-                beep(f"{self.deckname} - This should probably not happen.")
+                beep(f"This should probably not happen.")
                 breakpoint()
             # my implementation of relative overdueness:
             # (intervals are positive, overdue are negative for due cards
@@ -1921,7 +1929,7 @@ threads of size {batchsize})")
                 assert np.sum(
                     ro < 0) == 0, "wrong values of relative overdueness"
             except Exception as e:
-                beep(f"{self.deckname} - This should not happen: {str(e)}")
+                beep(f"This should not happen: {str(e)}")
                 breakpoint()
 
             # squishing values above some threshold
@@ -1961,7 +1969,7 @@ threads of size {batchsize})")
                                     n * np.mean(self.score_adjustment_factor))
 
             if repicked:
-                beep(f"{self.deckname} - {len(repicked)}/{len(due)} cards "
+                beep(f"{len(repicked)}/{len(due)} cards "
                      "with too low "
                      "relative overdueness (i.e. on the brink of being "
                      "forgotten) where found.")
@@ -1984,7 +1992,7 @@ threads of size {batchsize})")
                         red("Appended tags 'urgent_reviews' to cards with "
                             "very low relative overdueness.")
                     except Exception as e:
-                        beep(f"{self.deckname} - Error adding tags to urgent "
+                        beep(f"Error adding tags to urgent "
                              f"cards: {str(e)}")
 
             self.repicked = repicked  # store to use when resorting the cards
@@ -2097,7 +2105,7 @@ threads of size {batchsize})")
                                            include='all')
                 whi(f"Distance: {val}\n\n")
             except Exception as e:
-                beep(f"{self.deckname} - Exception: {e}")
+                beep(f"Exception: {e}")
             pd.reset_option('display.float_format')
 
         # minmaxscaling from 0 to 1
@@ -2246,7 +2254,7 @@ threads of size {batchsize})")
                         "Invalid new queues!")
                 queue = new_queue
         except Exception as e:
-            beep(f"{self.deckname} - Exception when reordering: {e}")
+            beep(f"Exception when reordering: {e}")
 
         try:
             if w1 == 0:
@@ -2285,7 +2293,7 @@ threads of size {batchsize})")
                     red(pyfiglet.figlet_format(f"{sign}{abs(ratio)}%"))
 
         except Exception as e:
-            beep(f"{self.deckname} - \nException: {e}")
+            beep(f"\nException: {e}")
 
         self.opti_rev_order = [int(x) for x in queue]
         self.df = df
@@ -2393,7 +2401,7 @@ threads of size {batchsize})")
             self.filtered_deck_name = filtered_deck_name
 
             while filtered_deck_name in self._call_anki(action="deckNames"):
-                beep(f"{self.deckname} - \nFound existing filtered "
+                beep(f"\nFound existing filtered "
                      f"deck: {filtered_deck_name} "
                      "You have to delete it manually, the cards will be "
                      "returned to their original deck.")
@@ -2445,7 +2453,7 @@ threads of size {batchsize})")
                 red("Inconsistency! The deck does not contain the same cards "
                     " as opti_rev_order!")
                 pprint(diff)
-                beep(f"{self.deckname} - \nNumber of inconsistent cards: "
+                beep(f"\nNumber of inconsistent cards: "
                      f"{len(diff)}")
 
         yel("\nAsking anki to alter the due order...", end="")
@@ -2453,7 +2461,7 @@ threads of size {batchsize})")
                               cards=self.opti_rev_order)
         err = [x[1] for x in res if x[0] is False]
         if err:
-            beep(f"{self.deckname} - \nError when setting due order : {err}")
+            beep(f"\nError when setting due order : {err}")
             raise Exception(f"\nError when setting due order : {err}")
         else:
             yel(" Done!")
