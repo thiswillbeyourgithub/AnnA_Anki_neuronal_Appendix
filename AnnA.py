@@ -307,12 +307,11 @@ class AnnA:
             tags_to_ignore = []
         if not isinstance(tags_to_ignore, list):
             assert "[" in tags_to_ignore, "missing '[' in 'tags_to_ignore'"
-            tags_to_ignore = tags_to_ignore.replace("[", "").replace("]", "").strip()
-            tags_to_ignore = [
-                    re.compile(".*" + t.strip() + ".*")
-                    for t in tags_to_ignore.split(",")
-                    ]
-        self.tags_to_ignore = tags_to_ignore
+            tags_to_ignore = tags_to_ignore.replace("[", "").replace("]", "").strip().split(",")
+        self.tags_to_ignore = [
+                re.compile(".*" + t.strip() + ".*")
+                for t in tags_to_ignore
+                ]
 
         assert isinstance(add_KNN_to_field, bool), (
                 "Invalid type of `add_KNN_to_field`")
@@ -914,7 +913,16 @@ threads of size {batchsize})")
             list_cardInfo[i]["fields"] = dict(
                 (k.lower(), v)
                 for k, v in list_cardInfo[i]["fields"].items())
-            list_cardInfo[i]["tags"] = " ".join(list_cardInfo[i]["tags"])
+            tags = []
+            for t in list_cardInfo[i]["tags"]:
+                skip_t = False
+                for tags_to_ignore in self.tags_to_ignore:
+                    if tags_to_ignore.match(t):
+                        skip_t = True
+                        break
+                if not skip_t:
+                    tags.append(t)
+            list_cardInfo[i]["tags"] = " ".join(tags)
             if card["cardId"] in due_cards:
                 list_cardInfo[i]["status"] = "due"
             elif card["cardId"] in rated_cards:
@@ -2527,8 +2535,9 @@ threads of size {batchsize})")
         node_colours = []
         all_edges = {}
 
-        # to bind each tags to a color
-        self.df["colors"] = self.df["deckName"].factorize()[0]
+        # to bind each tags or deck to a color
+        #self.df["colors"] = self.df["deckName"].factorize()[0]
+        self.df["colors"] = self.df["tags"].factorize()[0]
 
         # add nodes
         for cid in tqdm(self.df.index, desc="Adding nodes", unit="node",
