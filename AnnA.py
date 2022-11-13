@@ -2550,7 +2550,7 @@ threads of size {batchsize})")
                 smallest = min(noteId, n_nid)
                 largest = max(noteId, n_nid)
                 # new weight is of decreasing importance
-                new_w = 1 / (1 + self.df_dist.loc[
+                new_w = 2 / (2 + self.df_dist.loc[
                     self.df.index[i], self.df.index[neighbour_indices[ii]]
                     ])
                 if smallest not in all_edges:
