@@ -254,7 +254,7 @@ class AnnA:
         self.target_deck_size = target_deck_size
         if target_deck_size in ["all", 1.0, "100%"] and (
                 task == "bury_excess_review_cards"):
-            beep(f"Arguments mean that all cards "
+            _beep(f"Arguments mean that all cards "
                  "will be selected and none will be buried. It makes no sense."
                  " Aborting.")
             raise Exception("Arguments mean that all cards will be selected "
@@ -413,13 +413,13 @@ class AnnA:
         self.deck_config = self._call_anki(action="getDeckConfig",
                                            deck=self.deckname)
 
+        global beep
         def beep(x):
             "simple overloading to display the deckname"
             try:
                 return _beep(f"{self.deckname}: {x}")
             except Exception:
                 return _beep(x)
-        global beep
 
         if task != "filter_review_cards" and (
                 self.filtered_deck_name_template is not None):
@@ -2378,7 +2378,7 @@ threads of size {batchsize})")
                 whi("(Excluding OCR text)")
             acr = random.sample(matched, k=min(5, len(matched)))
             pprint(", ".join(acr))
-            beep(title="AnnA - acronyms", message=f"Acronyms: {acr}")
+            beep(f"Acronyms: {acr}")
 
         print("")
         return True
