@@ -1630,6 +1630,8 @@ threads of size {batchsize})")
         self.df_dist.values[up_triangular] = values
         lo_triangular = np.tril_indices(self.df_dist.shape[0], -1)
         self.df_dist.values[lo_triangular] = self.df_dist.values.T[lo_triangular]
+        assert ((self.df_dist.values - self.df_dist.values.T) == 0).all(), (
+                "Non symetric distance matrix")
         whi("Finished minmax scaling.")
 
         # make sure the distances are positive otherwise it might reverse
