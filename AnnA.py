@@ -176,7 +176,7 @@ class AnnA:
                  highjack_due_query=None,
                  highjack_rated_query=None,
                  low_power_mode=False,
-                 log_level=2,  # 0, 1, 2
+                 log_level=0,  # 0, 1, 2
                  replace_greek=True,
                  keep_OCR=True,
                  append_tags=True,
@@ -3081,12 +3081,12 @@ if __name__ == "__main__":
                         nargs=1,
                         metavar="LOG_LEVEL",
                         dest="log_level",
-                        default=2,
+                        default=0,
                         type=int,
                         required=False,
                         help=(
                             "can be any number between 0 and 2. Default is "
-                            "`2` to only print errors. 1 means print "
+                            "`0` to only print errors. 1 means print "
                             "also useful "
                             "information and >=2 means print everything. "
                             "Messages are color coded so it might be better "
