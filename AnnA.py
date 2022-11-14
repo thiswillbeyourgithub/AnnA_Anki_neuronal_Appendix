@@ -2565,12 +2565,12 @@ threads of size {batchsize})")
             # sort neighbour by distance
             neighbour_indices = sorted(
                     neighbour_indices,
-                    key=lambda x: float(self.df_dist.loc[
-                        self.df.index[i], self.df.index[x]]),
+                    key=lambda x: self.df_dist.loc[
+                        self.df.index[i], self.df.index[x]],
                     reverse=False)
-            neighbours_nid = [int(self.df.loc[self.df.index[ind], "note"])
+            neighbours_nid = [self.df.loc[self.df.index[ind], "note"]
                               for ind in neighbour_indices]
-            noteId = int(self.df.loc[self.df.index[i], "note"])
+            noteId = self.df.loc[self.df.index[i], "note"]
             for ii, n_nid in enumerate(neighbours_nid):
                 if noteId == n_nid:
                     continue  # skip self neighbouring
