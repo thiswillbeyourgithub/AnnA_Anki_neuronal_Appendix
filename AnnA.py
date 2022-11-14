@@ -2717,7 +2717,7 @@ threads of size {batchsize})")
                 "<br>"
                 f"<b>deck:</b>{'<br>'.join(textwrap.wrap(deck, width=60))}"
                 "<br>"
-                f"<b>nid:</b>{node}<br>"
+                f"<b>nid:</b>{node}"
                 "<br>"
                 f"<b>tag:</b>{'<br>'.join(textwrap.wrap(tag, width=60))}"
                 "<br>"
