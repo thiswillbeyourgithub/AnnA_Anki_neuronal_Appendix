@@ -5,6 +5,7 @@ import beepy
 import argparse
 import logging
 import gc
+from datetime import datetime
 import time
 import random
 import pdb
@@ -59,7 +60,7 @@ Path("logs.txt").write_text(
         Path("logs.txt").read_text().split("\n")[-10_000:]))
 logging.basicConfig(filename="logs.txt",
                     filemode='a',
-                    format=f"{time.asctime()}: %(message)s")
+                    format=f"{time.ctime()}: %(message)s")
 log = logging.getLogger()
 log.setLevel(logging.INFO)
 
@@ -1999,19 +2000,14 @@ threads of size {batchsize})")
                 else:
                     red("Those cards were NOT boosted.")
                 if "addtag" in self.repick_task:
-                    # format time like 'Sun Nov 13 2022' (i.e. remove the
-                    # time of day)
-                    today_date = " ".join(
-                            [t
-                             for t in time.ctime().split(" ")
-                             if ":" not in t]
-                            )
+                    d = datetime.today()
+                    # time format is day/month/year
+                    today_date = f"{d.day:02d}/{d.month:02d}/{d.year}"
                     notes = []
                     for card in repicked:
                         notes.append(int(self.df.loc[card, "note"]))
                     notes = list(set(notes))  # remove duplicates
-                    new_tag = ("AnnA::urgent_reviews::session_of_"
-                               f"{today_date.replace(' ', '_')}")
+                    new_tag = f"AnnA::urgent_reviews::session_of_{today_date}"
                     try:
                         self._call_anki(action="addTags",
                                         notes=notes, tags=new_tag)
