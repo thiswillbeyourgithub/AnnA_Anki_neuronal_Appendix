@@ -1975,7 +1975,7 @@ threads of size {batchsize})")
                 n = (overdue.loc[x] - correction) / \
                     (df.loc[x, "interval"] + correction)
                 if (n <= -0.25 and df.loc[x, "interval"] > 1 and (
-                        overdue.loc[x] <= -1)) or (df.loc[x, "interval"] <= 1):
+                        overdue.loc[x] <= -1)) or (df.loc[x, "interval"] <= 5):
                     repicked.append(x)
                     if boost:
                         # scales the value to be relevant compared to
@@ -1984,7 +1984,10 @@ threads of size {batchsize})")
                             # if short interval: boost by a fixed amount
                             # (somewhat arbitrary)
                             ro_cs[due.index(x)] += -1 - abs(
-                                    5 * np.mean(self.score_adjustment_factor))
+                                    2 * np.mean(self.score_adjustment_factor))
+                        elif df.loc[x, "interval"] <= 5:
+                            ro_cs[due.index(x)] += -1.5 - abs(
+                                    n * np.mean(self.score_adjustment_factor))
                         else:
                             ro_cs[due.index(x)] += -1 - abs(
                                     n * np.mean(self.score_adjustment_factor))
