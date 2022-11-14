@@ -2609,7 +2609,7 @@ threads of size {batchsize})")
         whi("    computing layout...")
         layout_spring = nx.spring_layout(
                 G,
-                k=1 / np.sqrt(n),  # repulsive force
+                k=1 / np.sqrt(n),  # repulsive force, default is 1/sqrt(n)
                 pos=positions,  # initial positions is the 2D embeddings
                 iterations=50,  # default to 50
                 # fixed=None,  # keep those nodes at their starting position
