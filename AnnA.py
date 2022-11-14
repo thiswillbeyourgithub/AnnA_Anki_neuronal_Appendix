@@ -36,7 +36,6 @@ from tokenizers import Tokenizer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import pairwise_distances, pairwise_kernels
 from sklearn.decomposition import TruncatedSVD
-from sklearn.preprocessing import StandardScaler
 from sklearn.neighbors import kneighbors_graph
 
 import networkx as nx
@@ -1823,7 +1822,7 @@ threads of size {batchsize})")
             argument 'reference_order', hence picking a card according to its
             'ref' only can be the same as using a regular filtered deck with
             'reference_order' set to 'relative_overdueness' for example.
-            Some of the ref columns are centered and scaled or processed.
+            Some of the ref columns are minmax scaled or processed.
         2. remove siblings of the due list of found (except if the queue
             is meant to contain a lot of cards, then siblings are not removed)
         3. prints a few stats about 'ref' distribution in your deck as well
@@ -1895,14 +1894,19 @@ threads of size {batchsize})")
 
         # computing reference order:
         if reference_order in ["lowest_interval", "LIRO_mix"]:
-            ivl = df.loc[due, 'interval'].to_numpy().reshape(-1, 1)
-            interval_cs = StandardScaler().fit_transform(ivl)
+            ivl = df.loc[due, 'interval'].to_numpy().reshape(-1, 1).squeeze()
+            # make start at 0
+            assert (ivl > 0).all(), "Negative intervals"
+            ivl -= ivl.min()
+            ivl /= ivl.max()
             if not reference_order == "LIRO_mix":
-                df.loc[due, "ref"] = interval_cs
+                df.loc[due, "ref"] = ivl
 
         elif reference_order == "order_added":
-            df.loc[due, "ref"] = StandardScaler().fit_transform(
-                np.array(due).reshape(-1, 1))
+            df.loc[due, "ref"] = due
+            assert (due > 0).all(), "Negative due values"
+            df.loc[due, "ref"] -= df.loc[due, "ref"].min()
+            df.loc[due, "ref"] /= df.loc[due, "ref"].max()
 
         if reference_order in ["relative_overdueness", "LIRO_mix"]:
             yel("Computing relative overdueness...")
@@ -1938,59 +1942,52 @@ threads of size {batchsize})")
             # my implementation of relative overdueness:
             # (intervals are positive, overdue are negative for due cards
             # hence ro is positive)
-            # low ro means urgent, high lo means not urgent
-            ro = -1 * (df.loc[due, "interval"].values +
+            # low ro means urgent, high ro means not urgent
+            assert (df.loc[due, "interval"].values > 0).all(), "Negative interval"
+            assert (correction > 0).all(), "Negative correction factor"
+            assert (overdue - correction < 0).all(), "Positive overdue - correction"
+            ro = (
+                    (df.loc[due, "interval"].values +
                        correction) / (overdue - correction)
-
-            # sanity check
-            try:
-                assert np.sum((overdue-correction) >
-                              0) == 0, (
-                    "wrong value computed to correct overdue")
-                assert np.sum(
-                    ro < 0) == 0, "wrong values of relative overdueness"
-            except Exception as e:
-                beep(f"This should not happen: {str(e)}")
-                breakpoint()
+                    )
+            if ro.min() <= 0:
+                ro += abs(ro.min()) + 0.0001
+            assert np.sum(ro < 0) == 0, "wrong values of relative overdueness"
 
             # squishing values above some threshold
             limit = np.percentile(ro, 75)
             ro[ro > limit] = limit + np.log(1 + ro[ro > limit])
             # clipping extreme values
-            ro_clipped = np.clip(ro, 0, 2 * limit)
-            # centering and scaling
-            ro_cs = StandardScaler().fit_transform(
-                    ro_clipped.values.reshape(-1, 1))
+            ro = np.clip(ro, 0, 2 * limit)
 
-            # boosting urgent cards to make sure they make it to the deck
+            # boost cards according to how overdue they are
             boost = True if "boost" in self.repick_task else False
+            repick_factor = 1 / ro
+            assert (repick_factor > 0).all(), "Negative repick_factor values"
+            repick_factor = np.clip(repick_factor, 0, 1)
+
+            mask = np.argwhere(repick_factor.values >= 0.25).squeeze().tolist()
+            if isinstance(mask, int):
+                mask = [mask]  # only one value found
             repicked = []
-            for x in due:
-                # if overdue at least equal to half the interval, then boost
-                # those cards.
-                # for example, a card with interval 7 days, that is 15 days
-                # overdue is very ugent, n will be about 15/7~=2 so this card
-                # will be boosted.
-                # note  that 'n' is negative
-                n = (overdue.loc[x] - correction) / \
-                    (df.loc[x, "interval"] + correction)
-                if (n <= -0.25 and df.loc[x, "interval"] > 1 and (
-                        overdue.loc[x] <= -1)) or (df.loc[x, "interval"] <= 5):
-                    repicked.append(x)
-                    if boost:
-                        # scales the value to be relevant compared to
-                        # distance factor
-                        if df.loc[x, "interval"] <= 1:
-                            # if short interval: boost by a fixed amount
-                            # (somewhat arbitrary)
-                            ro_cs[due.index(x)] += -1 - abs(
-                                    2 * np.mean(self.score_adjustment_factor))
-                        elif df.loc[x, "interval"] <= 5:
-                            ro_cs[due.index(x)] += -1.5 - abs(
-                                    n * np.mean(self.score_adjustment_factor))
-                        else:
-                            ro_cs[due.index(x)] += -1 - abs(
-                                    n * np.mean(self.score_adjustment_factor))
+            repicked.extend([due[i] for i in mask])
+            repicked.extend([ind for ind in due if df.loc[ind, "interval"] <= 5])
+
+            # minmax scaling
+            # repick_factor - repick_factor.min()
+            # repick_factor /= repick_factor.max()
+
+            # minmax scaling of ro
+            ro -= ro.min()
+            ro /= ro.max()
+
+            if boost:
+                ro -= repick_factor
+                if ro.min() < 0:
+                    ro += abs(ro.min())
+                else:
+                    ro -= ro.min()
+                ro /= ro.max()
 
             if repicked:
                 beep(f"{len(repicked)}/{len(due)} cards "
@@ -2002,6 +1999,7 @@ threads of size {batchsize})")
                         " soon.")
                 else:
                     red("Those cards were NOT boosted.")
+
                 if "addtag" in self.repick_task:
                     d = datetime.today()
                     # time format is day/month/year
@@ -2020,17 +2018,19 @@ threads of size {batchsize})")
                         beep(f"Error adding tags to urgent "
                              f"cards: {str(e)}")
 
+            assert sum(ro < 0) == 0, "Negative values in relative overdueness"
+
             self.repicked = repicked  # store to use when resorting the cards
 
             if not reference_order == "LIRO_mix":
-                df.loc[due, "ref"] = ro_cs
+                df.loc[due, "ref"] = ro
 
         # weighted mean of lowest interval and relative overdueness
         if reference_order == "LIRO_mix":
             assert 0 not in list(
                 np.isnan(df["ref"].values)), "missing ref value for some cards"
             weights = [1, 4]
-            df.loc[due, "ref"] = (weights[0] * ro_cs + weights[1] * interval_cs
+            df.loc[due, "ref"] = (weights[0] * ro + weights[1] * ivl
                                   ) / sum(weights)
 
         assert len([x for x in rated if df.loc[x, "status"] != "rated"]
@@ -2144,7 +2144,7 @@ threads of size {batchsize})")
             maxval = self.df.loc[due, "ref"].max()
             minval = self.df.loc[due, "ref"].min()
         if np.isclose(maxval, minval):
-            red("Not doing minmaxscaling becausemaxval and minal are too "
+            red("Not doing minmaxscaling because maxval and minval are too "
                 "close. Setting 'ref' to 0")
             self.df.loc[due, "ref"] = 0
         elif maxval > 0:  # don't check if actually all ref values are 0
