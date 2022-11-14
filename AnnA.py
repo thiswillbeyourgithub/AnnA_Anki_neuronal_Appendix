@@ -1601,41 +1601,36 @@ threads of size {batchsize})")
 
         self.df_dist = self.df_dist.sort_index()
 
-        whi("Scaling each vertical row of the distance matrix...")
+        yel("Minmax scaling the distance matrix...")
 
-        def minmaxscaling(index, vector):
-            """
-            simplified from MinMaxScaler formula because with now the min
-            value is 0, and the target range is 0 to 1
-            """
-            maxval = vector.max()
-            return [index, vector / maxval]
+        # computing and displaying stats before rescaling
+        whi("Computing mean and std of distance matrix before minmax..."
+            "\n(excluding diagonal)")
+        up_triangular = np.triu_indices(self.df_dist.shape[0], 1)
+        mean_dist = round(np.nanmean(self.df_dist.values[up_triangular]), 2)
+        std_dist = round(np.nanstd(self.df_dist.values[up_triangular]), 2)
+        yel(f"Mean distance: {mean_dist}, std: {std_dist}\n")
 
-        tqdm_params = {"unit": "card",
-                       "desc": "Scaling",
-                       "leave": True,
-                       "mininterval": 1,
-                       #"miniter": 5,
-                       "ascii": True,
-                       "total": len(self.df_dist.index),
-                       "file": self.t_strm,
-                       }
-        parallel = ProgressParallel(backend="threading",
-                                    tqdm_params=tqdm_params,
-                                    pre_dispatch="all",
-                                    n_jobs=-1,
-                                    mmap_mode=None,
-                                    max_nbytes=None)
-        out_val = parallel(joblib.delayed(minmaxscaling)(
-            index=x,
-            vector=self.df_dist[x],
-            ) for x in self.df_dist.index)
-        indexes = [x[0] for x in out_val]
-        values = [x[1] for x in out_val]
-        # storing results
-        self.df_dist = pd.DataFrame(columns=indexes,
-                                    index=df.index,
-                                    data=values)
+        # get all values
+        values = self.df_dist.values[up_triangular]
+        # get minimum that is not 0
+        above_zero = values[values > 0].ravel().min()
+        # move everything closer to 0
+        values -= above_zero
+        original_zero_mask = (values < 0)  # store for later
+        # max scaling
+        values /= values.max()
+        # move everything a bit farther than 0
+        values += 0.1
+        # make sure the original 0 are restored (they are identical cards)
+        values[original_zero_mask] = 0
+        # rescale once more
+        values /= values.max()
+        whi("Storing values...")
+        self.df_dist.values[up_triangular] = values
+        lo_triangular = np.tril_indices(self.df_dist.shape[0], -1)
+        self.df_dist.values[lo_triangular] = self.df_dist.values.T[lo_triangular]
+        whi("Finished minmax scaling.")
 
         # make sure the distances are positive otherwise it might reverse
         # the sorting logic for the negative values (i.e. favoring similar
