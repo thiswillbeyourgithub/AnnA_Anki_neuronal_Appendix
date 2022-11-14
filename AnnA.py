@@ -2555,6 +2555,8 @@ threads of size {batchsize})")
                 node_colours.append(self.df.loc[cid, "colors"])
 
         # create a dict containing all edges and their weights
+        min_w = np.inf
+        max_w = -np.inf
         for i in tqdm(
                 range(self.knn.shape[0]),
                 desc="Computing edges",
@@ -2577,9 +2579,9 @@ threads of size {batchsize})")
                 smallest = min(noteId, n_nid)
                 largest = max(noteId, n_nid)
                 # new weight is of decreasing importance
-                new_w = 2 / (2 + self.df_dist.loc[
+                new_w = self.df_dist.loc[
                     self.df.index[i], self.df.index[neighbour_indices[ii]]
-                    ])
+                    ]
                 if smallest not in all_edges:
                     all_edges[smallest] = {largest: new_w}
                 else:
@@ -2587,6 +2589,21 @@ threads of size {batchsize})")
                         all_edges[smallest][largest] = new_w
                     else:
                         all_edges[smallest][largest] += new_w
+                if all_edges[smallest][largest] > max_w:
+                    max_w = all_edges[smallest][largest]
+                if all_edges[smallest][largest] < min_w:
+                    min_w = all_edges[smallest][largest]
+
+        assert min_w >= 0 and min_w < max_w, (
+                f"Impossible weight values: {min_w} and {max_w}")
+
+        # minmax scaling of weights
+        mean_w = (max_w + min_w) / 2
+        for k, v in tqdm(all_edges.items(),
+                         desc="Minmax weights",
+                         file=self.t_strm):
+            for sub_k, sub_v in all_edges[k].items():
+                all_edges[k][sub_k] = (sub_v - min_w + mean_w) / (max_w - min_w + mean_w)
 
         # add each edge to the graph
         for k, v in tqdm(all_edges.items(),
@@ -2702,7 +2719,6 @@ threads of size {batchsize})")
                 ),
                 line=dict(width=5)))
 
-        whi("Reindexing dataframe...")
         note_df = self.df.reset_index().drop_duplicates(subset="note").set_index("note")
         for node in tqdm(G.nodes(), desc="Plotting nodes", file=self.t_strm):
             x, y = computed_layout[node]
