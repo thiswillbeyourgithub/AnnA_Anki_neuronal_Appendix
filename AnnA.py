@@ -2610,7 +2610,8 @@ threads of size {batchsize})")
         # computing spring layout
         n = len(node_colours)
         start = time.time()
-        whi("Drawing spring layout network...")
+        whi("\nDrawing spring layout network...")
+        whi("    computing layout...")
         layout_spring = nx.spring_layout(
                 G,
                 k=1 / np.sqrt(n),  # repulsive force
@@ -2678,10 +2679,6 @@ threads of size {batchsize})")
                 x1, y1 = computed_layout[edge[1]]
                 edge_trace['x'] += tuple([x0, x1, None])
                 edge_trace['y'] += tuple([y0, y1, None])
-                # if edge[2]["weight"] >= 2:
-                #     # doubles the traces when weight is high
-                #     edge_trace['x'] += tuple([x0, x1, None])
-                #     edge_trace['y'] += tuple([y0, y1, None])
 
         node_trace = Scatter(
             x=[],
@@ -2705,16 +2702,17 @@ threads of size {batchsize})")
                 ),
                 line=dict(width=5)))
 
+        whi("Reindexing dataframe...")
+        note_df = self.df.reset_index().drop_duplicates(subset="note").set_index("note")
         for node in tqdm(G.nodes(), desc="Plotting nodes", file=self.t_strm):
             x, y = computed_layout[node]
             node_trace['x'] += tuple([x])
             node_trace['y'] += tuple([y])
 
-            content = self.df.loc[self.df["note"] == node, "text"].tolist()[0]
-            tag = self.df.loc[self.df["note"] == node, "tags"].tolist()[0]
-            deck = self.df.loc[self.df["note"] == node, "deckName"].tolist()[0]
+            content = note_df.loc[node, "text"]
+            tag = note_df.loc[node, "tags"]
+            deck = note_df.loc[node, "deckName"]
             node_trace['text'] += tuple([
-                "<br>"
                 f"<b>deck:</b>{'<br>'.join(textwrap.wrap(deck, width=60))}"
                 "<br>"
                 f"<b>nid:</b>{node}"
