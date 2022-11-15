@@ -256,22 +256,20 @@ AnnA includes built-in methods you can run after instantiating the class. Note t
 * `save_df` saves the dataframe containing the cards and all other infos needed by AnnA as a pickle file. Used mainly for debugging. Files will be saved to the folder `DF_backups`
 
 ## TODO
-* reach out to the dev of the mindmapping addon and show them the 2D plots you made
-* see if using graphviz instead of networkx to compute layout is faster?
-* check if using hamming distance + binary TFIDF is somewhat better than dealing with all those distances
-* switch to using Fire instead of argparse and move all the documentation to the docstring
+* compute the distance matrix on the notes only instead of the cards
+* add a simple json caching to remember the latest number of dimension was kept
 * add picture and documentation to the knn feature
-* when loading the acronyms, see if any acronym dict value is matched by an acronym key and tell it to the user
+    * reach out to the dev of the mindmapping addon and show them the 2D plots you made
+* switch to using Fire instead of argparse and move all the documentation to the docstring
+* add argument to automatically flag cards deemed urgent
+* increase speed at which information on cards is gathered from anki as it seems to be the main bottleneck. Maybe try to use asyncio?
 * refactor a bit the way optimal score is computed to allow printing of the inner mechanism and debugging
 * use joblib caching for text_formater function (necessary steps: add more argument to it to stop relying on self)
 * add an option to generate a reachability plot for the decks using an argument (+add tqdm to OPTICS (I checked, it's easy) ; +do it with a timeout and in an external process)
 * use hierarchical clustering (quick because you already have the distance matrix) to have the full tree, then instead of using the TFIDF distance when computing the optimal order, use the "tree distance"
-* implement flagging urgent card instead of only tag or boost
 * investigate wether CLIP is a better vectorizer than what you used in the past
 * merge code from anki connect to make companion addon compatible with latest anki
-* switch to using more ankipandas than anki connect to gather information
 * package AnnA on pypi or as a standalone package
-* you can now vectorize the whole deck but what about computing distance in the whole deck too?
 * consider considering image occlusions of the same image as siblings
 
 * investigate using parallel processing of TF_IDF instead of _format_text using the .preprocess() method
