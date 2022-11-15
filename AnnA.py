@@ -998,7 +998,8 @@ threads of size {batchsize})")
 
         # if blockquote or li or ul, mention that it's a list item
         # usually indicating a harder card
-        if re.match("</?li/?>|</?ul/?>", text, flags=re.M):
+        # the ' <br>}}{{' is something specific to AnnA's author
+        if re.match(r"</?li/?>|</?ul/?>| <br>}}{{", text, flags=re.M):
             text += " list list"
 
         # remove html spaces
