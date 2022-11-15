@@ -1935,8 +1935,14 @@ threads of size {batchsize})")
             # then, correct overdue values to make sure they are negative
             correction = max(overdue.max(), 0) + 0.01
             if correction > 1:
-                beep(f"This should probably not happen.")
+                beep("This should probably never happen.")
                 breakpoint()
+
+            # Note: the order of preprocessing of ro (relative overdueness)
+            #       and urgency_factor is not certain to be the best. Feedback
+            #       are welcome as always!
+            #       #TODO
+
             # my implementation of relative overdueness:
             # (intervals are positive, overdue are negative for due cards
             # hence ro is positive)
@@ -1950,7 +1956,29 @@ threads of size {batchsize})")
                     )
             if ro.min() <= 0:
                 ro += abs(ro.min()) + 0.0001
-            assert np.sum(ro < 0) == 0, "wrong values of relative overdueness"
+            assert (ro > 0).all(), "wrong values of relative overdueness"
+
+            # boost cards according to how overdue they are
+            boost = True if "boost" in self.repick_task else False
+            urgency_factor = 1 / ro
+            assert (urgency_factor > 0).all(), "Negative urgency_factor values"
+            urgency_factor = np.clip(urgency_factor, 0, 1)
+
+            # gather list of urgent dues
+            ivl_limit = 5  # all cards with interval <= ivl_limit are deemed urgent
+            p = 0.1  # all cards more than (100*p)% overdue are deemed urgent
+            mask = np.argwhere(urgency_factor.values >= p).squeeze().tolist()
+            if isinstance(mask, int):
+                mask = [mask]  # if only one value found, make it an iterable
+            temp = [due[i] for i in mask]
+            temp2 = [ind for ind in due if df.loc[ind, "interval"] <= ivl_limit]
+            urgent_dues = temp + temp2
+            whi(f"Found '{len(temp)}' cards that are more than '{p*100}%' overdue.")
+            whi(f"Found '{len(temp2)}' cards that are due with 'interval <= {ivl_limit} days'.")
+
+            # minmax scaling
+            # urgency_factor -= urgency_factor.min() + 0.0001
+            # urgency_factor /= urgency_factor.max()
 
             # squishing values above some threshold
             limit = np.percentile(ro, 75)
@@ -1958,40 +1986,20 @@ threads of size {batchsize})")
             # clipping extreme values
             ro = np.clip(ro, 0, 2 * limit)
 
-            # boost cards according to how overdue they are
-            boost = True if "boost" in self.repick_task else False
-            repick_factor = 1 / ro
-            assert (repick_factor > 0).all(), "Negative repick_factor values"
-            repick_factor = np.clip(repick_factor, 0, 1)
-
-            # gather list of urgent dues
-            ivl_limit = 5  # all cards with interval <= ivl_limit are deemed urgent
-            p = 0.1  # all cards more than (100*p)% overdue are deemed urgent
-            mask = np.argwhere(repick_factor.values >= p).squeeze().tolist()
-            if isinstance(mask, int):
-                mask = [mask]  # if only one value found, make it an iterable
-            temp = [due[i] for i in mask]
-            temp2 = [ind for ind in due if df.loc[ind, "interval"] <= ivl_limit]
-            urgent_dues = temp + temp2
-            whi(f"Found {len(temp)} cards that are more than {p*100}% overdue.")
-            whi(f"Found {len(temp2)} cards that are due with interval <={ivl_limit}.")
-
-            # minmax scaling
-            # repick_factor - repick_factor.min()
-            # repick_factor /= repick_factor.max()
-
             # minmax scaling of ro
             ro -= ro.min()
             ro /= ro.max()
+            ro += 0.0001
 
             if boost:
-                ro -= repick_factor
+                ro -= urgency_factor
                 if ro.min() < 0:
                     ro += abs(ro.min())
                 else:
                     ro -= ro.min()
                 ro /= ro.max()
 
+            # add tag to urgent dues
             if urgent_dues:
                 beep(f"{len(urgent_dues)}/{len(due)} cards "
                      "with too low "
