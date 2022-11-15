@@ -46,6 +46,8 @@ from plotly.graph_objs import (Scatter, scatter, Figure, Layout, layout)
 import ankipandas as akp
 import shutil
 
+from utils.greek import greek_alphabet_mapping
+
 # avoids annoying warning
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
@@ -232,8 +234,6 @@ class AnnA:
 
         assert isinstance(
             replace_greek, bool), "Invalid type of `replace_greek`"
-        if replace_greek:
-            from util.greek import greek_alphabet_mapping
         self.replace_greek = replace_greek
 
         assert isinstance(keep_OCR, bool), "Invalid type of `keep_OCR`"
@@ -1507,6 +1507,7 @@ threads of size {batchsize})")
 
                 except Exception as err:
                     beep(f"Exception when loading latest dimension cache: '{err}'")
+                    cache = {}
                     self.TFIDF_dim = min(50, t_vec.shape[1] - 1)
 
             already_tried = []
