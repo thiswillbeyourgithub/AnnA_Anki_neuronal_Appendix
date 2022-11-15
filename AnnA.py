@@ -2575,7 +2575,7 @@ threads of size {batchsize})")
         assert min_w >= 0 and min_w < max_w, (
                 f"Impossible weight values: {min_w} and {max_w}")
 
-        # minmax scaling of weights
+        # minmax scaling of weights (even though the distances were already minmaxed)
         mean_w = (max_w + min_w) / 2
         for k, v in tqdm(all_edges.items(),
                          desc="Minmax weights",
