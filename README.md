@@ -257,7 +257,6 @@ AnnA includes built-in methods you can run after instantiating the class. Note t
 
 ## TODO
 * compute the distance matrix on the notes only instead of the cards
-* add a simple json caching to remember the latest number of dimension was kept
 * add picture and documentation to the knn feature
     * reach out to the dev of the mindmapping addon and show them the 2D plots you made
 * switch to using Fire instead of argparse and move all the documentation to the docstring

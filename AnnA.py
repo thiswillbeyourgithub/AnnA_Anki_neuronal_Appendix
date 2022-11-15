@@ -1491,9 +1491,25 @@ threads of size {batchsize})")
                 f"{desired_variance_kept}% of variance is kept.")
 
             # start either from the user supplied value or from the highest
-            # possible number up to 50
+            # possible number up to 50 or from cache
             if self.TFIDF_dim == "auto":
-                self.TFIDF_dim = min(50, t_vec.shape[1] - 1)
+
+                # trying from cache
+                try:
+                    cache_dir = Path("utils")
+                    cache_dir.mkdir(exist_ok=True)
+                    cache_file = cache_dir / "latest_TFIDF_dim.cache.json"
+                    assert cache_file.exists(), "No 'latest_TFIDF_dim.cache.json' file, creating it."
+                    cache = json.load(cache_file)
+                    if f"{self.deckname}_{self.task}" in cache:
+                        self.TFIDF_dim = int(cache[f"{self.deckname}_{self.task}"])
+                        self.TFIDF_dim = min(self.TFIDF_dim, t_vec.shape[1] - 1)
+
+                except Exception as err:
+                    beep(f"Exception when loading latest dimension cache: '{err}'")
+                    self.TFIDF_dim = min(50, t_vec.shape[1] - 1)
+
+            already_tried = []
             while True:
                 self.TFIDF_dim = min(self.TFIDF_dim, t_vec.shape[1] - 1)
                 yel(f"\nReducing dimensions to {self.TFIDF_dim} using SVD...",
@@ -1502,25 +1518,44 @@ threads of size {batchsize})")
                 t_red = svd.fit_transform(t_vec)
                 evr = round(sum(svd.explained_variance_ratio_) * 100, 1)
                 trial += 1
+                already_tried.append(self.TFIDF_dim)
+
                 if abs(evr - desired_variance_kept) <= 5:
+                    # success
                     break
+
                 elif trial >= 10:
-                    yel(f"Tried {trial} times to find the right number of "
+                    # failure, should not really happen
+                    beep(f"Tried {trial} times to find the right number of "
                         "dimensions, carrying on.")
                     break
+
                 else:
+                    # choosing next value to try
                     offset = desired_variance_kept - evr
                     # multiply or divide by 2 every 20% of difference
                     self.TFIDF_dim *= 2**(offset/20)
-                    if self.TFIDF_dim <= 50 and np.random.random() >= 0.5:
-                        self.TFIDF_dim += 1  # tries to avoid periodical loops
                     self.TFIDF_dim = int(max(2, min(self.TFIDF_dim, 1999)))
                     yel(f"Explained variance ratio is only {evr}% ("
                         "retrying up to 10 times to get closer to "
                         f"{desired_variance_kept}%)", end=" ")
+
+                    if self.TFIDF_dim in already_tried:
+                        yel(f"Already tried dimension {self.TFIDF_dim}, skipping.")
+                        break
+
                     continue
+
             yel(f"Explained variance ratio after SVD with {self.TFIDF_dim} "
                 f"dims on Tf_idf: {evr}%")
+
+            # store dim value into a cache file
+            try:
+                cache[f"{self.deckname}_{self.task}"] = int(self.TFIDF_dim)
+                json.dump(cache, cache_file)
+            except Exception as err:
+                beep(f"Exception when storing latest dimension to cache: '{err}'")
+
             df["VEC"] = [x for x in t_red]
 
         if self.plot_2D_embeddings:
