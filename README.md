@@ -256,6 +256,7 @@ AnnA includes built-in methods you can run after instantiating the class. Note t
 * `save_df` saves the dataframe containing the cards and all other infos needed by AnnA as a pickle file. Used mainly for debugging. Files will be saved to the folder `DF_backups`
 
 ## TODO
+* reach out to the dev of the mindmapping addon and show them the 2D plots you made
 * see if using graphviz instead of networkx to compute layout is faster?
 * check if using hamming distance + binary TFIDF is somewhat better than dealing with all those distances
 * switch to using Fire instead of argparse and move all the documentation to the docstring
