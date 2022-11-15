@@ -1941,7 +1941,7 @@ threads of size {batchsize})")
             # hence ro is positive)
             # low ro means urgent, high ro means not urgent
             assert (df.loc[due, "interval"].values > 0).all(), "Negative interval"
-            assert (correction > 0).all(), "Negative correction factor"
+            assert correction > 0, "Negative correction factor"
             assert (overdue - correction < 0).all(), "Positive overdue - correction"
             ro = (
                     (df.loc[due, "interval"].values +
