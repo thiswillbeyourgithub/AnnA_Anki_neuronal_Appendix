@@ -2226,15 +2226,14 @@ threads of size {batchsize})")
                 # first in the filtered deck and only then the non repicked
                 # cards. But while still maximizing distance throughout the
                 # reviews.
-                self.df["ref_filtered"] = self.df["ref"] - 50
+                self.df.loc[to_process, "ref_filtered"] = -50
                 self.df.loc[[q
                              for q in to_process
                              if q not in self.repicked
                              ], "ref_filtered"] = 50
 
-                # not reusing adjustment score 'w2' because it could overpower
-                # the arbitrary 50 limit of 'ref_filtered'.
-                sign = 1 if w2 > 0 else -1
+                # keeping sorting order of user
+                factor = 1 if w2 > 0 else -1
 
                 assert set(new_queue) & set(to_process) == set(), (
                         "queue construction failed!")
@@ -2247,7 +2246,7 @@ threads of size {batchsize})")
                 while to_process:
                     pbar.update(1)
                     score = self.df.loc[to_process, "ref_filtered"] - (
-                            sign * combinator(
+                            factor * combinator(
                                 self.df_dist.loc[to_process, new_queue].values
                             ))
                     new_queue.append(to_process.pop(score.argmin()))
