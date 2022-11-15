@@ -1856,7 +1856,7 @@ threads of size {batchsize})")
             w3 = (w1 + w2) / 2 * self.mean_dist / 10
         else:
             w3 = 0
-        self.repicked = []
+        self.urgent_dues = []
 
         # hardcoded settings
         display_stats = True
@@ -1972,7 +1972,7 @@ threads of size {batchsize})")
                 mask = [mask]  # if only one value found, make it an iterable
             temp = [due[i] for i in mask]
             temp2 = [ind for ind in due if df.loc[ind, "interval"] <= ivl_limit]
-            repicked = temp + temp2
+            urgent_dues = temp + temp2
             whi(f"Found {len(temp)} cards that are more than {p*100}% overdue.")
             whi(f"Found {len(temp2)} cards that are due with interval <={ivl_limit}.")
 
@@ -1992,8 +1992,8 @@ threads of size {batchsize})")
                     ro -= ro.min()
                 ro /= ro.max()
 
-            if repicked:
-                beep(f"{len(repicked)}/{len(due)} cards "
+            if urgent_dues:
+                beep(f"{len(urgent_dues)}/{len(due)} cards "
                      "with too low "
                      "relative overdueness (i.e. on the brink of being "
                      "forgotten) where found.")
@@ -2008,7 +2008,7 @@ threads of size {batchsize})")
                     # time format is day/month/year
                     today_date = f"{d.day:02d}/{d.month:02d}/{d.year}"
                     notes = []
-                    for card in repicked:
+                    for card in urgent_dues:
                         notes.append(int(self.df.loc[card, "note"]))
                     notes = list(set(notes))  # remove duplicates
                     new_tag = f"AnnA::urgent_reviews::session_of_{today_date}"
@@ -2023,7 +2023,7 @@ threads of size {batchsize})")
 
             assert sum(ro < 0) == 0, "Negative values in relative overdueness"
 
-            self.repicked = repicked  # store to use when resorting the cards
+            self.urgent_dues = urgent_dues  # store to use when resorting the cards
 
             if not reference_order == "LIRO_mix":
                 df.loc[due, "ref"] = ro
@@ -2220,22 +2220,22 @@ threads of size {batchsize})")
                 to_process = [q for q in queue[1:]]
 
                 # tell proportion to the user
-                n = len([q for q in self.repicked if q in queue])
+                n = len([q for q in self.urgent_dues if q in queue])
                 if n > 0:
                     proportion = int(n / len(queue) * 100)
                     yel(f"The filtered deck will contain {proportion}% of "
                         "boosted cards.")
 
                 # create a new column like the reference score but -50 .
-                # the non repicked cards have their reference set at 50
-                # In effect, this forces repicked repicked cards to appear
-                # first in the filtered deck and only then the non repicked
+                # the non urgent_dues cards have their reference set at 50
+                # In effect, this forces urgent_dues cards to appear
+                # first in the filtered deck and only then the non urgent_dues
                 # cards. But while still maximizing distance throughout the
                 # reviews.
                 self.df.loc[to_process, "ref_filtered"] = -50
                 self.df.loc[[q
                              for q in to_process
-                             if q not in self.repicked
+                             if q not in self.urgent_dues
                              ], "ref_filtered"] = 50
 
                 # keeping sorting order of user
