@@ -51,5 +51,3 @@ greek_alphabet_mapping = {
     u'\u03C8': 'psi',
     u'\u03C9': 'omega',
 }
-
-
