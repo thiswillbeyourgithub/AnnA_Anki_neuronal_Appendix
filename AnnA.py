@@ -1964,12 +1964,17 @@ threads of size {batchsize})")
             assert (repick_factor > 0).all(), "Negative repick_factor values"
             repick_factor = np.clip(repick_factor, 0, 1)
 
-            mask = np.argwhere(repick_factor.values >= 0.25).squeeze().tolist()
+            # gather list of urgent dues
+            ivl_limit = 5  # all cards with interval <= ivl_limit are deemed urgent
+            p = 0.1  # all cards more than (100*p)% overdue are deemed urgent
+            mask = np.argwhere(repick_factor.values >= p).squeeze().tolist()
             if isinstance(mask, int):
-                mask = [mask]  # only one value found
-            repicked = []
-            repicked.extend([due[i] for i in mask])
-            repicked.extend([ind for ind in due if df.loc[ind, "interval"] <= 5])
+                mask = [mask]  # if only one value found, make it an iterable
+            temp = [due[i] for i in mask]
+            temp2 = [ind for ind in due if df.loc[ind, "interval"] <= ivl_limit]
+            repicked = temp + temp2
+            whi(f"Found {len(temp)} cards that are more than {p*100}% overdue.")
+            whi(f"Found {len(temp2)} cards that are due with interval <={ivl_limit}.")
 
             # minmax scaling
             # repick_factor - repick_factor.min()
