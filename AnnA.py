@@ -1895,7 +1895,8 @@ threads of size {batchsize})")
             # make start at 0
             assert (ivl > 0).all(), "Negative intervals"
             ivl -= ivl.min()
-            ivl /= ivl.max()
+            if ivl.max() != 0:
+                ivl /= ivl.max()
             if not reference_order == "LIRO_mix":
                 df.loc[due, "ref"] = ivl
 
