@@ -1053,7 +1053,8 @@ threads of size {batchsize})")
                 "ï", "i"
                 ).replace(
                 "ù", "u"
-                )
+                ).replace(
+                "œ", "oe")
 
         # replace acronyms
         already_replaced = []
