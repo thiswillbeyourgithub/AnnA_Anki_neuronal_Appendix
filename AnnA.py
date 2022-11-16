@@ -2019,7 +2019,7 @@ threads of size {batchsize})")
             temp = [due[i] for i in mask]
             temp2 = [ind for ind in due if df.loc[ind, "interval"] <= ivl_limit]
             urgent_dues = temp + temp2
-            whi(f"Found '{len(temp)}' cards that are more than '{p*100}%' overdue.")
+            whi(f"Found '{len(temp)}' cards that are more than '{int(p*100)}%' overdue.")
             whi(f"Found '{len(temp2)}' cards that are due with 'interval <= {ivl_limit} days'.")
 
             # minmax scaling
