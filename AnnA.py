@@ -1492,22 +1492,28 @@ threads of size {batchsize})")
 
             # start either from the user supplied value or from the highest
             # possible number up to 50 or from cache
-            if self.TFIDF_dim == "auto":
 
+            cache_dir = Path("utils")
+            cache_dir.mkdir(exist_ok=True)
+            cache_file = cache_dir / "latest_TFIDF_dim.cache.json"
+            cache = {}
+
+            if self.TFIDF_dim == "auto":
                 # trying from cache
                 try:
-                    cache_dir = Path("utils")
-                    cache_dir.mkdir(exist_ok=True)
-                    cache_file = cache_dir / "latest_TFIDF_dim.cache.json"
                     assert cache_file.exists(), "No 'latest_TFIDF_dim.cache.json' file, creating it."
-                    cache = json.load(cache_file)
-                    if f"{self.deckname}_{self.task}" in cache:
-                        self.TFIDF_dim = int(cache[f"{self.deckname}_{self.task}"])
+                    cache = json.load(cache_file.open("r"))
+                    assert isinstance(cache, dict), "cache is not a dict"
+                    if f"{self.deckname}_{self.task}_{desired_variance_kept}" in cache:
+                        self.TFIDF_dim = int(cache[f"{self.deckname}_{self.task}_{desired_variance_kept}"])
                         self.TFIDF_dim = min(self.TFIDF_dim, t_vec.shape[1] - 1)
+                        whi(f"(Loaded dimension '{self.TFIDF_dim}' from cache file)")
+                    else:
+                        self.TFIDF_dim = min(50, t_vec.shape[1] - 1)
+                        yel("Cache does not contain the key to this deck, creating it.")
 
                 except Exception as err:
                     beep(f"Exception when loading latest dimension cache: '{err}'")
-                    cache = {}
                     self.TFIDF_dim = min(50, t_vec.shape[1] - 1)
 
             already_tried = []
@@ -1536,7 +1542,7 @@ threads of size {batchsize})")
                     offset = desired_variance_kept - evr
                     # multiply or divide by 2 every 20% of difference
                     self.TFIDF_dim *= 2**(offset/20)
-                    self.TFIDF_dim = int(max(2, min(self.TFIDF_dim, 1999)))
+                    self.TFIDF_dim = int(max(3, min(self.TFIDF_dim, 1999)))
                     yel(f"Explained variance ratio is only {evr}% ("
                         "retrying up to 10 times to get closer to "
                         f"{desired_variance_kept}%)", end=" ")
@@ -1552,8 +1558,9 @@ threads of size {batchsize})")
 
             # store dim value into a cache file
             try:
-                cache[f"{self.deckname}_{self.task}"] = int(self.TFIDF_dim)
-                json.dump(cache, cache_file)
+                cache[f"{self.deckname}_{self.task}_{desired_variance_kept}"] = int(self.TFIDF_dim)
+                json.dump(cache, cache_file.open("w"))
+                whi("(Saved dimension to cache file.)")
             except Exception as err:
                 beep(f"Exception when storing latest dimension to cache: '{err}'")
 
