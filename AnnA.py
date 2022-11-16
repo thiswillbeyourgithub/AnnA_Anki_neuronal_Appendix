@@ -2013,14 +2013,17 @@ threads of size {batchsize})")
             # gather list of urgent dues
             ivl_limit = 5  # all cards with interval <= ivl_limit are deemed urgent
             p = 0.1  # all cards more than (100*p)% overdue are deemed urgent
+            ease_limit = 1600  # all cards with lower ease are deemed urgent
             mask = np.argwhere(urgency_factor.values >= p).squeeze().tolist()
             if isinstance(mask, int):
                 mask = [mask]  # if only one value found, make it an iterable
             temp = [due[i] for i in mask]
             temp2 = [ind for ind in due if df.loc[ind, "interval"] <= ivl_limit]
-            urgent_dues = temp + temp2
+            temp3 = [ind for ind in due if df.loc[ind, "factor"] <= ease_limit]
+            urgent_dues = temp + temp2 + temp3
             whi(f"Found '{len(temp)}' cards that are more than '{int(p*100)}%' overdue.")
             whi(f"Found '{len(temp2)}' cards that are due with 'interval <= {ivl_limit} days'.")
+            whi(f"Found '{len(temp3)}' cards that are due with 'ease <= {ease_limit//10}%'.")
 
             # minmax scaling
             # urgency_factor -= urgency_factor.min() + 0.0001

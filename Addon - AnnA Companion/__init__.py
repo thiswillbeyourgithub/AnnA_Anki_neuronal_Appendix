@@ -508,6 +508,7 @@ class AnkiConnect:
                     'fields': fields,
                     'deckName': self.deckNameFromId(card.did),
                     'modelName': model['name'],
+                    'factor': card.factor,
                     'tags': note.tags,
                     'interval': card.ivl,
                     'note': card.nid,
