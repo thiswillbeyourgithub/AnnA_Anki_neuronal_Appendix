@@ -182,7 +182,7 @@ class AnnA:
                  replace_greek=True,
                  keep_OCR=True,
                  append_tags=True,
-                 tags_to_ignore=["AnnA", "missing_OCR"],
+                 tags_to_ignore=["AnnA"],
                  tags_separator="::",
                  add_KNN_to_field=False,
                  filtered_deck_name_template=None,
@@ -3123,7 +3123,7 @@ if __name__ == "__main__":
                         nargs="*",
                         metavar="TAGS_TO_IGNORE",
                         dest="tags_to_ignore",
-                        default="[AnnA, missing_OCR]",
+                        default="[AnnA]",
                         type=str,
                         required=False,
                         help=(
@@ -3132,7 +3132,7 @@ if __name__ == "__main__":
                             "appending tags to cards. This is not a "
                             "list of tags "
                             "whose card should be ignored! Default is "
-                            "'[AnnA,missing_OCR]'. Set to None to disable it."))
+                            "'[AnnA]'. Set to None to disable it."))
     parser.add_argument("--tags_separator",
                         nargs=1,
                         metavar="TAGS_SEP",
