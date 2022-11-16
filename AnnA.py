@@ -2625,7 +2625,8 @@ threads of size {batchsize})")
                     if largest not in all_edges[smallest]:
                         all_edges[smallest][largest] = new_w
                     else:
-                        all_edges[smallest][largest] += new_w
+                        assert np.isclose(all_edges[smallest][largest], new_w), (
+                                f"A weight is not symetric: {all_edges[smallest][largest]} != {new_w}")
                 if all_edges[smallest][largest] > max_w:
                     max_w = all_edges[smallest][largest]
                 if all_edges[smallest][largest] < min_w:
