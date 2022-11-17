@@ -256,6 +256,7 @@ AnnA includes built-in methods you can run after instantiating the class. Note t
 * `save_df` saves the dataframe containing the cards and all other infos needed by AnnA as a pickle file. Used mainly for debugging. Files will be saved to the folder `DF_backups`
 
 ## TODO
+* make UMAP start from the precomputed KNN matrix
 * compute the distance matrix on the notes only instead of the cards
 * add picture and documentation to the knn feature
     * reach out to the dev of the mindmapping addon and show them the 2D plots you made
