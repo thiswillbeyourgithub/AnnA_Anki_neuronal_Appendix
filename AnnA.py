@@ -2607,8 +2607,8 @@ class AnnA:
                     # skip self neighbouring
                     continue
                 if ii > 20:
-                    whi("(Stopped considering n'th neighbours after "
-                        f"20 of {len(neighbours_nid)}")
+                    whi("(Only considering 20 first neighbours out of "
+                        f"{len(neighbours_nid)}")
                     break
                 smallest = min(noteId, n_nid)
                 largest = max(noteId, n_nid)
