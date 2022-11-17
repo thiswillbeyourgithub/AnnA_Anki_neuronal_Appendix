@@ -1700,6 +1700,9 @@ class AnnA:
         std_dist = round(np.nanstd(self.df_dist.values[up_triangular]), 2)
         yel(f"Mean distance: {mean_dist}, std: {std_dist}\n")
 
+        self.mean_dist = mean_dist
+        self.std_dist = std_dist
+
         # store mean distance for the fuzz factor
         if self.enable_fuzz:
             self.mean_dist = mean_dist
@@ -1719,12 +1722,13 @@ class AnnA:
             whi("Computing KNN matrix is not needed by those arguments.")
             return
         try:
-            radius = 0.1
+            radius = 1 / 2 * self.mean_dist
             yel(f"Finding neighbors within {radius}...")
             self.knn = radius_neighbors_graph(
                     X=self.df_dist,
-                    radius=0.1,
+                    radius=radius,
                     #n_neighbors=n_n,
+                    mode="connectivity",
                     n_jobs=-1,
                     metric="precomputed",
                     include_self=True)
@@ -1780,7 +1784,7 @@ class AnnA:
 
         if nb_of_nn:
             yel("Number of neighbors on average:")
-            whi(pd.DataFrame(nb_of_nn).describe())
+            whi(str(pd.DataFrame(nb_of_nn).describe()))
 
     def _print_similar(self):
         """ finds two cards deemed very similar (but not equal) and print
@@ -2600,7 +2604,7 @@ class AnnA:
                     neighbour_indices,
                     key=lambda x: self.df_dist.loc[
                         self.df.index[i], self.df.index[x]],
-                    reverse=False)
+                    reverse=True)
             neighbours_nid = [self.df.loc[self.df.index[ind], "note"]
                               for ind in neighbour_indices]
             noteId = self.df.loc[self.df.index[i], "note"]
@@ -2609,8 +2613,7 @@ class AnnA:
                     # skip self neighbouring
                     continue
                 if ii > 20:
-                    whi("(Only considering 20 first neighbours out of "
-                        f"{len(neighbours_nid)}")
+                    # Only considering 20 first neighbours
                     break
                 smallest = min(noteId, n_nid)
                 largest = max(noteId, n_nid)
