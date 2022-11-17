@@ -2716,7 +2716,7 @@ class AnnA:
         # randomize edges order
         edges_to_draw.sort(key=lambda x: random.random())
 
-        n_limit = 5000
+        n_limit = 1000
         if len(edges_to_draw) > n_limit:
             yel(f"Too many edges to draw ({len(edges_to_draw)}, keeping "
                 f"{n_limit}.")
