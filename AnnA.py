@@ -1500,6 +1500,8 @@ class AnnA:
             cache_dir = Path("utils")
             cache_dir.mkdir(exist_ok=True)
             cache_file = cache_dir / "latest_TFIDF_dim.cache.json"
+            dim_limit = len(self.df.index) // 50  # maximum 1 dimension per 50 cards
+            assert dim_limit <= (t_vec.shape[1] - 1), "Invalid number of dimension!"
             cache = {}
 
             if self.TFIDF_dim == "auto":
@@ -1510,19 +1512,19 @@ class AnnA:
                     assert isinstance(cache, dict), "cache is not a dict"
                     if f"{self.deckname}_{self.task}_{desired_variance_kept}" in cache:
                         self.TFIDF_dim = int(cache[f"{self.deckname}_{self.task}_{desired_variance_kept}"])
-                        self.TFIDF_dim = min(self.TFIDF_dim, t_vec.shape[1] - 1)
+                        self.TFIDF_dim = min(self.TFIDF_dim, dim_limit)
                         whi(f"(Loaded dimension '{self.TFIDF_dim}' from cache file)")
                     else:
-                        self.TFIDF_dim = min(50, t_vec.shape[1] - 1)
+                        self.TFIDF_dim = dim_limit
                         yel("Cache does not contain the key to this deck, creating it.")
 
                 except Exception as err:
                     beep(f"Exception when loading latest dimension cache: '{err}'")
-                    self.TFIDF_dim = min(50, t_vec.shape[1] - 1)
+                    self.TFIDF_dim = dim_limit
 
             already_tried = []
             while True:
-                self.TFIDF_dim = min(self.TFIDF_dim, t_vec.shape[1] - 1)
+                self.TFIDF_dim = min(self.TFIDF_dim, dim_limit)
                 yel(f"\nReducing dimensions to {self.TFIDF_dim} using SVD...",
                     end=" ")
                 svd = TruncatedSVD(n_components=self.TFIDF_dim)
@@ -1546,7 +1548,7 @@ class AnnA:
                     offset = desired_variance_kept - evr
                     # multiply or divide by 2 every 20% of difference
                     self.TFIDF_dim *= 2**(offset/20)
-                    self.TFIDF_dim = int(max(3, min(self.TFIDF_dim, 1999)))
+                    self.TFIDF_dim = int(max(3, min(self.TFIDF_dim, dim_limit)))
                     yel(f"Explained variance ratio is only {evr}% ("
                         "retrying up to 10 times to get closer to "
                         f"{desired_variance_kept}%)", end=" ")
