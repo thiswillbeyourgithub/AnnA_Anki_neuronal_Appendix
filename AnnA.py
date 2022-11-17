@@ -2638,12 +2638,12 @@ class AnnA:
                 f"Impossible weight values: {min_w} and {max_w}")
 
         # minmax scaling of weights (even though the distances were already minmaxed)
-        mean_w = (max_w + min_w) / 2
-        for k, v in tqdm(all_edges.items(),
-                         desc="Minmax weights",
-                         file=self.t_strm):
-            for sub_k, sub_v in all_edges[k].items():
-                all_edges[k][sub_k] = (sub_v - min_w + mean_w) / (max_w - min_w + mean_w)
+        # mean_w = (max_w + min_w) / 2
+        # for k, v in tqdm(all_edges.items(),
+        #                  desc="Minmax weights",
+        #                  file=self.t_strm):
+        #     for sub_k, sub_v in all_edges[k].items():
+        #         all_edges[k][sub_k] = (sub_v - min_w + mean_w) / (max_w - min_w + mean_w)
 
         # add each edge to the graph
         for k, v in tqdm(all_edges.items(),
