@@ -544,15 +544,15 @@ class AnkiConnect:
         return self.collection().db.list('select distinct nid from cards where id in ' + anki.utils.ids2str(cards))
 
     @util.api()
-    def update_KNN_field(self, notes=None, new_field_value=None):
+    def update_KNN_field(self, nid_content):
         editing_started = False
-        for i in range(len(notes)):
-            ankiNote = self.getNote(notes[i])
-            if ankiNote["Nearest_neighbours"] != new_field_value[i]:
+        for note, content in nid_content.items():
+            ankiNote = self.getNote(note)
+            if ankiNote["Nearest_neighbours"] != content:
                 if not editing_started:
                     self.startEditing()
                     editing_started = True
-                ankiNote["Nearest_neighbours"] = new_field_value[i]
+                ankiNote["Nearest_neighbours"] = content
                 ankiNote.flush()
         if editing_started:
             self.collection().autosave()

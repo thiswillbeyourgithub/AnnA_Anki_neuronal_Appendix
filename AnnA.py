@@ -1740,8 +1740,8 @@ class AnnA:
             return
         red("Adding the list of neighbours to each note.")
         try:
-            modified_nid = []
-            new_content_list = []
+            nid_content = {}
+            nb_of_nn = []
             for i in tqdm(
                     range(self.knn.shape[0]),
                     desc="Colecting neighbours of notes",
@@ -1752,12 +1752,13 @@ class AnnA:
                         cardId, "fields"].keys():
                     continue
                 noteId = int(self.df.loc[cardId, "note"])
-                if noteId in modified_nid:
+                if noteId in nid_content:
                     continue  # skipped because a card of this note was
                     # already processed
 
                 knn_ar = self.knn.getcol(i).toarray().squeeze()
                 neighbour_indices = list(np.where(knn_ar == 1)[0])
+                nb_of_nn.append(len(neighbour_indices))
                 neighbour_indices = sorted(
                         neighbour_indices,
                         key=lambda x: float(self.df_dist.loc[
@@ -1765,33 +1766,15 @@ class AnnA:
                         reverse=False)
                 neighbours_nid = [str(self.df.loc[self.df.index[ind], "note"])
                                   for ind in neighbour_indices]
-                new_content = "nid:" + ",".join(neighbours_nid)
-                modified_nid.append(noteId)
-                new_content_list.append(new_content)
-            # commented: add a tag to indicate which card was updated
-            # whi("Sending new field value to Anki (tagging)...")
-            # tags_added = False
-            # self._call_anki(
-            #         action="addTags",
-            #         notes=modified_nid,
-            #         tags="AnnA::added_KNN")
-            tags_added = True
+                nid_content[noteId] = "nid:" + ",".join(neighbours_nid)
             whi("Sending new field value to Anki...")
-            assert len(new_content_list) == len(modified_nid)
             self._call_anki(
                     action="update_KNN_field",
-                    notes=modified_nid,
-                    new_field_value=new_content_list,
+                    nid_content=nid_content,
                     )
             yel("Finished adding neighbours to notes.")
         except Exception:
-            # add a tag to indicate that those cards where modified
             beep("Error when adding neighbour list to notes!")
-            if modified_nid and not tags_added:
-                self._call_anki(
-                        action="addTags",
-                        notes=modified_nid,
-                        tags="AnnA::added_KNN")
 
     def _print_similar(self):
         """ finds two cards deemed very similar (but not equal) and print
