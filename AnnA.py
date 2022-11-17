@@ -738,7 +738,7 @@ class AnnA:
             cnt = 0
             r_list = []
             target_thread_n = 5
-            batchsize = (len(card_id) // target_thread_n) + 1
+            batchsize = max((len(card_id) // target_thread_n) + 1, 5)
             whi("(Large number of cards to retrieve: creating"
                 f"{target_thread_n} threads of size {batchsize})")
 
