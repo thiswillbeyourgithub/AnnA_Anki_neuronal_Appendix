@@ -722,7 +722,7 @@ class AnnA:
         """
         if isinstance(card_id, int):
             card_id = [card_id]
-        if len(card_id) < 50:
+        if len(card_id) < 20:
             r_list = []
             for card in tqdm(card_id, file=self.t_strm):
                 r_list.extend(self._call_anki(action="cardsInfo",
@@ -735,9 +735,9 @@ class AnnA:
             cnt = 0
             r_list = []
             target_thread_n = 5
-            batchsize = len(card_id) // target_thread_n + 3
-            whi(f"(Large number of cards to retrieve: creating 10 \
-threads of size {batchsize})")
+            batchsize = (len(card_id) // target_thread_n) + 1
+            whi("(Large number of cards to retrieve: creating"
+                f"{target_thread_n} threads of size {batchsize})")
 
             def retrieve_cards(card_list, lock, cnt, r_list):
                 "for multithreaded card retrieval"
