@@ -2032,9 +2032,9 @@ class AnnA:
             ro += 0.0001
 
             if boost:
-                whi("Boosted urgent_dues cards to make sure they are reviewed.")
+                whi("Boosted urgent_dues cards to increase chances they are reviewed today.")
                 for ind in urgent_dues:
-                    ro[ind] -= 1
+                    ro[ind] -= 0.5
                 if ro.min() < 0:
                     ro += abs(ro.min()) + 0.001
                 else:
