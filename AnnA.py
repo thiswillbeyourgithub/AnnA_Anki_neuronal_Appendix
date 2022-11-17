@@ -83,17 +83,20 @@ def coloured_log(color_asked):
     col_yel = "\033[93m"
     col_rst = "\033[0m"
 
+    # all logs are considered "errors" otherwise the datascience libs just
+    # overwhelm the logs
+
     if color_asked == "white":
         def printer(string, **args):
             if isinstance(string, list):
                 string = ",".join(string)
-            log.info(string)
+            log.error(string)
             tqdm.write(col_rst + string + col_rst, **args)
     elif color_asked == "yellow":
         def printer(string, **args):
             if isinstance(string, list):
                 string = ",".join(string)
-            log.warning(string)
+            log.error(string)
             tqdm.write(col_yel + string + col_rst, **args)
     elif color_asked == "red":
         def printer(string, **args):
