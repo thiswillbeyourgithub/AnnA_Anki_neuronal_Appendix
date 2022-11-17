@@ -2063,7 +2063,7 @@ class AnnA:
                     for card in urgent_dues:
                         notes.append(int(self.df.loc[card, "note"]))
                     notes = list(set(notes))  # remove duplicates
-                    new_tag = f"AnnA::urgent_reviews::session_of_{today_date}"
+                    new_tag = f"AnnA::urgent_reviews::{today_date}"
                     try:
                         self._call_anki(action="addTags",
                                         notes=notes, tags=new_tag)
