@@ -36,7 +36,7 @@ from tokenizers import Tokenizer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import pairwise_distances, pairwise_kernels
 from sklearn.decomposition import TruncatedSVD
-from sklearn.neighbors import radius_neighbors_graph
+from sklearn.neighbors import radius_neighbors_graph, kneighbors_graph
 
 import networkx as nx
 from plotly.colors import qualitative
@@ -1710,28 +1710,45 @@ class AnnA:
         self._print_similar()
         return True
 
-    def _compute_KNN(self):
+    def _compute_KNN(self, mode="fixed_nn"):
         """
         Compute the nearest neighbours of each note of the distance matrix.
         This is used to then fill the field "Nearest_neighbours" of those notes
         so that you can quickly know the neighbour of any given card straight
         into anki without having to use AnnA.
+
+        "mode" can be either "fixed_nn" or "fixed_radius"
         """
         if not ((self.add_KNN_to_field or self.plot_2D_embeddings) or (
                 self.task == "just_add_KNN")):
             whi("Computing KNN matrix is not needed by those arguments.")
             return
         try:
-            radius = 1 / 2 * self.mean_dist
-            yel(f"Finding neighbors within {radius}...")
-            self.knn = radius_neighbors_graph(
-                    X=self.df_dist,
-                    radius=radius,
-                    #n_neighbors=n_n,
-                    mode="connectivity",
-                    n_jobs=-1,
-                    metric="precomputed",
-                    include_self=True)
+            if mode == "fixed_nn":
+                # 1% of neighbors, bounded
+                n_n = min(20, max(self.df_dist.shape[0] // 100, 5))
+                yel(f"Computing '{n_n}' nearest neighbours per point...")
+                self.knn = kneighbors_graph(
+                        self.df_dist,
+                        n_neighbors=n_n,
+                        mode="connectivity",
+                        n_jobs=-1,
+                        metric="precomputed",
+                        include_self=True
+                        )
+            elif mode == "fixed_radius":
+                radius = 1 / 4 * self.mean_dist
+                yel(f"Finding neighbors within {radius}...")
+                self.knn = radius_neighbors_graph(
+                        X=self.df_dist,
+                        radius=radius,
+                        mode="connectivity",
+                        n_jobs=-1,
+                        metric="precomputed",
+                        include_self=True
+                        )
+            else:
+                raise ValueError
         except Exception as err:
             beep(f"Error when computing KNN: '{err}'")
 
