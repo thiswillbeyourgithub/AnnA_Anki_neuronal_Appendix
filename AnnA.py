@@ -2007,7 +2007,7 @@ class AnnA:
 
             # gather list of urgent dues
 
-            p = 0.2  # all cards more than (100*p)% overdue are deemed urgent
+            p = 0.15  # all cards more than (100*p)% overdue are deemed urgent
             mask = np.argwhere(ro.values <= 1/p).squeeze()
             mask2 = np.argwhere(np.abs(overdue.values) > 1).squeeze()
             # if only one found in mask, make sure it's an iterable
@@ -2032,24 +2032,21 @@ class AnnA:
 
 
             # reduce the increase of ro as a very high ro is not important
-            while ro.max() > 2:
+            while ro.max() > 1.5:
                 whi("(Smoothing relative overdueness)")
                 ro[ro > 1] = 1 + np.log(ro[ro > 1])
 
             # minmax scaling of ro
             ro -= ro.min()
             ro /= ro.max()
-            ro += 0.0001
+            ro += 0.001
 
             if boost:
                 whi("Boosted urgent_dues cards to increase chances they are reviewed today.")
                 for ind in urgent_dues:
-                    ro[ind] -= 0.5
-                if ro.min() < 0:
-                    ro += abs(ro.min()) + 0.001
-                else:
-                    ro -= ro.min()
-                    ro += 0.001
+                    ro[ind] -= 1
+                assert ro.min() < 0:
+                ro += abs(ro.min()) + 0.001
                 assert ro.min() > 0, "Negative value in relative overdueness"
                 ro /= ro.max()
 
