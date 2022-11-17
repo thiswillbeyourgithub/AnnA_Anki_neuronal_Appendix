@@ -2024,6 +2024,7 @@ class AnnA:
             whi(f"* Found '{len(temp2)}' cards that are due with 'interval <= {ivl_limit} days'.")
             whi(f"* Found '{len(temp3)}' cards that are due with 'ease <= {ease_limit//10}%'.")
             urgent_dues = temp1 + temp2 + temp3
+            urgent_dues = list(set(urgent_dues))
 
             # minmax scaling of ro
             ro -= ro.min()
