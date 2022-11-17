@@ -1985,11 +1985,6 @@ class AnnA:
                 beep("This should probably never happen.")
                 breakpoint()
 
-            # Note: the order of preprocessing of ro (relative overdueness)
-            #       and urgency_factor is not certain to be the best. Feedback
-            #       are welcome as always!
-            #       #TODO
-
             # my implementation of relative overdueness:
             # (intervals are positive, overdue are negative for due cards
             # hence ro is positive)
@@ -2005,11 +2000,15 @@ class AnnA:
                 ro += abs(ro.min()) + 0.0001
             assert (ro > 0).all(), "wrong values of relative overdueness"
 
+            # squishing values above some threshold
+            ro[ro > 1] = 1 + np.log(1 + ro[ro > 1])
+            # clipping extreme values
+            ro = np.clip(ro, 0, 2)
+
             # boost cards according to how overdue they are
             boost = True if "boost" in self.repick_task else False
             urgency_factor = 1 / ro
-            assert (urgency_factor > 0).all(), "Negative urgency_factor values"
-            urgency_factor = np.clip(urgency_factor, 0, 1)
+            assert (urgency_factor > 0).all(), "Negative or null urgency_factor values"
 
             # gather list of urgent dues
             ivl_limit = 5  # all cards with interval <= ivl_limit are deemed urgent
@@ -2018,23 +2017,13 @@ class AnnA:
             mask = np.argwhere(urgency_factor.values >= p).squeeze().tolist()
             if isinstance(mask, int):
                 mask = [mask]  # if only one value found, make it an iterable
-            temp = [due[i] for i in mask]
+            temp1 = [due[i] for i in mask]
             temp2 = [ind for ind in due if df.loc[ind, "interval"] <= ivl_limit]
             temp3 = [ind for ind in due if df.loc[ind, "factor"] <= ease_limit]
-            urgent_dues = temp + temp2 + temp3
-            whi(f"Found '{len(temp)}' cards that are more than '{int(p*100)}%' overdue.")
-            whi(f"Found '{len(temp2)}' cards that are due with 'interval <= {ivl_limit} days'.")
-            whi(f"Found '{len(temp3)}' cards that are due with 'ease <= {ease_limit//10}%'.")
-
-            # minmax scaling
-            # urgency_factor -= urgency_factor.min() + 0.0001
-            # urgency_factor /= urgency_factor.max()
-
-            # squishing values above some threshold
-            limit = np.percentile(ro, 75)
-            ro[ro > limit] = limit + np.log(1 + ro[ro > limit])
-            # clipping extreme values
-            ro = np.clip(ro, 0, 2 * limit)
+            whi(f"* Found '{len(temp1)}' cards that are more than '{int(p*100)}%' overdue.")
+            whi(f"* Found '{len(temp2)}' cards that are due with 'interval <= {ivl_limit} days'.")
+            whi(f"* Found '{len(temp3)}' cards that are due with 'ease <= {ease_limit//10}%'.")
+            urgent_dues = temp1 + temp2 + temp3
 
             # minmax scaling of ro
             ro -= ro.min()
@@ -2042,11 +2031,15 @@ class AnnA:
             ro += 0.0001
 
             if boost:
-                ro -= urgency_factor
+                whi("Boosted urgent_dues cards to make sure they are reviewed.")
+                for ind in urgent_dues:
+                    ro[ind] -= 1
                 if ro.min() < 0:
-                    ro += abs(ro.min())
+                    ro += abs(ro.min()) + 0.001
                 else:
                     ro -= ro.min()
+                    ro += 0.001
+                assert ro.min() > 0, "Negative value in relative overdueness"
                 ro /= ro.max()
 
             # add tag to urgent dues
