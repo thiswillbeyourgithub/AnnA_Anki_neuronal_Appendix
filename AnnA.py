@@ -36,7 +36,7 @@ from tokenizers import Tokenizer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import pairwise_distances, pairwise_kernels
 from sklearn.decomposition import TruncatedSVD
-from sklearn.neighbors import kneighbors_graph
+from sklearn.neighbors import radius_neighbors_graph
 
 import networkx as nx
 from plotly.colors import qualitative
@@ -1707,7 +1707,7 @@ class AnnA:
 
     def _compute_KNN(self):
         """
-        Compute the K nearest neighbour of each note of the distance matrix.
+        Compute the nearest neighbours of each note of the distance matrix.
         This is used to then fill the field "Nearest_neighbours" of those notes
         so that you can quickly know the neighbour of any given card straight
         into anki without having to use AnnA.
@@ -1717,12 +1717,12 @@ class AnnA:
             whi("Computing KNN matrix is not needed by those arguments.")
             return
         try:
-            # 1% of neighbors, bounded
-            n_n = min(20, max(self.df_dist.shape[0] // 100, 5))
-            yel(f"Computing '{n_n}' nearest neighbours per point...")
-            self.knn = kneighbors_graph(
-                    self.df_dist,
-                    n_neighbors=n_n,
+            radius = 0.1
+            yel(f"Finding neighbors within {radius}...")
+            self.knn = radius_neighbors_graph(
+                    X=self.df_dist,
+                    radius=0.1,
+                    #n_neighbors=n_n,
                     n_jobs=-1,
                     metric="precomputed",
                     include_self=True)
@@ -1739,9 +1739,9 @@ class AnnA:
             whi("Not adding KNN to note field because of arguments.")
             return
         red("Adding the list of neighbours to each note.")
+        nid_content = {}
+        nb_of_nn = []
         try:
-            nid_content = {}
-            nb_of_nn = []
             for i in tqdm(
                     range(self.knn.shape[0]),
                     desc="Colecting neighbours of notes",
@@ -1775,6 +1775,10 @@ class AnnA:
             yel("Finished adding neighbours to notes.")
         except Exception:
             beep("Error when adding neighbour list to notes!")
+
+        if nb_of_nn:
+            yel("Number of neighbors on average:")
+            whi(pd.DataFrame(nb_of_nn).describe())
 
     def _print_similar(self):
         """ finds two cards deemed very similar (but not equal) and print
@@ -2600,7 +2604,12 @@ class AnnA:
             noteId = self.df.loc[self.df.index[i], "note"]
             for ii, n_nid in enumerate(neighbours_nid):
                 if noteId == n_nid:
-                    continue  # skip self neighbouring
+                    # skip self neighbouring
+                    continue
+                if ii > 20:
+                    whi("(Stopped considering n'th neighbours after "
+                        f"20 of {len(neighbours_nid)}")
+                    break
                 smallest = min(noteId, n_nid)
                 largest = max(noteId, n_nid)
                 # new weight is of decreasing importance
