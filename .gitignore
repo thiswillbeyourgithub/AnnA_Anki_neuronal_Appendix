@@ -8,3 +8,4 @@ logs.txt
 *perso*
 cache
 NetworkX_plots/
+utils/latest_TFIDF_dim.cache.json
