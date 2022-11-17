@@ -87,7 +87,7 @@ Here are different ways of looking at what AnnA can do for you in a few words:
 * There are two ways to run AnnA:
     * Either in a Python console : `from AnnA import * ; AnnA(YOUR_ARGUMENTS)`
     * Or directly in the terminal : `python3 AnnA.py --help` *(note that the terminal mode was added after the python console and might still contain error when parsing arguments)*
-* If you want to run AnnA on several decks in a row like I do, edit the file `autorun.py` then execute it with `python3 ./autorun.py`
+* If you want to run AnnA on several decks in a row like I do, edit the file `utils/autorun_example.py`, move it one folder up then execute it with `python3 ./autorun.py`
 * Open an issue telling me your remarks and suggestion
 
 ### Usage and arguments
