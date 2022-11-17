@@ -1765,7 +1765,7 @@ class AnnA:
                         neighbour_indices,
                         key=lambda x: float(self.df_dist.loc[
                             cardId, self.df.index[x]]),
-                        reverse=False)
+                        reverse=True)
                 neighbours_nid = [str(self.df.loc[self.df.index[ind], "note"])
                                   for ind in neighbour_indices]
                 nid_content[noteId] = "nid:" + ",".join(neighbours_nid)
