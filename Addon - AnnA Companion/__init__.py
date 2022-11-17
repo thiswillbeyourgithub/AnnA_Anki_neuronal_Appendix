@@ -547,7 +547,7 @@ class AnkiConnect:
     def update_KNN_field(self, nid_content):
         editing_started = False
         for note, content in nid_content.items():
-            ankiNote = self.getNote(note)
+            ankiNote = self.getNote(int(note))
             if ankiNote["Nearest_neighbours"] != content:
                 if not editing_started:
                     self.startEditing()
