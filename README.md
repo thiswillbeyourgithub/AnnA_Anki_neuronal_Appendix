@@ -259,6 +259,7 @@ AnnA includes built-in methods you can run after instantiating the class. Note t
 * compute the distance matrix on the notes only instead of the cards
 * add picture and documentation to the knn feature
     * reach out to the dev of the mindmapping addon and show them the 2D plots you made
+* rename the "acronym" system to something more true like "word_expander"
 * switch to using Fire instead of argparse and move all the documentation to the docstring
 * add argument to automatically flag cards deemed urgent
 * increase speed at which information on cards is gathered from anki as it seems to be the main bottleneck. Maybe try to use asyncio?
