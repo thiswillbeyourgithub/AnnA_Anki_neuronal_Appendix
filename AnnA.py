@@ -1976,8 +1976,8 @@ class AnnA:
                     df.at[i, "ref_due"] /= 86400
                 assert df.at[i,
                              "ref_due"] > 0, f"negative interval for card {i}"
-            overdue = df.loc[due, "ref_due"] - time_offset
-            df.drop("ref_due", axis=1, inplace=True)
+            df.loc[due, "overdue"] = df.loc[due, "ref_due"] - time_offset
+            overdue = df.loc[due, "overdue"]
 
             # then, correct overdue values to make sure they are negative
             correction = max(overdue.max(), 0) + 0.01
@@ -1991,40 +1991,47 @@ class AnnA:
             # low ro means urgent, high ro means not urgent
             assert (df.loc[due, "interval"].values > 0).all(), "Negative interval"
             assert correction > 0, "Negative correction factor"
-            assert (overdue - correction < 0).all(), "Positive overdue - correction"
-            ro = (
-                    (df.loc[due, "interval"].values +
-                       correction) / (overdue - correction)
-                    )
-            if ro.min() <= 0:
-                ro += abs(ro.min()) + 0.0001
-            assert (ro > 0).all(), "wrong values of relative overdueness"
+            assert (-overdue + correction > 0).all(), "Positive overdue - correction"
+            ro = (df.loc[due, "interval"].values + correction) / (-overdue + correction)
+            assert (ro >= 0).all(), "wrong values of relative overdueness"
+            assert ro.max() < np.inf, "Infinity is part of relative overdueness"
 
-            # squishing values above some threshold
-            ro[ro > 1] = 1 + np.log(1 + ro[ro > 1])
-            # clipping extreme values
-            ro = np.clip(ro, 0, 2)
+            # clipping extreme values, above 1 is useless anyway
+            #ro = np.clip(ro, 0, 10)
 
             # boost cards according to how overdue they are
             boost = True if "boost" in self.repick_task else False
-            urgency_factor = 1 / ro
-            assert (urgency_factor > 0).all(), "Negative or null urgency_factor values"
 
             # gather list of urgent dues
-            ivl_limit = 5  # all cards with interval <= ivl_limit are deemed urgent
-            p = 0.1  # all cards more than (100*p)% overdue are deemed urgent
-            ease_limit = 1600  # all cards with lower ease are deemed urgent
-            mask = np.argwhere(urgency_factor.values >= p).squeeze().tolist()
+
+            p = 0.2  # all cards more than (100*p)% overdue are deemed urgent
+            mask = np.argwhere(ro.values <= 1/p).squeeze()
+            mask2 = np.argwhere(np.abs(overdue.values) > 1).squeeze()
+            # if only one found in mask, make sure it's an iterable
             if isinstance(mask, int):
-                mask = [mask]  # if only one value found, make it an iterable
-            temp1 = [due[i] for i in mask]
-            temp2 = [ind for ind in due if df.loc[ind, "interval"] <= ivl_limit]
-            temp3 = [ind for ind in due if df.loc[ind, "factor"] <= ease_limit]
+                mask = [mask]
+            if isinstance(mask2, int):
+                mask = [mask2]
+            temp1 = [due[i] for i in np.intersect1d(mask, mask2).tolist()]
             whi(f"* Found '{len(temp1)}' cards that are more than '{int(p*100)}%' overdue.")
+
+            ivl_limit = 5  # all cards with interval <= ivl_limit are deemed urgent
+            temp2 = [ind for ind in due if df.loc[ind, "interval"] <= ivl_limit]
             whi(f"* Found '{len(temp2)}' cards that are due with 'interval <= {ivl_limit} days'.")
+
+            ease_limit = 1750  # all cards with lower ease are deemed urgent
+            temp3 = [ind for ind in due if df.loc[ind, "factor"] <= ease_limit]
             whi(f"* Found '{len(temp3)}' cards that are due with 'ease <= {ease_limit//10}%'.")
+
             urgent_dues = temp1 + temp2 + temp3
             urgent_dues = list(set(urgent_dues))
+            whi(f"=> In total, found {len(urgent_dues)} cards to boost.")
+
+
+            # reduce the increase of ro as a very high ro is not important
+            while ro.max() > 2:
+                whi("(Smoothing relative overdueness)")
+                ro[ro > 1] = 1 + np.log(ro[ro > 1])
 
             # minmax scaling of ro
             ro -= ro.min()
