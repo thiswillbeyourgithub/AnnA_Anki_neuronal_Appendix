@@ -1500,7 +1500,7 @@ class AnnA:
             cache_dir = Path("utils")
             cache_dir.mkdir(exist_ok=True)
             cache_file = cache_dir / "latest_TFIDF_dim.cache.json"
-            dim_limit = len(self.df.index) // 50  # maximum 1 dimension per 50 cards
+            dim_limit = max(3, len(self.df.index) // 50)  # maximum 1 dimension per 50 cards
             assert dim_limit <= (t_vec.shape[1] - 1), "Invalid number of dimension!"
             cache = {}
 
@@ -1531,7 +1531,7 @@ class AnnA:
                 t_red = svd.fit_transform(t_vec)
                 evr = round(sum(svd.explained_variance_ratio_) * 100, 1)
                 trial += 1
-                already_tried.append(self.TFIDF_dim)
+                already_tried.append(int(self.TFIDF_dim))
 
                 if abs(evr - desired_variance_kept) <= 5:
                     # success
@@ -1553,7 +1553,7 @@ class AnnA:
                         "retrying up to 10 times to get closer to "
                         f"{desired_variance_kept}%)", end=" ")
 
-                    if self.TFIDF_dim in already_tried:
+                    if int(self.TFIDF_dim) in already_tried:
                         yel(f"Already tried dimension {self.TFIDF_dim}, skipping.")
                         break
 
