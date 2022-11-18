@@ -2609,6 +2609,8 @@ class AnnA:
         # create a dict containing all edges and their weights
         min_w = np.inf
         max_w = -np.inf
+        sum_w = 0
+        n_w = 0
         for i in tqdm(
                 range(self.knn.shape[0]),
                 desc="Computing edges",
@@ -2634,33 +2636,40 @@ class AnnA:
                     break
                 smallest = min(noteId, n_nid)
                 largest = max(noteId, n_nid)
-                # new weight is of decreasing importance
+                # new weight is the distance between points
                 new_w = self.df_dist.loc[
                     self.df.index[i], self.df.index[neighbour_indices[ii]]
                     ]
+
+                # store the weight
                 if smallest not in all_edges:
                     all_edges[smallest] = {largest: new_w}
                 else:
                     if largest not in all_edges[smallest]:
                         all_edges[smallest][largest] = new_w
                     else:
+                        # check that weight is coherent
                         assert np.isclose(all_edges[smallest][largest], new_w), (
                                 f"A weight is not symetric: {all_edges[smallest][largest]} != {new_w}")
-                if all_edges[smallest][largest] > max_w:
-                    max_w = all_edges[smallest][largest]
-                if all_edges[smallest][largest] < min_w:
-                    min_w = all_edges[smallest][largest]
+                # store the weights information to scale them afterwards
+                if new_w > max_w:
+                    max_w = new_w
+                if new_w < min_w:
+                    min_w = new_w
+                sum_w += new_w
+                n_w += 1
 
         assert min_w >= 0 and min_w < max_w, (
                 f"Impossible weight values: {min_w} and {max_w}")
 
-        # minmax scaling of weights (even though the distances were already minmaxed)
-        # mean_w = (max_w + min_w) / 2
-        # for k, v in tqdm(all_edges.items(),
-        #                  desc="Minmax weights",
-        #                  file=self.t_strm):
-        #     for sub_k, sub_v in all_edges[k].items():
-        #         all_edges[k][sub_k] = (sub_v - min_w + mean_w) / (max_w - min_w + mean_w)
+        # scaling of weights (even though the distances were already minmaxed)
+        mean_w = sum_w / n_w
+        for k, v in tqdm(all_edges.items(),
+                         desc="Minmax weights",
+                         file=self.t_strm):
+            for sub_k, sub_v in all_edges[k].items():
+                all_edges[k][sub_k] = (sub_v - min_w) / (max_w - min_w) + mean_w / (max_w - min_w)
+                assert not np.isclose(all_edges[k][sub_k], 0), "Too small weight!"
 
         # add each edge to the graph
         for k, v in tqdm(all_edges.items(),
