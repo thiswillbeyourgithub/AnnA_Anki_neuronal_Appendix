@@ -1497,7 +1497,7 @@ class AnnA:
             # start either from the user supplied value or from the highest
             # possible number up to 50 or from cache
 
-            cache_dir = Path("utils")
+            cache_dir = Path(".cache")
             cache_dir.mkdir(exist_ok=True)
             cache_file = cache_dir / "latest_TFIDF_dim.cache.json"
             dim_limit = max(3, len(self.df.index) // 50)  # maximum 1 dimension per 50 cards
