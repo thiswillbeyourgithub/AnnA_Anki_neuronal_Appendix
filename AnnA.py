@@ -408,7 +408,7 @@ class AnnA:
         self.resort_by_dist = resort_by_dist
 
         # initialize joblib caching
-        # self.mem = joblib.Memory("./cache", mmap_mode="r", verbose=0)
+        # self.mem = joblib.Memory("./.cache", mmap_mode="r", verbose=0)
 
         # additional processing of arguments #################################
 
@@ -1378,10 +1378,10 @@ class AnnA:
                          "cancel now. Waiting 10s for you to see this "
                          "message before proceeding.")
                     time.sleep(1)
-                Path.mkdir(Path("cache"), exist_ok=True)
+                Path.mkdir(Path(".cache"), exist_ok=True)
                 name = f"{self.profile_name}_{self.deckname}".replace(" ", "_")
                 temp_db = shutil.copy(
-                    original_db, f"./cache/{name.replace('/', '_')}")
+                    original_db, f"./.cache/{name.replace('/', '_')}")
                 col = akp.Collection(path=temp_db)
 
                 # keep only unsuspended cards from the right deck

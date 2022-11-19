@@ -6,6 +6,6 @@ AMIMA_jupyter.py
 *.pickle
 logs.txt
 *perso*
-cache
+.cache
 NetworkX_plots/
 utils/latest_TFIDF_dim.cache.json
