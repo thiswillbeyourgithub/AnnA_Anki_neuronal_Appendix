@@ -1653,38 +1653,8 @@ class AnnA:
 
         self.df_dist = self.df_dist.sort_index()
 
-        yel("Minmax scaling the distance matrix...")
-
-        # computing and displaying stats before rescaling
-        whi("Computing mean and std of distance matrix before minmax..."
-            "\n(excluding diagonal)")
-        up_triangular = np.triu_indices(self.df_dist.shape[0], 1)
-        mean_dist = round(np.nanmean(self.df_dist.values[up_triangular]), 2)
-        std_dist = round(np.nanstd(self.df_dist.values[up_triangular]), 2)
-        yel(f"Mean distance: {mean_dist}, std: {std_dist}\n")
-
-        # get all values
-        values = self.df_dist.values[up_triangular]
-        # get minimum that is not 0
-        above_zero = values[values > 0].ravel().min()
-        # move everything closer to 0
-        values -= above_zero
-        original_zero_mask = (values < 0)  # store for later
-        # max scaling
-        values /= values.max()
-        # move everything a bit farther than 0
-        values += 0.1
-        # make sure the original 0 are restored (they are identical cards)
-        values[original_zero_mask] = 0
-        # rescale once more
-        values /= values.max()
-        whi("Storing values...")
-        self.df_dist.values[up_triangular] = values
-        lo_triangular = np.tril_indices(self.df_dist.shape[0], -1)
-        self.df_dist.values[lo_triangular] = self.df_dist.values.T[lo_triangular]
         assert ((self.df_dist.values - self.df_dist.values.T) == 0).all(), (
                 "Non symetric distance matrix")
-        whi("Finished minmax scaling.")
 
         # make sure the distances are positive otherwise it might reverse
         # the sorting logic for the negative values (i.e. favoring similar
