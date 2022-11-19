@@ -1358,7 +1358,7 @@ class AnnA:
                                    sublinear_tf=True,
                                    max_features=min(10_000,
                                                     len(df.index) // 2),
-                                   # max_df=0.99,  # ignore words present in
+                                   # max_df=0.25,  # ignore words present in
                                    # more than X% of documents
                                    # min_df=2,  # ignore words than appear
                                    # # less than n times
@@ -1579,7 +1579,6 @@ class AnnA:
             try:
                 yel("Computing 2D embeddings for the plot...")
 
-                #TODO: test with UMAP
                 try:
                     whi("Trying with UMAP first.")
                     import umap.umap_
@@ -1587,7 +1586,7 @@ class AnnA:
                                    "verbose": 1,
                                    "n_components": 2,
                                    "metric": "cosine",
-                                   "init": 'spectral',  # TODO: try, 'pca'
+                                   "init": 'spectral',  # TODO: try, 'pca' when new release comes out
                                    "random_state": 42,
                                    "transform_seed": 42,
                                    "n_neighbors": 20,
@@ -1732,7 +1731,7 @@ class AnnA:
                 n_n = min(20, max(self.df_dist.shape[0] // 100, 5))
                 yel(f"Computing '{n_n}' nearest neighbours per point...")
                 self.knn = kneighbors_graph(
-                        self.df_dist,
+                        X=self.df_dist,
                         n_neighbors=n_n,
                         mode="connectivity",
                         n_jobs=-1,
@@ -2751,8 +2750,8 @@ class AnnA:
 
         n_limit = 1000
         if len(edges_to_draw) > n_limit:
-            yel(f"Too many edges to draw ({len(edges_to_draw)}, keeping "
-                f"{n_limit}.")
+            yel(f"Too many edges to draw ({len(edges_to_draw)}), drawing "
+                f"only {n_limit}.")
             # keep only first n
             edges_to_draw = edges_to_draw[:n_limit]
 
