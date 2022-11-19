@@ -468,11 +468,9 @@ class AnnA:
                 raise Exception(f"Acronym file was not found: {acronym_file}")
 
             # importing acronym file
-            if ".py" in acronym_file:
-                acr_mod = importlib.import_module(acronym_file.replace(
-                    ".py", ""))
-            else:
-                acr_mod = importlib.import_module(acronym_file)
+            acr_mod = importlib.import_module(
+                    acronym_file.replace("/", ".").replace(".py", "")
+                    )
 
             # getting acronym dictionnary list
             acr_dict_list = [x for x in dir(acr_mod)
@@ -567,7 +565,7 @@ class AnnA:
                 assert f.exists(), ("field_mappings file does not exist : "
                                     f"{self.field_mappings}")
                 imp = importlib.import_module(
-                    self.field_mappings.replace(".py", ""))
+                    self.field_mappings.replace("/", ".").replace(".py", ""))
                 self.field_dic = imp.field_dic
             except Exception as e:
                 beep(f"Error with field mapping file, will use "
