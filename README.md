@@ -26,7 +26,7 @@ Here are different ways of looking at what AnnA can do for you in a few words:
 2. This project communicates with anki using a fork of the addon [AnkiConnect](https://github.com/FooSoft/anki-connect) called [AnnA-companion](https://ankiweb.net/shared/info/447942356). Note that AnnA-companion was tested from anki 2.1.44 to 2.1.54 only.
 3. Although I've been using it daily for months, I am still changing the code base almost every day, if you tried AnnA and were disappointed, maybe try it another time later. Major improvements are regularly made.
 4. In the past I implemented several vectorization methods. I now only kept [subword TF_IDF](https://en.wikipedia.org/wiki/Tf%E2%80%93idf). TF_IDF is known to be reliable, fast, very general (it does not assume anything about your cards and will work for just about any language, format, phrasing etc). TF_IDF works very well if you have large number of cards.
-5. If you want to know how I'm using this, take a look at [authors_routine.md](./authors_routine.md)
+5. If you want to know how I'm using this, take a look at [authors_routine.md](./docs/authors_routine.md)
 6. If you like this, another  project of mine can be used to do semantic search on your anki collection using AI : [I call it Anki SemSearch](https://github.com/thiswillbeyourgithub/Anki-Semantic-Search)
 
 ## Other features
@@ -49,7 +49,7 @@ Here are different ways of looking at what AnnA can do for you in a few words:
 * **Can I use this if I don't know python?** Yes! Installing the thing might not be easy but it's absolutely doable. And you don't need to know python to *run* AnnA. I tried my best to make it accessible and help is welcome.
 * **What do you call "optimal review order"?** The order that minimizes the chance of reviewing similar cards in a day. You see, Anki has no knowledge of the content of cards and only cares about their interval and ease. Its built-in system of "siblings" is useful but I think we can do better. AnnA was made to create filtered decks sorted by "relative_overdueness" (or other) BUT in a way that keeps *semantic* siblings far from each other.
 * **When should I use this?** It seems good for dealing with the huge backlog you get in medical school, or just everyday to reduce the workload. If you have 2 000 reviews to do, but can only do 500 in a day: AnnA is making sure that you will get the most out of those 500.
-* **How do you use this?** I described my routine in a separate file called `authors_routine.md`.
+* **How do you use this?** I described my routine in a separate file called `docs/authors_routine.md`.
 * **Can I use AnnA to optimize a list of new cards?** I never did it personally but helped a user doing it: [see related thread](https://github.com/thiswillbeyourgithub/AnnA_Anki_neuronal_Appendix/issues/14)
 
 * **What are the power requirements to run this?** I wanted to make it as efficient as possible but am still improving the code. Computing the distance matrix can be long if you do this on very large amount of cards but this step is done in parallel on all cores so should not be the bottleneck. Let me know if some steps are unusually slow and I will try to optimize it. There are ways to make it way easier on the CPU, see arguments `low_power_mode` and `TFIDF_dim`.
