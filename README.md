@@ -82,7 +82,7 @@ Here are different ways of looking at what AnnA can do for you in a few words:
 * Install the addon [AnnA Companion (Anki neuronal Appendix) - do LESS reviews with MORE retention!](https://ankiweb.net/shared/info/447942356)
 * Clone this repository (for example with `git clone https://github.com/thiswillbeyourgithub/AnnA_Anki_neuronal_Appendix`)
 * Install the required python libraries : `pip install -r requirements.txt` (in case of errors, try using python 3.9)
-* Edit file `field_mapping.py`: it contains a dictionary where the keys are notetypes and values are lists of which field to take into account.
+* Edit file `utils/field_mapping.py`: it contains a dictionary where the keys are notetypes and values are lists of which field to take into account.
 * Edit file `acronym_file.py`: it contains dictionaries where keys are words to replace and values are what the words should be replaced with.
 * There are two ways to run AnnA:
     * Either in a Python console : `from AnnA import * ; AnnA(YOUR_ARGUMENTS)`
@@ -158,7 +158,7 @@ optional arguments:
                         apart.
   --field_mapping FIELD_MAPPING_PATH
                         path of file that indicates which field to keep from which note type
-                        and in which order. Default value is `field_mappings.py`. If empty
+                        and in which order. Default value is `utils/field_mappings.py`. If empty
                         or if no matching notetype was found, AnnA will only take into
                         account the first 2 fields. If you assign a notetype to
                         `["take_all_fields]`, AnnA will grab all fields of the notetype in

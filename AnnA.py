@@ -172,7 +172,7 @@ class AnnA:
                  stopwords_lang=["english", "french"],
                  rated_last_X_days=4,
                  score_adjustment_factor=[1, 2],
-                 field_mappings="field_mappings.py",
+                 field_mappings="utils/field_mappings.py",
                  acronym_file="acronym_file.py",
                  acronym_list=None,
 
@@ -3010,13 +3010,13 @@ if __name__ == "__main__":
                         nargs=1,
                         metavar="FIELD_MAPPING_PATH",
                         dest="field_mappings",
-                        default="field_mappings.py",
+                        default="utils/field_mappings.py",
                         type=str,
                         required=False,
                         help=(
                             "path of file that indicates which field to keep "
                             "from which note type and in which order. Default "
-                            "value is `field_mappings.py`. If empty or if no "
+                            "value is `utils/field_mappings.py`. If empty or if no "
                             "matching notetype was found, AnnA will only take "
                             "into account the first 2 fields. If you assign a "
                             "notetype to `[\"take_all_fields]`, AnnA "
