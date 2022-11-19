@@ -83,7 +83,7 @@ Here are different ways of looking at what AnnA can do for you in a few words:
 * Clone this repository (for example with `git clone https://github.com/thiswillbeyourgithub/AnnA_Anki_neuronal_Appendix`)
 * Install the required python libraries : `pip install -r requirements.txt` (in case of errors, try using python 3.9)
 * Edit file `utils/field_mapping.py`: it contains a dictionary where the keys are notetypes and values are lists of which field to take into account.
-* Edit file `acronym_file.py`: it contains dictionaries where keys are words to replace and values are what the words should be replaced with.
+* Edit file `utils/acronym_example.py`: it contains dictionaries where keys are words to replace and values are what the words should be replaced with.
 * There are two ways to run AnnA:
     * Either in a Python console : `from AnnA import * ; AnnA(YOUR_ARGUMENTS)`
     * Or directly in the terminal : `python3 AnnA.py --help` *(note that the terminal mode was added after the python console and might still contain error when parsing arguments)*
@@ -167,7 +167,7 @@ optional arguments:
                         a python file containing dictionaries that themselves contain
                         acronyms to extend in the text of cards. For example `CRC` can be
                         extended to `CRC (colorectal cancer)`. (The parenthesis are
-                        automatically added.) Default is `"acronym_file.py"`. The matching
+                        automatically added.) Default is `"utils/acronym_example.py"`. The matching
                         is case sensitive only if the key contains uppercase characters. The
                         ".py" file extension is not mandatory.
   --acronym_list [ACRONYM_LIST ...]

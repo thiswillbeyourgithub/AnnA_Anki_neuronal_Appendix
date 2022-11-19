@@ -173,7 +173,7 @@ class AnnA:
                  rated_last_X_days=4,
                  score_adjustment_factor=[1, 2],
                  field_mappings="utils/field_mappings.py",
-                 acronym_file="acronym_file.py",
+                 acronym_file="utils/acronym_example.py",
                  acronym_list=None,
 
                  # others:
@@ -3028,7 +3028,7 @@ if __name__ == "__main__":
                         nargs=1,
                         metavar="ACRONYM_FILE_PATH",
                         dest="acronym_file",
-                        default="acronym_file.py",
+                        default="utils/acronym_example.py",
                         required=False,
                         help=(
                             "a python file containing dictionaries that "
@@ -3038,7 +3038,7 @@ if __name__ == "__main__":
                             "to `CRC "
                             "(colorectal cancer)`. (The parenthesis are "
                             "automatically added.) Default is "
-                            "`\"acronym_file.py\"`. The matching is case "
+                            "`\"utils/acronym_example.py\"`. The matching is case "
                             "sensitive only if the key contains uppercase "
                             "characters. The \".py\" file extension is not "
                             "mandatory."))
@@ -3051,7 +3051,7 @@ if __name__ == "__main__":
                         required=False,
                         help=(
                             "a comma separated list of name of dictionaries "
-                            "to extract file supplied in `acronym_file`. "
+                            "to extract file supplied in `acronym_file` var. "
                             "Used to extend text, for instance "
                             "`AI_machine_learning,medical_terms`. Default to "
                             "None."))
