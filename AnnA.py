@@ -204,6 +204,7 @@ class AnnA:
                  TFIDF_tokenize=True,
                  tokenizer_model="GPT",
                  plot_2D_embeddings=False,
+                 plot_dir="Plots",
                  TFIDF_stem=False,
                  dist_metric="RBF",  # 'RBF' or 'cosine'
 
@@ -345,6 +346,8 @@ class AnnA:
         assert isinstance(plot_2D_embeddings, bool), (
             "Invalid type of `plot_2D_embeddings`")
         self.plot_2D_embeddings = plot_2D_embeddings
+        self.plot_dir = Path(str(plot_dir))
+
         assert isinstance(TFIDF_stem, bool), "Invalid type of `TFIDF_stem`"
         assert isinstance(
             TFIDF_tokenize, bool), "Invalid type of `TFIDF_tokenize`"
@@ -2586,7 +2589,6 @@ class AnnA:
         signal.signal(signal.SIGALRM, time_watcher)
         signal.alarm(300)  # 5 minutes
 
-        self.plot_dir = Path("NetworkX_plots")
         self.plot_dir.mkdir(exist_ok=True)
         G = nx.MultiGraph()
         positions = {}
@@ -3311,6 +3313,17 @@ if __name__ == "__main__":
                             "EXPERIMENTAL AND UNFINISHED. "
                             "default to `False`. Will compute 2D embeddins "
                             "then create a 2D plots at the end."))
+    parser.add_argument("--plot_dir",
+                        nargs=1,
+                        metavar="PLOT_PATH",
+                        dest="plot_dir",
+                        type=str,
+                        default="Plots",
+                        required=False,
+                        help=(
+                            "Path location for the output plots. "
+                            "Default is 'Plots'."
+                            ))
     parser.add_argument("--TFIDF_stem",
                         dest="TFIDF_stem",
                         default=False,
