@@ -1,11 +1,6 @@
-sbert_cache.pickle
-obsolete
 .ipynb_checkpoints
 __pycache__/
-AMIMA_jupyter.py
-*.pickle
 logs.txt
-*perso*
 .cache
-NetworkX_plots/
-utils/latest_TFIDF_dim.cache.json
+Plots
+author_dir/
