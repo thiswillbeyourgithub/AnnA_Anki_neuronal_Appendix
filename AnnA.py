@@ -436,14 +436,14 @@ class AnnA:
             if self.tokenizer_model.lower() in ["bert", "both"]:
                 yel("Will use BERT as tokenizer.")
                 self.tokenizer_bert = Tokenizer.from_file(
-                    "./bert-base-multilingual-cased_tokenizer.json")
+                    "./utils/bert-base-multilingual-cased_tokenizer.json")
                 self.tokenizer_bert.no_truncation()
                 self.tokenizer_bert.no_padding()
                 self.tokenize = self._bert_tokenize
             if self.tokenizer_model.lower() in ["gpt", "both"]:
                 yel("Will use GPT as tokenizer.")
                 self.tokenizer_gpt = Tokenizer.from_file(
-                    "./gpt_neox_20B_tokenizer.json")
+                    "./utils/gpt_neox_20B_tokenizer.json")
                 self.tokenizer_gpt.no_truncation()
                 self.tokenizer_gpt.no_padding()
                 self.tokenize = self._gpt_tokenize
