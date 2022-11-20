@@ -615,8 +615,6 @@ class AnnA:
             elif task == "bury_excess_review_cards":
                 red("Task : bury some reviews\n")
             self._init_dataFrame()
-            if self.not_enough_cards is True:
-                return
             self._format_card()
             self._print_acronyms()
             self._compute_card_vectors()
@@ -629,8 +627,6 @@ class AnnA:
         elif task == "filter_review_cards":
             red("Task : created filtered deck containing review cards")
             self._init_dataFrame()
-            if self.not_enough_cards is True:
-                return
             self._format_card()
             self._print_acronyms()
             self._compute_card_vectors()
@@ -646,8 +642,6 @@ class AnnA:
             whi("(Setting 'rated_last_X_days' to None)")
             self.rated_last_X_days = None
             self._init_dataFrame()
-            if self.not_enough_cards is True:
-                return
             self._format_card()
             self._print_acronyms()
             self._compute_card_vectors()
@@ -886,10 +880,7 @@ class AnnA:
         if len(self.due_cards) < self.minimum_due:
             beep(f"Number of due cards is {len(self.due_cards)} which is "
                  f"less than threshold ({self.minimum_due}).\nStopping.")
-            self.not_enough_cards = True
-            return
-        else:
-            self.not_enough_cards = False
+            raise Exception("Not enough cards!")
 
         combined_card_list = list(rated_cards + due_cards)
 
