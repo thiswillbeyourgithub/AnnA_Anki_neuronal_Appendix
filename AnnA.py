@@ -618,11 +618,7 @@ class AnnA:
             if self.not_enough_cards is True:
                 return
             self._format_card()
-            if self.low_power_mode:
-                red("Not printing acronyms because low_power_mode is set to "
-                    "'True'")
-            else:
-                self._print_acronyms()
+            self._print_acronyms()
             self._compute_card_vectors()
             self._compute_distance_matrix()
             self._compute_opti_rev_order()
@@ -636,11 +632,7 @@ class AnnA:
             if self.not_enough_cards is True:
                 return
             self._format_card()
-            if self.low_power_mode:
-                red("Not printing acronyms because low_power_mode is set to "
-                    "'True'")
-            else:
-                self._print_acronyms()
+            self._print_acronyms()
             self._compute_card_vectors()
             self._compute_distance_matrix()
             self._compute_opti_rev_order()
@@ -657,11 +649,7 @@ class AnnA:
             if self.not_enough_cards is True:
                 return
             self._format_card()
-            if self.low_power_mode:
-                red("Not printing acronyms because low_power_mode is set to "
-                    "'True'")
-            else:
-                self._print_acronyms()
+            self._print_acronyms()
             self._compute_card_vectors()
             self._compute_distance_matrix()
             self._compute_KNN()
@@ -2367,6 +2355,10 @@ class AnnA:
         * acronyms found in OCR text are ignored by default, because they
             cause too many false positive.
         """
+        if self.low_power_mode:
+            red("Not printing acronyms because low_power_mode is set to "
+                "'True'")
+            return
         yel("Looking for acronyms that perhaps should be in 'acronym_file'...")
         if not len(self.acronym_dict.keys()):
             return True
