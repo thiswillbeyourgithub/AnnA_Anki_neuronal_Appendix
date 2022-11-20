@@ -1587,10 +1587,10 @@ class AnnA:
                                    "init": 'spectral',  # TODO: try, 'pca' when new release comes out
                                    "random_state": 42,
                                    "transform_seed": 42,
-                                   "n_neighbors": 20,
+                                   "n_neighbors":  min(20, max(len(self.df.index) // 100, 5)),
                                    "min_dist": 0.01,
                                    "low_memory":  False,
-                                   "densmap": False,
+                                   "densmap": True,
                                    }
                     U = umap.umap_.UMAP(**umap_kwargs)
                     t_embed = U.fit_transform(t_vec)
