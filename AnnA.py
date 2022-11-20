@@ -366,6 +366,19 @@ class AnnA:
                         "bury_excess_learning_cards",
                         "bury_excess_review_cards",
                         "just_add_KNN"], "Invalid value for `task`"
+        if task in ["bury_excess_learning_cards",
+                    "bury_excess_review_cards"]:
+            if task == "bury_excess_learning_cards":
+                red("Task : bury some learning cards")
+            elif task == "bury_excess_review_cards":
+                red("Task : bury some reviews\n")
+        elif task == "filter_review_cards":
+            red("Task : created filtered deck containing review cards")
+        elif task == "just_add_KNN":
+            red("Task : find the nearest neighbour of each note and "
+                "add it to a field.")
+        else:
+            raise ValueError()
         self.task = task
 
         assert isinstance(filtered_deck_name_template, (str, type(
@@ -606,44 +619,24 @@ class AnnA:
             yel("Set 'target_deck_size' to deck's value: "
                 f"{self.target_deck_size}")
 
+        red(f"Starting task: {task}")
         if task in ["bury_excess_learning_cards",
                     "bury_excess_review_cards"]:
-            # bypasses most of the code to bury learning cards
-            # directly in the deck without creating filtered decks
-            if task == "bury_excess_learning_cards":
-                red("Task : bury some learning cards")
-            elif task == "bury_excess_review_cards":
-                red("Task : bury some reviews\n")
-            self._init_dataFrame()
-            self._format_card()
-            self._print_acronyms()
-            self._compute_projections()
-            self._compute_distance_matrix()
-            self._compute_optimized_queue()
+            self._common_init()
             self._add_neighbors_to_notes()
+            self._compute_optimized_queue()
             self._bury_or_create_filtered()
 
         elif task == "filter_review_cards":
-            red("Task : created filtered deck containing review cards")
-            self._init_dataFrame()
-            self._format_card()
-            self._print_acronyms()
-            self._compute_projections()
-            self._compute_distance_matrix()
-            self._compute_optimized_queue()
+            self._common_init()
             self._add_neighbors_to_notes()
+            self._compute_optimized_queue()
             self._bury_or_create_filtered()
 
         elif task == "just_add_KNN":
-            red("Task : find the nearest neighbour of each note and "
-                "add it to a field.")
             whi("(Setting 'rated_last_X_days' to None)")
             self.rated_last_X_days = None
-            self._init_dataFrame()
-            self._format_card()
-            self._print_acronyms()
-            self._compute_projections()
-            self._compute_distance_matrix()
+            self._common_init()
             self._add_neighbors_to_notes()
 
         else:
@@ -693,6 +686,15 @@ class AnnA:
             beep(response['error'])
             raise Exception(response['error'])
         return response['result']
+
+
+    def _common_init(self):
+        "Calls one by one the methods needed by all tasks anyway."
+        self._init_dataFrame()
+        self._format_card()
+        self._print_acronyms()
+        self._compute_projections()
+        self._compute_distance_matrix()
 
     def _fetch_cards(self, card_id):
         """ get all information from a card from its card id
