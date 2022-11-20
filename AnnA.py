@@ -620,7 +620,6 @@ class AnnA:
             self._compute_card_vectors()
             self._compute_distance_matrix()
             self._compute_opti_rev_order()
-            self._compute_KNN()
             self._do_add_KNN_to_note()
             self._bury_or_create_filtered()
 
@@ -632,7 +631,6 @@ class AnnA:
             self._compute_card_vectors()
             self._compute_distance_matrix()
             self._compute_opti_rev_order()
-            self._compute_KNN()
             self._do_add_KNN_to_note()
             self._bury_or_create_filtered()
 
@@ -646,7 +644,6 @@ class AnnA:
             self._print_acronyms()
             self._compute_card_vectors()
             self._compute_distance_matrix()
-            self._compute_KNN()
             self._do_add_KNN_to_note()
 
         else:
@@ -1655,6 +1652,9 @@ class AnnA:
         # store mean distance for the fuzz factor
         if self.enable_fuzz:
             self.mean_dist = mean_dist
+
+        if self.plot_2D_embeddings or self.add_KNN_to_field:
+            self._compute_KNN()
 
         self._print_similar()
         return True
