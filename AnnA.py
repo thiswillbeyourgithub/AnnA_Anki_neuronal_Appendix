@@ -2280,7 +2280,16 @@ class AnnA:
                              ], "ref_filtered"] = 50
 
                 # keeping sorting order of user
-                factor = 1 if w2 > 0 else -1
+                if w2 > 0:
+                    factor = 1
+                elif w2 == 0:
+                    red("Weight 2 was set to 0, this is weird. You should "
+                        "check your arguments.")
+                    factor = 0
+                elif w2 < 0:
+                    yel("Weight 2 is negative so the resorting will favor "
+                        "cards semantically close to be reviewed in a row."
+                    factor = -1
 
                 assert set(new_queue) & set(to_process) == set(), (
                         "queue construction failed!")
