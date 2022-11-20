@@ -1995,20 +1995,20 @@ class AnnA:
                 mask = [mask]
             if isinstance(mask2, int):
                 mask = [mask2]
-            temp1 = [due[i] for i in np.intersect1d(mask, mask2).tolist()]
-            whi(f"* Found '{len(temp1)}' cards that are more than '{int(p*100)}%' overdue.")
+            urg_overdue = [due[i] for i in np.intersect1d(mask, mask2).tolist()]
+            yel(f"* Found '{len(urg_overdue)}' cards that are more than '{int(p*100)}%' overdue.")
 
             ivl_limit = 5  # all cards with interval <= ivl_limit are deemed urgent
-            temp2 = [ind for ind in due if df.loc[ind, "interval"] <= ivl_limit]
-            whi(f"* Found '{len(temp2)}' cards that are due with 'interval <= {ivl_limit} days'.")
+            urg_ivl = [ind for ind in due if df.loc[ind, "interval"] <= ivl_limit]
+            yel(f"* Found '{len(urg_ivl)}' cards that are due with 'interval <= {ivl_limit} days'.")
 
             ease_limit = 1750  # all cards with lower ease are deemed urgent
-            temp3 = [ind for ind in due if df.loc[ind, "factor"] <= ease_limit]
-            whi(f"* Found '{len(temp3)}' cards that are due with 'ease <= {ease_limit//10}%'.")
+            urg_lowease = [ind for ind in due if df.loc[ind, "factor"] <= ease_limit]
+            yel(f"* Found '{len(urg_lowease)}' cards that are due with 'ease <= {ease_limit//10}%'.")
 
-            urgent_dues = temp1 + temp2 + temp3
+            urgent_dues = urg_overdue + urg_ivl + urg_lowease
             urgent_dues = list(set(urgent_dues))
-            whi(f"=> In total, found {len(urgent_dues)} cards to boost.")
+            yel(f"=> In total, found {len(urgent_dues)} cards to boost.")
 
 
             # reduce the increase of ro as a very high ro is not important
@@ -2046,19 +2046,21 @@ class AnnA:
                     d = datetime.today()
                     # time format is day/month/year
                     today_date = f"{d.day:02d}/{d.month:02d}/{d.year}"
-                    notes = []
-                    for card in urgent_dues:
-                        notes.append(int(self.df.loc[card, "note"]))
-                    notes = list(set(notes))  # remove duplicates
-                    new_tag = f"AnnA::urgent_reviews::{today_date}"
-                    try:
-                        self._call_anki(action="addTags",
-                                        notes=notes, tags=new_tag)
-                        red("Appended tags 'urgent_reviews' to cards with "
-                            "very low relative overdueness.")
-                    except Exception as e:
-                        beep(f"Error adding tags to urgent "
-                             f"cards: {str(e)}")
+                    for reason, urgents in {"overdue": urg_overdue,
+                                            "low_interval": urg_ivl,
+                                            "low_ease": urg_lowease}.items():
+                        new_tag = f"AnnA::urgent_reviews::{today_date}::{reason}"
+                        notes = []
+                        for card in urgents:
+                            notes.append(int(self.df.loc[card, "note"]))
+                        notes = list(set(notes))  # remove duplicates
+                        try:
+                            self._call_anki(action="addTags",
+                                            notes=notes, tags=new_tag)
+                            red(f"Appended tags {new_tag} to urgent reviews")
+                        except Exception as e:
+                            beep(f"Error adding tags to urgent '{reason}' "
+                                 f"cards: {str(e)}")
 
             assert sum(ro < 0) == 0, "Negative values in relative overdueness"
 
