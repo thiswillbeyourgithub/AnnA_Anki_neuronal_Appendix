@@ -416,7 +416,7 @@ class AnnA:
         # additional processing of arguments #################################
 
         # load or ask for deckname
-        self.deckname = self._deckname_check(deckname)
+        self.deckname = self._check_deckname(deckname)
         red(f"Selected deck: {self.deckname}\n")
         self.deck_config = self._call_anki(action="getDeckConfig",
                                            deck=self.deckname)
@@ -617,10 +617,10 @@ class AnnA:
             self._init_dataFrame()
             self._format_card()
             self._print_acronyms()
-            self._compute_card_vectors()
+            self._compute_projections()
             self._compute_distance_matrix()
-            self._compute_opti_rev_order()
-            self._do_add_KNN_to_note()
+            self._compute_optimized_queue()
+            self._add_neighbors_to_notes()
             self._bury_or_create_filtered()
 
         elif task == "filter_review_cards":
@@ -628,10 +628,10 @@ class AnnA:
             self._init_dataFrame()
             self._format_card()
             self._print_acronyms()
-            self._compute_card_vectors()
+            self._compute_projections()
             self._compute_distance_matrix()
-            self._compute_opti_rev_order()
-            self._do_add_KNN_to_note()
+            self._compute_optimized_queue()
+            self._add_neighbors_to_notes()
             self._bury_or_create_filtered()
 
         elif task == "just_add_KNN":
@@ -642,16 +642,17 @@ class AnnA:
             self._init_dataFrame()
             self._format_card()
             self._print_acronyms()
-            self._compute_card_vectors()
+            self._compute_projections()
             self._compute_distance_matrix()
-            self._do_add_KNN_to_note()
+            self._add_neighbors_to_notes()
 
         else:
             raise ValueError(f"Invalid task value: {task}")
 
+        # create 2D plots if needed
         if self.plot_2D_embeddings:
             try:
-                self._do_2D_plots()
+                self._compute_plots()
             except Exception as err:
                 beep(f"Exception when plotting 2D embeddings: '{err}'")
                 red(traceback.format_exc())
@@ -693,7 +694,7 @@ class AnnA:
             raise Exception(response['error'])
         return response['result']
 
-    def _getCardsInfo(self, card_id):
+    def _fetch_cards(self, card_id):
         """ get all information from a card from its card id
 
         * Due to the time it takes to get thousands of cards, I decided
@@ -777,7 +778,7 @@ class AnnA:
             output.extend(self.tokenizer_gpt.encode(t).tokens)
         return output
 
-    def _deckname_check(self, deckname):
+    def _check_deckname(self, deckname):
         """
         check if the deck you're calling AnnA exists or not
         if not, user is asked to enter the name, suggesting autocompletion
@@ -887,7 +888,7 @@ class AnnA:
         yel(f"Asking Anki for information about {n} cards...")
         start = time.time()
         list_cardInfo.extend(
-            self._getCardsInfo(
+            self._fetch_cards(
                 card_id=combined_card_list))
         whi(f"Got all infos in {int(time.time()-start)} seconds.\n")
 
@@ -1305,7 +1306,7 @@ class AnnA:
         self.df = self.df.sort_index()
         return True
 
-    def _compute_card_vectors(self):
+    def _compute_projections(self):
         """
         Assigne vectors to each card's 'comb_text', using TFIDF as vectorizer.
 
@@ -1654,12 +1655,12 @@ class AnnA:
             self.mean_dist = mean_dist
 
         if self.plot_2D_embeddings or self.add_KNN_to_field:
-            self._compute_KNN()
+            self._compute_nearest_neighbor()
 
         self._print_similar()
         return True
 
-    def _compute_KNN(self, mode="fixed_nn"):
+    def _compute_nearest_neighbor(self, mode="fixed_nn"):
         """
         Compute the nearest neighbours of each note of the distance matrix.
         This is used to then fill the field "Nearest_neighbours" of those notes
@@ -1701,7 +1702,7 @@ class AnnA:
         except Exception as err:
             beep(f"Error when computing KNN: '{err}'")
 
-    def _do_add_KNN_to_note(self):
+    def _add_neighbors_to_notes(self):
         """
         if the model card contains the field 'Nearest_neighbours', replace its
         content by a query that can be used to find the neighbour of the
@@ -1821,8 +1822,10 @@ class AnnA:
             pd.reset_option('display.max_colwidth')
             whi("")
 
-    def _compute_opti_rev_order(self):
+    def _compute_optimized_queue(self):
         """
+        Long function that computes the new queue order.
+
         1. calculates the 'ref' column. The lowest the 'ref', the more urgent
             the card needs to be reviewed. The computation used depends on
             argument 'reference_order', hence picking a card according to its
@@ -1836,7 +1839,7 @@ class AnnA:
         4. assigns a score to each card, the lowest score at each turn is
             added to the queue, each new turn compares the cards to
             the present queue. The algorithm is described in more details in
-            the docstring of function 'combinator'.
+            the docstring of function 'combine_arrays'.
             Here's the gist:
             At each turn, the card from indTODO with the lowest score is
                 removed from indTODO and added to indQUEUE
@@ -2167,7 +2170,7 @@ class AnnA:
             assert np.sum(np.isnan(df.loc[due, x].values)) == 0, (
                     f"invalid treatment of due cards, column : {x}")
 
-        def combinator(array):
+        def combine_arrays(array):
             """
             'array' represents:
                 * columns : the cards of indTODO
@@ -2185,11 +2188,11 @@ class AnnA:
                 a good candidate to add to indQUEUE (same for np.median)
             * Naturally, np.min is given more importance than np.mean
 
-            Best candidates are cards with high combinator output.
+            Best candidates are cards with high combine_arrays output.
             The outut is substracted to the 'ref' of each indTODO card.
 
             Hence, at each turn, the card from indTODO with the lowest
-                'w1*ref - w2*combinator' is removed from indTODO and added
+                'w1*ref - w2*combine_arrays' is removed from indTODO and added
                 to indQUEUE.
 
             The content of 'queue' is the list of card_id in best review order.
@@ -2216,7 +2219,7 @@ class AnnA:
                 #     tqdm.write(f"{sp}REF_SCORE: {ref_avg:02f}")
                 queue.append(indTODO[
                     (w1*df.loc[indTODO, "ref"].values -
-                     w2*combinator(self.df_dist.loc[indTODO, indQUEUE].values
+                     w2*combine_arrays(self.df_dist.loc[indTODO, indQUEUE].values
                                    ) + (
                      w3*np.random.rand(1, len(indTODO))
                      )
@@ -2281,7 +2284,7 @@ class AnnA:
                 while to_process:
                     pbar.update(1)
                     score = self.df.loc[to_process, "ref_filtered"] - (
-                            factor * combinator(
+                            factor * combine_arrays(
                                 self.df_dist.loc[to_process, new_queue].values
                             ))
                     new_queue.append(to_process.pop(score.argmin()))
@@ -2534,9 +2537,9 @@ class AnnA:
         yel(f"Dataframe exported to {name}.")
         return True
 
-    def _do_2D_plots(self):
+    def _compute_plots(self):
         """
-        Create a 2D network plot of the deck.
+        Create a 2D plot of the deck.
         """
         red("Creating 2D plots...")
         assert self.plot_2D_embeddings, "invalid arguments!"
@@ -2644,7 +2647,7 @@ class AnnA:
         # 2D embeddings layout
         start = time.time()
         whi("Drawing embedding network...")
-        self._do_plotly(G=G,
+        self._construct_plot(G=G,
                         computed_layout=positions,
                         node_colours=node_colours,
                         title=f"{self.deckname} - embeddings"
@@ -2670,7 +2673,7 @@ class AnnA:
                 threshold=1e-4,  # stop goes below, default 1e-4
                 )
         whi(f"Finished computing spring layout in {int(time.time()-start)}s")
-        self._do_plotly(G=G,
+        self._construct_plot(G=G,
                         computed_layout=layout_spring,
                         node_colours=node_colours,
                         title=f"{self.deckname} - spring"
@@ -2682,7 +2685,7 @@ class AnnA:
         whi("Finished 2D plots")
         signal.alarm(0)  # turn off timeout
 
-    def _do_plotly(self,
+    def _construct_plot(self,
                    G,
                    computed_layout,
                    node_colours,
