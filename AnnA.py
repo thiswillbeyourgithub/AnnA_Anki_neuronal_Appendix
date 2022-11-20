@@ -1653,7 +1653,7 @@ class AnnA:
 
         self.df_dist = self.df_dist.sort_index()
 
-        assert ((self.df_dist.values - self.df_dist.values.T) == 0).all(), (
+        assert np.isclose(self.df_dist.values - self.df_dist.values.T, 0).all(), (
                 "Non symetric distance matrix")
 
         # make sure the distances are positive otherwise it might reverse
