@@ -2280,7 +2280,7 @@ class AnnA:
                     factor = 0
                 elif w2 < 0:
                     yel("Weight 2 is negative so the resorting will favor "
-                        "cards semantically close to be reviewed in a row."
+                        "cards semantically close to be reviewed in a row.")
                     factor = -1
 
                 assert set(new_queue) & set(to_process) == set(), (
