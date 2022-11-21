@@ -1918,7 +1918,8 @@ class AnnA:
             df.loc[due, "ref"] = due
             assert (due > 0).all(), "Negative due values"
             df.loc[due, "ref"] -= df.loc[due, "ref"].min()
-            df.loc[due, "ref"] /= df.loc[due, "ref"].max()
+            if df.loc[due, "ref"].max() != 0:
+                df.loc[due, "ref"] /= df.loc[due, "ref"].max()
 
         if reference_order in ["relative_overdueness", "LIRO_mix"]:
             yel("Computing relative overdueness...")
@@ -2002,7 +2003,8 @@ class AnnA:
 
             # minmax scaling of ro
             ro -= ro.min()
-            ro /= ro.max()
+            if ro.max() != 0:
+                ro /= ro.max()
             ro += 0.001
 
             if boost:
