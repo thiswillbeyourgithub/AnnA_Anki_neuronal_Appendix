@@ -314,10 +314,8 @@ class AnnA:
         if not isinstance(tags_to_ignore, list):
             assert "[" in tags_to_ignore, "missing '[' in 'tags_to_ignore'"
             tags_to_ignore = tags_to_ignore.replace("[", "").replace("]", "").strip().split(",")
-        self.tags_to_ignore = [
-                re.compile(".*" + t.strip() + ".*")
-                for t in tags_to_ignore
-                ]
+            tags_to_ignore = [f".*{t.strip()}.*" if ".*" not in t else t.strip() for t in tags_to_ignore]
+        self.tags_to_ignore = [re.compile(t) for t in tags_to_ignore]
 
         assert isinstance(add_KNN_to_field, bool), (
                 "Invalid type of `add_KNN_to_field`")
@@ -901,8 +899,8 @@ class AnnA:
             tags = []
             for t in list_cardInfo[i]["tags"]:
                 skip_t = False
-                for tags_to_ignore in self.tags_to_ignore:
-                    if tags_to_ignore.match(t):
+                for tag_ti in self.tags_to_ignore:
+                    if tag_ti.match(t):
                         skip_t = True
                         break
                 if not skip_t:
@@ -1174,8 +1172,8 @@ class AnnA:
                     tags = self.df.loc[index, "tags"].split(" ")
                     for t in tags:
                         skip_tag = False
-                        for tags_to_ignore in self.tags_to_ignore:
-                            if tags_to_ignore.match(t):
+                        for tag_ti in self.tags_to_ignore:
+                            if tag_ti.match(t):
                                 skip_tag = True
                                 break
                         if skip_tag:
