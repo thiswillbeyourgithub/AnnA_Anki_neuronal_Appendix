@@ -256,12 +256,13 @@ AnnA includes built-in methods you can run after instantiating the class. Note t
 * `save_df` saves the dataframe containing the cards and all other infos needed by AnnA as a pickle file. Used mainly for debugging. Files will be saved to the folder `DF_backups`
 
 ## TODO
-* fix the radius of KNN, it should be better than using a fixed n_n in principle
-* make UMAP start from the precomputed KNN matrix
+* make it so that the low_power_mode triggers the "binary" mode of TFIDF, which works apparently alright
+* use radius to find neighbours instead of fixed number of neighbors
 * compute the distance matrix on the notes only instead of the cards
+* investigate using the neighbour matrix to initialize UMAP
 * add picture and documentation to the knn feature
     * reach out to the dev of the mindmapping addon and show them the 2D plots you made
-* rename the "acronym" system to something more true like "word_expander"
+* rename the "acronym" system to something more explicit like "word_expander"
 * switch to using Fire instead of argparse and move all the documentation to the docstring
 * add argument to automatically flag cards deemed urgent
 * increase speed at which information on cards is gathered from anki as it seems to be the main bottleneck. Maybe try to use asyncio?
