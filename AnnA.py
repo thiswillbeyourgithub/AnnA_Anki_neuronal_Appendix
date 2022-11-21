@@ -1995,6 +1995,12 @@ class AnnA:
             urgent_dues = list(set(urgent_dues))
             yel(f"=> In total, found {len(urgent_dues)} cards to boost.")
 
+            # compute the score by which to boost the ro
+            urgent_factor = 1 / ro[urgent_dues]
+            urgent_factor -= urgent_factor.min()
+            if urgent_factor.max() != 0:  # otherwise fails if ro was constant
+                urgent_factor /= urgent_factor.max()
+            assert (urgent_factor >= 0).all(), "Negative urgent factor"
 
             # reduce the increase of ro as a very high ro is not important
             while ro.max() > 1.5:
@@ -2010,8 +2016,8 @@ class AnnA:
             if boost:
                 whi("Boosted urgent_dues cards to increase chances they are reviewed today.")
                 for ind in urgent_dues:
-                    ro[ind] -= 1
-                assert ro.min() < 0:
+                    ro[ind] += (-0.5 - urgent_factor[ind])
+                assert ro.min() < 0
                 ro += abs(ro.min()) + 0.001
                 assert ro.min() > 0, "Negative value in relative overdueness"
                 ro /= ro.max()
