@@ -1313,9 +1313,6 @@ class AnnA:
     def _compute_projections(self):
         """
         Assigne vectors to each card's 'comb_text', using TFIDF as vectorizer.
-
-        After calling this function df["VEC"] contains either all the vectors
-            or less if you enabled dimensionality reduction
         """
         df = self.df
 
@@ -1467,7 +1464,7 @@ class AnnA:
               "Vectorizing using TFIDF"),
                                                   file=self.t_strm))
         if self.TFIDF_dim is None:
-            df["VEC"] = [x for x in t_vec]
+            self.vector = t_vec
         else:
             # explanation : trying to do a dimensions reduction on the vectors
             # but trying up to 10 times to find the right value that keeps
@@ -1555,7 +1552,7 @@ class AnnA:
             except Exception as err:
                 beep(f"Exception when storing latest dimension to cache: '{err}'")
 
-            df["VEC"] = [x for x in t_red]
+            self.vectors = t_red
 
         if self.plot_2D_embeddings:
             try:
@@ -1606,11 +1603,11 @@ class AnnA:
         yel("\nComputing distance matrix on all available cores"
             "...")
         if self.dist_metric == "rbf":
-            sig = np.mean(np.std([x for x in df["VEC"]], axis=1))
+            sig = np.mean(np.std(self.vectors, axis=1))
             self.df_dist = pd.DataFrame(columns=df.index,
                                         index=df.index,
                                         data=pairwise_kernels(
-                                            [x for x in df["VEC"]],
+                                            self.vectors,
                                             n_jobs=-1,
                                             metric="rbf",
                                             gamma=1/(2*sig),
@@ -1628,7 +1625,7 @@ class AnnA:
             self.df_dist = pd.DataFrame(columns=df.index,
                                         index=df.index,
                                         data=pairwise_distances(
-                                            [x for x in df["VEC"]],
+                                            self.vectors,
                                             n_jobs=-1,
                                             metric="cosine",
                                             ))
@@ -1636,7 +1633,7 @@ class AnnA:
             self.df_dist = pd.DataFrame(columns=df.index,
                                         index=df.index,
                                         data=pairwise_distances(
-                                            [x for x in df["VEC"]],
+                                            self.vectors,
                                             n_jobs=-1,
                                             metric="euclidean",
                                             ))
