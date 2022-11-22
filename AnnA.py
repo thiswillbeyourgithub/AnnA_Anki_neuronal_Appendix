@@ -207,7 +207,7 @@ class AnnA:
                  plot_2D_embeddings=False,
                  plot_dir="Plots",
                  TFIDF_stem=False,
-                 dist_metric="RBF",  # 'RBF' or 'cosine'
+                 dist_metric="RBF",  # 'RBF' or 'cosine' or 'euclidean"
 
                  whole_deck_computation=False,
                  profile_name=None,
@@ -357,7 +357,7 @@ class AnnA:
         assert tokenizer_model.lower() in ["bert", "gpt", "both"], (
             "Wrong tokenizer model name!")
         self.tokenizer_model = tokenizer_model
-        assert dist_metric.lower() in ["cosine", "rbf"], (
+        assert dist_metric.lower() in ["cosine", "rbf", "euclidean"], (
             "Invalid 'dist_metric'")
         self.dist_metric = dist_metric.lower()
 
@@ -1631,6 +1631,14 @@ class AnnA:
                                             [x for x in df[input_col]],
                                             n_jobs=-1,
                                             metric="cosine",
+                                            ))
+        elif self.dist_metric == "euclidean":
+            self.df_dist = pd.DataFrame(columns=df.index,
+                                        index=df.index,
+                                        data=pairwise_distances(
+                                            [x for x in df[input_col]],
+                                            n_jobs=-1,
+                                            metric="euclidean",
                                             ))
         else:
             raise ValueError("Invalid 'dist_metric' value")
@@ -3326,8 +3334,8 @@ if __name__ == "__main__":
                         required=False,
                         help=(
                             "when computing the distance matrix, wether to "
-                            "use 'cosine' or 'rbf' metrics. Changing this "
-                            "should not affect the results significantly."))
+                            "use 'cosine' or 'rbf' or 'euclidean' metrics. "
+                            "cosine and rbf should be fine. Default to 'rbf'"))
     parser.add_argument("--whole_deck_computation",
                         dest="whole_deck_computation",
                         default=False,
