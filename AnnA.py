@@ -1595,7 +1595,7 @@ class AnnA:
         self.df = df
         return True
 
-    def _compute_distance_matrix(self, input_col="VEC"):
+    def _compute_distance_matrix(self):
         """
         compute distance matrix : a huge matrix containing the
             cosine distance between the vectors of each cards.
@@ -1606,11 +1606,11 @@ class AnnA:
         yel("\nComputing distance matrix on all available cores"
             "...")
         if self.dist_metric == "rbf":
-            sig = np.mean(np.std([x for x in df[input_col]], axis=1))
+            sig = np.mean(np.std([x for x in df["VEC"]], axis=1))
             self.df_dist = pd.DataFrame(columns=df.index,
                                         index=df.index,
                                         data=pairwise_kernels(
-                                            [x for x in df[input_col]],
+                                            [x for x in df["VEC"]],
                                             n_jobs=-1,
                                             metric="rbf",
                                             gamma=1/(2*sig),
@@ -1628,7 +1628,7 @@ class AnnA:
             self.df_dist = pd.DataFrame(columns=df.index,
                                         index=df.index,
                                         data=pairwise_distances(
-                                            [x for x in df[input_col]],
+                                            [x for x in df["VEC"]],
                                             n_jobs=-1,
                                             metric="cosine",
                                             ))
@@ -1636,7 +1636,7 @@ class AnnA:
             self.df_dist = pd.DataFrame(columns=df.index,
                                         index=df.index,
                                         data=pairwise_distances(
-                                            [x for x in df[input_col]],
+                                            [x for x in df["VEC"]],
                                             n_jobs=-1,
                                             metric="euclidean",
                                             ))
