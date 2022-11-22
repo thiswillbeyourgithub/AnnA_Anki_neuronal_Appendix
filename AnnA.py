@@ -1321,8 +1321,10 @@ class AnnA:
 
         if not self.low_power_mode:
             ngram_val = (1, 5)
+            binary_mode = False
         else:
             ngram_val = (1, 3)
+            binary_mode = True
 
         def init_vectorizer():
             """used to make sure the same statement is used to create
@@ -1337,6 +1339,7 @@ class AnnA:
                                    sublinear_tf=True,
                                    max_features=min(10_000,
                                                     len(df.index) // 2),
+                                   binary=binary_mode,
                                    # max_df=0.25,  # ignore words present in
                                    # more than X% of documents
                                    # min_df=2,  # ignore words than appear
@@ -3081,7 +3084,9 @@ if __name__ == "__main__":
                             "Default to `False`. It skips trying to find "
                             "acronyms "
                             "that were not replaced and reduces the "
-                            "ngram range."))
+                            "ngram range. It also uses TFIDF's 'binary' mode "
+                            "which saves a lot of compute to the cost of "
+                            "worst precision."))
     parser.add_argument("--log_level",
                         nargs=1,
                         metavar="LOG_LEVEL",
