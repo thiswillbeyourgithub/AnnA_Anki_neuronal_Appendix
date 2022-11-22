@@ -47,6 +47,7 @@ import ankipandas as akp
 import shutil
 
 from utils.greek import greek_alphabet_mapping
+from utils.exceptions import NotEnoughCardsToReview
 
 # avoids annoying warning
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
@@ -878,7 +879,10 @@ class AnnA:
         if len(self.due_cards) < self.minimum_due:
             beep(f"Number of due cards is {len(self.due_cards)} which is "
                  f"less than threshold ({self.minimum_due}).\nStopping.")
-            raise Exception("Not enough cards!")
+            red("Not enough cards!")
+            raise NotEnoughCardsToReview
+            # This exception was created to both warn the user that the run was
+            # stopped while not interruption batches launched via autorun
 
         combined_card_list = list(rated_cards + due_cards)
 

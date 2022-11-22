@@ -16,40 +16,43 @@ if __name__ == '__main__':
             print("=" * 10)
         print("", end="\n\n")
 
-    AnnA(deckname="Some_Deck",
-         # creates a new filtered deck with your reviews in the right order
-         task="filter_review_cards",
-         target_deck_size="50%",  # you will do half of the reviews
-         rated_last_X_days=3,
-         # consider similarity with reviews of today and the past 3 days
-         acronym_list=["medical_terms"],
-         # use this filtered deck sorting order as reference order to alter
-         # based on similarity
-         reference_order="relative_overdueness",
-         )
+    try:
+        AnnA(deckname="Some_Deck",
+             # creates a new filtered deck with your reviews in the right order
+             task="filter_review_cards",
+             target_deck_size="50%",  # you will do half of the reviews
+             rated_last_X_days=3,
+             # consider similarity with reviews of today and the past 3 days
+             acronym_list=["medical_terms"],
+             # use this filtered deck sorting order as reference order to alter
+             # based on similarity
+             reference_order="relative_overdueness",
+             )
 
-    interscreen()
+        interscreen()
 
-    AnnA(deckname="Some_OtherDeck::subdeck#1",
-         # don't create a filtered deck and just bury the cards not to
-         # review today ; only takes into account learning cards
-         task="bury_excess_learning_cards",
-         target_deck_size="deck_settings",
-         rated_last_X_days=3,
-         acronym_list=["medical_terms", "AI_machine_learning"],
-         reference_order="lowest_interval",
-         )
+        AnnA(deckname="Some_OtherDeck::subdeck#1",
+             # don't create a filtered deck and just bury the cards not to
+             # review today ; only takes into account learning cards
+             task="bury_excess_learning_cards",
+             target_deck_size="deck_settings",
+             rated_last_X_days=3,
+             acronym_list=["medical_terms", "AI_machine_learning"],
+             reference_order="lowest_interval",
+             )
 
-    interscreen()
+        interscreen()
 
-    AnnA(deckname="Some_OtherDeck::subdeck#2",
-         # don't create a filtered deck and just bury the cards not to
-         # review today ; only takes into account reviews
-         task="bury_excess_review_cards",
-         target_deck_size="50",
-         acronym_list=None,
-         rated_last_X_days=3,
-         )
+        AnnA(deckname="Some_OtherDeck::subdeck#2",
+             # don't create a filtered deck and just bury the cards not to
+             # review today ; only takes into account reviews
+             task="bury_excess_review_cards",
+             target_deck_size="50",
+             acronym_list=None,
+             rated_last_X_days=3,
+             )
+    except AnnA.NotEnoughCardsToReview:
+        pass
 
 try:
     ans = input("\n\nEnter console? (y/n)\n>")
