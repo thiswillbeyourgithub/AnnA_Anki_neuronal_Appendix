@@ -47,7 +47,6 @@ import ankipandas as akp
 import shutil
 
 from utils.greek import greek_alphabet_mapping
-from utils.exceptions import NotEnoughCardsToReview
 
 # avoids annoying warning
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
@@ -621,22 +620,28 @@ class AnnA:
         red(f"Starting task: {task}")
         if task in ["bury_excess_learning_cards",
                     "bury_excess_review_cards"]:
-            self._common_init()
-            self._add_neighbors_to_notes()
-            self._compute_optimized_queue()
-            self._bury_or_create_filtered()
+            if self._common_init():
+                self._add_neighbors_to_notes()
+                self._compute_optimized_queue()
+                self._bury_or_create_filtered()
+            else:
+                return
 
         elif task == "filter_review_cards":
-            self._common_init()
-            self._add_neighbors_to_notes()
-            self._compute_optimized_queue()
-            self._bury_or_create_filtered()
+            if self._common_init():
+                self._add_neighbors_to_notes()
+                self._compute_optimized_queue()
+                self._bury_or_create_filtered()
+            else:
+                return
 
         elif task == "just_add_KNN":
             whi("(Setting 'rated_last_X_days' to None)")
             self.rated_last_X_days = None
-            self._common_init()
-            self._add_neighbors_to_notes()
+            if self._common_init():
+                self._add_neighbors_to_notes()
+            else:
+                return
 
         else:
             raise ValueError(f"Invalid task value: {task}")
@@ -689,11 +694,15 @@ class AnnA:
 
     def _common_init(self):
         "Calls one by one the methods needed by all tasks anyway."
-        self._init_dataFrame()
+        if not self._init_dataFrame():
+            # not enough cards were found, interrupting the run
+            # without exception to avoid stopping batch run
+            return False
         self._format_card()
         self._print_acronyms()
         self._compute_projections()
         self._compute_distance_matrix()
+        return True
 
     def _fetch_cards(self, card_id):
         """ get all information from a card from its card id
@@ -879,10 +888,11 @@ class AnnA:
         if len(self.due_cards) < self.minimum_due:
             beep(f"Number of due cards is {len(self.due_cards)} which is "
                  f"less than threshold ({self.minimum_due}).\nStopping.")
-            red("Not enough cards!")
-            raise NotEnoughCardsToReview
-            # This exception was created to both warn the user that the run was
-            # stopped while not interruption batches launched via autorun
+            red("Not enough cards to review! Exiting.")
+            self.not_enough_cards = True
+            return False
+        else:
+            self.not_enough_cards = False
 
         combined_card_list = list(rated_cards + due_cards)
 
@@ -2562,6 +2572,8 @@ class AnnA:
         Create a 2D plot of the deck.
         """
         red("Creating 2D plots...")
+        if self.not_enough_cards:
+            return
         assert self.plot_2D_embeddings, "invalid arguments!"
         assert hasattr(self, "knn"), "no knn in attribute!"
         assert "2D_embeddings" in self.df.columns, "no x/y columns in df!"
