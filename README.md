@@ -256,6 +256,7 @@ AnnA includes built-in methods you can run after instantiating the class. Note t
 * `save_df` saves the dataframe containing the cards and all other infos needed by AnnA as a pickle file. Used mainly for debugging. Files will be saved to the folder `DF_backups`
 
 ## TODO
+* add new task "resort filtered deck"
 * instead of storing the nearest neighbors in a field, store it in a file accessible to the addon and add interface menus via the addon to query neighbors
 * create an exception class that handles the "not enough review" case and ignore it in the autorun
 * make it so that the low_power_mode triggers the "binary" mode of TFIDF, which works apparently alright
