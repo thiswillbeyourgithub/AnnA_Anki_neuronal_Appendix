@@ -1579,7 +1579,7 @@ class AnnA:
                                    "random_state": 42,
                                    "transform_seed": 42,
                                    "n_neighbors":  min(20, max(len(self.df.index) // 100, 5)),
-                                   "min_dist": 0.01,
+                                   "min_dist": 0.05,
                                    "low_memory":  False,
                                    "densmap": True,
                                    }
@@ -2695,7 +2695,7 @@ class AnnA:
         whi("    computing layout...")
         layout_spring = nx.spring_layout(
                 G,
-                k=100 / np.sqrt(n),  # repulsive force, default is 1/sqrt(n)
+                k=500 / np.sqrt(n),  # repulsive force, default is 1/sqrt(n)
                 pos=positions,  # initial positions is the 2D embeddings
                 iterations=50,  # default to 50
                 # fixed=None,  # keep those nodes at their starting position
