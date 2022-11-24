@@ -1594,7 +1594,7 @@ class AnnA:
                     svd = TruncatedSVD(n_components=2)
                     t_embed = svd.fit_transform(t_vec)
 
-                df["2D_embeddings"] = [x for x in t_embed]
+                self.embeddings2D = t_embed
             except Exception as err:
                 beep(f"Error when computing 2D embeddings: '{err}'")
                 red(traceback.format_exc())
@@ -2576,7 +2576,7 @@ class AnnA:
             return
         assert self.plot_2D_embeddings, "invalid arguments!"
         assert hasattr(self, "knn"), "no knn in attribute!"
-        assert "2D_embeddings" in self.df.columns, "no x/y columns in df!"
+        assert hasattr(self, "embeddings2D"), "2D embeddings could not be found!"
 
         # add a timeout to make sure it doesn't get stuck
         def time_watcher(signum, frame):
@@ -2601,7 +2601,8 @@ class AnnA:
             nid = self.df.loc[cid, "note"]
             G.add_node(nid)  # duplicate nodes are ignored by networkx
             if nid not in positions:
-                positions[nid] = list(self.df.loc[cid, "2D_embeddings"])
+                positions[nid] = list(self.embeddings2D[np.argwhere(self.df.index == cid).squeeze(), :])
+
                 node_colours.append(self.df.loc[cid, "colors"])
 
         # create a dict containing all edges and their weights
