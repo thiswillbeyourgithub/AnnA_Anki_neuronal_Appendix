@@ -195,7 +195,7 @@ class AnnA:
                  repick_task="boost",  # None, "addtag", "boost" or
                  # "boost&addtag"
                  enable_fuzz=True,
-                 resort_by_dist=True,
+                 resort_by_dist="farther",
 
                  # vectorization:
                  vectorizer="TFIDF",  # can only be "TFIDF" but
@@ -417,9 +417,11 @@ class AnnA:
         assert isinstance(enable_fuzz, bool), "Invalid type for 'enable_fuzz'"
         self.enable_fuzz = enable_fuzz
 
-        assert isinstance(resort_by_dist, bool), (
+        assert isinstance(resort_by_dist, str), (
             "Invalid type for 'resort_by_dist'")
-        self.resort_by_dist = resort_by_dist
+        assert resort_by_dist.lower() in ["farther", "closer"], (
+            "Invalid 'resort_by_dist' value")
+        self.resort_by_dist = resort_by_dist.lower()
 
         # initialize joblib caching
         # self.mem = joblib.Memory("./.cache", mmap_mode="r", verbose=0)
@@ -2289,18 +2291,6 @@ class AnnA:
                              if q not in self.urgent_dues
                              ], "ref_filtered"] = 50
 
-                # keeping sorting order of user
-                if w2 > 0:
-                    factor = 1
-                elif w2 == 0:
-                    red("Weight 2 was set to 0, this is weird. You should "
-                        "check your arguments.")
-                    factor = 0
-                elif w2 < 0:
-                    yel("Weight 2 is negative so the resorting will favor "
-                        "cards semantically close to be reviewed in a row.")
-                    factor = -1
-
                 assert set(new_queue) & set(to_process) == set(), (
                         "queue construction failed!")
                 assert set(new_queue) | set(to_process) == set(queue), (
@@ -2312,10 +2302,15 @@ class AnnA:
                 while to_process:
                     pbar.update(1)
                     score = self.df.loc[to_process, "ref_filtered"] - (
-                            factor * combine_arrays(
+                            combine_arrays(
                                 self.df_dist.loc[to_process, new_queue].values
                             ))
-                    new_queue.append(to_process.pop(score.argmin()))
+                    if self.resort_by_dist == "farther":
+                        new_queue.append(to_process.pop(score.argmin()))
+                    elif self.resort_by_dist == "closer":
+                        new_queue.append(to_process.pop(score.argmax()))
+                    else:
+                        raise ValueError("Invalid value for 'resort_by_dist'")
                 pbar.close()
 
                 assert len(set()) == 0, "to_process is not empty!"
@@ -3370,8 +3365,8 @@ if __name__ == "__main__":
                             "to `True`."))
     parser.add_argument("--resort_by_dist",
                         dest="resort_by_dist",
-                        default=True,
-                        action="store_true",
+                        default="farther",
+                        type=str,
                         required=False,
                         help=(
                             "Recomputing the best order of the cards in the "
@@ -3386,7 +3381,11 @@ if __name__ == "__main__":
                             "sure "
                             "you review first the most urgent cards. This "
                             "feature is active only if you set the task to '"
-                            "filter_review_cards'. Default to True."))
+                            "filter_review_cards'. "
+                            "Can be either 'farther' or 'closer'. The former "
+                            "meaning to spread the cards as differently as "
+                            "possible. "
+                            "Default to 'farther'."))
     parser.add_argument("--profile_name",
                         nargs=1,
                         metavar="PROFILE_NAME",
