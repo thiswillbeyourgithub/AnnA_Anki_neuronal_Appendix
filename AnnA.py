@@ -1327,10 +1327,8 @@ class AnnA:
         df = self.df
 
         if not self.low_power_mode:
-            ngram_val = (1, 5)
             binary_mode = False
         else:
-            ngram_val = (1, 3)
             binary_mode = True
 
         def init_vectorizer():
@@ -1341,7 +1339,7 @@ class AnnA:
                                    tokenizer=self.tokenize,
                                    token_pattern=None,
                                    stop_words=None,
-                                   ngram_range=ngram_val,
+                                   ngram_range=(2, 2),
                                    norm="l2",
                                    sublinear_tf=True,
                                    max_features=min(10_000,
@@ -3098,13 +3096,9 @@ if __name__ == "__main__":
                         help=(
                             "enable to reduce the computation needed for "
                             "AnnA, making it usable for less powerful "
-                            "computers. "
-                            "Default to `False`. It skips trying to find "
-                            "acronyms "
-                            "that were not replaced and reduces the "
-                            "ngram range. It also uses TFIDF's 'binary' mode "
-                            "which saves a lot of compute to the cost of "
-                            "worst precision."))
+                            "computers. This can greatly reduce accuracy."
+                            "Default to `False`. "
+                            ))
     parser.add_argument("--log_level",
                         nargs=1,
                         metavar="LOG_LEVEL",
