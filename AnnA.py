@@ -2681,10 +2681,10 @@ class AnnA:
         start = time.time()
         whi("Drawing embedding network...")
         self._construct_plot(G=G,
-                        computed_layout=positions,
-                        node_colours=node_colours,
-                        title=f"{self.deckname} - embeddings"
-                        )
+                             computed_layout=positions,
+                             node_colours=node_colours,
+                             title=f"{self.deckname} - embeddings"
+                             )
         whi(f"Saved embeddings layout in {int(time.time()-start)}s!")
         nx.drawing.nx_pydot.write_dot(
                 G, f'{self.plot_dir}/{self.deckname} - embeddings.dot')
@@ -2707,10 +2707,10 @@ class AnnA:
                 )
         whi(f"Finished computing spring layout in {int(time.time()-start)}s")
         self._construct_plot(G=G,
-                        computed_layout=layout_spring,
-                        node_colours=node_colours,
-                        title=f"{self.deckname} - spring"
-                        )
+                             computed_layout=layout_spring,
+                             node_colours=node_colours,
+                             title=f"{self.deckname} - spring"
+                             )
         whi(f"Saved spring layout in {int(time.time()-start)}s!")
         nx.drawing.nx_pydot.write_dot(
                 G, f'{self.plot_dir}/{self.deckname} - spring.dot')
@@ -2719,10 +2719,10 @@ class AnnA:
         signal.alarm(0)  # turn off timeout
 
     def _construct_plot(self,
-                   G,
-                   computed_layout,
-                   node_colours,
-                   title):
+                        G,
+                        computed_layout,
+                        node_colours,
+                        title):
         """
         Create 2D plotly plot from networkx graph.
         """
