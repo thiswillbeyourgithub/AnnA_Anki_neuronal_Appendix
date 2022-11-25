@@ -2057,11 +2057,11 @@ class AnnA:
                 if "addtag" in self.repick_task:
                     d = datetime.today()
                     # time format is day/month/year
-                    today_date = f"{d.day:02d}/{d.month:02d}/{d.year}"
-                    for reason, urgents in {"overdue": urg_overdue,
-                                            "low_interval": urg_ivl,
-                                            "low_ease": urg_lowease}.items():
-                        new_tag = f"AnnA::urgent_reviews::{today_date}::{reason}"
+                    today_date = f"{d.day:02d}/{d.month:02d}"
+                    for reason, urgents in {"OD": urg_overdue,
+                                            "LI": urg_ivl,
+                                            "LE": urg_lowease}.items():
+                        new_tag = f"AnnA::UR::{today_date}::{reason}"
                         notes = []
                         for card in urgents:
                             notes.append(int(self.df.loc[card, "note"]))
