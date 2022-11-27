@@ -1341,7 +1341,7 @@ class AnnA:
                                    tokenizer=self.tokenize,
                                    token_pattern=None,
                                    stop_words=None,
-                                   ngram_range=(2, 2),
+                                   ngram_range=(1, 5),
                                    norm="l2",
                                    sublinear_tf=True,
                                    max_features=min(10_000,
@@ -2708,7 +2708,7 @@ class AnnA:
         whi("    computing layout...")
         layout_spring = nx.spring_layout(
                 G,
-                k=500 / np.sqrt(n),  # repulsive force, default is 1/sqrt(n)
+                k=100 / np.sqrt(n),  # repulsive force, default is 1/sqrt(n)
                 pos=positions,  # initial positions is the 2D embeddings
                 iterations=50,  # default to 50
                 # fixed=None,  # keep those nodes at their starting position
