@@ -194,7 +194,7 @@ class AnnA:
                  repick_task="boost",  # None, "addtag", "boost" or
                  # "boost&addtag"
                  enable_fuzz=True,
-                 resort_by_dist="farther",
+                 resort_by_dist="closer",
 
                  # vectorization:
                  vectorizer="TFIDF",  # can only be "TFIDF" but
@@ -3368,7 +3368,7 @@ if __name__ == "__main__":
                             "to `True`."))
     parser.add_argument("--resort_by_dist",
                         dest="resort_by_dist",
-                        default="farther",
+                        default="closer",
                         type=str,
                         required=False,
                         help=(
@@ -3385,10 +3385,11 @@ if __name__ == "__main__":
                             "you review first the most urgent cards. This "
                             "feature is active only if you set the task to '"
                             "filter_review_cards'. "
-                            "Can be either 'farther' or 'closer'. The former "
+                            "Can be either 'farther' or 'closer' or False. "
+                            "The former "
                             "meaning to spread the cards as differently as "
                             "possible. "
-                            "Default to 'farther'."))
+                            "Default to 'closer'."))
     parser.add_argument("--profile_name",
                         nargs=1,
                         metavar="PROFILE_NAME",
