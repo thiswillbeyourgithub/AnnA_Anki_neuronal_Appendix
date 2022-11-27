@@ -186,7 +186,6 @@ class AnnA:
                  keep_OCR=True,
                  append_tags=True,
                  tags_to_ignore=["AnnA, leech"],
-                 tags_separator="::",
                  add_KNN_to_field=False,
                  filtered_deck_name_template=None,
                  filtered_deck_by_batch=False,
@@ -320,9 +319,6 @@ class AnnA:
         assert isinstance(add_KNN_to_field, bool), (
                 "Invalid type of `add_KNN_to_field`")
         self.add_KNN_to_field = add_KNN_to_field
-        assert isinstance(
-            tags_separator, str), "Invalid type of `tags_separator`"
-        self.tags_separator = tags_separator
 
         assert isinstance(
             low_power_mode, bool), "Invalid type of `low_power_mode`"
@@ -1199,7 +1195,7 @@ class AnnA:
                         t = re.sub(
                             spacers_compiled,
                             " ",
-                            " ".join(t.split(self.tags_separator)[-2:]))
+                            " ".join(t.split("::")))
                         comb_text += " " + t
 
                 with lock:
@@ -1297,13 +1293,18 @@ class AnnA:
                 for ind in ind_short:
                     tags = self.df.loc[ind, "tags"].split(" ")
                     for t in tags:
-                        if ("AnnA" not in t) and (
-                                t not in self.tags_to_ignore):
-                            t = re.sub(
-                                spacers_compiled,
-                                " ",
-                                " ".join(t.split(self.tags_separator)[-2:]))
-                            self.df.loc[ind, "text"] += " " + t
+                        skip_tag = False
+                        for tag_ti in self.tags_to_ignore:
+                            if tag_ti.match(t):
+                                skip_tag = True
+                                break
+                        if skip_tag:
+                            continue
+                        t = re.sub(
+                            spacers_compiled,
+                            " ",
+                            " ".join(t.split("::")))
+                        self.df.loc[ind, "text"] += " " + t
 
         yel("\n\nPrinting 2 random samples of your formated text, to help "
             " adjust formating issues:")
@@ -1449,7 +1450,7 @@ class AnnA:
                             if ("AnnA" not in t) and (
                                     t not in self.tags_to_ignore):
                                 t = re.sub(spacers_compiled, " ", " ".join(
-                                    t.split(self.tags_separator)[-2:]))
+                                    t.split("::")))
                                 processed += " " + t
                     corpus.append(processed)
 
@@ -3153,7 +3154,7 @@ if __name__ == "__main__":
                         required=False,
                         action="store_true",
                         help=(
-                            "Wether to append the 2 deepest tags to the "
+                            "Wether to append the tags to the "
                             "cards content or to add no tags. Default "
                             "to `True`."))
     parser.add_argument("--tags_to_ignore",
@@ -3170,16 +3171,6 @@ if __name__ == "__main__":
                             "list of tags "
                             "whose card should be ignored! Default is "
                             "'[AnnA, leech]'. Set to None to disable it."))
-    parser.add_argument("--tags_separator",
-                        nargs=1,
-                        metavar="TAGS_SEP",
-                        dest="tags_separator",
-                        default="::",
-                        type=str,
-                        required=False,
-                        help=(
-                            "separator between levels of tags. Default "
-                            "to `::`."))
     parser.add_argument("--add_KNN_to_field",
                         action="store_true",
                         dest="add_KNN_to_field",
