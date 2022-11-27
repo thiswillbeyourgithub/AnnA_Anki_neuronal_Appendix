@@ -1183,19 +1183,10 @@ class AnnA:
                 if self.append_tags:
                     tags = self.df.loc[index, "tags"].split(" ")
                     for t in tags:
-                        skip_tag = False
-                        for tag_ti in self.tags_to_ignore:
-                            if tag_ti.match(t):
-                                skip_tag = True
-                                break
-                        if skip_tag:
-                            continue
-                        # replaces _ - and / by a space and keep only
-                        # the last 2 levels of each tags:
                         t = re.sub(
                             spacers_compiled,
                             " ",
-                            " ".join(t.split("::")))
+                            t)
                         comb_text += " " + t
 
                 with lock:
@@ -1209,7 +1200,7 @@ class AnnA:
 
         threads = []
         to_notify = []
-        spacers_compiled = re.compile("_|-|/")
+        spacers_compiled = re.compile("_|-|/|::")
 
         # initialize the column to avoid race conditions
         self.df["comb_text"] = np.nan
@@ -1303,7 +1294,7 @@ class AnnA:
                         t = re.sub(
                             spacers_compiled,
                             " ",
-                            " ".join(t.split("::")))
+                            t)
                         self.df.loc[ind, "text"] += " " + t
 
         yel("\n\nPrinting 2 random samples of your formated text, to help "
