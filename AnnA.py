@@ -1515,11 +1515,17 @@ class AnnA:
                     self.TFIDF_dim = dim_limit
 
             already_tried = []
+            # computing the max value of n_oversamples for SVD
+            whi("Computing matrix rank...")
+            m_rank = np.linalg.matrix_rank(t_vec)
             while True:
                 self.TFIDF_dim = min(self.TFIDF_dim, dim_limit)
                 yel(f"\nReducing dimensions to {self.TFIDF_dim} using SVD...",
                     end=" ")
-                svd = TruncatedSVD(n_components=self.TFIDF_dim)
+                svd = TruncatedSVD(n_components=self.TFIDF_dim,
+                                   random_state=42,
+                                   n_oversamples=max(10, 2 * m_rank - self.TFIDF_dim)
+                                   )
                 t_red = svd.fit_transform(t_vec)
                 evr = round(sum(svd.explained_variance_ratio_) * 100, 1)
                 trial += 1
@@ -1591,7 +1597,10 @@ class AnnA:
                     red(traceback.format_exc())
 
                     yel("Using SVD...")
-                    svd = TruncatedSVD(n_components=2)
+                    svd = TruncatedSVD(n_components=2,
+                                       random_state=42,
+                                       n_oversamples=max(10, 2 * m_rank - 2)
+                            )
                     t_embed = svd.fit_transform(t_vec)
 
                 self.embeddings2D = t_embed
