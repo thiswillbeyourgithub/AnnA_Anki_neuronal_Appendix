@@ -1652,8 +1652,18 @@ class AnnA:
 
         self.df_dist = self.df_dist.sort_index()
 
-        assert np.isclose(self.df_dist.values - self.df_dist.values.T, 0).all(), (
+        assert np.isclose(a=(self.df_dist.values - self.df_dist.values.T),
+                          b=0,
+                          atol=1e-07).all(), (
                 "Non symetric distance matrix")
+
+        # make it very symetric for good measure
+        self.df_dist += self.df_dist.T
+        self.df_dist /= 2
+        if (np.diag(self.df_dist) != 0).all():
+            red("'Forced symetrisation' of the distance matrix resulted in "
+                "non zero diagonal elements, setting them manually to 0.")
+            self.df_dist.values[np.diag_indices(self.df_dist.shape[0])] = 0
 
         # make sure the distances are positive otherwise it might reverse
         # the sorting logic for the negative values (i.e. favoring similar
