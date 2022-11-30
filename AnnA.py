@@ -1484,7 +1484,7 @@ class AnnA:
             # starts to get lost and over that cards can tend to
             # all be equidistant (I think).
             trial = 0
-            desired_variance_kept = 75
+            desired_variance_kept = 50
             red("Iteratively computing dimension reduction until "
                 f"{desired_variance_kept}% of variance is kept.")
 
