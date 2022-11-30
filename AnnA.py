@@ -1338,7 +1338,7 @@ class AnnA:
                                    tokenizer=self.tokenize,
                                    token_pattern=None,
                                    stop_words=None,
-                                   ngram_range=(1, 5),
+                                   ngram_range=(1, 1),
                                    norm="l2",
                                    sublinear_tf=True,
                                    max_features=min(10_000,
