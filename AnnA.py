@@ -2021,7 +2021,7 @@ class AnnA:
             urg_overdue = [due[i] for i in np.intersect1d(mask, mask2).tolist()]
             yel(f"* Found '{len(urg_overdue)}' cards that are more than '{int(p*100)}%' overdue.")
 
-            ivl_limit = 5  # all cards with interval <= ivl_limit are deemed urgent
+            ivl_limit = 14  # all cards with interval <= ivl_limit are deemed urgent
             urg_ivl = [ind for ind in due if df.loc[ind, "interval"] <= ivl_limit]
             yel(f"* Found '{len(urg_ivl)}' cards that are due with 'interval <= {ivl_limit} days'.")
 
