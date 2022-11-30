@@ -1027,7 +1027,7 @@ class AnnA:
         text = re.sub(r"\[\d*\]", "", text)  # wiki style citation
 
         text = re.sub("<.*?>", "", text)  # remaining html tags
-        text = text.replace("&gt", "").replace("&lt", "").replace(
+        text = text.replace("&gt;", "").replace("&lt;", "").replace(
             "<", "").replace(">", "").replace("'",
                                               " ")  # misc + french apostrophe
 
@@ -2285,7 +2285,7 @@ class AnnA:
         try:
             if self.task == "filter_review_cards" and self.resort_by_dist:
                 red("Reordering before creating the filtered deck "
-                    "to maximize distance...")
+                    "to maximize/minimize distance...")
                 whi("But starts by the cards needing to be boosted)")
                 new_queue = [queue[0]]
                 to_process = [q for q in queue[1:]]
