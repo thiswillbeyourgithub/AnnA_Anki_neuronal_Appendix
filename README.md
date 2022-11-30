@@ -257,6 +257,7 @@ AnnA includes built-in methods you can run after instantiating the class. Note t
 
 ## TODO
 * add new task "resort filtered deck"
+* figure out a clever way to know which cards can be used to link 2 distinct tags/notes
 * inestigate using graphviz instead of networkx to compute the graph
 * use radius to find neighbours instead of fixed number of neighbors
 * compute the distance matrix on the notes only instead of the cards
