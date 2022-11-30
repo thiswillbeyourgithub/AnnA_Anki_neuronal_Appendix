@@ -1325,10 +1325,10 @@ class AnnA:
         """
         df = self.df
 
-        if not self.low_power_mode:
-            binary_mode = False
-        else:
+        if self.low_power_mode:
             binary_mode = True
+        else:
+            binary_mode = False
 
         def init_vectorizer():
             """used to make sure the same statement is used to create
