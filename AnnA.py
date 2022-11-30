@@ -1452,8 +1452,8 @@ class AnnA:
 
                 vectorizer = init_vectorizer()
                 vectorizer.fit(tqdm(corpus + df["text"].tolist(),
-                                    desc="Vectorizing whole deck"),
-                                    file=self.t_strm)
+                                    desc="Vectorizing whole deck",
+                                    file=self.t_strm))
                 t_vec = vectorizer.transform(tqdm(df["text"],
                                                   desc=(
                     "Vectorizing dues cards using TFIDF"),
