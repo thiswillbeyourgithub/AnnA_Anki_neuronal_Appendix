@@ -1344,7 +1344,7 @@ class AnnA:
                                    max_features=min(10_000,
                                                     len(df.index) // 2),
                                    binary=binary_mode,
-                                   max_df=0.5,  # ignore words present in
+                                   # max_df=0.5,  # ignore words present in
                                    # more than X% of documents
                                    # min_df=2,  # ignore words than appear
                                    # # less than n times
