@@ -189,6 +189,7 @@ class AnnA:
                  add_KNN_to_field=False,
                  filtered_deck_name_template=None,
                  filtered_deck_by_batch=False,
+                 filtered_deck_at_top_level=True,
                  filtered_deck_batch_size=25,
                  show_banner=True,
                  repick_task="boost",  # None, "addtag", "boost" or
@@ -382,6 +383,10 @@ class AnnA:
         assert isinstance(filtered_deck_by_batch,
                           bool), "Invalid type for `filtered_deck_by_batch`"
         self.filtered_deck_by_batch = filtered_deck_by_batch
+
+        assert isinstance(filtered_deck_at_top_level,
+                          bool), "Invalid type for `filtered_deck_at_top_level`"
+        self.filtered_deck_at_top_level = filtered_deck_at_top_level
 
         assert isinstance(filtered_deck_batch_size,
                           int), "Invalid type for `filtered_deck_batch_size`"
@@ -2472,21 +2477,25 @@ class AnnA:
             red("This will not affect the due order.")
             self._call_anki(action="bury", cards=to_bury)
             return True
+
+        if self.filtered_deck_name_template is not None:
+            filtered_deck_name = str(
+                self.filtered_deck_name_template + f" - {self.deckname}")
+            filtered_deck_name = filtered_deck_name.replace("::", "_")
         else:
-            if self.filtered_deck_name_template is not None:
-                filtered_deck_name = str(
-                    self.filtered_deck_name_template + f" - {self.deckname}")
-                filtered_deck_name = filtered_deck_name.replace("::", "_")
+            if self.filtered_deck_at_top_level:
+                top_lvl_deckname = self.deckname.split("::")[-1]
+                filtered_deck_name = f"{top_lvl_deckname} - AnnA Optideck"
             else:
                 filtered_deck_name = f"{self.deckname} - AnnA Optideck"
-            self.filtered_deck_name = filtered_deck_name
+        self.filtered_deck_name = filtered_deck_name
 
-            while filtered_deck_name in self._call_anki(action="deckNames"):
-                beep(f"\nFound existing filtered "
-                     f"deck: {filtered_deck_name} "
-                     "You have to delete it manually, the cards will be "
-                     "returned to their original deck.")
-                input("Done? >")
+        while filtered_deck_name in self._call_anki(action="deckNames"):
+            beep(f"\nFound existing filtered "
+                 f"deck: {filtered_deck_name} "
+                 "You have to delete it manually, the cards will be "
+                 "returned to their original deck.")
+            input("Done? >")
 
         whi("Creating deck containing the cards to review: "
             f"{filtered_deck_name}")
@@ -3201,6 +3210,16 @@ if __name__ == "__main__":
                         help=(
                             "To enable creating batch of filtered "
                             "decks. Default is `False`."))
+    parser.add_argument("--filtered_deck_at_top_level",
+                        action="store_true",
+                        dest="filtered_deck_at_top_level",
+                        default=True,
+                        required=False,
+                        help=(
+                            "If True, the new filtered deck will be a "
+                            "top level deck, if False: the filtered "
+                            "deck will be next to the original "
+                            "deck. Default to True."))
     parser.add_argument("--filtered_deck_batch_size",
                         nargs=1,
                         metavar="FILTERED_DECK_BATCH_SIZE",
