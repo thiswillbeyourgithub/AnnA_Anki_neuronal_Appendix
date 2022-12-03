@@ -2730,6 +2730,16 @@ class AnnA:
         nx.drawing.nx_pydot.write_dot(
                 G, f'{self.plot_dir}/{self.deckname} - spring.dot')
 
+        # computing average clustering coefficient
+        whi("Computing average clustering...")
+        t = time.time()
+        avg_clst = nx.average_clustering(G,
+                                         weight="weight",
+                                         count_zeros=True,
+                                         )
+        yel(f"Average clustering of plot: {avg_clst}"
+            f"\n(In {int(time.time()-t)}s)")
+
         whi("Finished 2D plots")
         signal.alarm(0)  # turn off timeout
 
