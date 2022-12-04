@@ -2485,7 +2485,7 @@ class AnnA:
         else:
             if self.filtered_deck_at_top_level:
                 top_lvl_deckname = self.deckname.split("::")[-1]
-                filtered_deck_name = f"{top_lvl_deckname} - AnnA Optideck"
+                filtered_deck_name = f"AnnA Optideck - {top_lvl_deckname}"
             else:
                 filtered_deck_name = f"{self.deckname} - AnnA Optideck"
         self.filtered_deck_name = filtered_deck_name
@@ -2730,15 +2730,16 @@ class AnnA:
         nx.drawing.nx_pydot.write_dot(
                 G, f'{self.plot_dir}/{self.deckname} - spring.dot')
 
+        # not implemented for nx.Multigraph
         # computing average clustering coefficient
-        whi("Computing average clustering...")
-        t = time.time()
-        avg_clst = nx.average_clustering(G,
-                                         weight="weight",
-                                         count_zeros=True,
-                                         )
-        yel(f"Average clustering of plot: {avg_clst}"
-            f"\n(In {int(time.time()-t)}s)")
+        # whi("Computing average clustering...")
+        # t = time.time()
+        # avg_clst = nx.average_clustering(G,
+        #                                  weight="weight",
+        #                                  count_zeros=True,
+        #                                  )
+        # yel(f"Average clustering of plot: {avg_clst}"
+        #     f"\n(In {int(time.time()-t)}s)")
 
         whi("Finished 2D plots")
         signal.alarm(0)  # turn off timeout
