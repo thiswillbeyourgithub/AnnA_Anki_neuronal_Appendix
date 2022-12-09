@@ -2051,14 +2051,17 @@ class AnnA:
                 ro /= ro.max()
             ro += 0.001
 
-            if boost:
-                whi("Boosted urgent_dues cards to increase chances they are reviewed today.")
+            if boost and (self.score_adjustment_factor[0] == 0):
+                yel("Will not boost cards because the relevant score "
+                    "adjustment factor is 0")
+            elif boost:
                 for ind in urgent_dues:
-                    ro[ind] += (-0.5 - urgent_factor[ind])
+                    ro[ind] += (-0.5 * self.score_adjustment_factor[0] - urgent_factor[ind])
                 assert ro.min() < 0
                 ro += abs(ro.min()) + 0.001
                 assert ro.min() > 0, "Negative value in relative overdueness"
                 ro /= ro.max()
+                whi("Boosted urgent_dues cards to increase chances they are reviewed today.")
 
             # add tag to urgent dues
             if urgent_dues:
