@@ -1495,7 +1495,7 @@ class AnnA:
                                "init": 'spectral',  # TODO: try, 'pca' when new release comes out
                                "random_state": 42,
                                "transform_seed": 42,
-                               "n_neighbors":  50,  # higher means more focused on the global structure
+                               "n_neighbors":  30,  # higher means more focused on the global structure
                                "min_dist": 0,
                                "low_memory":  False,
                                "densmap": True,  # try to preserve local density
@@ -1511,6 +1511,7 @@ class AnnA:
                 fallback_to_SVD = True
 
             if fallback_to_SVD:
+                whi("Using SVD to reduce dimensions...")
                 # explanation : trying to do a dimensions reduction on the vectors
                 # but trying up to 10 times to find the right value that keeps
                 # between X-% and X+5% of variance. Under that the information
