@@ -206,7 +206,7 @@ class AnnA:
                  plot_2D_embeddings=False,
                  plot_dir="Plots",
                  TFIDF_stem=False,
-                 dist_metric="RBF",  # 'RBF' or 'cosine' or 'euclidean"
+                 dist_metric="cosine",  # 'RBF' or 'cosine' or 'euclidean"
 
                  whole_deck_computation=False,
                  profile_name=None,
@@ -3365,12 +3365,12 @@ if __name__ == "__main__":
                         metavar="DIST_METRIC",
                         dest="dist_metric",
                         type=str,
-                        default="RBF",
+                        default="cosine",
                         required=False,
                         help=(
                             "when computing the distance matrix, wether to "
                             "use 'cosine' or 'rbf' or 'euclidean' metrics. "
-                            "cosine and rbf should be fine. Default to 'rbf'"))
+                            "cosine and rbf should be fine. Default to 'cosine'"))
     parser.add_argument("--whole_deck_computation",
                         dest="whole_deck_computation",
                         default=False,
