@@ -1703,7 +1703,7 @@ class AnnA:
 
         assert np.isclose(a=(self.df_dist.values - self.df_dist.values.T),
                           b=0,
-                          atol=1e-07).all(), (
+                          atol=1e-06).all(), (
                 "Non symetric distance matrix")
 
         # make it very symetric for good measure
