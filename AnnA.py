@@ -171,7 +171,7 @@ class AnnA:
                  max_deck_size=None,
                  stopwords_lang=["english", "french"],
                  rated_last_X_days=4,
-                 score_adjustment_factor=[1, 2],
+                 score_adjustment_factor=[1, 5],
                  field_mappings="utils/field_mappings.py",
                  acronym_file="utils/acronym_example.py",
                  acronym_list=None,
@@ -2939,13 +2939,13 @@ if __name__ == "__main__":
                         nargs="+",
                         metavar="SCORE_ADJUSTMENT_FACTOR",
                         dest="score_adjustment_factor",
-                        default="1,2",
+                        default="1,5",
                         type=str,
                         required=False,
                         help=(
                             "a comma separated list of numbers used to "
                             "adjust the value of the reference order compared to "
-                            "how similar the cards are. Default is `1,2`. For "
+                            "how similar the cards are. Default is `1,5`. For "
                             "example: '1, 1.3' means that the algorithm will "
                             "spread the similar cards farther apart."))
     parser.add_argument("--field_mapping",
