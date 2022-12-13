@@ -35,8 +35,8 @@ from tokenizers import Tokenizer
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import pairwise_distances, pairwise_kernels
-from sklearn.decomposition import TruncatedSVD
 from sklearn.neighbors import radius_neighbors_graph, kneighbors_graph
+import umap.umap_
 
 import networkx as nx
 from plotly.colors import qualitative
@@ -1471,180 +1471,48 @@ class AnnA:
               "Vectorizing using TFIDF"),
                                                   file=self.t_strm))
 
-        # computing the max value of n_oversamples for SVD
-        whi("Computing matrix rank...")
-        m_rank = np.linalg.matrix_rank(t_vec)
 
         if self.TFIDF_dim is None:
             self.vector = t_vec
         else:
-            # AnnA will try to use UMAP to reduce the dimensions, but
-            # in case of errors, will revert back to SVD (automatically
-            # finds the best number of dimensions to keep a good proportion of
-            # the variance) but it's less good because of the curse of
-            # dimensionnality : SVD keeps a lot of dimensions so most distances
-            # are large
-            try:
-                whi("Using UMAP to reduce to 10 dimension")
-                fallback_to_SVD = False
-                import umap.umap_
-                umap_kwargs = {"n_jobs": -1,
-                               "verbose": 1,
-                               "n_components": 10,
-                               "metric": "cosine",
-                               "init": 'spectral',  # TODO: try, 'pca' when new release comes out
-                               "random_state": 42,
-                               "transform_seed": 42,
-                               "n_neighbors":  30,  # higher means more focused on the global structure
-                               "min_dist": 0,
-                               "low_memory":  False,
-                               "densmap": True,  # try to preserve local density
-                               }
-                U = umap.umap_.UMAP(**umap_kwargs)
-                t_red = U.fit_transform(t_vec)
-                self.vectors = t_red
-            except Exception as err:
-                beep(f"Exception with UMAP: '{err}'")
-                red(traceback.format_exc())
+            # AnnA will use UMAP to reduce the dimensions
+            # Previously TruncatedSVD was used but it kept too many
+            # dimensions so ended up in the curse of dimensionnality
 
-                yel("Using SVD instead...")
-                fallback_to_SVD = True
-
-            if fallback_to_SVD:
-                whi("Using SVD to reduce dimensions...")
-                # explanation : trying to do a dimensions reduction on the vectors
-                # but trying up to 10 times to find the right value that keeps
-                # between X-% and X+5% of variance. Under that the information
-                # starts to get lost and over that cards can tend to
-                # all be equidistant (I think).
-                trial = 0
-                desired_variance_kept = 25
-                red("Iteratively computing dimension reduction until "
-                    f"{desired_variance_kept}% of variance is kept.")
-
-                # start either from the user supplied value or from the highest
-                # possible number up to 50 or from cache
-
-                cache_dir = Path(".cache")
-                cache_dir.mkdir(exist_ok=True)
-                cache_file = cache_dir / "latest_TFIDF_dim.cache.json"
-                dim_limit = max(3, len(self.df.index) // 50)  # maximum 1 dimension per 50 cards
-                assert dim_limit <= (t_vec.shape[1] - 1), (
-                    "Invalid number of dimension!")
-                cache = {}
-
-                if self.TFIDF_dim == "auto":
-                    # trying from cache
-                    try:
-                        assert cache_file.exists(), (
-                            "No 'latest_TFIDF_dim.cache.json' file, "
-                            "creating it.")
-                        cache = json.load(cache_file.open("r"))
-                        assert isinstance(cache, dict), "cache is not a dict"
-                        if f"{self.deckname}_{self.task}_{desired_variance_kept}" in cache:
-                            self.TFIDF_dim = int(cache[f"{self.deckname}_{self.task}_{desired_variance_kept}"])
-                            self.TFIDF_dim = min(self.TFIDF_dim, dim_limit)
-                            whi(f"(Loaded dimension '{self.TFIDF_dim}' from cache file)")
-                        else:
-                            self.TFIDF_dim = dim_limit
-                            yel("Cache does not contain the key to this deck, "
-                                "creating it.")
-                    except Exception as err:
-                        beep("Exception when loading latest dimension cache:"
-                             "'{err}'")
-                        self.TFIDF_dim = dim_limit
-
-                already_tried = []
-                while True:
-                    self.TFIDF_dim = min(self.TFIDF_dim, dim_limit)
-                    yel(f"\nReducing dimensions to {self.TFIDF_dim} using "
-                        "SVD...", end=" ")
-                    svd = TruncatedSVD(n_components=self.TFIDF_dim,
-                                       random_state=42,
-                                       n_oversamples=max(
-                                           10, 2 * m_rank - self.TFIDF_dim)
-                                       )
-                    t_red = svd.fit_transform(t_vec)
-                    evr = round(sum(svd.explained_variance_ratio_) * 100, 1)
-                    trial += 1
-                    already_tried.append(int(self.TFIDF_dim))
-
-                    if abs(evr - desired_variance_kept) <= 5:
-                        # success
-                        break
-
-                    elif trial >= 10:
-                        # failure, should not really happen
-                        beep(f"Tried {trial} times to find the right number "
-                             "of dimensions, carrying on.")
-                        break
-
-                    else:
-                        # choosing next value to try
-                        offset = desired_variance_kept - evr
-                        # multiply or divide by 2 every 20% of difference
-                        self.TFIDF_dim *= 2**(offset/20)
-                        self.TFIDF_dim = int(max(3,
-                                                 min(self.TFIDF_dim,
-                                                     dim_limit)))
-                        yel(f"Explained variance ratio is only {evr}% ("
-                            "retrying up to 10 times to get closer to "
-                            f"{desired_variance_kept}%)", end=" ")
-
-                        if int(self.TFIDF_dim) in already_tried:
-                            yel(f"Already tried dimension {self.TFIDF_dim}, "
-                                "skipping.")
-                            break
-
-                        continue
-
-                yel(f"Explained variance ratio after SVD with {self.TFIDF_dim} "
-                    f"dims on Tf_idf: {evr}%")
-
-                # store dim value into a cache file
-                try:
-                    cache[f"{self.deckname}_{self.task}_{desired_variance_kept}"] = int(self.TFIDF_dim)
-                    json.dump(cache, cache_file.open("w"))
-                    whi("(Saved dimension to cache file.)")
-                except Exception as err:
-                    beep(f"Exception when storing latest dimension to cache: '{err}'")
-
-                self.vectors = t_red
+            whi("Using UMAP to reduce to 10 dimension")
+            umap_kwargs = {"n_jobs": -1,
+                           "verbose": 1,
+                           "n_components": 10,
+                           "metric": "cosine",
+                           "init": 'spectral',  # TODO: try, 'pca' when new release comes out
+                           "random_state": 42,
+                           "transform_seed": 42,
+                           "n_neighbors":  30,  # higher means more focused on the global structure
+                           "min_dist": 0,
+                           "low_memory":  False,
+                           "densmap": True,  # try to preserve local density
+                           }
+            U = umap.umap_.UMAP(**umap_kwargs)
+            t_red = U.fit_transform(t_vec)
+            self.vectors = t_red
 
         if self.plot_2D_embeddings:
             try:
-                yel("Computing 2D embeddings for the plot...")
-
-                try:
-                    whi("Using UMAP")
-                    import umap.umap_
-                    umap_kwargs = {"n_jobs": -1,
-                                   "verbose": 1,
-                                   "n_components": 2,
-                                   "metric": "cosine",
-                                   "init": 'spectral',  # TODO: try, 'pca' when new release comes out
-                                   "random_state": 42,
-                                   "transform_seed": 42,
-                                   "n_neighbors":  50,  # higher means more focused on the global structure
-                                   "min_dist": 0,
-                                   "low_memory":  False,
-                                   "densmap": True,  # try to preserve local density
-                                   }
-                    U = umap.umap_.UMAP(**umap_kwargs)
-                    t_embed = U.fit_transform(t_vec)
-
-                except Exception as err:
-                    beep(f"Exception with UMAP: '{err}'")
-                    red(traceback.format_exc())
-
-                    yel("Using SVD...")
-                    svd = TruncatedSVD(n_components=2,
-                                       random_state=42,
-                                       n_oversamples=max(10, 2 * m_rank - 2)
-                            )
-                    t_embed = svd.fit_transform(t_vec)
-
-                self.embeddings2D = t_embed
+                yel("Computing 2D embeddings for the plot using UMAP...")
+                umap_kwargs = {"n_jobs": -1,
+                               "verbose": 1,
+                               "n_components": 2,
+                               "metric": "cosine",
+                               "init": 'spectral',
+                               "random_state": 42,
+                               "transform_seed": 42,
+                               "n_neighbors":  50,
+                               "min_dist": 0,
+                               "low_memory":  False,
+                               "densmap": True,
+                               }
+                U = umap.umap_.UMAP(**umap_kwargs)
+                self.embeddings2D = U.fit_transform(t_vec)
             except Exception as err:
                 beep(f"Error when computing 2D embeddings: '{err}'")
                 red(traceback.format_exc())
