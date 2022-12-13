@@ -1487,8 +1487,8 @@ class AnnA:
                            "init": 'spectral',  # TODO: try, 'pca' when new release comes out
                            "random_state": 42,
                            "transform_seed": 42,
-                           "n_neighbors":  30,  # higher means more focused on the global structure
-                           "min_dist": 0,
+                           "n_neighbors":  50,  # higher means more focused on the global structure
+                           "min_dist": 0,  # because siblings have the same location anyway
                            "low_memory":  False,
                            "densmap": True,  # try to preserve local density
                            }
