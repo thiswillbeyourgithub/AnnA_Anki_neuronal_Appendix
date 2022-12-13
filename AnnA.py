@@ -1902,8 +1902,7 @@ class AnnA:
             # then, correct overdue values to make sure they are negative
             correction = max(overdue.max(), 0) + 0.01
             if correction > 1:
-                beep("This should probably never happen.")
-                breakpoint()
+                raise Exception("Correction factor above 1")
 
             # my implementation of relative overdueness:
             # (intervals are positive, overdue are negative for due cards
