@@ -186,7 +186,7 @@ class AnnA:
                  replace_greek=True,
                  keep_OCR=True,
                  append_tags=True,
-                 tags_to_ignore=["AnnA, leech"],
+                 tags_to_ignore=["AnnA", "leech"],
                  add_KNN_to_field=False,
                  filtered_deck_name_template=None,
                  filtered_deck_by_batch=False,
@@ -310,13 +310,14 @@ class AnnA:
         assert isinstance(append_tags, bool), "Invalid type of `append_tags`"
         self.append_tags = append_tags
 
-        if tags_to_ignore is None or tags_to_ignore == "":
+        if tags_to_ignore is None:
             tags_to_ignore = []
-        if not isinstance(tags_to_ignore, list):
-            assert "[" in tags_to_ignore, "missing '[' in 'tags_to_ignore'"
-            tags_to_ignore = tags_to_ignore.replace("[", "").replace("]", "").strip().split(",")
-            tags_to_ignore = [f".*{t.strip()}.*" if ".*" not in t else t.strip() for t in tags_to_ignore]
-        self.tags_to_ignore = [re.compile(t) for t in tags_to_ignore]
+        assert isinstance(tags_to_ignore, list), "tags_to_ignore is not a list"
+        self.tags_to_ignore = [re.compile(f".*{t.strip()}.*")
+                               if ".*" not in t
+                               else re.compile(t.strip())
+                               for t in tags_to_ignore]
+        assert len(tags_to_ignore) == len(self.tags_to_ignore)
 
         assert isinstance(add_KNN_to_field, bool), (
                 "Invalid type of `add_KNN_to_field`")
@@ -3101,16 +3102,16 @@ if __name__ == "__main__":
                         nargs="*",
                         metavar="TAGS_TO_IGNORE",
                         dest="tags_to_ignore",
-                        default="[AnnA, leech]",
-                        type=str,
+                        default=["AnnA", "leech"],
+                        type=list,
                         required=False,
                         help=(
-                            "a comma separated list of regexp of tags to "
+                            "a list of regexp of tags to "
                             "ignore when "
                             "appending tags to cards. This is not a "
                             "list of tags "
                             "whose card should be ignored! Default is "
-                            "'[AnnA, leech]'. Set to None to disable it."))
+                            "['AnnA', 'leech']. Set to None to disable it."))
     parser.add_argument("--add_KNN_to_field",
                         action="store_true",
                         dest="add_KNN_to_field",
