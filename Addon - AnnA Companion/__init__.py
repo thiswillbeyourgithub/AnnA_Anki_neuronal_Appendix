@@ -548,11 +548,11 @@ class AnkiConnect:
         editing_started = False
         for note, content in nid_content.items():
             ankiNote = self.getNote(int(note))
-            if ankiNote["Nearest_neighbours"] != content:
+            if ankiNote["Nearest_neighbors"] != content:
                 if not editing_started:
                     self.startEditing()
                     editing_started = True
-                ankiNote["Nearest_neighbours"] = content
+                ankiNote["Nearest_neighbors"] = content
                 ankiNote.flush()
         if editing_started:
             self.collection().autosave()
