@@ -1343,8 +1343,7 @@ class AnnA:
                                    ngram_range=(1, 3),
                                    norm="l2",
                                    sublinear_tf=True,
-                                   max_features=min(10_000,
-                                                    len(df.index) // 2),
+                                   max_features=500,
                                    binary=binary_mode,
                                    # max_df=0.5,  # ignore words present in
                                    # more than X% of documents
