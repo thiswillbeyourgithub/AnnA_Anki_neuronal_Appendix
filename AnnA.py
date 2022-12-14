@@ -1481,7 +1481,7 @@ class AnnA:
             # dimensions so ended up in the curse of dimensionnality
 
             # reduce dimensions before UMAP if too many dimensions
-            dim_limit = 500
+            dim_limit = 100
             if t_vec.shape[1] > dim_limit:
                 yel(f"TFIDF output {t_vec.shape[1]} dimensions, above "
                     f"{dim_limit} so using SVD first to reduce to "
