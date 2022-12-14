@@ -1652,8 +1652,9 @@ class AnnA:
                         include_self=True
                         )
             elif mode == "fixed_radius":
-                radius = 1 / 4 * self.mean_dist
-                yel(f"Finding neighbors within {radius}...")
+                radius = self.mean_dist / 20
+                yel(f"Finding neighbors within {radius} (mean "
+                    f"distance is {round(self.mean_dist, 3)})...")
                 self.knn = radius_neighbors_graph(
                         X=self.df_dist,
                         radius=radius,
