@@ -1729,7 +1729,7 @@ class AnnA:
 
         if nb_of_nn:
             yel("Number of neighbors on average:")
-            whi(str(pd.DataFrame(nb_of_nn).describe()))
+            whi(str(pd.DataFrame(nb_of_nn, columns=["Neighbors"]).describe()))
 
     def _print_similar(self):
         """ finds two cards deemed very similar (but not equal) and print
@@ -2633,7 +2633,7 @@ class AnnA:
                          file=self.t_strm):
             for sub_k, sub_v in all_edges[k].items():
                 all_edges[k][sub_k] = (sub_v - min_w + mean_w) / new_spread
-                assert not np.isclose(all_edges[k][sub_k], 0), "Too small weight!"
+                assert not np.isclose(all_edges[k][sub_k], 0), "Null weight!"
 
         # add each edge to the graph
         for k, v in tqdm(all_edges.items(),
