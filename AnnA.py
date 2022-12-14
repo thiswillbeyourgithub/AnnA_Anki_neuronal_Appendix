@@ -372,7 +372,7 @@ class AnnA:
         elif task == "filter_review_cards":
             red("Task : created filtered deck containing review cards")
         elif task == "just_add_KNN":
-            red("Task : find the nearest neighbour of each note and "
+            red("Task : find the nearest neighbor of each note and "
                 "add it to a field.")
         else:
             raise ValueError()
@@ -1162,8 +1162,8 @@ class AnnA:
                     fields_to_keep = sorted(
                         field_list, key=lambda x: int(
                             self.df.loc[index, "fields"][x.lower()]["order"]))
-                    if "Nearest_neighbours" in field_list:
-                        field_list.remove("Nearest_neighbours")
+                    if "Nearest_neighbors" in field_list:
+                        field_list.remove("Nearest_neighbors")
 
                 comb_text = ""
                 for f in fields_to_keep:
@@ -1627,9 +1627,9 @@ class AnnA:
 
     def _compute_nearest_neighbor(self, mode="fixed_nn"):
         """
-        Compute the nearest neighbours of each note of the distance matrix.
-        This is used to then fill the field "Nearest_neighbours" of those notes
-        so that you can quickly know the neighbour of any given card straight
+        Compute the nearest neighbors of each note of the distance matrix.
+        This is used to then fill the field "Nearest_neighbors" of those notes
+        so that you can quickly know the neighbor of any given card straight
         into anki without having to use AnnA.
 
         "mode" can be either "fixed_nn" or "fixed_radius"
@@ -1642,7 +1642,7 @@ class AnnA:
             if mode == "fixed_nn":
                 # 1% of neighbors, bounded
                 n_n = min(20, max(self.df_dist.shape[0] // 100, 5))
-                yel(f"Computing '{n_n}' nearest neighbours per point...")
+                yel(f"Computing '{n_n}' nearest neighbors per point...")
                 self.knn = kneighbors_graph(
                         X=self.df_dist,
                         n_neighbors=n_n,
@@ -1670,60 +1670,62 @@ class AnnA:
 
     def _add_neighbors_to_notes(self):
         """
-        if the model card contains the field 'Nearest_neighbours', replace its
-        content by a query that can be used to find the neighbour of the
+        if the model card contains the field 'Nearest_neighbors', replace its
+        content by a query that can be used to find the neighbor of the
         given note.
         """
         if not (self.add_KNN_to_field or self.task == "just_add_KNN"):
             whi("Not adding KNN to note field because of arguments.")
             return
-        red("Adding the list of neighbours to each note.")
+        red("Adding the list of neighbors to each note.")
         nid_content = {}
         nb_of_nn = []
 
         # as some of the intermediary value for this iteration can be needed
         # if 2D plotting, they are stored as attributes just in case
         if self.plot_2D_embeddings:
-            self.neighbours_info = {}
+            self.nbrs_cache = {}
         try:
             for i in tqdm(
                     range(self.knn.shape[0]),
-                    desc="Collecting neighbours of notes",
+                    desc="Collecting neighbors of notes",
                     file=self.t_strm,
                     unit="card"):
                 cardId = self.df.index[i]
-                if "Nearest_neighbours".lower() not in self.df.loc[
+                if "Nearest_neighbors".lower() not in self.df.loc[
                         cardId, "fields"].keys():
                     continue
+
                 noteId = int(self.df.loc[cardId, "note"])
                 if noteId in nid_content:
                     continue  # skipped because a card of this note was
                     # already processed
 
                 knn_ar = self.knn.getcol(i).toarray().squeeze()
-                neighbour_indices = list(np.where(knn_ar == 1)[0])
-                nb_of_nn.append(len(neighbour_indices))
-                neighbour_indices = sorted(
-                        neighbour_indices,
+                nbrs_ind = np.where(knn_ar == 1)[0]
+                nbrs_ind = sorted(
+                        nbrs_ind,
                         key=lambda x: float(self.df_dist.loc[
                             cardId, self.df.index[x]]),
                         reverse=True)
-                neighbours_nid = [str(self.df.loc[self.df.index[ind], "note"])
-                                  for ind in neighbour_indices]
-                nid_content[noteId] = "nid:" + ",".join(neighbours_nid)
+                nbrs_nid = [self.df.loc[self.df.index[ind], "note"]
+                            for ind in nbrs_ind]
                 if self.plot_2D_embeddings:
-                    self.neighbours_info[noteId] = {
-                            "neighbour_indices": neighbour_indices,
-                            "neighbours_nid": neighbours_nid,
+                    self.nbrs_cache[noteId] = {
+                            "nbrs_ind": nbrs_ind,
+                            "nbrs_nid": nbrs_nid,
                             }
+
+                nid_content[noteId] = "nid:" + ",".join([str(x) for x in nbrs_nid])
+                nb_of_nn.append(len(nbrs_ind))
             whi("Sending new field value to Anki...")
             self._call_anki(
                     action="update_KNN_field",
                     nid_content=nid_content,
                     )
-            yel("Finished adding neighbours to notes.")
+            yel("Finished adding neighbors to notes.")
         except Exception:
-            beep("Error when adding neighbour list to notes!")
+            beep("Error when adding neighbor list to notes!")
 
         if nb_of_nn:
             yel("Number of neighbors on average:")
@@ -2564,46 +2566,47 @@ class AnnA:
         sum_w = 0
         n_w = 0
         assert len(self.df.index) == self.knn.shape[0]
-        if not hasattr(self, "neighbours_info"):
-            self.neighbours_info = {}  # for quicker check
+        if not hasattr(self, "nbrs_cache"):
+            self.nbrs_cache = {}  # for quicker check
         for i in tqdm(
                 range(self.knn.shape[0]),
                 desc="Computing edges",
                 file=self.t_strm,
                 unit="card"):
             noteId = self.df.loc[self.df.index[i], "note"]
-            if noteId in self.neighbours_info:
-                neighbour_indices = self.neighbours_info[noteId]["neighbour_indices"]
-                neighbours_nid = self.neighbours_info[noteId]["neighbours_nid"]
+            if noteId in self.nbrs_cache:
+                nbrs_ind = self.nbrs_cache[noteId]["nbrs_ind"]
+                nbrs_nid = self.nbrs_cache[noteId]["nbrs_nid"]
             else:
                 knn_ar = self.knn.getcol(i).toarray().squeeze()
-                neighbour_indices = np.where(knn_ar == 1)[0]
-                # sort neighbour by distance
-                neighbour_indices = sorted(
-                        neighbour_indices,
+                nbrs_ind = np.where(knn_ar == 1)[0]
+                # sort neighbors by distance
+                nbrs_ind = sorted(
+                        nbrs_ind,
                         key=lambda x: self.df_dist.loc[
                             self.df.index[i], self.df.index[x]],
                         reverse=True)
-                neighbours_nid = [self.df.loc[self.df.index[ind], "note"]
-                                  for ind in neighbour_indices]
-            for ii, n_nid in enumerate(neighbours_nid):
+                nbrs_nid = [self.df.loc[self.df.index[ind], "note"]
+                                  for ind in nbrs_ind]
+            for ii, n_nid in enumerate(nbrs_nid):
                 if noteId == n_nid:
-                    # skip self neighbouring
+                    # skip self neighboring
                     continue
                 if ii > 20:
-                    # Only considering the n first neighbours
+                    # Only considering the n first neighbors
                     break
                 smallest = min(noteId, n_nid)
                 largest = max(noteId, n_nid)
                 # new weight is the distance between points
                 new_w = self.df_dist.loc[
-                    self.df.index[i], self.df.index[neighbour_indices[ii]]
+                    self.df.index[i], self.df.index[nbrs_ind[ii]]
                     ]
 
                 # store the weight
                 if smallest not in all_edges:
                     all_edges[smallest] = {largest: new_w}
                 else:
+
                     if largest not in all_edges[smallest]:
                         all_edges[smallest][largest] = new_w
                     else:
@@ -2621,7 +2624,8 @@ class AnnA:
         assert min_w >= 0 and min_w < max_w, (
                 f"Impossible weight values: {min_w} and {max_w}")
 
-        # minmaing weights
+        # minmaing weights (although instead of reducing to 0, it adds the
+        # mean weight to avoid null weights)
         mean_w = sum_w / n_w
         new_spread = max_w - min_w
         for k, v in tqdm(all_edges.items(),
@@ -2905,8 +2909,8 @@ if __name__ == "__main__":
                             "similar learning cards (among other learning cards), "
                             "or bury only the similar cards in review (among "
                             "other review cards) or just find the nearest "
-                            "neighbours of each note and save it to the field "
-                            "'Nearest_neighbours' of each note. Default is "
+                            "neighbors of each note and save it to the field "
+                            "'Nearest_neighbors' of each note. Default is "
                             "\"`filter_review_cards`\"."))
     parser.add_argument("--target_deck_size",
                         nargs=1,
@@ -3137,8 +3141,8 @@ if __name__ == "__main__":
                         required=False,
                         help=(
                             "Wether to add a query to find the K nearest"
-                            "neighbour of a given card to a new field "
-                            "called 'Nearest_neighbours' (only if already "
+                            "neighbor of a given card to a new field "
+                            "called 'Nearest_neighbors' (only if already "
                             "present in the model). Be careful not to "
                             "overwrite the fields by running AnnA "
                             "several times in a row! For example by first "
