@@ -1707,7 +1707,7 @@ class AnnA:
                         nbrs_ind,
                         key=lambda x: float(self.df_dist.loc[
                             cardId, self.df.index[x]]),
-                        reverse=True)
+                        reverse=False)  # ascending order
                 nbrs_nid = [self.df.loc[self.df.index[ind], "note"]
                             for ind in nbrs_ind]
                 if self.plot_2D_embeddings:
@@ -2585,7 +2585,7 @@ class AnnA:
                         nbrs_ind,
                         key=lambda x: self.df_dist.loc[
                             self.df.index[i], self.df.index[x]],
-                        reverse=True)
+                        reverse=False)  # ascending order
                 nbrs_nid = [self.df.loc[self.df.index[ind], "note"]
                                   for ind in nbrs_ind]
             for ii, n_nid in enumerate(nbrs_nid):
