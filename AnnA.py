@@ -1716,7 +1716,10 @@ class AnnA:
                             "nbrs_nid": nbrs_nid,
                             }
 
-                nid_content[noteId] = "nid:" + ",".join([str(x) for x in nbrs_nid])
+                # don't send more than 50 neighbours
+                nid_content[noteId] = "nid:" + ",".join(
+                        [str(x) for x in nbrs_nid[:50]]
+                        )
                 nb_of_nn.append(len(nbrs_ind))
             whi("Sending new field value to Anki...")
             self._call_anki(
