@@ -2552,6 +2552,7 @@ class AnnA:
         max_w = -np.inf
         sum_w = 0
         n_w = 0
+        assert len(self.df.index) == self.knn.shape[0]
         for i in tqdm(
                 range(self.knn.shape[0]),
                 desc="Computing edges",
