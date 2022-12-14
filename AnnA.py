@@ -1571,21 +1571,13 @@ class AnnA:
             self.df_dist /= -max_val  # normalize values then make negative
             # add 1 to get: "dist = 1 - similarity"
             self.df_dist += 1
-        elif self.dist_metric == "cosine":
+        elif self.dist_metric in ["cosine", "euclidean"]:
             self.df_dist = pd.DataFrame(columns=df.index,
                                         index=df.index,
                                         data=pairwise_distances(
                                             self.vectors,
                                             n_jobs=-1,
-                                            metric="cosine",
-                                            ))
-        elif self.dist_metric == "euclidean":
-            self.df_dist = pd.DataFrame(columns=df.index,
-                                        index=df.index,
-                                        data=pairwise_distances(
-                                            self.vectors,
-                                            n_jobs=-1,
-                                            metric="euclidean",
+                                            metric=self.dist_metric,
                                             ))
         else:
             raise ValueError("Invalid 'dist_metric' value")
