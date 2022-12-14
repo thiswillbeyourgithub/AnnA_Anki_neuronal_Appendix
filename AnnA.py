@@ -1510,8 +1510,7 @@ class AnnA:
                            "min_dist": 0,  # because siblings have the same location anyway
                            "low_memory":  False,
                            "densmap": True,  # try to preserve local density
-                           # "random_state": 42,
-                           "parallel": True,  # makes it non deterministic
+                           # "random_state": 42, # turned of because makes it non deterministic
                            }
             U = umap.umap_.UMAP(**umap_kwargs)
             t_red = U.fit_transform(t_vec)
@@ -1530,8 +1529,6 @@ class AnnA:
                                "min_dist": 0,
                                "low_memory":  False,
                                "densmap": True,
-                               # "random_state": 42,
-                               "parallel": True,
                                }
                 U = umap.umap_.UMAP(**umap_kwargs)
                 self.embeddings2D = U.fit_transform(t_vec)
