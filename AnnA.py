@@ -2596,7 +2596,7 @@ class AnnA:
                 # store the weights information to scale them afterwards
                 if new_w > max_w:
                     max_w = new_w
-                if new_w < min_w:
+                elif new_w < min_w:
                     min_w = new_w
                 sum_w += new_w
                 n_w += 1
@@ -2604,13 +2604,14 @@ class AnnA:
         assert min_w >= 0 and min_w < max_w, (
                 f"Impossible weight values: {min_w} and {max_w}")
 
-        # scaling of weights (even though the distances were already minmaxed)
+        # minmaing weights
         mean_w = sum_w / n_w
+        new_spread = max_w - min_w
         for k, v in tqdm(all_edges.items(),
                          desc="Minmax weights",
                          file=self.t_strm):
             for sub_k, sub_v in all_edges[k].items():
-                all_edges[k][sub_k] = (sub_v - min_w) / (max_w - min_w) + mean_w / (max_w - min_w)
+                all_edges[k][sub_k] = (sub_v - min_w + mean_w) / new_spread
                 assert not np.isclose(all_edges[k][sub_k], 0), "Too small weight!"
 
         # add each edge to the graph
