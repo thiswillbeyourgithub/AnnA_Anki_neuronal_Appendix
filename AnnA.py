@@ -1680,6 +1680,11 @@ class AnnA:
         red("Adding the list of neighbours to each note.")
         nid_content = {}
         nb_of_nn = []
+
+        # as some of the intermediary value for this iteration can be needed
+        # if 2D plotting, they are stored as attributes just in case
+        if self.plot_2D_embeddings:
+            self.neighbours_info = {}
         try:
             for i in tqdm(
                     range(self.knn.shape[0]),
@@ -1706,6 +1711,11 @@ class AnnA:
                 neighbours_nid = [str(self.df.loc[self.df.index[ind], "note"])
                                   for ind in neighbour_indices]
                 nid_content[noteId] = "nid:" + ",".join(neighbours_nid)
+                if self.plot_2D_embeddings:
+                    self.neighbours_info[noteId] = {
+                            "neighbour_indices": neighbour_indices,
+                            "neighbours_nid": neighbours_nid,
+                            }
             whi("Sending new field value to Anki...")
             self._call_anki(
                     action="update_KNN_field",
@@ -2554,28 +2564,34 @@ class AnnA:
         sum_w = 0
         n_w = 0
         assert len(self.df.index) == self.knn.shape[0]
+        if not hasattr(self, "neighbours_info"):
+            self.neighbours_info = {}  # for quicker check
         for i in tqdm(
                 range(self.knn.shape[0]),
                 desc="Computing edges",
                 file=self.t_strm,
                 unit="card"):
-            knn_ar = self.knn.getcol(i).toarray().squeeze()
-            neighbour_indices = np.where(knn_ar == 1)[0]
-            # sort neighbour by distance
-            neighbour_indices = sorted(
-                    neighbour_indices,
-                    key=lambda x: self.df_dist.loc[
-                        self.df.index[i], self.df.index[x]],
-                    reverse=True)
-            neighbours_nid = [self.df.loc[self.df.index[ind], "note"]
-                              for ind in neighbour_indices]
             noteId = self.df.loc[self.df.index[i], "note"]
+            if noteId in self.neighbours_info:
+                neighbour_indices = self.neighbours_info[noteId]["neighbour_indices"]
+                neighbours_nid = self.neighbours_info[noteId]["neighbours_nid"]
+            else:
+                knn_ar = self.knn.getcol(i).toarray().squeeze()
+                neighbour_indices = np.where(knn_ar == 1)[0]
+                # sort neighbour by distance
+                neighbour_indices = sorted(
+                        neighbour_indices,
+                        key=lambda x: self.df_dist.loc[
+                            self.df.index[i], self.df.index[x]],
+                        reverse=True)
+                neighbours_nid = [self.df.loc[self.df.index[ind], "note"]
+                                  for ind in neighbour_indices]
             for ii, n_nid in enumerate(neighbours_nid):
                 if noteId == n_nid:
                     # skip self neighbouring
                     continue
                 if ii > 20:
-                    # Only considering 20 first neighbours
+                    # Only considering the n first neighbours
                     break
                 smallest = min(noteId, n_nid)
                 largest = max(noteId, n_nid)
