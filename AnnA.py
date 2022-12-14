@@ -1625,14 +1625,14 @@ class AnnA:
         self._print_similar()
         return True
 
-    def _compute_nearest_neighbor(self, mode="fixed_nn"):
+    def _compute_nearest_neighbor(self, mode="radius"):
         """
         Compute the nearest neighbors of each note of the distance matrix.
         This is used to then fill the field "Nearest_neighbors" of those notes
         so that you can quickly know the neighbor of any given card straight
         into anki without having to use AnnA.
 
-        "mode" can be either "fixed_nn" or "fixed_radius"
+        "mode" can be either "fixed_nn" or "radius"
         """
         if not ((self.add_KNN_to_field or self.plot_2D_embeddings) or (
                 self.task == "just_add_KNN")):
@@ -1651,8 +1651,8 @@ class AnnA:
                         metric="precomputed",
                         include_self=True
                         )
-            elif mode == "fixed_radius":
-                radius = self.mean_dist / 20
+            elif mode == "radius":
+                radius = self.std_dist * 0.05
                 yel(f"Finding neighbors within {radius} (mean "
                     f"distance is {round(self.mean_dist, 3)})...")
                 self.knn = radius_neighbors_graph(
