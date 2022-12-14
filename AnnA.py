@@ -2640,7 +2640,7 @@ class AnnA:
                          desc="Adding edges",
                          file=self.t_strm):
             for sub_k, sub_v in all_edges[k].items():
-                G.add_edge(k, sub_k, weight=sub_v)
+                G.add_edge(k, sub_k, weight=1 + mean_w - sub_v)
 
         # 2D embeddings layout
         start = time.time()
