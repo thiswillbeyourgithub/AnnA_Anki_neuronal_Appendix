@@ -2650,9 +2650,9 @@ class AnnA:
                              node_colours=node_colours,
                              title=f"{self.deckname} - embeddings"
                              )
-        whi(f"Saved embeddings layout in {int(time.time()-start)}s!")
-        nx.drawing.nx_pydot.write_dot(
-                G, f'{self.plot_dir}/{self.deckname} - embeddings.dot')
+        # whi(f"Saved embeddings layout in {int(time.time()-start)}s!")
+        # nx.drawing.nx_pydot.write_dot(
+        #         G, f'{self.plot_dir}/{self.deckname} - embeddings.dot')
 
         # computing spring layout
         n = len(node_colours)
@@ -2676,9 +2676,9 @@ class AnnA:
                              node_colours=node_colours,
                              title=f"{self.deckname} - spring"
                              )
-        whi(f"Saved spring layout in {int(time.time()-start)}s!")
-        nx.drawing.nx_pydot.write_dot(
-                G, f'{self.plot_dir}/{self.deckname} - spring.dot')
+        # whi(f"Saved spring layout in {int(time.time()-start)}s!")
+        # nx.drawing.nx_pydot.write_dot(
+        #         G, f'{self.plot_dir}/{self.deckname} - spring.dot')
 
         # not implemented for nx.Multigraph
         # computing average clustering coefficient
