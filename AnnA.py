@@ -1682,7 +1682,7 @@ class AnnA:
         try:
             for i in tqdm(
                     range(self.knn.shape[0]),
-                    desc="Colecting neighbours of notes",
+                    desc="Collecting neighbours of notes",
                     file=self.t_strm,
                     unit="card"):
                 cardId = self.df.index[i]
