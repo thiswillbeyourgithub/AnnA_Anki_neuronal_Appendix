@@ -1509,7 +1509,7 @@ class AnnA:
                            "n_neighbors":  50,  # higher means more focused on the global structure
                            "min_dist": 0,  # because siblings have the same location anyway
                            "low_memory":  False,
-                           "densmap": True,  # try to preserve local density
+                           "densmap": False,  # try to preserve local density
                            # "random_state": 42, # turned of because makes it non deterministic
                            }
             U = umap.umap_.UMAP(**umap_kwargs)
@@ -1528,7 +1528,7 @@ class AnnA:
                                "n_neighbors":  50,
                                "min_dist": 0,
                                "low_memory":  False,
-                               "densmap": True,
+                               "densmap": False,
                                }
                 U = umap.umap_.UMAP(**umap_kwargs)
                 self.embeddings2D = U.fit_transform(t_vec)
