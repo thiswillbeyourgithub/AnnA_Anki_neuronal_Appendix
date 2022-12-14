@@ -2573,7 +2573,8 @@ class AnnA:
                 desc="Computing edges",
                 file=self.t_strm,
                 unit="card"):
-            noteId = self.df.loc[self.df.index[i], "note"]
+            cardId = self.df.index[i]
+            noteId = self.df.loc[cardId, "note"]
             if noteId in self.nbrs_cache:
                 nbrs_ind = self.nbrs_cache[noteId]["nbrs_ind"]
                 nbrs_nid = self.nbrs_cache[noteId]["nbrs_nid"]
@@ -2584,22 +2585,22 @@ class AnnA:
                 nbrs_ind = sorted(
                         nbrs_ind,
                         key=lambda x: self.df_dist.loc[
-                            self.df.index[i], self.df.index[x]],
+                            cardId, self.df.index[x]],
                         reverse=False)  # ascending order
                 nbrs_nid = [self.df.loc[self.df.index[ind], "note"]
-                                  for ind in nbrs_ind]
+                            for ind in nbrs_ind]
             for ii, n_nid in enumerate(nbrs_nid):
                 if noteId == n_nid:
                     # skip self neighboring
                     continue
-                if ii > 20:
+                if ii > 100:
                     # Only considering the n first neighbors
                     break
                 smallest = min(noteId, n_nid)
                 largest = max(noteId, n_nid)
                 # new weight is the distance between points
                 new_w = self.df_dist.loc[
-                    self.df.index[i], self.df.index[nbrs_ind[ii]]
+                    cardId, self.df.index[nbrs_ind[ii]]
                     ]
 
                 # store the weight
@@ -2611,8 +2612,15 @@ class AnnA:
                         all_edges[smallest][largest] = new_w
                     else:
                         # check that weight is coherent
-                        assert np.isclose(all_edges[smallest][largest], new_w), (
-                                f"A weight is not symetric: {all_edges[smallest][largest]} != {new_w}")
+                        # as some cards of the same note can have different
+                        # embedding locations, severall weights can be
+                        # stored and will be averaged later on
+                        if isinstance(all_edges[smallest][largest], list):
+                            all_edges[smallest][largest].append(new_w)
+                        else:
+                            all_edges[smallest][largest] = [all_edges[smallest][largest], new_w]
+                            n_w -= 1  # avoid duplicate counts
+
                 # store the weights information to scale them afterwards
                 if new_w > max_w:
                     max_w = new_w
@@ -2625,22 +2633,28 @@ class AnnA:
                 f"Impossible weight values: {min_w} and {max_w}")
 
         # minmaing weights (although instead of reducing to 0, it adds the
-        # mean weight to avoid null weights)
-        mean_w = sum_w / n_w
+        # a fixed value to avoid null weights)
         new_spread = max_w - min_w
+        fixed_offset = 0.1
         for k, v in tqdm(all_edges.items(),
                          desc="Minmax weights",
                          file=self.t_strm):
             for sub_k, sub_v in all_edges[k].items():
-                all_edges[k][sub_k] = (sub_v - min_w + mean_w) / new_spread
-                assert not np.isclose(all_edges[k][sub_k], 0), "Null weight!"
+                if isinstance(sub_v, list):
+                    sub_v = float(np.mean(sub_v))
+                all_edges[k][sub_k] = (sub_v - min_w) / new_spread + fixed_offset
+
+                # as the distance grows, the weight has to decrease:
+                all_edges[k][sub_k] *= -1
+                all_edges[k][sub_k] += 1 + fixed_offset
+                assert all_edges[k][sub_k] > 0, "Null or negative edge weight!"
 
         # add each edge to the graph
         for k, v in tqdm(all_edges.items(),
                          desc="Adding edges",
                          file=self.t_strm):
             for sub_k, sub_v in all_edges[k].items():
-                G.add_edge(k, sub_k, weight=1 + mean_w - sub_v)
+                G.add_edge(k, sub_k, weight=sub_v)
 
         # 2D embeddings layout
         start = time.time()
