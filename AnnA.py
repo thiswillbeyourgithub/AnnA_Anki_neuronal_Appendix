@@ -36,6 +36,7 @@ from tokenizers import Tokenizer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import pairwise_distances, pairwise_kernels
 from sklearn.neighbors import radius_neighbors_graph, kneighbors_graph
+from sklearn.decomposition import TruncatedSVD
 import umap.umap_
 
 import networkx as nx
@@ -1479,7 +1480,26 @@ class AnnA:
             # Previously TruncatedSVD was used but it kept too many
             # dimensions so ended up in the curse of dimensionnality
 
-            whi("Using UMAP to reduce to 10 dimension")
+            # reduce dimensions before UMAP if too many dimensions
+            dim_limit = 500
+            if t_vec.shape[1] > dim_limit:
+                yel(f"TFIDF output {t_vec.shape[1]} dimensions, above "
+                    f"{dim_limit} so using SVD first to reduce to "
+                    f"{dim_limit}.")
+                m_rank = np.linalg.matrix_rank(t_vec)
+                svd = TruncatedSVD(n_components=dim_limit,
+                                     random_state=42,
+                                     n_oversamples=max(
+                                         10,
+                                         2 * m_rank - dim_limit
+                                         )
+                                     )
+                t_vec = svd.fit_transform(t_vec)
+                evr = round(sum(svd.explained_variance_ratio_) * 100, 1)
+                whi(f"Done, explained variance ratio: {evr}%")
+
+
+            whi("Using UMAP to reduce to 10 dimensions")
             umap_kwargs = {"n_jobs": -1,
                            "verbose": 1,
                            "n_components": 10,
