@@ -2645,12 +2645,14 @@ class AnnA:
             for sub_k, sub_v in all_edges[k].items():
                 if isinstance(sub_v, list):
                     sub_v = float(np.mean(sub_v))
-                all_edges[k][sub_k] = (sub_v - min_w) / new_spread + fixed_offset
+                all_edges[k][sub_k] = (sub_v - min_w) / new_spread
 
                 # as the distance grows, the weight has to decrease:
                 all_edges[k][sub_k] *= -1
                 all_edges[k][sub_k] += 1 + fixed_offset
-                assert all_edges[k][sub_k] > 0, "Null or negative edge weight!"
+                assert all_edges[k][sub_k] <= 1 + fixed_offset, "Too high edge weight value!"
+                assert all_edges[k][sub_k] >= 0, "Negative edge weight!"
+                assert all_edges[k][sub_k] != 0, "Null edge weight!"
 
         # add each edge to the graph
         for k, v in tqdm(all_edges.items(),
