@@ -1483,37 +1483,51 @@ class AnnA:
             # reduce dimensions before UMAP if too many dimensions
             dim_limit = 100
             if t_vec.shape[1] > dim_limit:
-                yel(f"TFIDF output of shape {t_vec.shape}, dimensions above "
-                    f"{dim_limit} so using SVD first to keep only "
-                    f"{dim_limit} dimensions.")
-                m_rank = np.linalg.matrix_rank(t_vec)
-                svd = TruncatedSVD(n_components=dim_limit,
-                                   random_state=42,
-                                   n_oversamples=max(
-                                       10,
-                                       2 * m_rank - dim_limit
+                try:
+                    yel(f"TFIDF output of shape {t_vec.shape}, dimensions above "
+                        f"{dim_limit} so using SVD first to keep only "
+                        f"{dim_limit} dimensions.")
+                    m_rank = np.linalg.matrix_rank(t_vec)
+                    svd = TruncatedSVD(n_components=dim_limit,
+                                       random_state=42,
+                                       n_oversamples=max(
+                                           10,
+                                           2 * m_rank - dim_limit
+                                           )
                                        )
-                                   )
-                t_vec = svd.fit_transform(t_vec)
-                evr = round(sum(svd.explained_variance_ratio_) * 100, 1)
-                whi(f"Done, explained variance ratio: {evr}%. New shape: {t_vec.shape}")
+                    t_vec = svd.fit_transform(t_vec)
+                    evr = round(sum(svd.explained_variance_ratio_) * 100, 1)
+                    whi(f"Done, explained variance ratio: {evr}%. New shape: {t_vec.shape}")
+                except Exception as err:
+                    beep(f"Error when using SVD to reduce to {dim_limit} "
+                         f"dims: '{err}'.\rTrying to continue with "
+                         f"UMAP nonetheless.\rData shape: {t_vec.shape}")
+                    red(traceback.format_exc())
+
 
             whi("Using UMAP to reduce to 10 dimensions")
-            umap_kwargs = {"n_jobs": -1,
-                           "verbose": 1,
-                           "n_components": 10,
-                           "metric": "cosine",
-                           "init": 'spectral',  # TODO: try, 'pca' when new release comes out
-                           "transform_seed": 42,
-                           "n_neighbors":  50,  # higher means more focused on the global structure
-                           "min_dist": 0.01,  # could also be 0 because siblings have the same location anyway
-                           "low_memory":  False,
-                           "densmap": False,  # try to preserve local density
-                           # "random_state": 42, # turned of because makes it non deterministic
-                           }
-            U = umap.umap_.UMAP(**umap_kwargs)
-            t_red = U.fit_transform(t_vec)
-            self.vectors = t_red
+            try:
+                umap_kwargs = {"n_jobs": -1,
+                               "verbose": 1,
+                               "n_components": 10,
+                               "metric": "cosine",
+                               "init": 'spectral',  # TODO: try, 'pca' when new release comes out
+                               "transform_seed": 42,
+                               "n_neighbors":  50,  # higher means more focused on the global structure
+                               "min_dist": 0.01,  # could also be 0 because siblings have the same location anyway
+                               "low_memory":  False,
+                               "densmap": False,  # try to preserve local density
+                               # "random_state": 42, # turned of because makes it non deterministic
+                               }
+                U = umap.umap_.UMAP(**umap_kwargs)
+                t_red = U.fit_transform(t_vec)
+                self.vectors = t_red
+            except Exception as err:
+                beep(f"Error when using UMAP to reduce to 10 "
+                     f"dims: '{err}'.\rTrying to continue "
+                     f"nonetheless.\rData shape: {t_vec.shape}")
+                red(traceback.format_exc())
+                self.vectors = t_vec
 
         if self.plot_2D_embeddings:
             try:
