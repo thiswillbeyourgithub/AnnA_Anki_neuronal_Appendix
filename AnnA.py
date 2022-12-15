@@ -1483,21 +1483,20 @@ class AnnA:
             # reduce dimensions before UMAP if too many dimensions
             dim_limit = 100
             if t_vec.shape[1] > dim_limit:
-                yel(f"TFIDF output {t_vec.shape[1]} dimensions, above "
-                    f"{dim_limit} so using SVD first to reduce to "
-                    f"{dim_limit}.")
+                yel(f"TFIDF output of shape {t_vec.shape}, dimensions above "
+                    f"{dim_limit} so using SVD first to keep only "
+                    f"{dim_limit} dimensions.")
                 m_rank = np.linalg.matrix_rank(t_vec)
                 svd = TruncatedSVD(n_components=dim_limit,
-                                     random_state=42,
-                                     n_oversamples=max(
-                                         10,
-                                         2 * m_rank - dim_limit
-                                         )
-                                     )
+                                   random_state=42,
+                                   n_oversamples=max(
+                                       10,
+                                       2 * m_rank - dim_limit
+                                       )
+                                   )
                 t_vec = svd.fit_transform(t_vec)
                 evr = round(sum(svd.explained_variance_ratio_) * 100, 1)
-                whi(f"Done, explained variance ratio: {evr}%")
-
+                whi(f"Done, explained variance ratio: {evr}%. New shape: {t_vec.shape}")
 
             whi("Using UMAP to reduce to 10 dimensions")
             umap_kwargs = {"n_jobs": -1,
