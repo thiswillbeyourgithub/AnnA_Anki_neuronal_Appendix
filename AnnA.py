@@ -1514,7 +1514,7 @@ class AnnA:
                                "init": 'spectral',  # TODO: try, 'pca' when new release comes out
                                "transform_seed": 42,
                                "n_neighbors":  50,  # higher means more focused on the global structure
-                               "min_dist": 0.01,  # could also be 0 because siblings have the same location anyway
+                               "min_dist": 0.1,  # could also be 0 because siblings have the same location anyway
                                "low_memory":  False,
                                "densmap": False,  # try to preserve local density
                                # "random_state": 42, # turned of because makes it non deterministic
@@ -1539,7 +1539,7 @@ class AnnA:
                                "init": 'spectral',
                                "transform_seed": 42,
                                "n_neighbors":  50,
-                               "min_dist": 0.01,
+                               "min_dist": 0.1,
                                "low_memory":  False,
                                "densmap": False,
                                }
