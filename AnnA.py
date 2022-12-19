@@ -1577,7 +1577,7 @@ class AnnA:
             tqdm.pandas(desc="Applying log", smoothing=0, unit=" card",
                         file=self.t_strm)
             self.df_dist = self.df_dist.progress_apply(lambda x: np.log(1+x))
-            max_val = np.amax(self.df_dist)
+            max_val = np.max(self.df_dist.values.ravel())
             self.df_dist /= -max_val  # normalize values then make negative
             # add 1 to get: "dist = 1 - similarity"
             self.df_dist += 1
@@ -1616,6 +1616,13 @@ class AnnA:
         # cards)
         assert (self.df_dist.values.ravel() < 0).sum() == 0, (
             "Negative values in the distance matrix!")
+
+        # make sure that the maximum distance is 1
+        max_val = np.max(self.df_dist.values.ravel())
+        if not np.isclose(max_val, 1):
+            whi(f"Maximum value is {max_val}, scaling the distance matrix to "
+                "have 1 as maximum value.")
+            self.df_dist /= max_val
 
         yel("Computing mean and std of distance...\n(excluding diagonal)")
         # ignore the diagonal of the distance matrix to get a sensible mean
@@ -1764,7 +1771,7 @@ class AnnA:
             pd.set_option('display.max_colwidth', 180)
 
             red("\nPrinting the most semantically different cards:")
-            highest_value = np.amax(self.df_dist.values[up_triangular])
+            highest_value = np.max(self.df_dist.values[up_triangular].ravel())
             coord_max = np.where(self.df_dist == highest_value)
             one = self.df.loc[self.df.index[coord_max[0][0]]].text[:max_length]
             two = self.df.loc[self.df.index[coord_max[1][0]]].text[:max_length]
