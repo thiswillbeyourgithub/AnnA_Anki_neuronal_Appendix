@@ -1628,8 +1628,8 @@ class AnnA:
         # ignore the diagonal of the distance matrix to get a sensible mean
         # and std value:
         up_triangular = np.triu_indices(self.df_dist.shape[0], 1)
-        mean_dist = np.mean(self.df_dist.values[up_triangular])
-        std_dist = np.std(self.df_dist.values[up_triangular])
+        mean_dist = np.mean(self.df_dist.values[up_triangular].ravel())
+        std_dist = np.std(self.df_dist.values[up_triangular].ravel())
         whi(f"Mean distance: {mean_dist}\nMean std: {std_dist}\n")
 
         self.mean_dist = mean_dist
