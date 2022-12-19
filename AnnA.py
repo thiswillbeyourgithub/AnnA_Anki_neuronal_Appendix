@@ -1860,7 +1860,7 @@ class AnnA:
         rated = self.rated_cards
         due = self.due_cards
         w1 = self.score_adjustment_factor[0]
-        w2 = self.score_adjustment_factor[1]
+        w2 = self.score_adjustment_factor[1] / self.mean_dist
         if self.enable_fuzz:
             w3 = (w1 + w2) / 2 * self.mean_dist / 10
         else:
