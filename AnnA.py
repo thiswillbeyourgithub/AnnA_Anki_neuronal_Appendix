@@ -2158,10 +2158,14 @@ class AnnA:
                 else:
                     whi("Not showing statistics of the reference score, you "
                         "set its adjustment weight to 0")
-                val = pd.DataFrame(data=w2*self.df_dist.values.ravel(),
-                                   columns=['distance matrix']).describe(
-                                           include='all')
-                whi(f"Distance: {val}\n\n")
+                val1 = pd.DataFrame(data=self.df_dist.values.ravel(),
+                                    columns=['distance matrix']).describe(
+                                            include='all')
+                val2 = pd.DataFrame(data=w2*self.df_dist.values.ravel(),
+                                    columns=['distance matrix']).describe(
+                                            include='all')
+                whi(f"Non adjusted distance matrix: {val1}\n")
+                whi(f"Weight adjusted distance matrix: {val2}\n\n")
             except Exception as e:
                 beep(f"Exception: {e}")
             pd.reset_option('display.float_format')
