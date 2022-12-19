@@ -1628,16 +1628,12 @@ class AnnA:
         # ignore the diagonal of the distance matrix to get a sensible mean
         # and std value:
         up_triangular = np.triu_indices(self.df_dist.shape[0], 1)
-        mean_dist = round(np.nanmean(self.df_dist.values[up_triangular]), 2)
-        std_dist = round(np.nanstd(self.df_dist.values[up_triangular]), 2)
-        yel(f"Mean distance: {mean_dist}, std: {std_dist}\n")
+        mean_dist = np.mean(self.df_dist.values[up_triangular])
+        std_dist = np.std(self.df_dist.values[up_triangular])
+        whi(f"Mean distance: {mean_dist}\nMean std: {std_dist}\n")
 
         self.mean_dist = mean_dist
         self.std_dist = std_dist
-
-        # store mean distance for the fuzz factor
-        if self.enable_fuzz:
-            self.mean_dist = mean_dist
 
         if self.plot_2D_embeddings or self.add_KNN_to_field:
             self._compute_nearest_neighbor()
