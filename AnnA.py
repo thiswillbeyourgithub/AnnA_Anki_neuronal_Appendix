@@ -1505,11 +1505,11 @@ class AnnA:
                     red(traceback.format_exc())
 
 
-            whi("Using UMAP to reduce to 10 dimensions")
+            whi("Using UMAP to reduce to 3 dimensions")
             try:
                 umap_kwargs = {"n_jobs": -1,
                                "verbose": 1,
-                               "n_components": 10,
+                               "n_components": 3,
                                "metric": "cosine",
                                "init": 'spectral',  # TODO: try, 'pca' when new release comes out
                                "transform_seed": 42,
@@ -1523,7 +1523,7 @@ class AnnA:
                 t_red = U.fit_transform(t_vec)
                 self.vectors = t_red
             except Exception as err:
-                beep(f"Error when using UMAP to reduce to 10 "
+                beep(f"Error when using UMAP to reduce to 3 "
                      f"dims: '{err}'.\rTrying to continue "
                      f"nonetheless.\rData shape: {t_vec.shape}")
                 red(traceback.format_exc())
