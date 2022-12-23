@@ -1540,9 +1540,9 @@ class AnnA:
                                "init": 'spectral',
                                "transform_seed": 42,
                                "n_neighbors":  50,
-                               "min_dist": 0.1,
+                               "min_dist": 0,
                                "low_memory":  False,
-                               "densmap": False,
+                               "densmap": True,
                                }
                 U = umap.umap_.UMAP(**umap_kwargs)
                 self.embeddings2D = U.fit_transform(t_vec)
