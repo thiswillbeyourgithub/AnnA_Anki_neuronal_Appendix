@@ -1481,7 +1481,7 @@ class AnnA:
             # dimensions so ended up in the curse of dimensionnality
 
             # reduce dimensions before UMAP if too many dimensions
-            dim_limit = 100
+            dim_limit = 500
             if t_vec.shape[1] > dim_limit:
                 try:
                     yel(f"TFIDF output of shape {t_vec.shape}, dimensions above "
@@ -1505,25 +1505,26 @@ class AnnA:
                     red(traceback.format_exc())
 
 
-            whi("Using UMAP to reduce to 3 dimensions")
+            target_dim = 5
+            whi(f"Using UMAP to reduce to {target_dim} dimensions")
             try:
                 umap_kwargs = {"n_jobs": -1,
                                "verbose": 1,
-                               "n_components": 3,
+                               "n_components": target_dim,
                                "metric": "cosine",
                                "init": 'spectral',  # TODO: try, 'pca' when new release comes out
                                "transform_seed": 42,
-                               "n_neighbors":  50,  # higher means more focused on the global structure
-                               "min_dist": 0.1,  # could also be 0 because siblings have the same location anyway
+                               "n_neighbors":  max(len(self.df.index) // 100, 10),  # higher means more focused on the global structure
+                               "min_dist": 0,  # could also be 0 because siblings have the same location anyway
                                "low_memory":  False,
-                               "densmap": False,  # try to preserve local density
+                               "densmap": True,  # try to preserve local density
                                # "random_state": 42, # turned of because makes it non deterministic
                                }
                 U = umap.umap_.UMAP(**umap_kwargs)
                 t_red = U.fit_transform(t_vec)
                 self.vectors = t_red
             except Exception as err:
-                beep(f"Error when using UMAP to reduce to 3 "
+                beep(f"Error when using UMAP to reduce to {target_dim} "
                      f"dims: '{err}'.\rTrying to continue "
                      f"nonetheless.\rData shape: {t_vec.shape}")
                 red(traceback.format_exc())
