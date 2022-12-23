@@ -1868,7 +1868,7 @@ class AnnA:
         self.urgent_dues = []
 
         # hardcoded settings
-        display_stats = True
+        display_stats = True if not self.low_power_mode else False
 
         # setting interval to correct value for learning and relearnings:
         steps_L = [x / 1440 for x in self.deck_config["new"]["delays"]]
@@ -2169,6 +2169,9 @@ class AnnA:
             except Exception as e:
                 beep(f"Exception: {e}")
             pd.reset_option('display.float_format')
+        else:
+            whi("Not displaying stats of the data because 'low_power_mode' "
+                "if True.")
 
         # checking that there are no negative ref values
         assert (self.df.loc[due, "ref"].ravel() < 0).sum() == 0, (
@@ -3113,7 +3116,9 @@ if __name__ == "__main__":
                         help=(
                             "enable to reduce the computation needed for "
                             "AnnA, making it usable for less powerful "
-                            "computers. This can greatly reduce accuracy."
+                            "computers. This can greatly reduce accuracy. "
+                            "Also removes non necessary steps that take long "
+                            "like displaying some stats. "
                             "Default to `False`. "
                             ))
     parser.add_argument("--log_level",
