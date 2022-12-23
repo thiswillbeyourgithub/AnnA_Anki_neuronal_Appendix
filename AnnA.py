@@ -1341,7 +1341,7 @@ class AnnA:
                                    token_pattern=None,
                                    stop_words=None,
                                    ngram_range=(1, 3),
-                                   norm="l2",
+                                   norm="l1",
                                    sublinear_tf=True,
                                    max_features=10_000,
                                    binary=binary_mode,
