@@ -2077,6 +2077,11 @@ class AnnA:
         # computing optimal order
         indQUEUE = rated[:]
         indTODO = [x for x in df.index.tolist() if x not in indQUEUE]
+        assert len(
+                [x
+                 for x in indTODO
+                 if self.df.loc[x, "status"] != "due"]) == 0, (
+                         "Cards in indTODO are not actually due!")
         # at each turn of the scoring algorithm, all cards whose index is
         # in indTODO will have their distance compared to all cards whose
         # index is in indQUEUE. The lowest score card is then taken from
