@@ -2066,6 +2066,7 @@ class AnnA:
             weights = [1, 4]
             df.loc[due, "ref"] = (weights[0] * ro + weights[1] * ivl
                                   ) / sum(weights)
+            del weights  # not needed and removed to avoid confusion
 
         assert len([x for x in rated if df.loc[x, "status"] != "rated"]
                    ) == 0, "all rated cards are not marked as rated"
