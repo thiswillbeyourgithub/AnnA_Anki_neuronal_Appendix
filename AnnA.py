@@ -189,8 +189,8 @@ class AnnA:
                  tags_to_ignore=["AnnA", "leech"],
                  add_KNN_to_field=False,
                  filtered_deck_name_template=None,
-                 filtered_deck_by_batch=False,
                  filtered_deck_at_top_level=True,
+                 filtered_deck_by_batch=False,
                  filtered_deck_batch_size=25,
                  show_banner=True,
                  repick_task="boost",  # None, "addtag", "boost" or
@@ -3216,14 +3216,6 @@ if __name__ == "__main__":
                             "name template of the filtered deck to create. "
                             "Only available if task is set to "
                             "\"filter_review_cards\". Default is `None`."))
-    parser.add_argument("--filtered_deck_by_batch",
-                        action="store_true",
-                        dest="filtered_deck_by_batch",
-                        default=False,
-                        required=False,
-                        help=(
-                            "To enable creating batch of filtered "
-                            "decks. Default is `False`."))
     parser.add_argument("--filtered_deck_at_top_level",
                         action="store_true",
                         dest="filtered_deck_at_top_level",
@@ -3234,6 +3226,14 @@ if __name__ == "__main__":
                             "top level deck, if False: the filtered "
                             "deck will be next to the original "
                             "deck. Default to True."))
+    parser.add_argument("--filtered_deck_by_batch",
+                        action="store_true",
+                        dest="filtered_deck_by_batch",
+                        default=False,
+                        required=False,
+                        help=(
+                            "To enable creating batch of filtered "
+                            "decks. Default is `False`."))
     parser.add_argument("--filtered_deck_batch_size",
                         nargs=1,
                         metavar="FILTERED_DECK_BATCH_SIZE",
