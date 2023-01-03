@@ -572,5 +572,9 @@ class AnkiConnect:
 
         return self.findCards(query)
 
+    @util.api()
+    def sync(self):
+        self.window().onSync()
+
 
 ac = AnkiConnect()
