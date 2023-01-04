@@ -916,14 +916,17 @@ class AnnA:
             yel("Will not look for cards rated in past days.")
             rated_cards = []
 
+        # this was removed because having short interval cards that
+        # are quickly due will not be taken into account when taking
+        # rated cards into account for the optimal order
         # remove overlap between due and rated cards
-        if rated_cards != []:
-            temp = [x for x in rated_cards if x not in due_cards]
-            diff = len(rated_cards) - len(temp)
-            if diff != 0:
-                yel("Removed overlap between rated cards and due cards: "
-                    f"{diff} cards removed. Keeping {len(temp)} cards.\n")
-                rated_cards = temp
+        # if rated_cards != []:
+        #     temp = [x for x in rated_cards if x not in due_cards]
+        #     diff = len(rated_cards) - len(temp)
+        #     if diff != 0:
+        #         yel("Removed overlap between rated cards and due cards: "
+        #             f"{diff} cards removed. Keeping {len(temp)} cards.\n")
+        #         rated_cards = temp
 
         self.due_cards = due_cards
         self.rated_cards = rated_cards
@@ -938,7 +941,7 @@ class AnnA:
         else:
             self.not_enough_cards = False
 
-        combined_card_list = list(rated_cards + due_cards)
+        combined_card_list = list(set(rated_cards + due_cards))
 
         # fetch relevant information of each cards
         list_cardInfo = []
@@ -964,7 +967,9 @@ class AnnA:
                 if not skip_t:
                     tags.append(t)
             list_cardInfo[i]["tags"] = " ".join(tags)
-            if card["cardId"] in due_cards:
+            if card["cardId"] in due_cards and card["cardId"] in rated_cards:
+                list_cardInfo[i]["status"] = "due&rated"
+            elif card["cardId"] in due_cards:
                 list_cardInfo[i]["status"] = "due"
             elif card["cardId"] in rated_cards:
                 list_cardInfo[i]["status"] = "rated"
@@ -1901,6 +1906,7 @@ class AnnA:
         max_deck_size = self.max_deck_size
         rated = self.rated_cards
         due = self.due_cards
+        rated_excl_due = [i for i in rated if i not in due]
         w1 = self.score_adjustment_factor[0]
         w2 = self.score_adjustment_factor[1] / self.mean_dist
         if self.enable_fuzz:
@@ -1935,9 +1941,10 @@ class AnnA:
                 df.at[i, "interval"] /= -86400
 
         # setting rated cards value to nan value, to avoid them
-        # skewing the dataset distribution:
-        df.loc[rated, "interval"] = np.nan
-        df.loc[rated, "due"] = np.nan
+        # skewing the dataset distribution (but
+        # excludes rated that are also due):
+        df.loc[rated_excl_due, "interval"] = np.nan
+        df.loc[rated_excl_due, "due"] = np.nan
         df["ref"] = np.nan
 
         # computing reference order:
@@ -2109,7 +2116,7 @@ class AnnA:
                                   ) / sum(weights)
             del weights  # not needed and removed to avoid confusion
 
-        assert len([x for x in rated if df.loc[x, "status"] != "rated"]
+        assert len([x for x in rated if "rated" not in df.loc[x, "status"]]
                    ) == 0, "all rated cards are not marked as rated"
         if self.rated_last_X_days is not None:
             red("\nCards identified as rated in the past "
@@ -2118,11 +2125,11 @@ class AnnA:
         # contain the index of the cards that will be use when
         # computing optimal order
         indQUEUE = rated[:]
-        indTODO = [x for x in df.index.tolist() if x not in indQUEUE]
+        indTODO = due[:]
         assert len(
                 [x
                  for x in indTODO
-                 if self.df.loc[x, "status"] != "due"]) == 0, (
+                 if "due" not in self.df.loc[x, "status"]]) == 0, (
                          "Cards in indTODO are not actually due!")
         # at each turn of the scoring algorithm, all cards whose index is
         # in indTODO will have their distance compared to all cards whose
