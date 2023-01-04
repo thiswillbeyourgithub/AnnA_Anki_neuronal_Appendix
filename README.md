@@ -256,6 +256,7 @@ AnnA includes built-in methods you can run after instantiating the class. Note t
 * `save_df` saves the dataframe containing the cards and all other infos needed by AnnA as a pickle file. Used mainly for debugging. Files will be saved to the folder `DF_backups`
 
 ## TODO
+* instead of having difference reference order, use a vector of weights to adjust each reference possible and combine them at will
 * add new task "resort filtered deck"
 * figure out a clever way to know which cards can be used to link 2 distinct tags/notes
 * compute the distance matrix on the notes only instead of the cards
