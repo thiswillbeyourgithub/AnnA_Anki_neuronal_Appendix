@@ -211,6 +211,7 @@ class AnnA:
 
                  whole_deck_computation=False,
                  profile_name=None,
+                 sync_behavior="before&after",
                  ):
 
         if show_banner:
@@ -401,6 +402,18 @@ class AnnA:
         assert isinstance(profile_name, (str, type(None))
                           ), "Invalid type for `profile_name`"
         self.profile_name = profile_name
+
+        if sync_behavior is None:
+            sync_behavior = ""
+        assert isinstance(sync_behavior, str), (
+            "sync_behavior should be a string!")
+        assert (
+                (
+                    "before" in sync_behavior
+                    ) or ("after" in sync_behavior
+                        ) or (sync_behavior == "")
+                    ), (f"Wrong value of 'sync_behavior': '{sync_behavior}'")
+        self.sync_behavior = sync_behavior
 
         assert isinstance(repick_task, str), "Invalid type for `repick_task`"
         self.repick_task = repick_task
@@ -616,6 +629,17 @@ class AnnA:
 
         # actual execution ###################################################
 
+        # trigger a sync
+        if "before" in self.sync_behavior:
+            yel("Syncing before execution...")
+            sync_output = self._call_anki(action="sync")
+            assert sync_output is None or sync_output == "None", (
+                "Error during sync?: '{sync_output}'")
+            time.sleep(1)  # wait for sync to finish, just in case
+            whi("Done!")
+        else:
+            yel("Not syncing.")
+
         # load deck settings if needed
         if self.target_deck_size == "deck_config":
             self.target_deck_size = str(self.deck_config["rev"]["perDay"])
@@ -661,6 +685,16 @@ class AnnA:
             signal.alarm(0)  # turn off timeout
         red(f"Done with task '{self.task}' on deck '{self.deckname}'")
         gc.collect()
+
+        if "after" in self.sync_behavior:
+            yel("Syncing after run...")
+            sync_output = self._call_anki(action="sync")
+            assert sync_output is None or sync_output == "None", (
+                "Error during sync?: '{sync_output}'")
+            time.sleep(1)  # wait for sync to finish, just in case
+            whi("Done!")
+        else:
+            yel("Not syncing after run.")
 
     @classmethod
     def _call_anki(self, action, **params):
@@ -3442,6 +3476,17 @@ if __name__ == "__main__":
                         help=(
                             "defaults to `False`. Set to True to "
                             "open a python console after running."))
+    parser.add_argument("--sync_behavior",
+                        nargs=1,
+                        metavar="SYNC_BEHAVIOR",
+                        dest="sync_behavior",
+                        default="before&after",
+                        required=False,
+                        help=(
+                            "If contains 'before', will trigger a sync when "
+                            "AnnA is run. If contains 'after', will trigger "
+                            "a sync at the end of the run. "
+                            "Default is `before&after`."))
 
     args = parser.parse_args().__dict__
 
