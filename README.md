@@ -258,15 +258,12 @@ AnnA includes built-in methods you can run after instantiating the class. Note t
 ## TODO
 * add new task "resort filtered deck"
 * figure out a clever way to know which cards can be used to link 2 distinct tags/notes
-* inestigate using graphviz instead of networkx to compute the graph
 * compute the distance matrix on the notes only instead of the cards
 * instead of storing the nearest neighbors in a field, store it in a file accessible to the addon and add interface menus via the addon to query neighbors
 * add picture and documentation to the knn feature
     * reach out to the dev of the mindmapping addon and show them the 2D plots you made
 * rename the "acronym" system to something more explicit like "word_expander"
 * switch to using Fire instead of argparse and move all the documentation to the docstring
-* add argument to automatically flag cards deemed urgent
-* increase speed at which information on cards is gathered from anki as it seems to be the main bottleneck. Maybe try to use asyncio?
 * refactor a bit the way optimal score is computed to allow printing of the inner mechanism and debugging
 * use joblib caching for text_formater function (necessary steps: add more argument to it to stop relying on self)
 * add an option to generate a reachability plot for the decks using an argument (+add tqdm to OPTICS (I checked, it's easy) ; +do it with a timeout and in an external process)
