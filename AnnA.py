@@ -865,6 +865,7 @@ class AnnA:
         create a pandas DataFrame with the information gathered from
         anki (via the bridge addon) such as card fields, tags, intervals, etc
         """
+        # fetch due cards
         if self.highjack_due_query is not None:
             beep("Highjacking due card list:")
             query = self.highjack_due_query
@@ -895,6 +896,7 @@ class AnnA:
             due_cards = self._call_anki(action="findCards", query=query)
             whi(f"Found {len(due_cards)} cards...\n")
 
+        # fetch recently rated cards
         rated_cards = []
         if self.highjack_rated_query is not None:
             beep("Highjacking rated card list:")
@@ -914,6 +916,7 @@ class AnnA:
             yel("Will not look for cards rated in past days.")
             rated_cards = []
 
+        # remove overlap between due and rated cards
         if rated_cards != []:
             temp = [x for x in rated_cards if x not in due_cards]
             diff = len(rated_cards) - len(temp)
@@ -921,9 +924,11 @@ class AnnA:
                 yel("Removed overlap between rated cards and due cards: "
                     f"{diff} cards removed. Keeping {len(temp)} cards.\n")
                 rated_cards = temp
+
         self.due_cards = due_cards
         self.rated_cards = rated_cards
 
+        # smooth exit if not enough cards were found
         if len(self.due_cards) < self.minimum_due:
             beep(f"Number of due cards is {len(self.due_cards)} which is "
                  f"less than threshold ({self.minimum_due}).\nStopping.")
@@ -935,8 +940,8 @@ class AnnA:
 
         combined_card_list = list(rated_cards + due_cards)
 
+        # fetch relevant information of each cards
         list_cardInfo = []
-
         n = len(combined_card_list)
         yel(f"Asking Anki for information about {n} cards...")
         start = time.time()
@@ -967,10 +972,12 @@ class AnnA:
                 list_cardInfo[i]["status"] = "ERROR"
                 beep(f"Error processing card with ID {card['cardId']}")
 
+        # check for duplicates
         if len(list_cardInfo) != len(list(set(combined_card_list))):
             beep("Error: duplicate cards in DataFrame!\nExiting.")
             pdb.set_trace()
 
+        # assemble cards into a dataframe
         self.df = pd.DataFrame().append(list_cardInfo,
                                         ignore_index=True,
                                         sort=True)
