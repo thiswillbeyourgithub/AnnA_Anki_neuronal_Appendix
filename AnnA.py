@@ -953,6 +953,7 @@ class AnnA:
                 card_id=combined_card_list))
         whi(f"Got all infos in {int(time.time()-start)} seconds.\n")
 
+        error_ids = []
         for i, card in enumerate(list_cardInfo):
             list_cardInfo[i]["fields"] = dict(
                 (k.lower(), v)
@@ -975,12 +976,15 @@ class AnnA:
                 list_cardInfo[i]["status"] = "rated"
             else:
                 list_cardInfo[i]["status"] = "ERROR"
-                beep(f"Error processing card with ID {card['cardId']}")
+                error_ids.append(card)
+        if error_ids:
+            beep(f"Error processing card with IDs {','.join(error_ids)}")
+            breakpoint()
 
         # check for duplicates
         if len(list_cardInfo) != len(list(set(combined_card_list))):
             beep("Error: duplicate cards in DataFrame!\nExiting.")
-            pdb.set_trace()
+            breakpoint()
 
         # assemble cards into a dataframe
         self.df = pd.DataFrame().append(list_cardInfo,
