@@ -897,9 +897,48 @@ class AnnA:
             whi(f"Found {len(due_cards)} cards...\n")
 
         # fetch recently rated cards
+        def iterated_fetcher(query):
+            """
+            asks anki multiple times for 'rated:k -rated:k-1' for k
+            from 'rated_last_X_days' to 2. This way if a card was rated
+            3 times in the last 10 days it will appears 3 times in the 'rated'
+            list instead of appearing only once.
+            """
+            match = re.search(r" rated:(\d+)", query)
+            assert match is not None, r"' rated:\d' not found in query"
+            assert len(match.groups()) == 1, (
+                rf"Found multiple ' rated:\d' in query: '{match}'")
+            days = int(match.groups()[0])
+
+            rated_days = []
+            dupli_check = []  # if 2 days have identical reviews, its a bug?
+            for d in range(days, 0, -1):
+                if d > 1:  # avoid having '-rated:0'
+                    new_query = query.replace(f"rated:{days}",
+                                              f"rated:{d} -rated:{d-1}")
+                else:
+                    assert d == 1, f"invalid value for d: '{d}'"
+                    new_query = query.replace(f"rated:{days}",
+                                              f"rated:{d}")
+                rated_iter = self._call_anki(
+                        action="findCards",
+                        query=new_query)
+                assert rated_iter not in dupli_check, (
+                    f"2 days have identical reviews! '{d} and "
+                    f"{days-dupli_check.index(rated_iter)}")
+                dupli_check.append(rated_iter)
+                rated_days.extend(rated_iter)
+            dedup = list(
+                    set(rated_days))
+            if len(dedup) != len(rated_days):
+                yel(f"Using iterated fetching found '{len(dedup)}' reviews "
+                    f"instead of '{len(rated_days)}' otherwise.")
+            return rated_days
+
         rated_cards = []
         if self.highjack_rated_query is not None:
             beep("Highjacking rated card list:")
+            red("(This means the iterated fetcher will not be used!)")
             query = self.highjack_rated_query
             red(" >  '" + query + "'")
             rated_cards = self._call_anki(action="findCards", query=query)
@@ -910,7 +949,7 @@ class AnnA:
             query = (f"\"deck:{self.deckname}\" rated:{self.rated_last_X_days}"
                      " -is:suspended -is:buried")
             whi(" >  '" + query + "'")
-            rated_cards = self._call_anki(action="findCards", query=query)
+            rated_cards = iterated_fetcher(query)
             whi(f"Found {len(rated_cards)} cards...\n")
         else:
             yel("Will not look for cards rated in past days.")
@@ -3166,9 +3205,14 @@ if __name__ == "__main__":
                         help=(
                             "same idea as above, bypasses the query used "
                             "to fetch rated cards in anki. Related to "
-                            "`highjack_due_query` although you can set "
-                            "only one "
-                            "of them. Default is `None`."))
+                            "`highjack_due_query`. "
+                            "Using this will also bypass the function "
+                            "'iterated_fetcher' which looks for cards rated "
+                            "at each day until rated_last_X_days instead of "
+                            "querying all of them at once which removes "
+                            "duplicates (reviews of the same card but "
+                            "on different days). "
+                            "Default is `None`."))
     parser.add_argument("--low_power_mode",
                         dest="low_power_mode",
                         default=False,
