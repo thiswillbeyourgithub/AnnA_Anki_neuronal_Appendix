@@ -923,9 +923,10 @@ class AnnA:
                 rated_iter = self._call_anki(
                         action="findCards",
                         query=new_query)
-                assert rated_iter not in dupli_check, (
-                    f"2 days have identical reviews! '{d} and "
-                    f"{days-dupli_check.index(rated_iter)}")
+                if rated_iter != []:
+                    assert rated_iter not in dupli_check, (
+                        f"2 days have identical reviews! '{d} and "
+                        f"{days-dupli_check.index(rated_iter)}")
                 dupli_check.append(rated_iter)
                 rated_days.extend(rated_iter)
             dedup = list(
