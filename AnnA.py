@@ -2104,7 +2104,7 @@ class AnnA:
             if boost and (self.score_adjustment_factor[0] == 0):
                 yel("Will not boost cards because the relevant score "
                     "adjustment factor is 0")
-            elif boost:
+            elif boost and urgent_dues:
                 for ind in urgent_dues:
                     ro[ind] += (-0.5 * self.score_adjustment_factor[0] - urgent_factor[ind])
                 assert ro.min() < 0
