@@ -705,6 +705,12 @@ class AnnA:
 
         requestJson = json.dumps(request_wrapper(action, **params)
                                  ).encode('utf-8')
+
+        # otherwise beep cannot be used in a classmethod and exception fail:
+        if "beep" not in globals().keys():
+            def beep(x):
+                return beepy.beep(f"(fallback beepy){x}")
+
         try:
             response = json.load(urllib.request.urlopen(
                 urllib.request.Request(
