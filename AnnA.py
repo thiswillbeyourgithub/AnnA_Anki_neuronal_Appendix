@@ -3268,7 +3268,7 @@ if __name__ == "__main__":
                         required=False,
                         action="store_true",
                         help=(
-                            "Wether to append the tags to the "
+                            "Whether to append the tags to the "
                             "cards content or to add no tags. Default "
                             "to `True`."))
     parser.add_argument("--tags_to_ignore",
@@ -3291,7 +3291,7 @@ if __name__ == "__main__":
                         default=False,
                         required=False,
                         help=(
-                            "Wether to add a query to find the K nearest"
+                            "Whether to add a query to find the K nearest"
                             "neighbor of a given card to a new field "
                             "called 'Nearest_neighbors' (only if already "
                             "present in the model). Be careful not to "
@@ -3452,7 +3452,7 @@ if __name__ == "__main__":
                         action="store_true",
                         required=False,
                         help=(
-                            "default to `False`. Wether to enable "
+                            "default to `False`. Whether to enable "
                             "stemming of words. Currently the PorterStemmer "
                             "is used, and was made for English but can still "
                             "be useful for some other languages. Keep in "
@@ -3466,7 +3466,7 @@ if __name__ == "__main__":
                         default="cosine",
                         required=False,
                         help=(
-                            "when computing the distance matrix, wether to "
+                            "when computing the distance matrix, whether to "
                             "use 'cosine' or 'rbf' or 'euclidean' metrics. "
                             "cosine and rbf should be fine. Default to 'cosine'"))
     parser.add_argument("--whole_deck_computation",

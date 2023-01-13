@@ -251,14 +251,14 @@ optional arguments:
   --keep_OCR            if True, the OCR text extracted using the great
                         AnkiOCR addon (https://github.com/cfculhane/AnkiOCR/)
                         will be included in the card. Default is `True`.
-  --append_tags         Wether to append the tags to the cards content or to
+  --append_tags         Whether to append the tags to the cards content or to
                         add no tags. Default to `True`.
   --tags_to_ignore [TAGS_TO_IGNORE ...]
                         a list of regexp of tags to ignore when appending tags
                         to cards. This is not a list of tags whose card should
                         be ignored! Default is ['AnnA', 'leech']. Set to None
                         to disable it.
-  --add_KNN_to_field    Wether to add a query to find the K nearestneighbor of
+  --add_KNN_to_field    Whether to add a query to find the K nearestneighbor of
                         a given card to a new field called 'Nearest_neighbors'
                         (only if already present in the model). Be careful not
                         to overwrite the fields by running AnnA several times
@@ -322,13 +322,13 @@ optional arguments:
                         end.
   --plot_dir PLOT_PATH  Path location for the output plots. Default is
                         'Plots'.
-  --TFIDF_stem          default to `False`. Wether to enable stemming of
+  --TFIDF_stem          default to `False`. Whether to enable stemming of
                         words. Currently the PorterStemmer is used, and was
                         made for English but can still be useful for some
                         other languages. Keep in mind that this is the longest
                         step when formatting text.
   --dist_metric DIST_METRIC
-                        when computing the distance matrix, wether to use
+                        when computing the distance matrix, whether to use
                         'cosine' or 'rbf' or 'euclidean' metrics. cosine and
                         rbf should be fine. Default to 'cosine'
   --whole_deck_computation
@@ -389,7 +389,7 @@ AnnA includes built-in methods you can run after instantiating the class. Note t
 * use joblib caching for text_formater function (necessary steps: add more argument to it to stop relying on self)
 * add an option to generate a reachability plot for the decks using an argument (+add tqdm to OPTICS (I checked, it's easy) ; +do it with a timeout and in an external process)
 * use hierarchical clustering (quick because you already have the distance matrix) to have the full tree, then instead of using the TFIDF distance when computing the optimal order, use the "tree distance"
-* investigate wether CLIP is a better vectorizer than what you used in the past
+* investigate whether CLIP is a better vectorizer than what you used in the past
 * merge code from anki connect to make companion addon compatible with latest anki
 * package AnnA on pypi or as a standalone package
 * consider considering image occlusions of the same image as siblings
