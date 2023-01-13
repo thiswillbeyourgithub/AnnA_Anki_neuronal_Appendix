@@ -3389,7 +3389,7 @@ if __name__ == "__main__":
                         help=(
                             "the number of dimension to keep using "
                             "SVD. If 'auto' will automatically find the "
-                            "best number of dimensions to keep 80% of the "
+                            "best number of dimensions to keep 80%% of the "
                             "variance. If an int, will do like 'auto' but "
                             "starting from the supplied value. "
                             "Default is `auto`, you cannot disable "
