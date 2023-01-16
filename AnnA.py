@@ -1612,10 +1612,10 @@ class AnnA:
                                "metric": "cosine",
                                "init": 'spectral',  # TODO: try, 'pca' when new release comes out
                                "transform_seed": 42,
-                               "n_neighbors":  max(len(self.df.index) // 100 * 4, 10),  # higher means more focused on the global structure
-                               "min_dist": 0,  # could also be 0 because siblings have the same location anyway
+                               "n_neighbors":  max(len(self.df.index) // 100 * 5, 10),  # higher means more focused on the global structure
+                               "min_dist": 0.1,  # could also be 0 because siblings have the same location anyway
                                "low_memory":  False,
-                               "densmap": False,  # try to preserve local density
+                               "densmap": True,  # try to preserve local density
                                # "random_state": 42, # turned of because makes it non deterministic
                                }
                 U = umap.umap_.UMAP(**umap_kwargs)
@@ -1637,10 +1637,10 @@ class AnnA:
                                "metric": "cosine",
                                "init": 'spectral',
                                "transform_seed": 42,
-                               "n_neighbors":  max(len(self.df.index) // 100 * 4, 10),
-                               "min_dist": 0,
+                               "n_neighbors":  max(len(self.df.index) // 100 * 5, 10),
+                               "min_dist": 0.1,
                                "low_memory":  False,
-                               "densmap": False,
+                               "densmap": True,
                                }
                 U = umap.umap_.UMAP(**umap_kwargs)
                 self.embeddings2D = U.fit_transform(t_vec)
