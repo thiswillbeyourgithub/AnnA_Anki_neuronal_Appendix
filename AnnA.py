@@ -1,3 +1,4 @@
+import webbrowser
 import textwrap
 import traceback
 import copy
@@ -2668,7 +2669,7 @@ class AnnA:
         # add a timeout to make sure it doesn't get stuck
         def time_watcher(signum, frame):
             "used to issue a timeout"
-            raise TimeoutError("Timed out. Not finishing 2D plots.")
+            raise TimeoutError("Timed out after 5 minutes. Quitting 2D plots.")
         signal.signal(signal.SIGALRM, time_watcher)
         signal.alarm(300)  # 5 minutes
 
@@ -2968,10 +2969,24 @@ class AnnA:
         #     self._call_anki(action="guiBrowse", query=f"nid:{nid}")
         #app.run_server(debug=True, use_reloader=False)
 
+        saved_plot = f"{self.plot_dir}/{title}.html"
+        whi(f"Saving plot to {saved_plot}")
         offpy(fig,
-              filename=f"{self.plot_dir}/{title}.html",
-              auto_open=True,
-              show_link=True)
+              filename=saved_plot,
+              auto_open=False,
+              show_link=False,
+              validate=True,
+              output_type="file",
+              )
+        try:
+            whi(f"Trying to open {saved_plot} in the browser...")
+            webbrowser.open(
+                    str(
+                        Path(saved_plot).absolute()
+                        ).replace("\\", "")
+                    )
+        except Exception as e:
+            beep(f"Exception when openning file: '{e}'")
 
 
 class ProgressParallel(joblib.Parallel):
