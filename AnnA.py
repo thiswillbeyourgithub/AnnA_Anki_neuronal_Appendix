@@ -1579,7 +1579,7 @@ class AnnA:
             # dimensions so ended up in the curse of dimensionnality
 
             # reduce dimensions before UMAP if too many dimensions
-            dim_limit = 500
+            dim_limit = 1000
             if t_vec.shape[1] > dim_limit:
                 try:
                     yel(f"TFIDF output of shape {t_vec.shape}, dimensions above "
@@ -1615,7 +1615,7 @@ class AnnA:
                                "n_neighbors":  max(len(self.df.index) // 100 * 5, 10),  # higher means more focused on the global structure
                                "min_dist": 0.1,  # could also be 0 because siblings have the same location anyway
                                "low_memory":  False,
-                               "densmap": True,  # try to preserve local density
+                               "densmap": False,  # try to preserve local density
                                # "random_state": 42, # turned of because makes it non deterministic
                                }
                 U = umap.umap_.UMAP(**umap_kwargs)
@@ -1640,7 +1640,7 @@ class AnnA:
                                "n_neighbors":  max(len(self.df.index) // 100 * 5, 10),
                                "min_dist": 0.1,
                                "low_memory":  False,
-                               "densmap": True,
+                               "densmap": False,
                                }
                 U = umap.umap_.UMAP(**umap_kwargs)
                 self.embeddings2D = U.fit_transform(t_vec)
