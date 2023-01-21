@@ -376,6 +376,7 @@ AnnA includes built-in methods you can run after instantiating the class. Note t
 * `save_df` saves the dataframe containing the cards and all other infos needed by AnnA as a pickle file. Used mainly for debugging. Files will be saved to the folder `DF_backups`
 
 ## TODO
+* add the date in the embedding's plot title
 * add a way for smart acronym replacement to be toggled only if the card contain a specific word. This would add a lot of flexibility as the tag of the note is often in the text anyway
 * instead of having difference reference order, use a vector of weights to adjust each reference possible and combine them at will
 * add new task "resort filtered deck"
