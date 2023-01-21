@@ -2980,11 +2980,17 @@ class AnnA:
               )
         try:
             whi(f"Trying to open {saved_plot} in the browser...")
-            webbrowser.open(
-                    str(
-                        Path(saved_plot).absolute()
-                        ).replace("\\", "")
-                    )
+            saved_plot_fp = str(Path(saved_plot).absolute()).replace("\\", "")
+            if "genericbrowser" in str(webbrowser.get()).lower():
+                # if AnnA is launched using SSH, the webbrowser will
+                # possibly be in the console and can stop the script
+                # while the browser is not closed.
+                whi("No GUI browser detected, maybe you're in an SSH console? "
+                    "\nFalling back to using linux shell to open firefox")
+                os.system(f"DISPLAY=:0 firefox '{saved_plot_fp}'")
+            else:
+                whi("Opening browser.")
+                webbrowser.open(saved_plot_fp)
         except Exception as e:
             beep(f"Exception when openning file: '{e}'")
 
