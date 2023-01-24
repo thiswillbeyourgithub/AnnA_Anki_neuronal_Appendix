@@ -1975,8 +1975,13 @@ class AnnA:
         steps_RL = [x / 1440 for x in self.deck_config["lapse"]["delays"]]
         for i in df.index:
             if df.loc[i, "type"] == 1:  # learning
-                df.at[i, "interval"] = steps_L[int(
-                    str(df.loc[i, "left"])[-3:])-1]
+                step_L_index = int(str(df.loc[i, "left"])[-3:])-1
+                try:
+                    df.at[i, "interval"] = steps_L[step_L_index]
+                except Exception as e:
+                    whi(f"Invalid learning step, card was recently moved from another deck? cid: {i}; '{e}'")
+                    df.at[i, "interval"] = steps_L[0]
+
                 assert df.at[i,
                              "interval"] >= 0, (
                                      f"negative interval for card {i}")
