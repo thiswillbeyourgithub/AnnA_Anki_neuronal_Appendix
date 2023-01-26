@@ -1631,19 +1631,23 @@ class AnnA:
         if self.plot_2D_embeddings:
             try:
                 yel("Computing 2D embeddings for the plot using UMAP...")
-                umap_kwargs = {"n_jobs": -1,
-                               "verbose": 1,
-                               "n_components": 2,
-                               "metric": "cosine",
-                               "init": 'spectral',
-                               "transform_seed": 42,
-                               "n_neighbors":  max(len(self.df.index) // 100 * 5, 10),
-                               "min_dist": 0.1,
-                               "low_memory":  False,
-                               "densmap": False,
-                               }
-                U = umap.umap_.UMAP(**umap_kwargs)
-                self.embeddings2D = U.fit_transform(t_vec)
+                if self.vectors.shape[1] == 2:
+                    whi("Reusing UMAP dimension reduction for embeddings.")
+                    self.embeddings2D = self.vectors
+                else:  # compute embeddings
+                    umap_kwargs = {"n_jobs": -1,
+                                   "verbose": 1,
+                                   "n_components": 2,
+                                   "metric": "cosine",
+                                   "init": 'spectral',
+                                   "transform_seed": 42,
+                                   "n_neighbors":  max(len(self.df.index) // 100 * 5, 10),
+                                   "min_dist": 0.1,
+                                   "low_memory":  False,
+                                   "densmap": False,
+                                   }
+                    U = umap.umap_.UMAP(**umap_kwargs)
+                    self.embeddings2D = U.fit_transform(t_vec)
             except Exception as err:
                 beep(f"Error when computing 2D embeddings: '{err}'")
                 red(traceback.format_exc())
