@@ -1811,6 +1811,7 @@ class AnnA:
                     range(self.knn.shape[0]),
                     desc="Collecting neighbors of notes",
                     file=self.t_strm,
+                    mininterval=5,
                     unit="card"):
                 cardId = self.df.index[i]
                 if "Nearest_neighbors".lower() not in self.df.loc[
@@ -2721,6 +2722,7 @@ class AnnA:
                 range(self.knn.shape[0]),
                 desc="Computing edges",
                 file=self.t_strm,
+                mininterval=5,
                 unit="card"):
             cardId = self.df.index[i]
             noteId = self.df.loc[cardId, "note"]
