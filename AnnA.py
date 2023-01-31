@@ -2353,10 +2353,8 @@ class AnnA:
                 #     tqdm.write(f"{sp}REF_SCORE: {ref_avg:02f}")
                 queue.append(indTODO[
                     (w1*df.loc[indTODO, "ref"].values -
-                     w2*combine_arrays(indTODO, indQUEUE
-                                   ) + (
+                     w2*combine_arrays(indTODO, indQUEUE) +
                      w3*np.random.rand(1, len(indTODO))
-                     )
                      ).argmin()])
                 indQUEUE.append(indTODO.pop(indTODO.index(queue[-1])))
                 pbar.update(1)
@@ -2406,9 +2404,8 @@ class AnnA:
                 while to_process:
                     pbar.update(1)
                     score = self.df.loc[to_process, "ref_filtered"] - (
-                            combine_arrays(
-                                self.df_dist.loc[to_process, new_queue].values
-                            ))
+                            combine_arrays(to_process, new_queue)
+                            )
                     if self.resort_by_dist == "farther":
                         new_queue.append(to_process.pop(score.argmin()))
                     elif self.resort_by_dist == "closer":
