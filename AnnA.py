@@ -2303,7 +2303,7 @@ class AnnA:
             assert np.sum(np.isnan(df.loc[due, x].values)) == 0, (
                     f"invalid treatment of due cards, column : {x}")
 
-        def combine_arrays(array):
+        def combine_arrays(indTODO, indQUEUE):
             """
             'array' represents:
                 * columns : the cards of indTODO
@@ -2330,6 +2330,7 @@ class AnnA:
 
             The content of 'queue' is the list of card_id in best review order.
             """
+            array = self.df_dist.loc[indTODO, indQUEUE].values
             minimum = 1.0 * np.min(array, axis=1)
             average = 0.0 * np.mean(array, axis=1)
             med = 0.0 * np.median(array, axis=1)
@@ -2339,9 +2340,9 @@ class AnnA:
             #    tqdm.write(f"DIST_SCORE: {avg:02f}")
 
             # guarantee that dist_score will have some impact:
-            # if dist_score.max() < 1:
-            #     m = dist_score.max()
-            #     dist_score /= m
+            max_todo_dist = np.max(dist_score[-len(indQUEUE):])
+            if max_todo_dist < 1:
+                dist_score /= max_todo_dist
             return dist_score
 
         with tqdm(desc="Computing optimal review order",
@@ -2357,7 +2358,7 @@ class AnnA:
                 #     tqdm.write(f"{sp}REF_SCORE: {ref_avg:02f}")
                 queue.append(indTODO[
                     (w1*df.loc[indTODO, "ref"].values -
-                     w2*combine_arrays(self.df_dist.loc[indTODO, indQUEUE].values
+                     w2*combine_arrays(indTODO, indQUEUE
                                    ) + (
                      w3*np.random.rand(1, len(indTODO))
                      )
