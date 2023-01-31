@@ -2338,11 +2338,6 @@ class AnnA:
             # if self.log_level >= 2:
             #    avg = np.mean(dist_score) * self.score_adjustment_factor[1]
             #    tqdm.write(f"DIST_SCORE: {avg:02f}")
-
-            # guarantee that dist_score will have some impact:
-            max_todo_dist = np.max(dist_score[-len(indQUEUE):])
-            if max_todo_dist < 1:
-                dist_score /= max_todo_dist
             return dist_score
 
         with tqdm(desc="Computing optimal review order",
