@@ -2331,10 +2331,20 @@ class AnnA:
             The content of 'queue' is the list of card_id in best review order.
             """
             array = self.df_dist.loc[indTODO, indQUEUE].values
+
+            # scaling each column
+            maximum = np.max(array, axis=1)
+            array /= maximum[:, None]
+
             minimum = 1.0 * np.min(array, axis=1)
             average = 0.0 * np.mean(array, axis=1)
             med = 0.0 * np.median(array, axis=1)
             dist_score = minimum + average + med
+
+            # # 2nd scaling  # currently disabledl because not sure it's better
+            # maximum2 = np.max(dist_score)
+            # dist_score = dist_score / maximum2
+
             # if self.log_level >= 2:
             #    avg = np.mean(dist_score) * self.score_adjustment_factor[1]
             #    tqdm.write(f"DIST_SCORE: {avg:02f}")
