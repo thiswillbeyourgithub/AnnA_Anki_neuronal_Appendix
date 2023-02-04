@@ -2686,12 +2686,14 @@ class AnnA:
         assert hasattr(self, "knn"), "no knn in attribute!"
         assert hasattr(self, "embeddings2D"), "2D embeddings could not be found!"
 
+        timeout_in_minutes = 10
         # add a timeout to make sure it doesn't get stuck
         def time_watcher(signum, frame):
             "used to issue a timeout"
-            raise TimeoutError("Timed out after 5 minutes. Quitting 2D plots.")
+            raise TimeoutError(f"Timed out after {timeout_in_minutes} "
+                               "minutes. Quitting 2D plots.")
         signal.signal(signal.SIGALRM, time_watcher)
-        signal.alarm(300)  # 5 minutes
+        signal.alarm(int(timeout_in_minutes * 60))
 
         self.plot_dir.mkdir(exist_ok=True)
         G = nx.MultiGraph()
