@@ -2893,15 +2893,12 @@ class AnnA:
                              for edg in G.edges.data()
                              if random.random() <= p]
 
-        # randomize edges order
-        edges_to_draw.sort(key=lambda x: random.random())
-
         n_limit = 1000
         if len(edges_to_draw) > n_limit:
             yel(f"Too many edges to draw ({len(edges_to_draw)}), drawing "
                 f"only {n_limit}.")
             # keep only first n
-            edges_to_draw = edges_to_draw[:n_limit]
+            edges_to_draw = random.sample(edges_to_draw, n_limit)
 
         for edge in tqdm(G.edges.data(),
                          desc="Plotting edges",
