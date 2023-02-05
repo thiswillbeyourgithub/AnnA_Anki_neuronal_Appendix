@@ -941,8 +941,35 @@ class AnnA:
             dedup = list(
                     set(rated_days))
             if len(dedup) != len(rated_days):
+                # simply warn user that this worked
                 yel(f"Using iterated fetching found '{len(dedup)}' reviews "
                     f"instead of '{len(rated_days)}' otherwise.")
+
+            # look for cards in filtered decks created by AnnA as they will
+            # be reviewed most probably today, they have to be taken into
+            # account as 'rated'
+            in_filtered_deck = []
+            formated_name = self.deckname.replace("::", "_")
+            deckname_trial = [
+                    f"deck:\"*Optideck*{self.deckname}*\"",
+                    f"deck:\"*{self.deckname}*Optideck*\"",
+                    f"deck:\"*Optideck*{formated_name}*\"",
+                    f"deck:\"*{formated_name}*Optideck*\"",
+                    ]
+            if self.filtered_deck_name_template is not None:
+                    deckname_trial.append(f"deck:\"*{self.filtered_deck_name_template}*\"")
+            for deckname in deckname_trial:
+                optideck_query = f"{deckname} is:due -rated:1"
+                temp = self._call_anki(
+                        action="findCards",
+                        query=optideck_query)
+                assert isinstance(temp, list), (
+                    "Error when looking for filtered cards in rated query")
+                in_filtered_deck.extend(temp)
+            whi(f"Found '{len(in_filtered_deck)}' cards in filtered decks "
+                "created by AnnA that are considerated as 'rated'")
+            breakpoint()
+            rated_days.extend(in_filtered_deck)
             return rated_days
 
         rated_cards = []
@@ -3255,7 +3282,9 @@ if __name__ == "__main__":
                             "at each day until rated_last_X_days instead of "
                             "querying all of them at once which removes "
                             "duplicates (reviews of the same card but "
-                            "on different days). "
+                            "on different days). Note that 'iterated_fetcher'"
+                            " also looks for cards in filtered decks "
+                            "created by AnnA from the same deck. "
                             "Default is `None`."))
     parser.add_argument("--low_power_mode",
                         dest="low_power_mode",
