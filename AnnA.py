@@ -2860,18 +2860,10 @@ class AnnA:
         """
         Create 2D plotly plot from networkx graph.
         """
-        edge_trace = Scatter(
-            x=[],
-            y=[],
-            opacity=0.3,
-            line=scatter.Line(color='rgba(136, 136, 136, .8)'),
-            hoverinfo='none',
-            mode='lines'
-            )
 
         # only draw some edges, with an upper limit to reduce loading time
         p = 0.05  # proportion of edge to draw
-        n_limit = 1000  # don't draw more edges than this number
+        n_limit = 10_000  # don't draw more edges than this number
 
         p_int = int(p * len(G.edges.data()))
         if p_int > n_limit:
@@ -2879,19 +2871,51 @@ class AnnA:
                 f"only {n_limit}.")
         edges_to_draw = random.sample(list(G.edges.data()), min(p_int, n_limit))
 
+        edges_x = []
+        edges_y = []
         for edge in tqdm(G.edges.data(),
                          desc="Plotting edges",
                          file=self.t_strm):
             if edge in edges_to_draw:
                 x0, y0 = computed_layout[edge[0]]
                 x1, y1 = computed_layout[edge[1]]
-                edge_trace['x'] += tuple([x0, x1, None])
-                edge_trace['y'] += tuple([y0, y1, None])
+                edges_x.extend([x0, x1, None])
+                edges_y.extend([y0, y1, None])
+        edge_trace = Scatter(
+            x=edges_x,
+            y=edges_y,
+            opacity=0.3,
+            line=scatter.Line(color='rgba(136, 136, 136, .8)'),
+            hoverinfo='none',
+            mode='lines'
+            )
+
+        nodes_x = []
+        nodes_y = []
+        nodes_text = []
+        note_df = self.df.reset_index().drop_duplicates(subset="note").set_index("note")
+        for node in tqdm(G.nodes(), desc="Plotting nodes", file=self.t_strm):
+            x, y = computed_layout[node]
+            nodes_x.append(x)
+            nodes_y.append(y)
+
+            content = note_df.loc[node, "text"]
+            tag = note_df.loc[node, "tags"]
+            deck = note_df.loc[node, "deckName"]
+            text = (f"<b>deck:</b>{'<br>'.join(textwrap.wrap(deck, width=60))}"
+                    "<br>"
+                    f"<b>nid:</b>{node}"
+                    "<br>"
+                    f"<b>tag:</b>{'<br>'.join(textwrap.wrap(tag, width=60))}"
+                    "<br>"
+                    "<br>"
+                    f"<b>Content:</b>{'<br>'.join(textwrap.wrap(content, width=60))}")
+            nodes_text.append(text)
 
         node_trace = Scatter(
-            x=[],
-            y=[],
-            text=[],
+            x=nodes_x,
+            y=nodes_y,
+            text=nodes_text,
             mode='markers',
             textfont=dict(family='Calibri (Body)', size=25, color='black'),
             # opacity=0.1,
@@ -2909,26 +2933,6 @@ class AnnA:
                     titleside='right'
                 ),
                 line=dict(width=5)))
-
-        note_df = self.df.reset_index().drop_duplicates(subset="note").set_index("note")
-        for node in tqdm(G.nodes(), desc="Plotting nodes", file=self.t_strm):
-            x, y = computed_layout[node]
-            node_trace['x'] += tuple([x])
-            node_trace['y'] += tuple([y])
-
-            content = note_df.loc[node, "text"]
-            tag = note_df.loc[node, "tags"]
-            deck = note_df.loc[node, "deckName"]
-            node_trace['text'] += tuple([
-                f"<b>deck:</b>{'<br>'.join(textwrap.wrap(deck, width=60))}"
-                "<br>"
-                f"<b>nid:</b>{node}"
-                "<br>"
-                f"<b>tag:</b>{'<br>'.join(textwrap.wrap(tag, width=60))}"
-                "<br>"
-                "<br>"
-                f"<b>Content:</b>{'<br>'.join(textwrap.wrap(content, width=60))}"
-                ])
 
         fig = Figure(data=[node_trace, edge_trace],
                      layout=Layout(
