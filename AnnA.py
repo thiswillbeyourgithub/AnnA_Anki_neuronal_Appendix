@@ -967,7 +967,6 @@ class AnnA:
                 in_filtered_deck.extend(temp)
             whi(f"Found '{len(in_filtered_deck)}' cards in filtered decks "
                 "created by AnnA that are considerated as 'rated'")
-            breakpoint()
             rated_days.extend(in_filtered_deck)
             return rated_days
 
