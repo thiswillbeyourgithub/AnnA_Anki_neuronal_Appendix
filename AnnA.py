@@ -38,7 +38,6 @@ from tokenizers import Tokenizer
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import pairwise_distances, pairwise_kernels
-from sklearn.neighbors import radius_neighbors_graph, kneighbors_graph
 from sklearn.decomposition import TruncatedSVD
 import umap.umap_
 
@@ -1767,54 +1766,8 @@ class AnnA:
         self.mean_dist = mean_dist
         self.std_dist = std_dist
 
-        if self.plot_2D_embeddings or self.add_KNN_to_field:
-            self._compute_nearest_neighbor()
-
         self._print_similar()
         return True
-
-    def _compute_nearest_neighbor(self, mode="radius"):
-        """
-        Compute the nearest neighbors of each note of the distance matrix.
-        This is used to then fill the field "Nearest_neighbors" of those notes
-        so that you can quickly know the neighbor of any given card straight
-        into anki without having to use AnnA.
-
-        "mode" can be either "fixed_nn" or "radius"
-        """
-        if not ((self.add_KNN_to_field or self.plot_2D_embeddings) or (
-                self.task == "just_add_KNN")):
-            whi("Computing KNN matrix is not needed by those arguments.")
-            return
-        try:
-            if mode == "fixed_nn":
-                # 1% of neighbors, bounded
-                n_n = min(20, max(self.df_dist.shape[0] // 100, 5))
-                yel(f"Computing '{n_n}' nearest neighbors per point...")
-                self.knn = kneighbors_graph(
-                        X=self.df_dist,
-                        n_neighbors=n_n,
-                        mode="connectivity",
-                        n_jobs=-1,
-                        metric="precomputed",
-                        include_self=True
-                        )
-            elif mode == "radius":
-                radius = self.std_dist * 0.05
-                yel(f"Finding neighbors within {radius} (mean "
-                    f"distance is {round(self.mean_dist, 3)})...")
-                self.knn = radius_neighbors_graph(
-                        X=self.df_dist,
-                        radius=radius,
-                        mode="connectivity",
-                        n_jobs=-1,
-                        metric="precomputed",
-                        include_self=True
-                        )
-            else:
-                raise ValueError
-        except Exception as err:
-            beep(f"Error when computing KNN: '{err}'")
 
     def _add_neighbors_to_notes(self):
         """
@@ -1831,16 +1784,19 @@ class AnnA:
 
         # as some of the intermediary value for this iteration can be needed
         # if 2D plotting, they are stored as attributes just in case
+        self.n_n = min(50, max(5, self.df_dist.shape[0] // 100))
+        self.max_radius = self.std_dist * 0.05
+        yel(f"Keeping '{self.n_n}' nearest neighbors (that are within "
+            f"'{self.max_radius}')")
         if self.plot_2D_embeddings:
             self.nbrs_cache = {}
         try:
-            for i in tqdm(
-                    range(self.knn.shape[0]),
+            for cardId in tqdm(
+                    self.df.index,
                     desc="Collecting neighbors of notes",
                     file=self.t_strm,
                     mininterval=5,
                     unit="card"):
-                cardId = self.df.index[i]
                 if "Nearest_neighbors".lower() not in self.df.loc[
                         cardId, "fields"].keys():
                     continue
@@ -1850,21 +1806,18 @@ class AnnA:
                     continue  # skipped because a card of this note was
                     # already processed
 
-                nbrs_ind = self.knn.getcol(i).nonzero()[0]
-                nbrs_ind = sorted(
-                        nbrs_ind,
-                        key=lambda x: float(self.df_dist.loc[
-                            cardId, self.df.index[x]]),
-                        reverse=False)  # ascending order
+                nbrs_cid = self.df_dist.loc[cardId, :].nsmallest(self.n_n)
+                nbrs_cid = nbrs_cid[nbrs_cid <= self.max_radius]
+                assert len(nbrs_cid) > 0, "Invalid nbrs_cid value"
+                nbrs_cid = nbrs_cid.sort_values(ascending=True)
 
-                # get nid instead of indices and keep only the
-                # 50 closest neighbours
-                nbrs_nid = [self.df.loc[self.df.index[ind], "note"]
-                            for ind in nbrs_ind[:50]]
+                # get nid instead of indices
+                nbrs_nid = [self.df.loc[ind, "note"]
+                            for ind in nbrs_cid.index]
 
                 if self.plot_2D_embeddings:  # save for later if needed
                     self.nbrs_cache[noteId] = {
-                            "nbrs_ind": nbrs_ind,
+                            "nbrs_cid": nbrs_cid,
                             "nbrs_nid": nbrs_nid,
                             }
 
@@ -1872,15 +1825,15 @@ class AnnA:
                 nid_content[noteId] = "nid:" + ",".join(
                         [str(x) for x in nbrs_nid]
                         )
-                nb_of_nn.append(len(nbrs_ind))
+                nb_of_nn.append(len(nbrs_cid))
             whi("Sending new field value to Anki...")
             self._call_anki(
                     action="update_KNN_field",
                     nid_content=nid_content,
                     )
             yel("Finished adding neighbors to notes.")
-        except Exception:
-            beep("Error when adding neighbor list to notes!")
+        except Exception as err:
+            beep(f"Error when adding neighbor list to notes: '{err}'")
 
         if nb_of_nn:
             yel("Number of neighbors on average:")
@@ -2723,7 +2676,6 @@ class AnnA:
         if self.not_enough_cards:
             return
         assert self.plot_2D_embeddings, "invalid arguments!"
-        assert hasattr(self, "knn"), "no knn in attribute!"
         assert hasattr(self, "embeddings2D"), "2D embeddings could not be found!"
 
         timeout_in_minutes = 10
@@ -2760,30 +2712,26 @@ class AnnA:
         max_w = -np.inf
         sum_w = 0
         n_w = 0
-        assert len(self.df.index) == self.knn.shape[0]
+        assert len(self.df.index) == self.df_dist.shape[0]
         if not hasattr(self, "nbrs_cache"):
             self.nbrs_cache = {}  # for quicker check
-        for i in tqdm(
-                range(self.knn.shape[0]),
+        for cardId in tqdm(
+                self.df.index,
                 desc="Computing edges",
                 file=self.t_strm,
                 mininterval=5,
                 unit="card"):
-            cardId = self.df.index[i]
             noteId = self.df.loc[cardId, "note"]
             if noteId in self.nbrs_cache:
-                nbrs_ind = self.nbrs_cache[noteId]["nbrs_ind"]
+                nbrs_cid = self.nbrs_cache[noteId]["nbrs_cid"]
                 nbrs_nid = self.nbrs_cache[noteId]["nbrs_nid"]
             else:
-                nbrs_ind = self.knn.getcol(i).nonzero()[0]
-                # sort neighbors by distance
-                nbrs_ind = sorted(
-                        nbrs_ind,
-                        key=lambda x: self.df_dist.loc[
-                            cardId, self.df.index[x]],
-                        reverse=False)  # ascending order
-                nbrs_nid = [self.df.loc[self.df.index[ind], "note"]
-                            for ind in nbrs_ind]
+                nbrs_cid = self.df_dist.loc[cardId, :].nsmallest(self.n_n)
+                nbrs_cid = nbrs_cid[nbrs_cid <= self.max_radius]
+                assert len(nbrs_cid) > 0, "Invalid nbrs_cid value"
+                nbrs_cid = nbrs_cid.sort_values(ascending=True)
+                nbrs_nid = [self.df.loc[ind, "note"]
+                            for ind in nbrs_cid.index]
             for ii, n_nid in enumerate(nbrs_nid):
                 if noteId == n_nid:
                     # skip self neighboring
@@ -2793,10 +2741,8 @@ class AnnA:
                     break
                 smallest = min(noteId, n_nid)
                 largest = max(noteId, n_nid)
-                # new weight is the distance between points
-                new_w = self.df_dist.loc[
-                    cardId, self.df.index[nbrs_ind[ii]]
-                    ]
+                # new weight is 1 minus the distance between points
+                new_w = 1 - self.df_dist.loc[cardId, nbrs_cid.index[ii]]
 
                 # store the weight
                 if smallest not in all_edges:
@@ -2827,7 +2773,7 @@ class AnnA:
         assert min_w >= 0 and min_w < max_w, (
                 f"Impossible weight values: {min_w} and {max_w}")
 
-        # minmaing weights (although instead of reducing to 0, it adds the
+        # minmaxing weights (although instead of reducing to 0, it adds the
         # a fixed value to avoid null weights)
         new_spread = max_w - min_w
         fixed_offset = 0.1
