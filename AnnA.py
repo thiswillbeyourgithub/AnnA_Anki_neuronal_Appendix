@@ -2323,8 +2323,9 @@ class AnnA:
             # dist_score += 0.0 * np.median(dist_score, axis=1)  # median distance
 
             # scaling
-            max_dist2 = np.max(dist_score)
-            dist_score /= max_dist2
+            max_dist2 = np.max(dist_score).squeeze()
+            if max_dist2 > 0:
+                dist_score /= max_dist2
 
             # if self.log_level >= 2:
             #    avg = np.mean(dist_score) * self.score_adjustment_factor[1]
@@ -2333,7 +2334,9 @@ class AnnA:
             if task == "create_queue":
                 ref_score = df.loc[indTODO, "ref"].values.copy()
                 # scaling what is left of the ref_score
-                ref_score /= np.max(ref_score)
+                max_score = np.max(ref_score).squeeze()
+                if max_score > 0:
+                    ref_score /= max_score
 
                 score_array = w1 * ref_score - w2 * dist_score + w3 * np.random.rand(1, len(indTODO))
             elif task == "resort":
