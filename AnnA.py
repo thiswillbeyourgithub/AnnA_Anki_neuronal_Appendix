@@ -1850,8 +1850,7 @@ class AnnA:
                     continue  # skipped because a card of this note was
                     # already processed
 
-                knn_ar = self.knn.getcol(i).toarray().squeeze()
-                nbrs_ind = np.where(knn_ar == 1)[0]
+                nbrs_ind = self.knn.getcol(i).nonzero()[0]
                 nbrs_ind = sorted(
                         nbrs_ind,
                         key=lambda x: float(self.df_dist.loc[
