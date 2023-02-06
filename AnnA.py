@@ -1599,7 +1599,7 @@ class AnnA:
 
 
         if self.TFIDF_dim is None:
-            self.vector = t_vec
+            self.vectors = t_vec
         else:
             # AnnA will use UMAP to reduce the dimensions
             # Previously TruncatedSVD was used but it kept too many
