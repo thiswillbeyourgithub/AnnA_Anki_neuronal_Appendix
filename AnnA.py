@@ -2333,14 +2333,14 @@ class AnnA:
             assert np.sum(np.isnan(df.loc[due, x].values)) == 0, (
                     f"invalid treatment of due cards, column : {x}")
 
-        def combine_arrays(indTODO, indQUEUE):
+        def combine_arrays(indTODO, indQUEUE, task):
             """
-            'array' represents:
+            'dist_score' represents:
                 * columns : the cards of indTODO
                 * rows : the cards of indQUEUE
                 * the content of each cell is the similarity between them
                     (lower value means very similar)
-            Hence, for a given array:
+            Hence, for a given dist_score:
             * if a cell of np.min is high, then the corresponding card of
                 indTODO is not similar to any card of indQUEUE (i.e. its
                 closest card in indQUEUE is quite different). This card is a
@@ -2360,25 +2360,38 @@ class AnnA:
 
             The content of 'queue' is the list of card_id in best review order.
             """
-            array = self.df_dist.loc[indTODO, indQUEUE].values
+            dist_score = self.df_dist.loc[indTODO, indQUEUE].values.copy()
 
-            # scaling each column
-            maximum = np.max(array, axis=1)
-            array /= maximum[:, None]
+            # # scaling by column
+            # max_dist = np.max(dist_score, axis=1)
+            # dist_score /= max_dist[:, None]
 
-            minimum = 1.0 * np.min(array, axis=1)
-            average = 0.0 * np.mean(array, axis=1)
-            med = 0.0 * np.median(array, axis=1)
-            dist_score = minimum + average + med
+            dist_score = 1.0 * np.min(dist_score, axis=1)  # min distance
+            # dist_score += 0.0 * np.mean(dist_score, axis=1)  # average distance
+            # dist_score += 0.0 * np.median(dist_score, axis=1)  # median distance
 
-            # # 2nd scaling  # currently disabledl because not sure it's better
-            # maximum2 = np.max(dist_score)
-            # dist_score = dist_score / maximum2
+            # scaling
+            max_dist2 = np.max(dist_score)
+            dist_score /= max_dist2
 
             # if self.log_level >= 2:
             #    avg = np.mean(dist_score) * self.score_adjustment_factor[1]
             #    tqdm.write(f"DIST_SCORE: {avg:02f}")
-            return dist_score
+
+            if task == "create_queue":
+                ref_score = df.loc[indTODO, "ref"].values.copy()
+                # scaling what is left of the ref_score
+                ref_score /= np.max(ref_score)
+
+                score_array = w1 * ref_score - w2 * dist_score + w3 * np.random.rand(1, len(indTODO))
+            elif task == "resort":
+                # simply resort the final queue, only using dist_score
+                score_array = w2 * dist_score
+            else:
+                raise ValueError(f"Invalid value of 'task': '{task}'")
+
+            return score_array
+
 
         with tqdm(desc="Computing optimal review order",
                   unit=" card",
@@ -2387,15 +2400,12 @@ class AnnA:
                   file=self.t_strm,
                   total=queue_size_goal + len(rated)) as pbar:
             while len(queue) < queue_size_goal:
-                # if self.log_level >= 2:
-                #     ref_avg = np.mean(df.loc[indTODO, "ref"].values) * w1
-                #     sp = " " * 22
-                #     tqdm.write(f"{sp}REF_SCORE: {ref_avg:02f}")
-                queue.append(indTODO[
-                    (w1*df.loc[indTODO, "ref"].values -
-                     w2*combine_arrays(indTODO, indQUEUE) +
-                     w3*np.random.rand(1, len(indTODO))
-                     ).argmin()])
+                queue.append(
+                        indTODO[
+                            combine_arrays(indTODO, indQUEUE, "create_queue"
+                                ).argmin()
+                            ]
+                        )
                 indQUEUE.append(indTODO.pop(indTODO.index(queue[-1])))
                 pbar.update(1)
 
@@ -2444,7 +2454,7 @@ class AnnA:
                 while to_process:
                     pbar.update(1)
                     score = self.df.loc[to_process, "ref_filtered"] - (
-                            combine_arrays(to_process, new_queue)
+                            combine_arrays(to_process, new_queue, "resort")
                             )
                     if self.resort_by_dist == "farther":
                         new_queue.append(to_process.pop(score.argmin()))
