@@ -2341,7 +2341,7 @@ class AnnA:
                 score_array = w1 * ref_score - w2 * dist_score + w3 * np.random.rand(1, len(indTODO))
             elif task == "resort":
                 # simply resort the final queue, only using dist_score
-                score_array = w2 * dist_score
+                score_array = - w2 * dist_score
             else:
                 raise ValueError(f"Invalid value of 'task': '{task}'")
 
