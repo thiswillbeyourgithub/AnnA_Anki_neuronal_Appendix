@@ -1857,17 +1857,21 @@ class AnnA:
                         key=lambda x: float(self.df_dist.loc[
                             cardId, self.df.index[x]]),
                         reverse=False)  # ascending order
+
+                # get nid instead of indices and keep only the
+                # 50 closest neighbours
                 nbrs_nid = [self.df.loc[self.df.index[ind], "note"]
-                            for ind in nbrs_ind]
-                if self.plot_2D_embeddings:
+                            for ind in nbrs_ind[:50]]
+
+                if self.plot_2D_embeddings:  # save for later if needed
                     self.nbrs_cache[noteId] = {
                             "nbrs_ind": nbrs_ind,
                             "nbrs_nid": nbrs_nid,
                             }
 
-                # don't send more than 50 neighbours
+                # create the string that will be put to the anki note
                 nid_content[noteId] = "nid:" + ",".join(
-                        [str(x) for x in nbrs_nid[:50]]
+                        [str(x) for x in nbrs_nid]
                         )
                 nb_of_nn.append(len(nbrs_ind))
             whi("Sending new field value to Anki...")
@@ -2762,8 +2766,7 @@ class AnnA:
                 nbrs_ind = self.nbrs_cache[noteId]["nbrs_ind"]
                 nbrs_nid = self.nbrs_cache[noteId]["nbrs_nid"]
             else:
-                knn_ar = self.knn.getcol(i).toarray().squeeze()
-                nbrs_ind = np.where(knn_ar == 1)[0]
+                nbrs_ind = self.knn.getcol(i).nonzero()[0]
                 # sort neighbors by distance
                 nbrs_ind = sorted(
                         nbrs_ind,
