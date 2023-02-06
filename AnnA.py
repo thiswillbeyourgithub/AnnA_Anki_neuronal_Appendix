@@ -2917,13 +2917,13 @@ class AnnA:
 
         # only draw some edges, with an upper limit to reduce loading time
         p = 0.05  # proportion of edge to draw
-        n_limit = 100  # don't draw more edges than this number
+        n_limit = 1000  # don't draw more edges than this number
 
         p_int = int(p * len(G.edges.data()))
         if p_int > n_limit:
             yel(f"Too many edges to draw ({p_int}), drawing "
                 f"only {n_limit}.")
-        edges_to_draw = random.sample(G.edges.data(), min(p_int, n_limit))
+        edges_to_draw = random.sample(list(G.edges.data()), min(p_int, n_limit))
 
         for edge in tqdm(G.edges.data(),
                          desc="Plotting edges",
