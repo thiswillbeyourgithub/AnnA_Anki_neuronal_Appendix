@@ -2314,18 +2314,22 @@ class AnnA:
             """
             dist_score = self.df_dist.loc[indTODO, indQUEUE].values.copy()
 
-            # # scaling by column
-            # max_dist = np.max(dist_score, axis=1)
-            # dist_score /= max_dist[:, None]
+            # # minmax scaling by column
+            # min_dist_cols = np.min(dist_score, axis=1°
+            # dist_score -= min_dist_cols[:, None]
+            # max_dist_cols = np.max(dist_score, axis=1)
+            # dist_score /= max_dist_cols[:, None]
 
-            dist_score = 1.0 * np.min(dist_score, axis=1)  # min distance
-            # dist_score += 0.0 * np.mean(dist_score, axis=1)  # average distance
-            # dist_score += 0.0 * np.median(dist_score, axis=1)  # median distance
+            min_dist = 1.0 * np.min(dist_score, axis=1)
+            mean_dist = 0.0 * np.mean(dist_score, axis=1)
+            med_dist = 0.0 * np.median(dist_score, axis=1)
+            dist_score = min_dist + mean_dist + med_dist
 
-            # scaling
-            max_dist2 = np.max(dist_score).squeeze()
-            if max_dist2 > 0:
-                dist_score /= max_dist2
+            # minmax scaling
+            dist_score -= dist_score.min()
+            max_dist = np.max(dist_score).squeeze()
+            if max_dist > 0:
+                dist_score /= max_dist
 
             # if self.log_level >= 2:
             #    avg = np.mean(dist_score) * self.score_adjustment_factor[1]
@@ -2333,7 +2337,8 @@ class AnnA:
 
             if task == "create_queue":
                 ref_score = df.loc[indTODO, "ref"].values.copy()
-                # scaling what is left of the ref_score
+                # minmax scaling what is left of the ref_score
+                ref_score -= ref_score.min()
                 max_score = np.max(ref_score).squeeze()
                 if max_score > 0:
                     ref_score /= max_score
