@@ -2802,42 +2802,40 @@ class AnnA:
                 G.add_edge(k, sub_k, weight=sub_v)
 
         # 2D embeddings layout
-        # start = time.time()
+        start = time.time()
         whi("Drawing embedding network...")
         self._construct_plot(G=G,
                              computed_layout=positions,
                              node_colours=node_colours,
                              title=f"{self.deckname} - embeddings"
                              )
-        # whi(f"Saved embeddings layout in {int(time.time()-start)}s!")
+        whi(f"Saved embeddings layout in {int(time.time()-start)}s!")
         # nx.drawing.nx_pydot.write_dot(
         #         G, f'{self.plot_dir}/{self.deckname} - embeddings.dot')
 
-        # the spring layout was disabled because UMAP's 2D embeddings
-        # gave already a very decent embedding
-        # # computing spring layout
-        # n = len(node_colours)
-        # start = time.time()
-        # whi("\nDrawing spring layout network...")
-        # whi("    computing layout...")
-        # layout_spring = nx.spring_layout(
-        #         G,
-        #         k=100 / np.sqrt(n),  # repulsive force, default is 1/sqrt(n)
-        #         pos=positions,  # initial positions is the 2D embeddings
-        #         iterations=50,  # default to 50
-        #         # fixed=None,  # keep those nodes at their starting position
-        #         # center=None,  # center on a specific node
-        #         dim=2,  # dimension of layout
-        #         seed=4242,
-        #         threshold=1e-4,  # stop goes below, default 1e-4
-        #         )
-        # whi(f"Finished computing spring layout in {int(time.time()-start)}s")
-        # self._construct_plot(G=G,
-        #                      computed_layout=layout_spring,
-        #                      node_colours=node_colours,
-        #                      title=f"{self.deckname} - spring"
-        #                      )
-        # whi(f"Saved spring layout in {int(time.time()-start)}s!")
+        # computing spring layout
+        n = len(node_colours)
+        start = time.time()
+        whi("\nDrawing spring layout network...")
+        whi("    computing layout...")
+        layout_spring = nx.spring_layout(
+                G,
+                k=100 / np.sqrt(n),  # repulsive force, default is 1/sqrt(n)
+                pos=positions,  # initial positions is the 2D embeddings
+                iterations=50,  # default to 50
+                # fixed=None,  # keep those nodes at their starting position
+                # center=None,  # center on a specific node
+                dim=2,  # dimension of layout
+                seed=4242,
+                threshold=1e-3,  # stop goes below, default 1e-4
+                )
+        whi(f"Finished computing spring layout in {int(time.time()-start)}s")
+        self._construct_plot(G=G,
+                             computed_layout=layout_spring,
+                             node_colours=node_colours,
+                             title=f"{self.deckname} - spring"
+                             )
+        whi(f"Saved spring layout in {int(time.time()-start)}s!")
         # nx.drawing.nx_pydot.write_dot(
         #         G, f'{self.plot_dir}/{self.deckname} - spring.dot')
 
