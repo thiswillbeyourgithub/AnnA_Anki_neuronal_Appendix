@@ -2877,33 +2877,60 @@ class AnnA:
                 f"only {n_limit}.")
         edges_to_draw = random.sample(list(G.edges.data()), min(p_int, n_limit))
 
-        edges_x = []
-        edges_y = []
-        for edge in tqdm(G.edges.data(),
-                         desc="Plotting edges",
-                         file=self.t_strm):
-            if edge in edges_to_draw:
-                x0, y0 = computed_layout[edge[0]]
-                x1, y1 = computed_layout[edge[1]]
-                edges_x.extend([x0, x1, None])
-                edges_y.extend([y0, y1, None])
+        # multithreading way to add each edge to the plot list
+        self.edges_x = []
+        self.edges_y = []
+        lock = threading.Lock()
+        tqdm_params = {
+                "total": len(G.edges.data()),
+                "desc": "Plotting edges",
+                "file": self.t_strm,
+                "leave": True,
+                }
+        def _plot_edges(edge, computed_layout, lock):
+            "multithreaded way to add all edges to the plot"
+            x0, y0 = computed_layout[edge[0]]
+            x1, y1 = computed_layout[edge[1]]
+            with lock:
+                self.edges_x.extend([x0, x1, None])
+                self.edges_y.extend([y0, y1, None])
+        parallel = ProgressParallel(
+                tqdm_params=tqdm_params,
+                backend="threading",
+                n_jobs=-1,
+                mmap_mode=None,
+                max_nbytes=None,
+                verbose=0,
+                )
+        parallel(joblib.delayed(_plot_edges)(
+            edge=edge,
+            computed_layout=computed_layout,
+            lock=lock,
+            ) for edge in edges_to_draw)
         edge_trace = Scatter(
-            x=edges_x,
-            y=edges_y,
+            x=self.edges_x,
+            y=self.edges_y,
             opacity=0.3,
             line=scatter.Line(color='rgba(136, 136, 136, .8)'),
             hoverinfo='none',
             mode='lines'
             )
 
-        nodes_x = []
-        nodes_y = []
-        nodes_text = []
+        # multithreading way to add each node to the plot list
+        self.nodes_x = []
+        self.nodes_y = []
+        self.nodes_text = []
+        lock = threading.Lock()
+        tqdm_params = {
+                "total": len(G.nodes()),
+                "desc": "Plotting nodes",
+                "file": self.t_strm,
+                "leave": True,
+                }
         note_df = self.df.reset_index().drop_duplicates(subset="note").set_index("note")
-        for node in tqdm(G.nodes(), desc="Plotting nodes", file=self.t_strm):
+        def _plot_nodes(node, note_df, computed_layout, lock):
+            "multithreaded way to add all nodes to the plot"
             x, y = computed_layout[node]
-            nodes_x.append(x)
-            nodes_y.append(y)
 
             content = note_df.loc[node, "text"]
             tag = note_df.loc[node, "tags"]
@@ -2916,12 +2943,29 @@ class AnnA:
                     "<br>"
                     "<br>"
                     f"<b>Content:</b>{'<br>'.join(textwrap.wrap(content, width=60))}")
-            nodes_text.append(text)
+            with lock:
+                self.nodes_x.append(x)
+                self.nodes_y.append(y)
+                self.nodes_text.append(text)
 
+        parallel = ProgressParallel(
+                tqdm_params=tqdm_params,
+                backend="threading",
+                n_jobs=-1,
+                mmap_mode=None,
+                max_nbytes=None,
+                verbose=0,
+                )
+        parallel(joblib.delayed(_plot_nodes)(
+            node=node,
+            computed_layout=computed_layout,
+            note_df=note_df,
+            lock=lock,
+            ) for node in G.nodes())
         node_trace = Scatter(
-            x=nodes_x,
-            y=nodes_y,
-            text=nodes_text,
+            x=self.nodes_x,
+            y=self.nodes_y,
+            text=self.nodes_text,
             mode='markers',
             textfont=dict(family='Calibri (Body)', size=25, color='black'),
             # opacity=0.1,
