@@ -3040,7 +3040,10 @@ class AnnA:
                 # while the browser is not closed.
                 whi("No GUI browser detected, maybe you're in an SSH console? "
                     "\nFalling back to using linux shell to open firefox")
-                subprocess.check_output(shlex.split(f"DISPLAY=:0 firefox '{saved_plot_fp}'"))
+                subprocess.check_output(
+                        shlex.split(f"firefox '{saved_plot_fp}'"),
+                        shell=True,
+                        )
             else:
                 whi("Opening browser.")
                 webbrowser.open(saved_plot_fp)
