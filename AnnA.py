@@ -2315,10 +2315,10 @@ class AnnA:
             dist_score = self.df_dist.loc[indTODO, indQUEUE].values.copy()
 
             # # minmax scaling by column
-            # min_dist_cols = np.min(dist_score, axis=1°
-            # dist_score -= min_dist_cols[:, None]
+            # min_dist_cols = np.min(dist_score, axis=1)
+            # dist_score -= min_dist_cols[:, np.newaxis]
             # max_dist_cols = np.max(dist_score, axis=1)
-            # dist_score /= max_dist_cols[:, None]
+            # dist_score /= max_dist_cols[:, np.newaxis]
 
             min_dist = 1.0 * np.min(dist_score, axis=1)
             mean_dist = 0.0 * np.mean(dist_score, axis=1)
