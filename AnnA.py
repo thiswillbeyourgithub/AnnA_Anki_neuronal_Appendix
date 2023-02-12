@@ -199,6 +199,7 @@ class AnnA:
                  # "boost&addtag"
                  enable_fuzz=True,
                  resort_by_dist="closer",
+                 resort_split=False,
 
                  # vectorization:
                  vectorizer="TFIDF",  # can only be "TFIDF" but
@@ -440,6 +441,9 @@ class AnnA:
         assert resort_by_dist.lower() in ["farther", "closer"], (
             "Invalid 'resort_by_dist' value")
         self.resort_by_dist = resort_by_dist.lower()
+        assert isinstance(resort_split, bool), (
+            "Invalid type for 'resort_split'")
+        self.resort_split = resort_split
 
         # initialize joblib caching
         # self.mem = joblib.Memory("./.cache", mmap_mode="r", verbose=0)
@@ -2460,17 +2464,21 @@ class AnnA:
                     yel(f"The filtered deck will contain {proportion}% of "
                         "boosted cards.")
 
-                # create a new column like the reference score but -50 .
-                # the non urgent_dues cards have their reference set at 50
-                # In effect, this forces urgent_dues cards to appear
-                # first in the filtered deck and only then the non urgent_dues
-                # cards. But while still maximizing distance throughout the
-                # reviews.
-                self.df.loc[to_process, "ref_filtered"] = -50
-                self.df.loc[[q
-                             for q in to_process
-                             if q not in self.urgent_dues
-                             ], "ref_filtered"] = 50
+                if self.resort_split:
+                    # create a new column like the reference score but -50 .
+                    # the non urgent_dues cards have their reference set at 50
+                    # In effect, this forces urgent_dues cards to appear
+                    # first in the filtered deck and only then the non urgent_dues
+                    # cards. But while still maximizing distance throughout the
+                    # reviews.
+                    self.df.loc[to_process, "ref_filtered"] = -50
+                    self.df.loc[[q
+                                 for q in to_process
+                                 if q not in self.urgent_dues
+                                 ], "ref_filtered"] = 50
+                else:
+                    # don't split boosted cards from non boosted cards
+                    self.df.loc[to_process, "ref_filtered"] = 0
 
                 assert set(new_queue) & set(to_process) == set(), (
                         "queue construction failed!")
@@ -3684,6 +3692,17 @@ if __name__ == "__main__":
                             "meaning to spread the cards as differently as "
                             "possible. "
                             "Default to 'closer'."))
+    parser.add_argument("--resort_split",
+                        dest="resort_split",
+                        default=False,
+                        action="store_true",
+                        required=False,
+                        help=(
+                            "If 'resort_by_dist' is not False, set to True to "
+                            "resort the boost cards separately from the rest "
+                            "and make them appear first in the filtered deck."
+                            " Default to `False`."
+                            ))
     parser.add_argument("--profile_name",
                         nargs=1,
                         metavar="PROFILE_NAME",
