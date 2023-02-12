@@ -918,8 +918,13 @@ class AnnA:
                 rf"Found multiple ' rated:\d' in query: '{match}'")
             days = int(match.groups()[0])
 
-            rated_days = []
-            dupli_check = []  # if 2 days have identical reviews, its a bug?
+            previously_rated = []
+            dupli_check = []  # used to raise an issue if 2 days have exactly
+            # the same reviews
+            day_of_review = []  # will be the same length as 'previously_rated' and
+            # contains the "day" of the review. For example "4" if the review
+            # was 4days ago. This will be stored as attribute to
+            # be used when computing the optimal order.
             for d in range(days, 0, -1):
                 if d > 1:  # avoid having '-rated:0'
                     new_query = query.replace(f"rated:{days}",
@@ -928,25 +933,20 @@ class AnnA:
                     assert d == 1, f"invalid value for d: '{d}'"
                     new_query = query.replace(f"rated:{days}",
                                               f"rated:{d}")
-                rated_iter = self._call_anki(
+                rated_this_day = self._call_anki(
                         action="findCards",
                         query=new_query)
-                if rated_iter != []:
-                    assert rated_iter not in dupli_check, (
+                if rated_this_day != []:  # check unicity of review session
+                    assert rated_this_day not in dupli_check, (
                         f"2 days have identical reviews! '{d} and "
-                        f"{days-dupli_check.index(rated_iter)}")
-                dupli_check.append(rated_iter)
-                rated_days.extend(rated_iter)
-            dedup = list(
-                    set(rated_days))
-            if len(dedup) != len(rated_days):
-                # simply warn user that this worked
-                yel(f"Using iterated fetching found '{len(dedup)}' reviews "
-                    f"instead of '{len(rated_days)}' otherwise.")
+                        f"{days-dupli_check.index(rated_this_day)}")
+                dupli_check.append(rated_this_day)
+                previously_rated.extend(rated_this_day)
+                day_of_review.extend([d] * len(rated_this_day))
 
-            # look for cards in filtered decks created by AnnA as they will
-            # be reviewed most probably today, they have to be taken into
-            # account as 'rated'
+            # look for cards in filtered decks created by AnnA for the
+            # same deck as they will be reviewed most probably today,
+            # so they have to be counted as 'rated'
             in_filtered_deck = []
             formated_name = self.deckname.replace("::", "_")
             deckname_trial = [
@@ -956,7 +956,7 @@ class AnnA:
                     f"deck:\"*{formated_name}*Optideck*\"",
                     ]
             if self.filtered_deck_name_template is not None:
-                    deckname_trial.append(f"deck:\"*{self.filtered_deck_name_template}*\"")
+                deckname_trial.append(f"deck:\"*{self.filtered_deck_name_template}*\"")
             for deckname in deckname_trial:
                 optideck_query = f"{deckname} is:due -rated:1"
                 temp = self._call_anki(
@@ -965,12 +965,17 @@ class AnnA:
                 assert isinstance(temp, list), (
                     "Error when looking for filtered cards in rated query")
                 in_filtered_deck.extend(temp)
+                day_of_review.extend([1] * len(temp))
             whi(f"Found '{len(in_filtered_deck)}' cards in filtered decks "
                 "created by AnnA that are considerated as 'rated'")
-            rated_days.extend(in_filtered_deck)
-            return rated_days
+            previously_rated.extend(in_filtered_deck)
+            assert len(day_of_review) == len(previously_rated), (
+                "Invalid length of day_of_review")
+            self.day_of_review = day_of_review
+            return previously_rated
 
         rated_cards = []
+        self.day_of_review = []
         if self.highjack_rated_query is not None:
             beep("Highjacking rated card list:")
             red("(This means the iterated fetcher will not be used!)")
@@ -2285,6 +2290,43 @@ class AnnA:
             assert np.sum(np.isnan(df.loc[due, x].values)) == 0, (
                     f"invalid treatment of due cards, column : {x}")
 
+        # check that we have the right number of "review date" per "rated card"
+        assert len(self.day_of_review) == len(self.rated_cards), (
+            f"Incompatible length of day_of_review")
+        # format it in the right format score with formula:
+        #   f(day) = log( (day+Y)/Y ) with Y a dampening factor
+        #   (value are then translated to take day 1 as a reference, meaning
+        #    the distancence will not change if the card was rated today)
+
+        #     Example values for Y=7
+        #     card rated on day X  | score before translation | after
+        #                       1  |  0.13                    | 1
+        #                       2  |  0.25                    | 1.12
+        #                       5  |  0.54                    | 1.22
+        #                       7  |  0.70                    | 1.56
+        #                      10  |  0.89                    | 1.75
+        #                      15  |  1.15                    | 2.01
+        #                      30  |  1.67                    | 2.53
+        if self.day_of_review:
+            self.df_dor = pd.DataFrame(
+                    index=self.rated_cards,
+                    data=self.day_of_review,
+                    dtype=float
+                    )
+            # applying scoring formula
+            damp=7
+            f = lambda x: np.log( (x+damp) / damp )
+            self.df_dor = self.df_dor.apply(f)
+            self.df_dor += 1 - f(np.min(self.day_of_review))  # translation to start at 1
+            # show statistics to user
+            pd.set_option('display.float_format', lambda x: '%.5f' % x)
+            whi("\nTime score stats of rated cards:")
+            whi(f"{self.df_dor.describe()}\n")
+            pd.reset_option('display.float_format')
+            # check correct scaling
+            assert self.df_dor.min().squeeze() == 1, (
+                "Incorrect scaling of self.df_dor")
+
         def combine_arrays(indTODO, indQUEUE, task):
             """
             'dist_score' represents:
@@ -2312,27 +2354,53 @@ class AnnA:
 
             The content of 'queue' is the list of card_id in best review order.
             """
-            dist_score = self.df_dist.loc[indTODO, indQUEUE].values.copy()
+            dist_2d = self.df_dist.loc[indTODO, indQUEUE].values.copy()
 
-            # # minmax scaling by column
-            # min_dist_cols = np.min(dist_score, axis=1)
-            # dist_score -= min_dist_cols[:, np.newaxis]
-            # max_dist_cols = np.max(dist_score, axis=1)
-            # dist_score /= max_dist_cols[:, np.newaxis]
+            if task == "create_queue" and self.day_of_review:
+                # offset dist score of queue based on how recent was the review
+                intersect = np.intersect1d(
+                        self.df_dor.index,
+                        indTODO,
+                        return_indices=True)
+                if len(intersect) and len(intersect[0]):  # in case there are no intersections
+                    dist_2d[intersect[2]] *= self.df_dor.values[intersect[1]]
 
-            min_dist = 1.0 * np.min(dist_score, axis=1)
-            mean_dist = 0.0 * np.mean(dist_score, axis=1)
-            med_dist = 0.0 * np.median(dist_score, axis=1)
-            dist_score = min_dist + mean_dist + med_dist
+            # the minimum distance is what's most important in the scoring
+            min_dist = np.min(dist_2d, axis=1)
+            min_dist -= min_dist.min()
+            if min_dist.max() != 0:
+                min_dist /= min_dist.max()
 
-            # minmax scaling
-            dist_score -= dist_score.min()
-            max_dist = np.max(dist_score).squeeze()
-            if max_dist > 0:
-                dist_score /= max_dist
+            # # minmax scaling by column before taking mean and median value
+            # (min to be taken before rescaling because otherwise all min are 0)
+            # min_dist_cols = np.min(dist_2d, axis=1)
+            # dist_2d -= min_dist_cols[:, np.newaxis]
+            # max_dist_cols = np.max(dist_2d, axis=1)
+            # if (max_dist_cols.ravel() != 0).all():  # avoid null division
+            #     dist_2d /= max_dist_cols[:, np.newaxis]
+
+            # scaling mean and median so they are between 0 and 1
+            mean_dist = np.mean(dist_2d, axis=1)
+            mean_dist -= mean_dist.min()
+            if mean_dist.max() != 0:
+                mean_dist /= mean_dist.max()
+
+            med_dist = np.median(dist_2d, axis=1)
+            med_dist -= med_dist.min()
+            if med_dist.max() != 0:
+                med_dist /= med_dist.max()
+
+            # weighted agregation of min, mean and median into a 1d array
+            dist_1d = 0.9 * min_dist + 0.05 * mean_dist + 0.05 * med_dist
+
+            # minmax scaling this 1d array
+            dist_1d -= dist_1d.min()
+            max_dist = np.max(dist_1d).squeeze()
+            if max_dist > 0:  # in case of divide by 0 error
+                dist_1d /= max_dist
 
             # if self.log_level >= 2:
-            #    avg = np.mean(dist_score) * self.score_adjustment_factor[1]
+            #    avg = np.mean(dist_1d) * self.score_adjustment_factor[1]
             #    tqdm.write(f"DIST_SCORE: {avg:02f}")
 
             if task == "create_queue":
@@ -2343,10 +2411,11 @@ class AnnA:
                 if max_score > 0:
                     ref_score /= max_score
 
-                score_array = w1 * ref_score - w2 * dist_score + w3 * np.random.rand(1, len(indTODO))
+                score_array = w1 * ref_score - w2 * dist_1d + w3 * np.random.rand(1, len(indTODO))
             elif task == "resort":
-                # simply resort the final queue, only using dist_score
-                score_array = w2 * dist_score
+                # simply resorting the final queue, only using dist_1d
+                # (the sign is indeed positive and is taken into account later)
+                score_array = w2 * dist_1d
             else:
                 raise ValueError(f"Invalid value of 'task': '{task}'")
 
@@ -3299,7 +3368,10 @@ if __name__ == "__main__":
                             "on different days). Note that 'iterated_fetcher'"
                             " also looks for cards in filtered decks "
                             "created by AnnA from the same deck. "
-                            "Default is `None`."))
+                            "When 'iterated_fetcher' is "
+                            "used, the importance of reviews is gradually "
+                            "decreased as the number of days since the "
+                            "review growse. Default is `None`."))
     parser.add_argument("--low_power_mode",
                         dest="low_power_mode",
                         default=False,
