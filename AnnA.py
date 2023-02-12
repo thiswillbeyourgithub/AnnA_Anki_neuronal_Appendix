@@ -2754,6 +2754,9 @@ class AnnA:
         assert self.plot_2D_embeddings, "invalid arguments!"
         assert hasattr(self, "embeddings2D"), "2D embeddings could not be found!"
 
+        n_n_plot = 10  # number of closest neighbors to take into account
+        # for the spring layout computation
+
         timeout_in_minutes = 10
         # add a timeout to make sure it doesn't get stuck
         def time_watcher(signum, frame):
@@ -2812,7 +2815,7 @@ class AnnA:
                 if noteId == n_nid:
                     # skip self neighboring
                     continue
-                if ii > 100:
+                if ii > n_n_plot:
                     # Only considering the n first neighbors
                     break
                 smallest = min(noteId, n_nid)
@@ -2894,7 +2897,10 @@ class AnnA:
         whi("    computing layout...")
         layout_spring = nx.spring_layout(
                 G,
-                k=100 / np.sqrt(n),  # repulsive force, default is 1/sqrt(n)
+                k=1 / np.sqrt(n),  # repulsive force, default is 1/sqrt(n)
+                weight=None,
+                # if 'None', all weights are assumed to be 1,
+                # elif 'weight' use weight as computed previously
                 pos=positions,  # initial positions is the 2D embeddings
                 iterations=50,  # default to 50
                 # fixed=None,  # keep those nodes at their starting position
