@@ -1852,11 +1852,9 @@ class AnnA:
         them. This is used to make sure that the system is working correctly.
         Given that this takes time, a timeout has been implemented.
         """
-        def time_watcher(signum, frame):
-            "used to issue a timeout"
-            raise TimeoutError("Timed out. Not showing most similar cards")
-        signal.signal(signal.SIGALRM, time_watcher)
-        signal.alarm(60)
+        self.timeout_in_minutes = 1
+        signal.signal(signal.SIGALRM, self.time_watcher)
+        signal.alarm(int(self.timeout_in_minutes * 60))
 
         try:
             max_length = 200
@@ -2752,6 +2750,13 @@ class AnnA:
         yel(f"Dataframe exported to {name}.")
         return True
 
+    def time_watcher(self, signum, frame):
+        """
+        raise a TimeoutError if plotting or searching similar cards takes
+        too long"""
+        raise TimeoutError(f"Timed out after {self.timeout_in_minutes} "
+                           "minutes.")
+
     def _compute_plots(self):
         """
         Create a 2D plot of the deck.
@@ -2765,14 +2770,13 @@ class AnnA:
         n_n_plot = 10  # number of closest neighbors to take into account
         # for the spring layout computation
 
-        timeout_in_minutes = 10
+        self.timeout_in_minutes = 5
         # add a timeout to make sure it doesn't get stuck
-        def time_watcher(signum, frame):
-            "used to issue a timeout"
-            raise TimeoutError(f"Timed out after {timeout_in_minutes} "
-                               "minutes. Quitting 2D plots.")
-        signal.signal(signal.SIGALRM, time_watcher)
-        signal.alarm(int(timeout_in_minutes * 60))
+        signal.signal(signal.SIGALRM, self.time_watcher)
+        signal.alarm(int(self.timeout_in_minutes * 60))
+        # this timeout is replaced by a shorter timeout when opening
+        # the browser then resumed
+        self.timeout_start_time = time.time()
 
         self.plot_dir.mkdir(exist_ok=True)
         G = nx.MultiGraph()
@@ -3115,6 +3119,12 @@ class AnnA:
               output_type="file",
               )
         try:
+            # replacing timeout by a 5s one then resuming the previous one
+            def f_browser_timeout(signum, frame):
+                raise TimeoutError
+            signal.alarm(0)
+            signal.signal(signal.SIGALRM, f_browser_timeout)
+            signal.alarm(5)
             whi(f"Trying to open {saved_plot} in the browser...")
             saved_plot_fp = str(Path(saved_plot).absolute()).replace("\\", "")
             if "genericbrowser" in str(webbrowser.get()).lower():
@@ -3130,8 +3140,18 @@ class AnnA:
             else:
                 whi("Opening browser.")
                 webbrowser.open(saved_plot_fp)
+        except TimeoutError as e:
+            elapsed = self.timeout_in_minutes * 60 - (time.time() - self.timeout_start_time)
+            if elapsed <= 1:  # rare case when the timeout is for the overall
+                # plotting code and not just to open the browser
+                raise
+            else:
+                pass  # the function got stuck when openning the browser, ignore
         except Exception as e:
             beep(f"Exception when openning file: '{e}'")
+        signal.alarm(0)
+        signal.signal(signal.SIGALRM, self.time_watcher)
+        signal.alarm(int(self.timeout_in_minutes * 60 - (time.time() - self.timeout_start_time)))
 
 
 class ProgressParallel(joblib.Parallel):
