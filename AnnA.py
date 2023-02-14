@@ -2298,38 +2298,50 @@ class AnnA:
         assert len(self.day_of_review) == len(self.rated_cards), (
             f"Incompatible length of day_of_review")
         # format it in the right format score with formula:
-        #   f(day) = log( (day+Y)/Y ) with Y a dampening factor
-        #   (value are then translated to take day 1 as a reference, meaning
-        #    the distancence will not change if the card was rated today)
+        #   f(day) = log( 1 + day / 2 )
+        #  Example values:
+        #  day since review |  distance multiplying factor
+        #               01  |  1.0
+        #               02  |  1.28
+        #               03  |  1.51
+        #               04  |  1.69
+        #               05  |  1.84
+        #               06  |  1.98
+        #               07  |  2.09
+        #               08  |  2.20
+        #               09  |  2.29
+        #               10  |  2.38
+        #               11  |  2.46
+        #               12  |  2.54
+        #               13  |  2.60
+        #               14  |  2.67
+        #               15  |  2.73
+        #               16  |  2.79
+        #               17  |  2.84
+        #               18  |  2.89
+        #               19  |  2.94
 
-        #     Example values for Y=7
-        #     card rated on day X  | score before translation | after
-        #                       1  |  0.13                    | 1
-        #                       2  |  0.25                    | 1.12
-        #                       5  |  0.54                    | 1.22
-        #                       7  |  0.70                    | 1.56
-        #                      10  |  0.89                    | 1.75
-        #                      15  |  1.15                    | 2.01
-        #                      30  |  1.67                    | 2.53
+        #   (value are then translated to take day 1 as a reference, meaning
+        #    the distance for a card rated today won't change)
         if self.day_of_review:
-            self.df_dor = pd.DataFrame(
+            self.temporal_discounting = pd.DataFrame(
                     index=self.rated_cards,
                     data=self.day_of_review,
                     dtype=float
                     )
             # applying scoring formula
-            damp=7
-            f = lambda x: np.log( (x+damp) / damp )
-            self.df_dor = self.df_dor.apply(f)
-            self.df_dor += 1 - f(np.min(self.day_of_review))  # translation to start at 1
+            f = lambda x: np.log(1 + x / 2)
+            self.temporal_discounting = self.temporal_discounting.apply(f)
+            self.temporal_discounting -= self.temporal_discounting.min()
+            self.temporal_discounting += 1 # translation to start at 1
             # show statistics to user
             pd.set_option('display.float_format', lambda x: '%.5f' % x)
             whi("\nTime score stats of rated cards:")
-            whi(f"{self.df_dor.describe()}\n")
+            whi(f"{self.temporal_discounting.describe()}\n")
             pd.reset_option('display.float_format')
             # check correct scaling
-            assert self.df_dor.min().squeeze() == 1, (
-                "Incorrect scaling of self.df_dor")
+            assert self.temporal_discounting.min().squeeze() == 1, (
+                "Incorrect scaling of self.temporal_discounting")
 
         def combine_arrays(indTODO, indQUEUE, task):
             """
@@ -2363,11 +2375,11 @@ class AnnA:
             if task == "create_queue" and self.day_of_review:
                 # offset dist score of queue based on how recent was the review
                 intersect = np.intersect1d(
-                        self.df_dor.index,
+                        self.temporal_discounting.index,
                         indTODO,
                         return_indices=True)
                 if len(intersect) and len(intersect[0]):  # in case there are no intersections
-                    dist_2d[intersect[2]] *= self.df_dor.values[intersect[1]]
+                    dist_2d[intersect[2]] *= self.temporal_discounting.values[intersect[1]]
 
             # the minimum distance is what's most important in the scoring
             min_dist = np.min(dist_2d, axis=1)
