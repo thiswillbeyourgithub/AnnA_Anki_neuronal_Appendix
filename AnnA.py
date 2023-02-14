@@ -1477,7 +1477,9 @@ class AnnA:
                                    norm="l2",
                                    smooth_idf=False,
                                    sublinear_tf=True,
-                                   max_features=10_000,
+                                   max_features=1000,  # if more than
+                                   # dim_limit, SVD will be used to reduce dimension
+                                   # to dim_limit prior to running UMAP
                                    binary=binary_mode,
                                    # max_df=0.5,  # ignore words present in
                                    # more than X% of documents
