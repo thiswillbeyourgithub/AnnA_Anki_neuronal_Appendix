@@ -2330,8 +2330,9 @@ class AnnA:
                     dtype=float
                     )
             # applying scoring formula
-            f = lambda x: np.log(1 + x / 2)
-            self.temporal_discounting = self.temporal_discounting.apply(f)
+            self.temporal_discounting = self.temporal_discounting.apply(
+                    lambda x: np.log(1 + x / 2)
+                    )
             self.temporal_discounting -= self.temporal_discounting.min()
             self.temporal_discounting += 1 # translation to start at 1
             # show statistics to user
@@ -3419,7 +3420,8 @@ if __name__ == "__main__":
                             "When 'iterated_fetcher' is "
                             "used, the importance of reviews is gradually "
                             "decreased as the number of days since the "
-                            "review growse. Default is `None`."))
+                            "review grows. In short it's doing "
+                            "temporal discounting. Default is `None`."))
     parser.add_argument("--low_power_mode",
                         dest="low_power_mode",
                         default=False,
