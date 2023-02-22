@@ -2681,7 +2681,13 @@ class AnnA:
                  f"deck: {filtered_deck_name} "
                  "You have to delete it manually, the cards will be "
                  "returned to their original deck.")
-            input("Done? >")
+            yel("Syncing...")
+            sync_output = self._call_anki(action="sync")
+            assert sync_output is None or sync_output == "None", (
+                "Error during sync?: '{sync_output}'")
+            time.sleep(1)  # wait for sync to finish, just in case
+            whi("Done syncing!")
+            input("Done? (will trigger another sync) >")
 
         whi("Creating deck containing the cards to review: "
             f"{filtered_deck_name}")
