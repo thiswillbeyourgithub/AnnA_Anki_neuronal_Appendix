@@ -1123,13 +1123,16 @@ class AnnA:
         # remove sound recordings
         text = re.sub(r"\[sound:.*?\..*?\]", " ", text)
 
-        # duplicate bold and underlined content, as well as clozes
-        text = re.sub(r"\b<u>(.*?)</u>\b", r" \1 \1 ", text,
-                      flags=re.M | re.DOTALL)
-        text = re.sub(r"\b<b>(.*?)</b>\b", r" \1 \1 ", text,
-                      flags=re.M | re.DOTALL)
-        text = re.sub(r"{{c\d+::.*?}}", lambda x: f"{x.group(0)} {x.group(0)}",
-                      text, flags=re.M | re.DOTALL)
+        # append bold and underlined text at the end
+        # (to increase their importance without interfering with ngrams)
+        bold = re.findall(r"<b>(.*?)</b>", text, flags=re.M | re.DOTALL)
+        underlined = re.findall(r"<u>(.*?)</u>", text, flags=re.M | re.DOTALL)
+        for dupli in bold + underlined:
+            text += f" {dupli.strip()}"
+        # as well as clozes
+        cloze = re.findall(r"{{c\d+::(.*?)}}", text, flags=re.M | re.DOTALL)
+        for dupli in cloze:
+            text += f" {dupli}"
 
         # if blockquote or li or ul, mention that it's a list item
         # usually indicating a harder card
