@@ -376,6 +376,7 @@ AnnA includes built-in methods you can run after instantiating the class. Note t
 * `save_df` saves the dataframe containing the cards and all other infos needed by AnnA as a pickle file. Used mainly for debugging. Files will be saved to the folder `DF_backups`
 
 ## TODO
+* make a task=review_cluter that does a kmeans on the due cards, finds the cluster with the highest median relative overdueness then create a filtered deck from it
 * precompile all the regex matches used in text formatting to speed up the process
 * compute a metric for how good the embedding is in terms of clusterability and display it
 * add the date in the embedding's plot title
