@@ -436,11 +436,13 @@ class AnnA:
         assert isinstance(enable_fuzz, bool), "Invalid type for 'enable_fuzz'"
         self.enable_fuzz = enable_fuzz
 
-        assert isinstance(resort_by_dist, str), (
+        assert isinstance(resort_by_dist, (bool, str)), (
             "Invalid type for 'resort_by_dist'")
-        assert resort_by_dist.lower() in ["farther", "closer"], (
+        if isinstance(resort_by_dist, str):
+            resort_by_dist = resort_by_dist.lower()
+        self.resort_by_dist = resort_by_dist
+        assert resort_by_dist in ["farther", "closer", False], (
             "Invalid 'resort_by_dist' value")
-        self.resort_by_dist = resort_by_dist.lower()
         assert isinstance(resort_split, bool), (
             "Invalid type for 'resort_split'")
         self.resort_split = resort_split
@@ -3719,22 +3721,22 @@ if __name__ == "__main__":
                         type=str,
                         required=False,
                         help=(
-                            "Recomputing the best order of the cards in the "
-                            "filtered deck without taking into account the "
-                            "reference score. This is useful if you are "
-                            "sure to "
+                            "Resorting the new filtered deck taking only"
+                            "into account the semantic distance and not the "
+                            "reference score. Useful if you are "
+                            "certain to "
                             "review the entierety of the filtered deck "
                             "today as it "
-                            "will minimize similarity between cards. If "
+                            "will minimize similarity between consecutive "
+                            "cards. If "
                             "you are not sure you will finish the "
-                            "deck, it can be best to set to False to make "
-                            "sure "
+                            "deck today, set to `False` to make sure "
                             "you review first the most urgent cards. This "
-                            "feature is active only if you set the task to '"
-                            "filter_review_cards'. "
+                            "feature is active only if you set `task` to "
+                            "'filter_review_cards'. "
                             "Can be either 'farther' or 'closer' or False. "
-                            "The former "
-                            "meaning to spread the cards as differently as "
+                            "'farther' "
+                            "meaning to spread the cards as evenly as "
                             "possible. "
                             "Default to 'closer'."))
     parser.add_argument("--resort_split",
@@ -3744,7 +3746,7 @@ if __name__ == "__main__":
                         required=False,
                         help=(
                             "If 'resort_by_dist' is not False, set to True to "
-                            "resort the boost cards separately from the rest "
+                            "resort the boosted cards separately from the rest "
                             "and make them appear first in the filtered deck."
                             " Default to `False`."
                             ))
