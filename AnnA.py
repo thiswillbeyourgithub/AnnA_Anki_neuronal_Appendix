@@ -9,7 +9,6 @@ import gc
 from datetime import datetime
 import time
 import random
-import pdb
 import signal
 import os
 import subprocess
@@ -55,7 +54,7 @@ from utils.greek import greek_alphabet_mapping
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
 # makes the script interuptible, resume it using c+enter
-signal.signal(signal.SIGINT, (lambda signal, frame: pdb.set_trace()))
+signal.signal(signal.SIGINT, (lambda signal, frame: breakpoint()))
 
 # adds logger, restrict it to 5000 lines
 Path("logs.txt").touch(exist_ok=True)
