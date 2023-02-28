@@ -1502,7 +1502,7 @@ class AnnA:
                     yel("Ankipandas will use anki collection found at "
                         f"{original_db}")
                 if "trash" in str(original_db).lower():
-                    beep(f"Ankipandas seems to have "
+                    beep("Ankipandas seems to have "
                          "found a collection in "
                          "the trash folder. If that is not your intention "
                          "cancel now. Waiting 10s for you to see this "
@@ -3759,7 +3759,8 @@ if __name__ == "__main__":
                             "defaults to `None`. Profile named "
                             "used by ankipandas to find your collection. If "
                             "None, ankipandas will use the most probable "
-                            "collection."))
+                            "collection. Only used if "
+                            "'whole_deck_computation' is set to `True`"))
     parser.add_argument("--keep_console_open",
                         dest="console_mode",
                         default=False,
