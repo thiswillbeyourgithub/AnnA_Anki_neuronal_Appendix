@@ -2810,8 +2810,10 @@ class AnnA:
         all_edges = {}
 
         # to bind each tags or deck to a color
-        #self.df["colors"] = self.df["deckName"].factorize()[0]
-        self.df["colors"] = self.df["tags"].factorize()[0]
+        if len(list(set(self.df["deckName"]))) > 5:  # if there are more than 5 different decks
+            self.df["colors"] = self.df["deckName"].factorize()[0]
+        else:
+            self.df["colors"] = self.df["tags"].factorize()[0]
 
         # add nodes
         for cid in tqdm(self.df.index, desc="Adding nodes", unit="node",
