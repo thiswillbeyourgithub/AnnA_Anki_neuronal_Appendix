@@ -1,7 +1,7 @@
 plyer >= 2.0.0  # for notification, can help to install dbus-python too
 pyfiglet >= 0.8.post1   # for banner
 prompt_toolkit >= 3.0.14  # for autocomplete prompt
-python_Levenshtein >= 0.12.2  # to correct for field mapping and note type spelling errors
+python_Levenshtein == 0.12.2  # to correct for field mapping and note type spelling errors
 beepy>=1.0.7  # make a beeping sound
 ankipandas>=0.3.10  # to load the anki collection
 
@@ -10,7 +10,7 @@ pandas == 1.2.3
 joblib >= 1.1.0
 umap-learn >= 0.5.3
 
-numpy >= 1.19.4
+numpy == 1.23.5
 scikit-learn>=1.1.1
 tqdm >= 4.62.3
 tqdm_logger >= 1.0.1
