@@ -545,18 +545,21 @@ class AnkiConnect:
 
     @util.api()
     def update_KNN_field(self, nid_content):
-        editing_started = False
-        for note, content in nid_content.items():
-            ankiNote = self.getNote(int(note))
-            if ankiNote["Nearest_neighbors"] != content:
-                if not editing_started:
-                    self.startEditing()
-                    editing_started = True
-                ankiNote["Nearest_neighbors"] = content
-                ankiNote.flush()
-        if editing_started:
+        try:
+            self.startEditing()
+            for note, content in nid_content.items():
+                ankiNote = self.getNote(int(note))
+                if ankiNote["Nearest_neighbors"] != content:
+                    ankiNote["Nearest_neighbors"] = content
+                    ankiNote.flush()
             self.collection().autosave()
             self.stopEditing()
+        except Exception:
+            self.collection().autosave()
+            self.stopEditing()
+            raise
+
+
 
     @util.api()
     def guiBrowse(self, query=None):
