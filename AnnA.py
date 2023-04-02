@@ -63,7 +63,9 @@ Path("logs.txt").write_text(
         Path("logs.txt").read_text().split("\n")[-100_000:]))
 logging.basicConfig(filename="logs.txt",
                     filemode='a',
-                    format=f"{time.ctime()}: %(message)s")
+                    format=f"{time.ctime()}: %(message)s",
+                    force=True,
+                    )
 log = logging.getLogger()
 log.setLevel(logging.INFO)
 
