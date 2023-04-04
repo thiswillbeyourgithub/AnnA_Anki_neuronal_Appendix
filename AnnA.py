@@ -1076,6 +1076,21 @@ class AnnA:
             beep("Error: duplicate cards in DataFrame!\nExiting.")
             breakpoint()
 
+        # exclude from 'due' cards that have an 'odue' column != 0
+        # which means that they are already in a filtered deck
+        to_remove = []
+        for i, card in enumerate(list_cardInfo):
+            if int(card["odue"]) != 0:
+                if int(card["cardId"]) in self.due_cards:
+                    to_remove.append(card)
+        if to_remove:
+            beep(f"Removing '{len(to_remove)}' cards from due that are "
+                 " already in a filtered deck.")
+            [list_cardInfo.remove(c) for c in to_remove]
+            [self.due_cards.remove(int(c["cardId"])) for c in to_remove]
+        assert list_cardInfo, "Empty list_cardInfo!"
+        assert self.due_cards, "Empty self.due_cards!"
+
         # assemble cards into a dataframe
         self.df = pd.DataFrame().append(list_cardInfo,
                                         ignore_index=True,
