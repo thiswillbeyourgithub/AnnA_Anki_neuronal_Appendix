@@ -2405,6 +2405,8 @@ class AnnA:
                         indTODO,
                         return_indices=True)
                 if len(intersect) and len(intersect[0]):  # in case there are no intersections
+                    assert len(dist_2d[intersect[2]]), "invalid intersection with dist_2d"
+                    assert len(self.temporal_discounting.values[intersect[1]]), "invalid intersection with temporal_discounting"
                     dist_2d[intersect[2]] *= self.temporal_discounting.values[intersect[1]]
 
             # the minimum distance is what's most important in the scoring
