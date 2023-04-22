@@ -2397,9 +2397,10 @@ class AnnA:
             The content of 'queue' is the list of card_id in best review order.
             """
             dist_2d = self.df_dist.loc[indTODO, indQUEUE].values.copy()
+            assert (dist_2d >= 0).all(), "negative values in dist_2d #1"
 
             if task == "create_queue" and self.day_of_review:
-                # offset dist score of queue based on how recent was the review
+                # multiply dist score of queue based on how recent was the review
                 intersect = np.intersect1d(
                         self.temporal_discounting.index,
                         indTODO,
@@ -2409,6 +2410,7 @@ class AnnA:
                     assert len(self.temporal_discounting.values[intersect[1]]), "invalid intersection with temporal_discounting"
                     dist_2d[intersect[2]] *= self.temporal_discounting.values[intersect[1]]
 
+            assert (dist_2d >= 0).all(), "negative values in dist_2d #2"
             # the minimum distance is what's most important in the scoring
             min_dist = np.min(dist_2d, axis=1)
             min_dist -= min_dist.min()
