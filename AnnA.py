@@ -2348,26 +2348,26 @@ class AnnA:
 
         #   (value are then translated to take day 1 as a reference, meaning
         #    the distance for a card rated today won't change)
-        if self.day_of_review:
-            self.temporal_discounting = pd.DataFrame(
-                    index=self.rated_cards,
-                    data=self.day_of_review,
-                    dtype=float
-                    )
-            # applying scoring formula
-            self.temporal_discounting = self.temporal_discounting.apply(
-                    lambda x: np.log(1 + x / 2)
-                    )
-            self.temporal_discounting -= self.temporal_discounting.min()
-            self.temporal_discounting += 1 # translation to start at 1
-            # show statistics to user
-            pd.set_option('display.float_format', lambda x: '%.5f' % x)
-            whi("\nTime score stats of rated cards:")
-            whi(f"{self.temporal_discounting.describe()}\n")
-            pd.reset_option('display.float_format')
-            # check correct scaling
-            assert self.temporal_discounting.min().squeeze() == 1, (
-                "Incorrect scaling of self.temporal_discounting")
+        # if self.day_of_review:
+        #     self.temporal_discounting = pd.DataFrame(
+        #             index=self.rated_cards,
+        #             data=self.day_of_review,
+        #             dtype=float
+        #             )
+        #     # applying scoring formula
+        #     self.temporal_discounting = self.temporal_discounting.apply(
+        #             lambda x: np.log(1 + x / 2)
+        #             )
+        #     self.temporal_discounting -= self.temporal_discounting.min()
+        #     self.temporal_discounting += 1 # translation to start at 1
+        #     # show statistics to user
+        #     pd.set_option('display.float_format', lambda x: '%.5f' % x)
+        #     whi("\nTime score stats of rated cards:")
+        #     whi(f"{self.temporal_discounting.describe()}\n")
+        #     pd.reset_option('display.float_format')
+        #     # check correct scaling
+        #     assert self.temporal_discounting.min().squeeze() == 1, (
+        #         "Incorrect scaling of self.temporal_discounting")
 
         def combine_arrays(indTODO, indQUEUE, task):
             """
@@ -2399,16 +2399,16 @@ class AnnA:
             dist_2d = self.df_dist.loc[indTODO, indQUEUE].values.copy()
             assert (dist_2d >= 0).all(), "negative values in dist_2d #1"
 
-            if task == "create_queue" and self.day_of_review:
-                # multiply dist score of queue based on how recent was the review
-                intersect = np.intersect1d(
-                        self.temporal_discounting.index,
-                        indTODO,
-                        return_indices=True)
-                if len(intersect) and len(intersect[0]):  # in case there are no intersections
-                    assert len(dist_2d[intersect[2]]), "invalid intersection with dist_2d"
-                    assert len(self.temporal_discounting.values[intersect[1]]), "invalid intersection with temporal_discounting"
-                    dist_2d[intersect[2]] *= self.temporal_discounting.values[intersect[1]]
+            # if task == "create_queue" and self.day_of_review:
+            #     # multiply dist score of queue based on how recent was the review
+            #     intersect = np.intersect1d(
+            #             self.temporal_discounting.index,
+            #             indTODO,
+            #             return_indices=True)
+            #     if len(intersect) and len(intersect[0]):  # in case there are no intersections
+            #         assert len(dist_2d[intersect[2]]), "invalid intersection with dist_2d"
+            #         assert len(self.temporal_discounting.values[intersect[1]]), "invalid intersection with temporal_discounting"
+            #         dist_2d[intersect[2]] *= self.temporal_discounting.values[intersect[1]]
 
             assert (dist_2d >= 0).all(), "negative values in dist_2d #2"
             # the minimum distance is what's most important in the scoring
