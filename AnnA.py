@@ -1666,7 +1666,7 @@ class AnnA:
                     red(traceback.format_exc())
 
 
-            target_dim = 2
+            target_dim = 5
             whi(f"Using UMAP to reduce to {target_dim} dimensions")
             try:
                 umap_kwargs = {"n_jobs": -1,
