@@ -2437,7 +2437,7 @@ class AnnA:
                 med_dist /= med_dist.max()
 
             # weighted agregation of min, mean and median into a 1d array
-            dist_1d = 0.9 * min_dist + 0.05 * mean_dist + 0.05 * med_dist
+            dist_1d = 0.98 * min_dist + 0.01 * mean_dist + 0.01 * med_dist
 
             # minmax scaling this 1d array
             dist_1d -= dist_1d.min()
