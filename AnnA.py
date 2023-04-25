@@ -2348,26 +2348,26 @@ class AnnA:
 
         #   (value are then translated to take day 1 as a reference, meaning
         #    the distance for a card rated today won't change)
-        # if self.day_of_review:
-        #     self.temporal_discounting = pd.DataFrame(
-        #             index=self.rated_cards,
-        #             data=self.day_of_review,
-        #             dtype=float
-        #             )
-        #     # applying scoring formula
-        #     self.temporal_discounting = self.temporal_discounting.apply(
-        #             lambda x: np.log(1 + x / 2)
-        #             )
-        #     self.temporal_discounting -= self.temporal_discounting.min()
-        #     self.temporal_discounting += 1 # translation to start at 1
-        #     # show statistics to user
-        #     pd.set_option('display.float_format', lambda x: '%.5f' % x)
-        #     whi("\nTime score stats of rated cards:")
-        #     whi(f"{self.temporal_discounting.describe()}\n")
-        #     pd.reset_option('display.float_format')
-        #     # check correct scaling
-        #     assert self.temporal_discounting.min().squeeze() == 1, (
-        #         "Incorrect scaling of self.temporal_discounting")
+        if self.day_of_review:
+            self.temporal_discounting = pd.DataFrame(
+                    index=self.rated_cards,
+                    data=self.day_of_review,
+                    dtype=float
+                    )
+            # applying scoring formula
+            self.temporal_discounting = self.temporal_discounting.apply(
+                    lambda x: np.log(1 + x / 2)
+                    )
+            self.temporal_discounting -= self.temporal_discounting.min()
+            self.temporal_discounting += 1 # translation to start at 1
+            # show statistics to user
+            pd.set_option('display.float_format', lambda x: '%.5f' % x)
+            whi("\nTime score stats of rated cards:")
+            whi(f"{self.temporal_discounting.describe()}\n")
+            pd.reset_option('display.float_format')
+            # check correct scaling
+            assert self.temporal_discounting.min().squeeze() == 1, (
+                "Incorrect scaling of self.temporal_discounting")
 
         def combine_arrays(indTODO, indQUEUE, task):
             """
@@ -2396,42 +2396,35 @@ class AnnA:
 
             The content of 'queue' is the list of card_id in best review order.
             """
-            dist_2d = self.df_dist.loc[indTODO, indQUEUE].values.copy()
-            assert (dist_2d >= 0).all(), "negative values in dist_2d #1"
+            dist_2d = self.df_dist.loc[indTODO, indQUEUE].copy()
+            assert (dist_2d >= 0).values.all(), "negative values in dist_2d #1"
 
-            # if task == "create_queue" and self.day_of_review:
-            #     # multiply dist score of queue based on how recent was the review
-            #     intersect = np.intersect1d(
-            #             self.temporal_discounting.index,
-            #             indTODO,
-            #             return_indices=True)
-            #     if len(intersect) and len(intersect[0]):  # in case there are no intersections
-            #         assert len(dist_2d[intersect[2]]), "invalid intersection with dist_2d"
-            #         assert len(self.temporal_discounting.values[intersect[1]]), "invalid intersection with temporal_discounting"
-            #         dist_2d[intersect[2]] *= self.temporal_discounting.values[intersect[1]]
+            if task == "create_queue" and self.day_of_review:
+                # multiply dist score of queue based on how recent was the review
+                dist_2d.loc[:, self.temporal_discounting.index] *= self.temporal_discounting.values.squeeze()
 
-            assert (dist_2d >= 0).all(), "negative values in dist_2d #2"
+            assert (dist_2d >= 0).values.all(), "negative values in dist_2d #2"
             # the minimum distance is what's most important in the scoring
-            min_dist = np.min(dist_2d, axis=1)
+            min_dist = np.min(dist_2d.values, axis=1)
             min_dist -= min_dist.min()
             if min_dist.max() != 0:
                 min_dist /= min_dist.max()
 
             # # minmax scaling by column before taking mean and median value
             # (min to be taken before rescaling because otherwise all min are 0)
-            # min_dist_cols = np.min(dist_2d, axis=1)
+            # min_dist_cols = np.min(dist_2d.values, axis=1)
             # dist_2d -= min_dist_cols[:, np.newaxis]
-            # max_dist_cols = np.max(dist_2d, axis=1)
+            # max_dist_cols = np.max(dist_2d.values, axis=1)
             # if (max_dist_cols.ravel() != 0).all():  # avoid null division
             #     dist_2d /= max_dist_cols[:, np.newaxis]
 
             # scaling mean and median so they are between 0 and 1
-            mean_dist = np.mean(dist_2d, axis=1)
+            mean_dist = np.mean(dist_2d.values, axis=1)
             mean_dist -= mean_dist.min()
             if mean_dist.max() != 0:
                 mean_dist /= mean_dist.max()
 
-            med_dist = np.median(dist_2d, axis=1)
+            med_dist = np.median(dist_2d.values, axis=1)
             med_dist -= med_dist.min()
             if med_dist.max() != 0:
                 med_dist /= med_dist.max()
