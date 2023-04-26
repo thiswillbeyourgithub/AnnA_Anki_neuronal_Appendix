@@ -2401,7 +2401,15 @@ class AnnA:
 
             if task == "create_queue" and self.day_of_review:
                 # multiply dist score of queue based on how recent was the review
-                dist_2d.loc[:, self.temporal_discounting.index] *= self.temporal_discounting.values.squeeze()
+                try:
+                    itsct = np.intersect1d(
+                            list(dist_2d.columns),
+                            self.temporal_discounting.index.tolist(),
+                            return_indices=True,
+                            )
+                    dist_2d.loc[:, itsct[0]] *= self.temporal_discounting.loc[itsct[1]].values.squeeze()
+                except Exception as err:
+                    tqdm.write(f"Error in temporal discounting: {err}")
 
             assert (dist_2d >= 0).values.all(), "negative values in dist_2d #2"
             # the minimum distance is what's most important in the scoring
