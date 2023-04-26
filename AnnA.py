@@ -2407,9 +2407,9 @@ class AnnA:
                             self.temporal_discounting.index.tolist(),
                             return_indices=True,
                             )
-                    dist_2d.loc[:, itsct[0]] *= self.temporal_discounting.loc[itsct[1]].values.squeeze()
+                    dist_2d.loc[:, itsct[0]] *= self.temporal_discounting.loc[itsct[0]].values.squeeze()
                 except Exception as err:
-                    tqdm.write(f"Error in temporal discounting: {err}")
+                    beep(f"Error in temporal discounting: {err}")
 
             assert (dist_2d >= 0).values.all(), "negative values in dist_2d #2"
             # the minimum distance is what's most important in the scoring
