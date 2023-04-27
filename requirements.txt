@@ -4,6 +4,7 @@ prompt_toolkit >= 3.0.14  # for autocomplete prompt
 python_Levenshtein == 0.12.2  # to correct for field mapping and note type spelling errors
 beepy>=1.0.7  # make a beeping sound
 ankipandas>=0.3.10  # to load the anki collection
+ftfy>=6.1.1
 
 # datascience and computation
 pandas == 1.2.3

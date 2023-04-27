@@ -34,6 +34,7 @@ import Levenshtein as lev
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
 from tokenizers import Tokenizer
+import ftfy
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import pairwise_distances, pairwise_kernels
@@ -1247,6 +1248,14 @@ class AnnA:
         if self.vectorizer == "TFIDF":
             if self.TFIDF_stem is True:
                 text = " ".join([self.ps.stem(x) for x in text.split()])
+
+        # just in case, using ftfy
+        text = ftfy.fifx_text(
+                text,
+                unescape_html=True,
+                uncurl_quotes=True,
+                explain=False,
+                )
 
         return text
 
