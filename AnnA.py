@@ -1250,7 +1250,7 @@ class AnnA:
                 text = " ".join([self.ps.stem(x) for x in text.split()])
 
         # just in case, using ftfy
-        text = ftfy.fifx_text(
+        text = ftfy.fix_text(
                 text,
                 unescape_html=True,
                 uncurl_quotes=True,
