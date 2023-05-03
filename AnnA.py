@@ -78,7 +78,7 @@ def set_global_logging_level(level=logging.ERROR, prefices=[""]):
     """
     prefix_re = re.compile(fr'^(?:{ "|".join(prefices) })')
     for name in logging.root.manager.loggerDict:
-        if re.match(prefix_re, name):
+        if re.search(prefix_re, name):
             logging.getLogger(name).setLevel(level)
 
 
@@ -577,7 +577,7 @@ class AnnA:
                 for compiled2, value2 in compiled_dic.items():
                     if compiled.pattern == compiled2.pattern:
                         continue
-                    if re.match(compiled, value2):
+                    if re.search(compiled, value2):
                         if compiled.pattern not in acronyms_overlapping:
                             acronyms_overlapping[
                                     compiled.pattern] = [compiled2]
@@ -1160,7 +1160,7 @@ class AnnA:
         # if blockquote or li or ul, mention that it's a list item
         # usually indicating a harder card
         # the ' <br>}}{{' is something specific to AnnA's author
-        if re.match(r"</?li/?>|</?ul/?>| <br>}}{{", text, flags=re.M):
+        if re.search(r"</?li/?>|</?ul/?>| <br>}}{{", text, flags=re.M):
             text += " list list"
 
         # remove html spaces
@@ -1219,7 +1219,7 @@ class AnnA:
         already_replaced = []
         if self.acronym_file is not None:
             for regex, new_value in self.acronym_dict.items():
-                if re.match(regex, text):
+                if re.search(regex, text):
                     if regex not in already_replaced:
                         # only replace once but still apply the overlapping
                         # acronyms if needed
@@ -2648,7 +2648,7 @@ class AnnA:
 
         for compiled in self.acronym_dict:
             for acr in matched:
-                if re.match(compiled, acr) is not None:
+                if re.search(compiled, acr) is not None:
                     matched.remove(acr)
 
         if not matched:
