@@ -1228,7 +1228,7 @@ class AnnA:
                                       self._regexp_acronym_replacer(in_string,
                                                                     regex,
                                                                     new_value),
-                                      text)
+                                      text, count=1)
 
                     # if overlapping patterns, apply sequentially
                     if regex.pattern in self.acronyms_overlapping:
@@ -1238,7 +1238,7 @@ class AnnA:
                                           lambda in_string:
                                           self._regexp_acronym_replacer(
                                               in_string, regex2, new_value2),
-                                          text)
+                                          text, count=1)
                             already_replaced.append(regex2)
 
         # misc
