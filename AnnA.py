@@ -57,11 +57,16 @@ os.environ["TOKENIZERS_PARALLELISM"] = "true"
 # makes the script interuptible, resume it using c+enter
 signal.signal(signal.SIGINT, (lambda signal, frame: breakpoint()))
 
-# adds logger, restrict it to X lines
+# adds logger file, restrict it to X lines
 Path("logs.txt").touch(exist_ok=True)
+# make sure the logs does not go above 100k lines
 Path("logs.txt").write_text(
     "\n".join(
-        Path("logs.txt").read_text().split("\n")[-100_000:]))
+        [li
+         for li in Path("logs.txt").read_text().split("\n")
+         if li.strip() != '\x1b[A'
+         # type of newline character that's taking a lot of lines
+         ][-100_000:]))
 logging.basicConfig(filename="logs.txt",
                     filemode='a',
                     format=f"{time.ctime()}: %(message)s",
