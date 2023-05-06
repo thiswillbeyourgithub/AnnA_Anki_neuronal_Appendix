@@ -1,6 +1,6 @@
 .ipynb_checkpoints
 __pycache__/
-logs.txt
+logs.txt*
 .cache
 Plots
 author_dir/
