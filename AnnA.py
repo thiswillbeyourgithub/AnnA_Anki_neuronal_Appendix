@@ -2416,9 +2416,9 @@ class AnnA:
                 # multiply dist score of queue based on how recent was the review
                 try:
                     itsct = np.intersect1d(
-                            list(dist_2d.columns),
+                            indQUEUE,
                             self.temporal_discounting.index.tolist(),
-                            return_indices=True,
+                            return_indices=False,
                             )
                     dist_2d.loc[:, itsct[0]] *= self.temporal_discounting.loc[itsct[0]].values.squeeze()
                 except Exception as err:
