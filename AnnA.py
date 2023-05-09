@@ -820,7 +820,7 @@ class AnnA:
                                                     lock,
                                                     cnt,
                                                     r_list),
-                                              daemon=True)
+                                              daemon=False)
                     thread.start()
                     threads.append(thread)
                     time.sleep(0.1)
@@ -1397,7 +1397,7 @@ class AnnA:
                                                 pbar,
                                                 self.stopw_compiled,
                                                 spacers_compiled),
-                                          daemon=True)
+                                          daemon=False)
                 thread.start()
                 threads.append(thread)
 
@@ -1420,7 +1420,7 @@ class AnnA:
                                                 pbar,
                                                 self.stopw_compiled,
                                                 spacers_compiled),
-                                          daemon=True)
+                                          daemon=False)
                 thread.start()
                 thread.join()
                 if cnt > 10:
