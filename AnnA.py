@@ -2735,15 +2735,34 @@ class AnnA:
                 len(self.opti_rev_order) > self.filtered_deck_batch_size):
             yel("Creating batches of filtered decks...")
             batchsize = self.filtered_deck_batch_size
-            cnt = 0
-            while True:
-                if cnt > 10_000:
-                    raise Exception("Endless loop?")
-                batch_cards = self.opti_rev_order[cnt *
-                                                  batchsize:(cnt+1)*batchsize]
-                if not batch_cards:
-                    yel(f"Done creating {cnt+1} filtered decks.")
-                    break
+            # construct the list of batches to do:
+            toempty = self.opti_rev_order.copy()
+
+            # instead of having the last batch being of size different
+            # than batchsize, I prefer it being the first batch.
+            reminder = len(toempty) % batchsize
+            batches = [toempty[:reminder]]
+            toempty = toempty[:reminder]
+            # (if reminder is 0, batches is empty and toempty is full)
+            assert (
+                    reminder == 0 and len(toempty) != len(self.opti_rev_order)
+                    ) or (
+                            reminder != 0 and len(toempty) == len(self.opti_rev_order)
+                            ), "invalid reminder handling"
+
+            while toempty:
+                batches.append([])
+                while len(batches[-1]) < batchsize:
+                    batches[-1].append(toempty.pop(0))
+                assert len(batches[-1]) == batchsize, "invalid length of a batch"
+
+            assert len(toempty) == 0
+            assert list(set([len(x) for x in batches[1:]))[0] == batchsize, (
+                "invalid batches construction #1")
+            assert len(batches[0]) in [batchsize, reminder], (
+                "invalid batches construction #2")
+
+            for cnt, batch_cards in enumerate(batches):
                 query = "is:due -rated:1 cid:" + ','.join(
                         [str(x) for x in batch_cards])
                 self._call_anki(action="createFilteredDeck",
@@ -2754,7 +2773,6 @@ class AnnA:
                                 reschedule=True,
                                 sortOrder=5,
                                 createEmpty=False)
-                cnt += 1
         else:
             query = "is:due -rated:1 cid:" + ','.join(
                     [str(x) for x in self.opti_rev_order])
