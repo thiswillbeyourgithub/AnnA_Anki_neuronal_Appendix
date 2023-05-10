@@ -2736,7 +2736,9 @@ class AnnA:
             yel("Creating batches of filtered decks...")
             batchsize = self.filtered_deck_batch_size
             cnt = 0
-            while cnt <= 10000:
+            while True:
+                if cnt > 10_000:
+                    raise Exception("Endless loop?")
                 batch_cards = self.opti_rev_order[cnt *
                                                   batchsize:(cnt+1)*batchsize]
                 if not batch_cards:
