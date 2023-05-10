@@ -2757,7 +2757,7 @@ class AnnA:
                 assert len(batches[-1]) == batchsize, "invalid length of a batch"
 
             assert len(toempty) == 0
-            assert list(set([len(x) for x in batches[1:]))[0] == batchsize, (
+            assert list(set([len(x) for x in batches[1:]]))[0] == batchsize, (
                 "invalid batches construction #1")
             assert len(batches[0]) in [batchsize, reminder], (
                 "invalid batches construction #2")
