@@ -2431,7 +2431,7 @@ class AnnA:
             if min_dist.max() != 0:
                 min_dist /= min_dist.max()
 
-            # # minmax scaling by column before taking mean and median value
+            # # minmax scaling by column before taking mean and 25th quantile value
             # (min to be taken before rescaling because otherwise all min are 0)
             # min_dist_cols = np.min(dist_2d.values, axis=1)
             # dist_2d -= min_dist_cols[:, np.newaxis]
@@ -2439,19 +2439,19 @@ class AnnA:
             # if (max_dist_cols.ravel() != 0).all():  # avoid null division
             #     dist_2d /= max_dist_cols[:, np.newaxis]
 
-            # scaling mean and median so they are between 0 and 1
+            # scaling mean and 25th quantile so they are between 0 and 1
             mean_dist = np.mean(dist_2d.values, axis=1)
             mean_dist -= mean_dist.min()
             if mean_dist.max() != 0:
                 mean_dist /= mean_dist.max()
 
-            med_dist = np.median(dist_2d.values, axis=1)
-            med_dist -= med_dist.min()
-            if med_dist.max() != 0:
-                med_dist /= med_dist.max()
+            quant_dist = np.quantile(dist_2d.values, q=0.25, axis=1)
+            quant_dist -= quant_dist.min()
+            if quant_dist.max() != 0:
+                quant_dist /= quant_dist.max()
 
-            # weighted agregation of min, mean and median into a 1d array
-            dist_1d = 0.98 * min_dist + 0.01 * mean_dist + 0.01 * med_dist
+            # weighted agregation of min, mean and 25th quantile into a 1d array
+            dist_1d = 0.9 * min_dist + 0.02 * mean_dist + 0.08 * quant_dist
 
             # minmax scaling this 1d array
             dist_1d -= dist_1d.min()
