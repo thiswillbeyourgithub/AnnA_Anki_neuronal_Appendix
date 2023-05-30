@@ -824,8 +824,6 @@ class AnnA:
                     thread.start()
                     threads.append(thread)
                     time.sleep(0.1)
-                    while sum([t.is_alive() for t in threads]) >= 15:
-                        time.sleep(0.5)
                 print("")
                 [t.join() for t in threads]
             assert len(r_list) == len(card_id), "could not retrieve all cards"
