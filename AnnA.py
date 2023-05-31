@@ -1,4 +1,3 @@
-import hashlib
 import webbrowser
 import textwrap
 import traceback
@@ -40,7 +39,8 @@ import ftfy
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import pairwise_distances, pairwise_kernels
-from sklearn.decomposition import TruncatedSVD
+from sklearn.decomposition import TruncatedSVD, PCA
+from sklearn.preprocessing import normalize
 import umap.umap_
 
 import networkx as nx
@@ -216,7 +216,7 @@ class AnnA:
                  vectorizer="TFIDF",  # can only be "TFIDF" but
                  embed_model="distiluse-base-multilingual-cased-v2",
                  # left for legacy reason
-                 TFIDF_dim="auto",
+                 ndim_reduc="auto",
                  TFIDF_tokenize=True,
                  TFIDF_tknizer_model="GPT",
                  plot_2D_embeddings=False,
@@ -355,11 +355,11 @@ class AnnA:
             stopwords_lang, list), "Invalid type of var `stopwords_lang`"
         self.stopwords_lang = stopwords_lang
 
-        assert isinstance(TFIDF_dim, (int, type(None), str)
-                          ), "Invalid type of `TFIDF_dim`"
-        if isinstance(TFIDF_dim, str):
-            assert TFIDF_dim == "auto", "Invalid value for `TFIDF_dim`"
-        self.TFIDF_dim = TFIDF_dim
+        assert isinstance(ndim_reduc, (int, type(None), str)
+                          ), "Invalid type of `ndim_reduc`"
+        if isinstance(ndim_reduc, str):
+            assert ndim_reduc == "auto", "Invalid value for `ndim_reduc`"
+        self.ndim_reduc = ndim_reduc
 
         assert isinstance(plot_2D_embeddings, bool), (
             "Invalid type of `plot_2D_embeddings`")
@@ -465,7 +465,7 @@ class AnnA:
         self.resort_split = resort_split
 
         # initialize joblib caching
-        # self.mem = joblib.Memory("./.cache", mmap_mode="r", verbose=0)
+        self.mem = joblib.Memory("./.cache", mmap_mode="r", verbose=0)
 
         # additional processing of arguments #################################
 
@@ -1689,112 +1689,34 @@ class AnnA:
                                                       file=self.t_strm))
             elif self.vectorizer == "embeddings":
 
-                # get hash of each note
-                def hasher(note_content):
-                    # keep only the first 500 characters
-                    return hashlib.sha256(note_content[:500].encode()).hexdigest()
+                whi("Loading sentence transformer model")
+                model = SentenceTransformer(self.embed_model)
+                cached_encoder = self.mem.cache(model.encode)
 
-                tqdm.pandas(desc="Hashing note content", smoothing=0, unit=" card",
-                            file=self.t_strm)
-                df["sha256"] = df["text"].progress_apply(hasher)
-
-                cache_file = Path(f".embed_cache_{self.embed_model}.hdf")
-                nid_to_compute = ()
-                if not cache_file.exists():
-                    red("Embeddings cache file not found : '{cache_file}'\nComputing all embeddings.")
-                    nid_to_compute = set(df["note"].tolist())
-
-                    # creating hdf cache
-                    pd.DataFrame(
-                            columns=["sha256"],
-                            index=["empty_cache_key"],
-                            data=["empty hash"],
-                            ).to_hdf(
-                                    str(cache_file),
-                                    key="AnnA_cache",
-                                    mode="w",
-                                    complevel=0,
-                                    format="table"
-                                    )
-
-
-                yel("Loading keys from .hdf cache file")
-                # the loaded index is 'note' (for the nid)
-                cache = pd.HDFStore(
-                        path=str(cache_file),
-                        )
-                nid_in_cache = set(cache.keys())
-
-                tvec = pd.DataFrame(
-                        index=df.index,
-                        )
-
-                yel("Checking what new embeddings are needed")
-                for ind in tqdm(df.index, desc="Inspecting embed cache"):
-                    nid = df.loc[ind, "note"]
-
-                    # already loaded from cache
-                    if nid in nid_to_compute:
-                        continue
-
-                    # not even in cache
-                    if nid not in nid_in_cache:
-                        nid_to_compute.add(nid)
-                        continue
-
-                    # in cache but sha256 changed
-                    if cache.select(
-                            key=nid,
-                            columns=["sha256"]) != df.loc[ind, "sha256"]:
-                        nid_to_compute.add(nid)
-                        continue
-
-                    # load from cache
-                    if not tvec.index:
-                        # first create the right columns for the vectors
-                        row = cache.select(key=nid)
-                        colvec = [col for col in row.columns if col.startswith("V")]
-                        tvec = pd.DataFrame(columns=colvec)
-                    cached_vec = cache.select(key=nid, columns=colvec)
-                    tvec.loc[nid, colvec] = cached_vec
-
-                # get all note content that need to be embedded
-                if nid_to_compute:
-                    text_to_embed = []
-                    for nid in nid_to_compute:
-                        text = df.loc[df["note"]==nid, "text"].iloc[0]
-                        text_to_embed.append(text)
-                    
-                    # compute embeddings
-                    whi("Loading sentence transformer model")
-                    model = SentenceTransformer(self.embed_model)
-
-                    new_vecs = model.encode(
-                            sentences=text_to_embed,
-                            show_progress_bar=True,
+                def sencoder(sentences):
+                    return cached_encoder(
+                            sentences=sentences,
+                            show_progress_bar=False,
                             output_value="sentence_embedding",
                             convert_to_numpy=True,
                             normalize_embeddings=False,
                             )
 
-                    assert new_vecs.shape[0] == len(text_to_embed), "invalid length of new_vecs"
-                    assert new_vecs.shape[0] == len(nid_to_compute), "invalid length of new_vecs"
+                # create empty numpy array
+                tvec = np.zeroes(
+                        (len(df.index), max(sencoder(["test"]).shape)
+                            ), dtype=float)
+                for i, ind in enumerate(tqdm(df.index, desc="Embedding text", unit="card")):
+                    tvec[i,:] = sencoder(df.loc[ind, "text"])
 
-
-                # close the HDF
-
-                # normalize then PCA to 5 dim
-
-                # turn tvec into cid x vec
-
-
-                
+                whi("Normalizing embeddings")
+                normalize(tvec, norm="l2", axis=1, copy=False)
 
             else:
                  raise ValueError("Invalid vectorizer value")
 
 
-        if self.TFIDF_dim is None:
+        if self.ndim_reduc is None:
             self.vectors = t_vec
         else:
             # AnnA will use UMAP to reduce the dimensions
@@ -1802,29 +1724,38 @@ class AnnA:
             # dimensions so ended up in the curse of dimensionnality
 
             # reduce dimensions before UMAP if too many dimensions
-            dim_limit = 1000
+            dim_limit = 100
             if t_vec.shape[1] > dim_limit:
                 try:
-                    yel(f"TFIDF output of shape {t_vec.shape}, dimensions above "
-                        f"{dim_limit} so using SVD first to keep only "
+                    yel(f"Vectorized text of shape {t_vec.shape}, dimensions above "
+                        f"{dim_limit} so using SVD or PCA first to keep only "
                         f"{dim_limit} dimensions.")
-                    m_rank = np.linalg.matrix_rank(t_vec)
-                    svd = TruncatedSVD(n_components=dim_limit,
-                                       random_state=42,
-                                       n_oversamples=max(
-                                           10,
-                                           2 * m_rank - dim_limit
-                                           )
-                                       )
-                    t_vec = svd.fit_transform(t_vec)
-                    evr = round(sum(svd.explained_variance_ratio_) * 100, 1)
+                    if self.vectorizer == "TFIDF":
+                        m_rank = np.linalg.matrix_rank(t_vec)
+                        dimred = TruncatedSVD(
+                                n_components=dim_limit,
+                                random_state=42,
+                                n_oversamples=max(
+                                    10, 2 * m_rank - dim_limit
+                                    )
+                                )
+
+                    elif self.vectorizer == "embeddings":
+                        dimred = PCA(
+                                n_components=dim_limit,
+                                random_state=42,
+                                )
+                    else:
+                        raise ValueError("Invalid vectorizer")
+
+                    t_vec = dimred.fit_transform(t_vec)
+                    evr = round(sum(dimred.explained_variance_ratio_) * 100, 1)
                     whi(f"Done, explained variance ratio: {evr}%. New shape: {t_vec.shape}")
                 except Exception as err:
-                    beep(f"Error when using SVD to reduce to {dim_limit} "
+                    beep(f"Error when using SVD/PCA to reduce to {dim_limit} "
                          f"dims: '{err}'.\rTrying to continue with "
                          f"UMAP nonetheless.\rData shape: {t_vec.shape}")
                     red(traceback.format_exc())
-
 
             target_dim = 5
             whi(f"Using UMAP to reduce to {target_dim} dimensions")
@@ -3824,15 +3755,16 @@ if __name__ == "__main__":
                             "'distiluse-base-multilingual-cased-v2' but for "
                             "anything else use 'all-mpnet-base-v2'"
                             ))
-    parser.add_argument("--TFIDF_dim",
+    parser.add_argument("--ndim_reduc",
                         nargs=1,
-                        metavar="TFIDF_DIMENSIONS",
-                        dest="TFIDF_dim",
+                        metavar="NDIM_REDUC",
+                        dest="ndim_reduc",
                         default="auto",
                         required=False,
                         help=(
                             "the number of dimension to keep using "
-                            "SVD. If 'auto' will automatically find the "
+                            "TruncatedSVD (if TFIDF) or PCA (if embeddings). "
+                            "If 'auto' will automatically find the "
                             "best number of dimensions to keep 80%% of the "
                             "variance. If an int, will do like 'auto' but "
                             "starting from the supplied value. "
