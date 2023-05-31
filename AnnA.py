@@ -215,15 +215,15 @@ class AnnA:
                  resort_split=False,
 
                  # vectorization:
-                 vectorizer="embeddings",  # can only be "TFIDF" but
+                 vectorizer="embeddings",
                  embed_model="distiluse-base-multilingual-cased-v2",
                  # left for legacy reason
                  ndim_reduc="auto",
                  TFIDF_tokenize=True,
                  TFIDF_tknizer_model="GPT",
+                 TFIDF_stem=False,
                  plot_2D_embeddings=False,
                  plot_dir="Plots",
-                 TFIDF_stem=False,
                  dist_metric="cosine",  # 'RBF' or 'cosine' or 'euclidean"
 
                  whole_deck_computation=False,
