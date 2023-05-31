@@ -348,8 +348,7 @@ class AnnA:
         assert vectorizer in ["TFIDF", "embeddings"], "Invalid value for `vectorizer`"
         self.vectorizer = vectorizer
         if vectorizer == "embeddings" and whole_deck_computation:
-            raise NotImplementedError("It is not yet supported to do whole deck computation with embeddings")
-            # TODO
+            raise Exception("You can't use whole_deck_computation for embeddings")
 
         self.embed_model = embed_model
 
@@ -3916,7 +3915,9 @@ if __name__ == "__main__":
                         required=False,
                         action="store_true",
                         help=(
-                            "defaults to `False`. Use ankipandas to "
+                            "defaults to `False`. This can only be used with "
+                            "TFIDF and would not make any sense for "
+                            "sentence-transformers. Use ankipandas to "
                             "extract all text from the deck to feed into the "
                             "vectorizer. Results in more accurate relative "
                             "distances between cards."
