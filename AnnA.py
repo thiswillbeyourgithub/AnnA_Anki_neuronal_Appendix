@@ -1779,7 +1779,6 @@ class AnnA:
             else:
                  raise ValueError("Invalid vectorizer value")
 
-
         if self.ndim_reduc is None:
             self.vectors = t_vec
         else:
