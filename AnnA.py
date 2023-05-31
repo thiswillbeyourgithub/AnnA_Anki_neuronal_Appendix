@@ -1,8 +1,10 @@
+import pickle
+import hashlib
 import webbrowser
 import textwrap
 import traceback
 import copy
-import beepy
+# import beepy
 import argparse
 import logging
 import gc
@@ -213,7 +215,7 @@ class AnnA:
                  resort_split=False,
 
                  # vectorization:
-                 vectorizer="TFIDF",  # can only be "TFIDF" but
+                 vectorizer="embeddings",  # can only be "TFIDF" but
                  embed_model="distiluse-base-multilingual-cased-v2",
                  # left for legacy reason
                  ndim_reduc="auto",
@@ -345,7 +347,7 @@ class AnnA:
 
         assert vectorizer in ["TFIDF", "embeddings"], "Invalid value for `vectorizer`"
         self.vectorizer = vectorizer
-        if vectorizer == "embeddings" and self.whole_deck_computation:
+        if vectorizer == "embeddings" and whole_deck_computation:
             raise NotImplementedError("It is not yet supported to do whole deck computation with embeddings")
             # TODO
 
@@ -465,7 +467,7 @@ class AnnA:
         self.resort_split = resort_split
 
         # initialize joblib caching
-        self.mem = joblib.Memory("./.cache", mmap_mode="r", verbose=0)
+        # self.mem = joblib.Memory("./.cache", mmap_mode="r", verbose=0)
 
         # additional processing of arguments #################################
 
@@ -1689,28 +1691,89 @@ class AnnA:
                                                       file=self.t_strm))
             elif self.vectorizer == "embeddings":
 
-                whi("Loading sentence transformer model")
-                model = SentenceTransformer(self.embed_model)
-                cached_encoder = self.mem.cache(model.encode)
-
                 def sencoder(sentences):
-                    return cached_encoder(
+                    return model.encode(
                             sentences=sentences,
-                            show_progress_bar=False,
+                            show_progress_bar=True if len(sentences) > 1 else False,
                             output_value="sentence_embedding",
                             convert_to_numpy=True,
                             normalize_embeddings=False,
                             )
 
+                def hasher(text):
+                    return hashlib.sha256(text[:500].encode()).hexdigest()[:10]
+
+                def retrieve_cache(path):
+                    with open(path, "rb") as f:
+                        return pickle.load(f)
+
+                def add_to_cache(row, path):
+                    with open(path, "wb") as f:
+                        return pickle.dump(row, f)
+
+                memhasher = self.memoize(hasher)
+                memretr = self.memoize(retrieve_cache)
+
+                whi("Loading sentence transformer model")
+                model = SentenceTransformer(self.embed_model)
+
                 # create empty numpy array
-                tvec = np.zeroes(
+                t_vec = np.zeros(
                         (len(df.index), max(sencoder(["test"]).shape)
                             ), dtype=float)
-                for i, ind in enumerate(tqdm(df.index, desc="Embedding text", unit="card")):
-                    tvec[i,:] = sencoder(df.loc[ind, "text"])
+
+                # check existence of embeddings cache
+                vec_cache = Path(".embeddings_cache")
+                vec_cache.mkdir(exist_ok=True)
+                vec_cache = vec_cache / self.embed_model
+                vec_cache.mkdir(exist_ok=True)
+
+                # get what is in cache
+                cache_key = set(f.name for f in vec_cache.iterdir())
+
+                # compute fingerprint of all note content
+                tqdm.pandas(
+                        desc="Computing note content fingerprint",
+                        smoothing=0,
+                        unit=" card",
+                        file=self.t_strm)
+                df["sha256"] = df["text"].progress_apply(memhasher)
+
+                # load row of t_vec if cache present
+                for i, ind in enumerate(tqdm(df.index, desc="Loading from cache", file=self.t_strm)):
+                    fingerprint = df.loc[ind, "sha256"]
+                    nid = df.loc[ind, "note"]
+                    filename = f"{nid}_{fingerprint}.pickle"
+                    if filename in cache_key:
+                        t_vec[i, :] = memretr(str(vec_cache / filename))
+
+                # get embeddings for missing rows
+                done_rows = np.where(np.sum(t_vec, axis=1) != 0.0)[0]
+                missing_rows = np.where(np.sum(t_vec, axis=1) == 0.0)[0]
+                missing_cid = [df.index[i] for i in missing_rows]
+
+                yel(f"Rows not found in cache: '{len(missing_cid)}'")
+                yel(f"Rows found in cache: '{len(done_rows)}'")
+
+                red("Computing embeddings of uncached notes")
+                t_vec[missing_rows, :] = sencoder(df.loc[missing_cid, "text"].tolist())
+
+                whi(f"Adding to cache the newly computed embeddings")
+                for i, ind in enumerate(
+                        tqdm(
+                            missing_cid,
+                            desc="adding to cache",
+                            unit="note",
+                            file=self.t_strm
+                            )
+                        ):
+                    nid = df.loc[ind, "note"]
+                    fingerprint = df.loc[ind, "sha256"]
+                    filename = f"{nid}_{fingerprint}.pickle"
+                    add_to_cache(t_vec[missing_rows[i], :], str(vec_cache / filename))
 
                 whi("Normalizing embeddings")
-                normalize(tvec, norm="l2", axis=1, copy=False)
+                normalize(t_vec, norm="l2", axis=1, copy=False)
 
             else:
                  raise ValueError("Invalid vectorizer value")
