@@ -1723,7 +1723,9 @@ class AnnA:
                             ), dtype=float)
 
                 # check existence of embeddings cache
-                vec_cache = Path(".embeddings_cache")
+                vec_cache = Path(".cache")
+                vec_cache.mkdir(exist_ok=True)
+                vec_cache = vec_cache / "embeddings_cache"
                 vec_cache.mkdir(exist_ok=True)
                 vec_cache = vec_cache / self.embed_model
                 vec_cache.mkdir(exist_ok=True)
