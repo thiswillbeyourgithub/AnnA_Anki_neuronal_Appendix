@@ -623,7 +623,17 @@ class AnnA:
             except Exception as e:
                 beep(f"Error with field mapping file, will use "
                      f"default values. {e}")
-                self.field_dic = {"dummyvalue": "dummyvalue"}
+                self.field_dic = {"dummyvalue": ["dummyvalue"]}
+            if self.vectorizer == "embeddings":
+                red("Deduplicating field mapping because using embeddings")
+                for k, v in self.field_dic.items():
+                    assert isinstance(v, list), f"Value of self.field_dic is not list: '{v}'"
+                    if len(v) > 1:
+                        new = []
+                        for item in v:
+                            if item not in new:
+                                new.append(item)
+                        self.field_dic[k] = new
 
         # load stop words
         try:
@@ -1284,10 +1294,19 @@ class AnnA:
             cloze than to the field "More"
         """
         def _threaded_field_filter(index_list, lock, pbar,
-                                   stopw_compiled, spacers_compiled):
+                                   stopw_compiled, spacers_compiled,
+                                   vectorizer):
             """
             threaded call to speed up execution
             """
+            # skips using stopwords etc depending on the vectorizer
+            if vectorizer == "embeddings":
+                TFIDFmode=False
+            elif vectorizer == "TFIDF":
+                TFIDFmode=True
+            else:
+                raise ValueError("Invalid vectorizer")
+
             for index in index_list:
                 card_model = self.df.loc[index, "modelName"]
                 target_model = []
@@ -1344,13 +1363,18 @@ class AnnA:
                 comb_text = ""
                 for f in fields_to_keep:
                     try:
-                        next_field = re.sub(
-                            self.stopw_compiled,
-                            " ",
-                            self.df.loc[index,
-                                        "fields"][f.lower()]["value"].strip())
+                        next_field = self.df.loc[index,
+                                        "fields"][f.lower()]["value"].strip()
+                        if TFIDFmode:
+                            next_field = re.sub(
+                                self.stopw_compiled,
+                                " ",
+                                next_field).strip()
                         if next_field != "":
-                            comb_text = comb_text + next_field + " <NEWFIELD> "
+                            if TFIDFmode:
+                                comb_text += next_field + " <NEWFIELD> "
+                            else:
+                                comb_text += f"\n{f.title()}: {next_field}"
                     except KeyError as e:
                         with lock:
                             to_notify.append(
@@ -1359,12 +1383,14 @@ class AnnA:
                                 "identified as "
                                 f"notetype {target_model}")
                 comb_text = comb_text.strip()
-                if comb_text.endswith("<NEWFIELD>"):
+                if TFIDFmode and comb_text.endswith("<NEWFIELD>"):
                     comb_text = comb_text[:-10].strip()
 
                 # add tags to comb_text
                 if self.append_tags:
                     tags = self.df.loc[index, "tags"].split(" ")
+                    if tags and not TFIDFmode:
+                        comb_text += "\nTags: "
                     for t in tags:
                         t = re.sub(
                             spacers_compiled,
@@ -1401,7 +1427,9 @@ class AnnA:
                                                 lock,
                                                 pbar,
                                                 self.stopw_compiled,
-                                                spacers_compiled),
+                                                spacers_compiled,
+                                                self.vectorizer,
+                                                ),
                                           daemon=False)
                 thread.start()
                 threads.append(thread)
@@ -1424,7 +1452,9 @@ class AnnA:
                                                 lock,
                                                 pbar,
                                                 self.stopw_compiled,
-                                                spacers_compiled),
+                                                spacers_compiled,
+                                                self.vectorizer,
+                                                ),
                                           daemon=False)
                 thread.start()
                 thread.join()
@@ -1441,16 +1471,21 @@ class AnnA:
             beep(notif)
 
         # using multithreading is not faster, using multiprocess is probably
-        # slower if not done by large batching
+        # slower if not done by large batch
         tqdm.pandas(desc="Formating text", smoothing=0, unit=" card",
                     file=self.t_strm)
-        self.df["text"] = self.df["comb_text"].progress_apply(
-            lambda x: " <NEWFIELD> ".join(
-                [
-                    self._text_formatter(y) for y in x.split("<NEWFIELD>")
-                    ]
-                ).strip()
-            )
+        if self.vectorizer == "TFIDF":
+            self.df["text"] = self.df["comb_text"].progress_apply(
+                lambda x: " <NEWFIELD> ".join(
+                    [
+                        self._text_formatter(y) for y in x.split("<NEWFIELD>")
+                        ]
+                    ).strip()
+                )
+        elif self.vectorizer == "embeddings":
+            self.df["text"] = self.df["comb_text"].progress_apply(self._text_formatter)
+        else:
+            raise ValueError("Invalid vectorizer")
         del self.df["comb_text"]
 
         # find short cards
