@@ -1,3 +1,4 @@
+import hashlib
 import webbrowser
 import textwrap
 import traceback
@@ -1543,7 +1544,7 @@ class AnnA:
         # else:
         binary_mode = False
 
-        def init_vectorizer():
+        def init_TFIDF_vectorizer():
             """used to make sure the same statement is used to create
             the vectorizer"""
             return TfidfVectorizer(strip_accents="ascii",
@@ -1665,7 +1666,7 @@ class AnnA:
                                 processed += " " + t
                     corpus.append(processed)
 
-                vectorizer = init_vectorizer()
+                vectorizer = init_TFIDF_vectorizer()
                 vectorizer.fit(tqdm(corpus + df["text"].tolist(),
                                     desc="Vectorizing whole deck",
                                     file=self.t_strm))
@@ -1680,11 +1681,117 @@ class AnnA:
                 use_fallback = True
 
         if (self.whole_deck_computation is False) or (use_fallback):
-            vectorizer = init_vectorizer()
-            t_vec = vectorizer.fit_transform(tqdm(df["text"],
-                                                  desc=(
-              "Vectorizing using TFIDF"),
-                                                  file=self.t_strm))
+            if self.vectorizer == "TFIDF":
+                vectorizer = init_TFIDF_vectorizer()
+                t_vec = vectorizer.fit_transform(tqdm(df["text"],
+                                                      desc=(
+                  "Vectorizing using TFIDF"),
+                                                      file=self.t_strm))
+            elif self.vectorizer == "embeddings":
+
+                # get hash of each note
+                def hasher(note_content):
+                    # keep only the first 500 characters
+                    return hashlib.sha256(note_content[:500].encode()).hexdigest()
+
+                tqdm.pandas(desc="Hashing note content", smoothing=0, unit=" card",
+                            file=self.t_strm)
+                df["sha256"] = df["text"].progress_apply(hasher)
+
+                cache_file = Path(f".embed_cache_{self.embed_model}.hdf")
+                nid_to_compute = ()
+                if not cache_file.exists():
+                    red("Embeddings cache file not found : '{cache_file}'\nComputing all embeddings.")
+                    nid_to_compute = set(df["note"].tolist())
+
+                    # creating hdf cache
+                    pd.DataFrame(
+                            columns=["sha256"],
+                            index=["empty_cache_key"],
+                            data=["empty hash"],
+                            ).to_hdf(
+                                    str(cache_file),
+                                    key="AnnA_cache",
+                                    mode="w",
+                                    complevel=0,
+                                    format="table"
+                                    )
+
+
+                yel("Loading keys from .hdf cache file")
+                # the loaded index is 'note' (for the nid)
+                cache = pd.HDFStore(
+                        path=str(cache_file),
+                        )
+                nid_in_cache = set(cache.keys())
+
+                tvec = pd.DataFrame(
+                        index=df.index,
+                        )
+
+                yel("Checking what new embeddings are needed")
+                for ind in tqdm(df.index, desc="Inspecting embed cache"):
+                    nid = df.loc[ind, "note"]
+
+                    # already loaded from cache
+                    if nid in nid_to_compute:
+                        continue
+
+                    # not even in cache
+                    if nid not in nid_in_cache:
+                        nid_to_compute.add(nid)
+                        continue
+
+                    # in cache but sha256 changed
+                    if cache.select(
+                            key=nid,
+                            columns=["sha256"]) != df.loc[ind, "sha256"]:
+                        nid_to_compute.add(nid)
+                        continue
+
+                    # load from cache
+                    if not tvec.index:
+                        # first create the right columns for the vectors
+                        row = cache.select(key=nid)
+                        colvec = [col for col in row.columns if col.startswith("V")]
+                        tvec = pd.DataFrame(columns=colvec)
+                    cached_vec = cache.select(key=nid, columns=colvec)
+                    tvec.loc[nid, colvec] = cached_vec
+
+                # get all note content that need to be embedded
+                if nid_to_compute:
+                    text_to_embed = []
+                    for nid in nid_to_compute:
+                        text = df.loc[df["note"]==nid, "text"].iloc[0]
+                        text_to_embed.append(text)
+                    
+                    # compute embeddings
+                    whi("Loading sentence transformer model")
+                    model = SentenceTransformer(self.embed_model)
+
+                    new_vecs = model.encode(
+                            sentences=text_to_embed,
+                            show_progress_bar=True,
+                            output_value="sentence_embedding",
+                            convert_to_numpy=True,
+                            normalize_embeddings=False,
+                            )
+
+                    assert new_vecs.shape[0] == len(text_to_embed), "invalid length of new_vecs"
+                    assert new_vecs.shape[0] == len(nid_to_compute), "invalid length of new_vecs"
+
+
+                # close the HDF
+
+                # normalize then PCA to 5 dim
+
+                # turn tvec into cid x vec
+
+
+                
+
+            else:
+                 raise ValueError("Invalid vectorizer value")
 
 
         if self.TFIDF_dim is None:
