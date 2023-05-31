@@ -34,6 +34,7 @@ import Levenshtein as lev
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
 from tokenizers import Tokenizer
+from sentence_transformers import SentenceTransformer
 import ftfy
 
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -212,6 +213,7 @@ class AnnA:
 
                  # vectorization:
                  vectorizer="TFIDF",  # can only be "TFIDF" but
+                 embed_model="distiluse-base-multilingual-cased-v2",
                  # left for legacy reason
                  TFIDF_dim="auto",
                  TFIDF_tokenize=True,
@@ -340,8 +342,13 @@ class AnnA:
             low_power_mode, bool), "Invalid type of `low_power_mode`"
         self.low_power_mode = low_power_mode
 
-        assert vectorizer == "TFIDF", "Invalid value for `vectorizer`"
+        assert vectorizer in ["TFIDF", "embeddings"], "Invalid value for `vectorizer`"
         self.vectorizer = vectorizer
+        if vectorizer == "embeddings" and self.whole_deck_computation:
+            raise NotImplementedError("It is not yet supported to do whole deck computation with embeddings")
+            # TODO
+
+        self.embed_model = embed_model
 
         assert isinstance(
             stopwords_lang, list), "Invalid type of var `stopwords_lang`"
@@ -1492,7 +1499,7 @@ class AnnA:
 
     def _compute_projections(self):
         """
-        Assigne vectors to each card's 'comb_text', using TFIDF as vectorizer.
+        Assigne vectors to each card's 'comb_text', using the vectorizer.
         """
         df = self.df
 
@@ -3650,12 +3657,31 @@ if __name__ == "__main__":
                         nargs=1,
                         metavar="VECTORIZER",
                         dest="vectorizer",
-                        default="TFIDF",
+                        default="embeddings",
                         required=False,
                         type=str,
                         help=(
-                            "can nowadays only be set to \"TFIDF\", but "
-                            "kept for legacy reasons."))
+                            "Either TFIDF or 'embeddings' to use "
+                            "sentencetransformers. The latter will "
+                            "deduplicate the field_mapping, mention the "
+                            "name of the field before it's content "
+                            "before tokenizing, use a cache to avoid "
+                            "recomputing the embedding for previously "
+                            "seen notes, ignore stopwords and "
+                            "any TFIDF arguments used."
+                            ))
+    parser.add_argument("--embed_model",
+                        nargs=1,
+                        metavar="EMBED_MODEL",
+                        dest="embed_model",
+                        default="distiluse-base-multilingual-cased-v2",
+                        required=False,
+                        type=str,
+                        help=(
+                            "For multilingual use "
+                            "'distiluse-base-multilingual-cased-v2' but for "
+                            "anything else use 'all-mpnet-base-v2'"
+                            ))
     parser.add_argument("--TFIDF_dim",
                         nargs=1,
                         metavar="TFIDF_DIMENSIONS",

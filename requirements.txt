@@ -19,6 +19,8 @@ tqdm_logger >= 1.0.1
 nltk >= 3.5
 tokenizers >= 0.10.3
 transformers >= 4.22.2
+sentence_transformers >= 2.2.2
+tables >= 0.0.4
 
 # 2D plot
 matplotlib>=3.6.1
