@@ -215,7 +215,7 @@ class AnnA:
                  # left for legacy reason
                  TFIDF_dim="auto",
                  TFIDF_tokenize=True,
-                 tokenizer_model="GPT",
+                 TFIDF_tknizer_model="GPT",
                  plot_2D_embeddings=False,
                  plot_dir="Plots",
                  TFIDF_stem=False,
@@ -365,9 +365,9 @@ class AnnA:
             "You have to enable either tokenization or stemming!")
         self.TFIDF_stem = TFIDF_stem
         self.TFIDF_tokenize = TFIDF_tokenize
-        assert tokenizer_model.lower() in ["bert", "gpt", "both"], (
+        assert TFIDF_tknizer_model.lower() in ["bert", "gpt", "both"], (
             "Wrong tokenizer model name!")
-        self.tokenizer_model = tokenizer_model
+        self.TFIDF_tknizer_model = TFIDF_tknizer_model
         assert dist_metric.lower() in ["cosine", "rbf", "euclidean"], (
             "Invalid 'dist_metric'")
         self.dist_metric = dist_metric.lower()
@@ -482,21 +482,21 @@ class AnnA:
 
         # load tokenizers
         if TFIDF_tokenize:
-            if self.tokenizer_model.lower() in ["bert", "both"]:
+            if self.TFIDF_tknizer_model.lower() in ["bert", "both"]:
                 yel("Will use BERT as tokenizer.")
                 self.tokenizer_bert = Tokenizer.from_file(
                     "./utils/bert-base-multilingual-cased_tokenizer.json")
                 self.tokenizer_bert.no_truncation()
                 self.tokenizer_bert.no_padding()
                 self.tokenize = self._bert_tokenize
-            if self.tokenizer_model.lower() in ["gpt", "both"]:
+            if self.TFIDF_tknizer_model.lower() in ["gpt", "both"]:
                 yel("Will use GPT as tokenizer.")
                 self.tokenizer_gpt = Tokenizer.from_file(
                     "./utils/gpt_neox_20B_tokenizer.json")
                 self.tokenizer_gpt.no_truncation()
                 self.tokenizer_gpt.no_padding()
                 self.tokenize = self._gpt_tokenize
-            if self.tokenizer_model.lower() == "both":
+            if self.TFIDF_tknizer_model.lower() == "both":
                 yel("Using both GPT and BERT as tokenizers.")
                 self.tokenize = lambda x: self._gpt_tokenize(
                         x) + self._bert_tokenize(x)
@@ -3688,10 +3688,10 @@ if __name__ == "__main__":
                             "`TFIDF_stem` but should absolutely enable "
                             "at least "
                             "one."))
-    parser.add_argument("--tokenizer_model",
-                        dest="tokenizer_model",
+    parser.add_argument("--TFIDF_tknizer_model",
+                        dest="TFIDF_tknizer_model",
                         default="GPT",
-                        metavar="TOKENIZER_MODEL",
+                        metavar="TFIDF_tknizer_model",
                         required=False,
                         help=(
                             "default to `GPT`. Model to use for tokenizing "
@@ -3702,6 +3702,18 @@ if __name__ == "__main__":
                             "should work on just about any languages. Use "
                             "'Both' to concatenate both tokenizers. "
                             "(experimental)"))
+    parser.add_argument("--TFIDF_stem",
+                        dest="TFIDF_stem",
+                        default=False,
+                        action="store_true",
+                        required=False,
+                        help=(
+                            "default to `False`. Whether to enable "
+                            "stemming of words. Currently the PorterStemmer "
+                            "is used, and was made for English but can still "
+                            "be useful for some other languages. Keep in "
+                            "mind that this is the longest step when "
+                            "formatting text."))
     parser.add_argument("--plot_2D_embeddings",
                         dest="plot_2D_embeddings",
                         default=False,
@@ -3722,18 +3734,6 @@ if __name__ == "__main__":
                             "Path location for the output plots. "
                             "Default is 'Plots'."
                             ))
-    parser.add_argument("--TFIDF_stem",
-                        dest="TFIDF_stem",
-                        default=False,
-                        action="store_true",
-                        required=False,
-                        help=(
-                            "default to `False`. Whether to enable "
-                            "stemming of words. Currently the PorterStemmer "
-                            "is used, and was made for English but can still "
-                            "be useful for some other languages. Keep in "
-                            "mind that this is the longest step when "
-                            "formatting text."))
     parser.add_argument("--dist_metric",
                         nargs=1,
                         metavar="DIST_METRIC",
