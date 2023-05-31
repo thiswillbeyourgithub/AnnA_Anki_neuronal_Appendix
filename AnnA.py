@@ -1755,22 +1755,23 @@ class AnnA:
                 yel(f"Rows not found in cache: '{len(missing_cid)}'")
                 yel(f"Rows found in cache: '{len(done_rows)}'")
 
-                red("Computing embeddings of uncached notes")
-                t_vec[missing_rows, :] = sencoder(df.loc[missing_cid, "text"].tolist())
+                if missing_rows:
+                    red("Computing embeddings of uncached notes")
+                    t_vec[missing_rows, :] = sencoder(df.loc[missing_cid, "text"].tolist())
 
-                whi(f"Adding to cache the newly computed embeddings")
-                for i, ind in enumerate(
-                        tqdm(
-                            missing_cid,
-                            desc="adding to cache",
-                            unit="note",
-                            file=self.t_strm
-                            )
-                        ):
-                    nid = df.loc[ind, "note"]
-                    fingerprint = df.loc[ind, "sha256"]
-                    filename = f"{nid}_{fingerprint}.pickle"
-                    add_to_cache(t_vec[missing_rows[i], :], str(vec_cache / filename))
+                    whi(f"Adding to cache the newly computed embeddings")
+                    for i, ind in enumerate(
+                            tqdm(
+                                missing_cid,
+                                desc="adding to cache",
+                                unit="note",
+                                file=self.t_strm
+                                )
+                            ):
+                        nid = df.loc[ind, "note"]
+                        fingerprint = df.loc[ind, "sha256"]
+                        filename = f"{nid}_{fingerprint}.pickle"
+                        add_to_cache(t_vec[missing_rows[i], :], str(vec_cache / filename))
 
                 whi("Normalizing embeddings")
                 normalize(t_vec, norm="l2", axis=1, copy=False)
