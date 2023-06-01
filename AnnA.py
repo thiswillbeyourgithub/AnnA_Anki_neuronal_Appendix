@@ -1700,7 +1700,7 @@ class AnnA:
                             )
 
                 def hasher(text):
-                    return hashlib.sha256(text[:500].encode()).hexdigest()[:10]
+                    return hashlib.sha256(text[:10_000].encode()).hexdigest()[:10]
 
                 def retrieve_cache(path):
                     with open(path, "rb") as f:
