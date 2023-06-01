@@ -1756,11 +1756,11 @@ class AnnA:
                 yel(f"Rows not found in cache: '{len(missing_cid)}'")
                 yel(f"Rows found in cache: '{len(done_rows)}'")
 
-                if missing_rows:
+                if missing_cid:
                     red("Computing embeddings of uncached notes")
                     t_vec[missing_rows, :] = sencoder(df.loc[missing_cid, "text"].tolist())
 
-                    whi(f"Adding to cache the newly computed embeddings")
+                    whi("Adding to cache the newly computed embeddings")
                     for i, ind in enumerate(
                             tqdm(
                                 missing_cid,
