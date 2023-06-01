@@ -66,8 +66,8 @@ log_formatter = logging.Formatter('%(asctime)s %(levelname)s %(funcName)s(%(line
 file_handler = logging.handlers.RotatingFileHandler(
         "logs.txt",
         mode='a',
-        maxBytes=100000,
-        backupCount=1,
+        maxBytes=1000000,
+        backupCount=3,
         encoding=None,
         delay=0,
         )
