@@ -39,11 +39,13 @@ from tokenizers import Tokenizer
 from sentence_transformers import SentenceTransformer
 import ftfy
 
-from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from sklearn.metrics import pairwise_distances, pairwise_kernels
 from sklearn.decomposition import TruncatedSVD, PCA
 from sklearn.preprocessing import normalize
 import umap.umap_
+from bertopic import BERTopic
+import hdbscan
 
 import networkx as nx
 from plotly.colors import qualitative
@@ -3007,10 +3009,7 @@ class AnnA:
         if self.not_enough_cards:
             return
         assert self.plot_2D_embeddings, "invalid arguments!"
-        assert hasattr(self, "embeddings2D"), "2D embeddings could not be found!"
-
-        n_n_plot = 10  # number of closest neighbors to take into account
-        # for the spring layout computation
+        assert hasattr(self, "vectors2D"), "2D embeddings could not be found!"
 
         self.timeout_in_minutes = 5
         # add a timeout to make sure it doesn't get stuck
@@ -3020,174 +3019,248 @@ class AnnA:
         # the browser then resumed
         self.timeout_start_time = time.time()
 
-        self.plot_dir.mkdir(exist_ok=True)
-        G = nx.MultiGraph()
-        positions = {}
-        node_colours = []
-        all_edges = {}
-
-        # to bind each tags or deck to a color
-        if len(list(set(self.df["deckName"]))) > 5:  # if there are more than 5 different decks
-            self.df["colors"] = self.df["deckName"].factorize()[0]
-        else:
-            self.df["colors"] = self.df["tags"].factorize()[0]
-
-        # add nodes
-        for cid in tqdm(self.df.index, desc="Adding nodes", unit="node",
-                        file=self.t_strm):
-            nid = self.df.loc[cid, "note"]
-            G.add_node(nid)  # duplicate nodes are ignored by networkx
-            if nid not in positions:
-                positions[nid] = list(self.vectors2D[np.argwhere(self.df.index == cid).squeeze(), :])
-
-                node_colours.append(self.df.loc[cid, "colors"])
-
-        # create a dict containing all edges and their weights
-        min_w = np.inf
-        max_w = -np.inf
-        sum_w = 0
-        n_w = 0
-        assert len(self.df.index) == self.df_dist.shape[0]
-        if not hasattr(self, "nbrs_cache"):
-            self.nbrs_cache = {}  # for quicker check
-        for cardId in tqdm(
-                self.df.index,
-                desc="Computing edges",
-                file=self.t_strm,
-                mininterval=5,
-                unit="card"):
-            noteId = self.df.loc[cardId, "note"]
-            if noteId in self.nbrs_cache:
-                nbrs_cid = self.nbrs_cache[noteId]["nbrs_cid"]
-                nbrs_nid = self.nbrs_cache[noteId]["nbrs_nid"]
-            else:
-                nbrs_cid = self.df_dist.loc[cardId, :].nsmallest(self.n_n)
-                nbrs_cid = nbrs_cid[nbrs_cid <= self.max_radius]
-                assert len(nbrs_cid) > 0, "Invalid nbrs_cid value"
-                nbrs_cid = nbrs_cid.sort_values(ascending=True)
-                nbrs_nid = [self.df.loc[ind, "note"]
-                            for ind in nbrs_cid.index]
-            for ii, n_nid in enumerate(nbrs_nid):
-                if noteId == n_nid:
-                    # skip self neighboring
-                    continue
-                if ii > n_n_plot:
-                    # Only considering the n first neighbors
-                    break
-                smallest = min(noteId, n_nid)
-                largest = max(noteId, n_nid)
-                # new weight is 1 minus the distance between points
-                new_w = 1 - self.df_dist.loc[cardId, nbrs_cid.index[ii]]
-
-                # store the weight
-                if smallest not in all_edges:
-                    all_edges[smallest] = {largest: new_w}
-                else:
-
-                    if largest not in all_edges[smallest]:
-                        all_edges[smallest][largest] = new_w
-                    else:
-                        # check that weight is coherent
-                        # as some cards of the same note can have different
-                        # embedding locations, severall weights can be
-                        # stored and will be averaged later on
-                        if isinstance(all_edges[smallest][largest], list):
-                            all_edges[smallest][largest].append(new_w)
-                        else:
-                            all_edges[smallest][largest] = [all_edges[smallest][largest], new_w]
-                            n_w -= 1  # avoid duplicate counts
-
-                # store the weights information to scale them afterwards
-                if new_w > max_w:
-                    max_w = new_w
-                elif new_w < min_w:
-                    min_w = new_w
-                sum_w += new_w
-                n_w += 1
-
-        assert min_w >= 0 and min_w < max_w, (
-                f"Impossible weight values: {min_w} and {max_w}")
-
-        # minmaxing weights (although instead of reducing to 0, it adds the
-        # a fixed value to avoid null weights)
-        new_spread = max_w - min_w
-        fixed_offset = 0.1
-        for k, v in tqdm(all_edges.items(),
-                         desc="Minmax weights",
-                         file=self.t_strm):
-            for sub_k, sub_v in all_edges[k].items():
-                if isinstance(sub_v, list):
-                    sub_v = float(np.mean(sub_v))
-                all_edges[k][sub_k] = (sub_v - min_w) / new_spread
-
-                # as the distance grows, the weight has to decrease:
-                all_edges[k][sub_k] *= -1
-                all_edges[k][sub_k] += 1 + fixed_offset
-                assert all_edges[k][sub_k] <= 1 + fixed_offset, "Too high edge weight value!"
-                assert all_edges[k][sub_k] >= 0, "Negative edge weight!"
-                assert all_edges[k][sub_k] != 0, "Null edge weight!"
-
-        # add each edge to the graph
-        for k, v in tqdm(all_edges.items(),
-                         desc="Adding edges",
-                         file=self.t_strm):
-            for sub_k, sub_v in all_edges[k].items():
-                G.add_edge(k, sub_k, weight=sub_v)
-
-        # 2D embeddings layout
-        start = time.time()
-        whi("Drawing embedding network...")
-        self._create_plotfig(G=G,
-                             computed_layout=positions,
-                             node_colours=node_colours,
-                             title=f"{self.deckname} - embeddings"
-                             )
-        whi(f"Saved embeddings layout in {int(time.time()-start)}s!")
-        # nx.drawing.nx_pydot.write_dot(
-        #         G, f'{self.plot_dir}/{self.deckname} - embeddings.dot')
-
-        # computing spring layout
-        n = len(node_colours)
-        start = time.time()
-        whi("\nDrawing spring layout network...")
-        whi("    computing layout...")
-        layout_spring = nx.spring_layout(
-                G,
-                k=1 / np.sqrt(n),  # repulsive force, default is 1/sqrt(n)
-                weight=None,
-                # if 'None', all weights are assumed to be 1,
-                # elif 'weight' use weight as computed previously
-                pos=positions,  # initial positions is the 2D embeddings
-                iterations=50,  # default to 50
-                # fixed=None,  # keep those nodes at their starting position
-                # center=None,  # center on a specific node
-                dim=2,  # dimension of layout
-                seed=4242,
-                threshold=1e-3,  # stop goes below, default 1e-4
+        # bertopic plots
+        topic_model = BERTopic(
+                language="french",
+                top_n_words=10,
+                nr_topics=25,
+                vectorizer_model=CountVectorizer(
+                    stop_words=self.stops,
+                    n_gram_range=(1, 3),
+                    ),
+                hdbscan_model=hdbscan.HDBSCAN(
+                    min_cluster_size=5,
+                    ),
+                ).fit(
+                        self.df["text"].tolist(),
+                        embeddings=self.vectors,
+                        )
+        fig = topic_model.visualize_documents(
+                self.df["text"].tolist(),
+                #embeddings=self.vectors,
+                reduced_embeddings=self.vectors2D,
                 )
-        whi(f"Finished computing spring layout in {int(time.time()-start)}s")
-        self._create_plotfig(G=G,
-                             computed_layout=layout_spring,
-                             node_colours=node_colours,
-                             title=f"{self.deckname} - spring"
-                             )
-        whi(f"Saved spring layout in {int(time.time()-start)}s!")
-        # nx.drawing.nx_pydot.write_dot(
-        #         G, f'{self.plot_dir}/{self.deckname} - spring.dot')
+        saved_plot = f"{self.plot_dir}/{self.deckname} - embeddings.html"
+        whi(f"Saving plot to {saved_plot}")
+        offpy(fig,
+              filename=saved_plot,
+              auto_open=False,
+              show_link=False,
+              validate=True,
+              output_type="file",
+              )
+        try:
+            # replacing timeout by a 5s one then resuming the previous one
+            def f_browser_timeout(signum, frame):
+                raise TimeoutError
+            signal.alarm(0)
+            signal.signal(signal.SIGALRM, f_browser_timeout)
+            signal.alarm(5)
+            whi(f"Trying to open {saved_plot} in the browser...")
+            saved_plot_fp = str(Path(saved_plot).absolute()).replace("\\", "")
+            if "genericbrowser" in str(webbrowser.get()).lower():
+                # if AnnA is launched using SSH, the webbrowser will
+                # possibly be in the console and can stop the script
+                # while the browser is not closed.
+                whi("No GUI browser detected, maybe you're in an SSH console? "
+                    "\nFalling back to using linux shell to open firefox")
+                subprocess.check_output(
+                        shlex.split(f"env DISPLAY=:0 firefox '{saved_plot_fp}'"),
+                        shell=False,
+                        )
+            else:
+                whi("Opening browser.")
+                webbrowser.open(saved_plot_fp)
+        except TimeoutError as e:
+            elapsed = self.timeout_in_minutes * 60 - (time.time() - self.timeout_start_time)
+            if elapsed <= 1:  # rare case when the timeout is for the overall
+                # plotting code and not just to open the browser
+                raise
+            else:
+                pass  # the function got stuck when openning the browser, ignore
+        except Exception as e:
+            beep(f"Exception when openning file: '{e}'")
+        signal.alarm(0)
+        signal.signal(signal.SIGALRM, self.time_watcher)
+        signal.alarm(int(self.timeout_in_minutes * 60 - (time.time() - self.timeout_start_time)))
 
-        # not implemented for nx.Multigraph
-        # computing average clustering coefficient
-        # whi("Computing average clustering...")
-        # t = time.time()
-        # avg_clst = nx.average_clustering(G,
-        #                                  weight="weight",
-        #                                  count_zeros=True,
-        #                                  )
-        # yel(f"Average clustering of plot: {avg_clst}"
-        #     f"\n(In {int(time.time()-t)}s)")
 
-        whi("Finished 2D plots")
-        signal.alarm(0)  # turn off timeout
+
+        red(f"Done with BERTopic")
+        return
+
+        # older code that does not use bertopic
+        # n_n_plot = 10  # number of closest neighbors to take into account
+        # # for the spring layout computation
+
+        # self.plot_dir.mkdir(exist_ok=True)
+        # G = nx.MultiGraph()
+        # positions = {}
+        # node_colours = []
+        # all_edges = {}
+
+        # # to bind each tags or deck to a color
+        # if len(list(set(self.df["deckName"]))) > 5:  # if there are more than 5 different decks
+        #     self.df["colors"] = self.df["deckName"].factorize()[0]
+        # else:
+        #     self.df["colors"] = self.df["tags"].factorize()[0]
+
+        # # add nodes
+        # for cid in tqdm(self.df.index, desc="Adding nodes", unit="node",
+        #                 file=self.t_strm):
+        #     nid = self.df.loc[cid, "note"]
+        #     G.add_node(nid)  # duplicate nodes are ignored by networkx
+        #     if nid not in positions:
+        #         positions[nid] = list(self.vectors2D[np.argwhere(self.df.index == cid).squeeze(), :])
+
+        #         node_colours.append(self.df.loc[cid, "colors"])
+
+        # # create a dict containing all edges and their weights
+        # min_w = np.inf
+        # max_w = -np.inf
+        # sum_w = 0
+        # n_w = 0
+        # assert len(self.df.index) == self.df_dist.shape[0]
+        # if not hasattr(self, "nbrs_cache"):
+        #     self.nbrs_cache = {}  # for quicker check
+        # for cardId in tqdm(
+        #         self.df.index,
+        #         desc="Computing edges",
+        #         file=self.t_strm,
+        #         mininterval=5,
+        #         unit="card"):
+        #     noteId = self.df.loc[cardId, "note"]
+        #     if noteId in self.nbrs_cache:
+        #         nbrs_cid = self.nbrs_cache[noteId]["nbrs_cid"]
+        #         nbrs_nid = self.nbrs_cache[noteId]["nbrs_nid"]
+        #     else:
+        #         nbrs_cid = self.df_dist.loc[cardId, :].nsmallest(self.n_n)
+        #         nbrs_cid = nbrs_cid[nbrs_cid <= self.max_radius]
+        #         assert len(nbrs_cid) > 0, "Invalid nbrs_cid value"
+        #         nbrs_cid = nbrs_cid.sort_values(ascending=True)
+        #         nbrs_nid = [self.df.loc[ind, "note"]
+        #                     for ind in nbrs_cid.index]
+        #     for ii, n_nid in enumerate(nbrs_nid):
+        #         if noteId == n_nid:
+        #             # skip self neighboring
+        #             continue
+        #         if ii > n_n_plot:
+        #             # Only considering the n first neighbors
+        #             break
+        #         smallest = min(noteId, n_nid)
+        #         largest = max(noteId, n_nid)
+        #         # new weight is 1 minus the distance between points
+        #         new_w = 1 - self.df_dist.loc[cardId, nbrs_cid.index[ii]]
+
+        #         # store the weight
+        #         if smallest not in all_edges:
+        #             all_edges[smallest] = {largest: new_w}
+        #         else:
+
+        #             if largest not in all_edges[smallest]:
+        #                 all_edges[smallest][largest] = new_w
+        #             else:
+        #                 # check that weight is coherent
+        #                 # as some cards of the same note can have different
+        #                 # embedding locations, severall weights can be
+        #                 # stored and will be averaged later on
+        #                 if isinstance(all_edges[smallest][largest], list):
+        #                     all_edges[smallest][largest].append(new_w)
+        #                 else:
+        #                     all_edges[smallest][largest] = [all_edges[smallest][largest], new_w]
+        #                     n_w -= 1  # avoid duplicate counts
+
+        #         # store the weights information to scale them afterwards
+        #         if new_w > max_w:
+        #             max_w = new_w
+        #         elif new_w < min_w:
+        #             min_w = new_w
+        #         sum_w += new_w
+        #         n_w += 1
+
+        # assert min_w >= 0 and min_w < max_w, (
+        #         f"Impossible weight values: {min_w} and {max_w}")
+
+        # # minmaxing weights (although instead of reducing to 0, it adds the
+        # # a fixed value to avoid null weights)
+        # new_spread = max_w - min_w
+        # fixed_offset = 0.1
+        # for k, v in tqdm(all_edges.items(),
+        #                  desc="Minmax weights",
+        #                  file=self.t_strm):
+        #     for sub_k, sub_v in all_edges[k].items():
+        #         if isinstance(sub_v, list):
+        #             sub_v = float(np.mean(sub_v))
+        #         all_edges[k][sub_k] = (sub_v - min_w) / new_spread
+
+        #         # as the distance grows, the weight has to decrease:
+        #         all_edges[k][sub_k] *= -1
+        #         all_edges[k][sub_k] += 1 + fixed_offset
+        #         assert all_edges[k][sub_k] <= 1 + fixed_offset, "Too high edge weight value!"
+        #         assert all_edges[k][sub_k] >= 0, "Negative edge weight!"
+        #         assert all_edges[k][sub_k] != 0, "Null edge weight!"
+
+        # # add each edge to the graph
+        # for k, v in tqdm(all_edges.items(),
+        #                  desc="Adding edges",
+        #                  file=self.t_strm):
+        #     for sub_k, sub_v in all_edges[k].items():
+        #         G.add_edge(k, sub_k, weight=sub_v)
+
+        # # 2D embeddings layout
+        # start = time.time()
+        # whi("Drawing embedding network...")
+        # self._create_plotfig(G=G,
+        #                      computed_layout=positions,
+        #                      node_colours=node_colours,
+        #                      title=f"{self.deckname} - embeddings"
+        #                      )
+        # whi(f"Saved embeddings layout in {int(time.time()-start)}s!")
+        # # nx.drawing.nx_pydot.write_dot(
+        # #         G, f'{self.plot_dir}/{self.deckname} - embeddings.dot')
+
+        # # computing spring layout
+        # n = len(node_colours)
+        # start = time.time()
+        # whi("\nDrawing spring layout network...")
+        # whi("    computing layout...")
+        # layout_spring = nx.spring_layout(
+        #         G,
+        #         k=1 / np.sqrt(n),  # repulsive force, default is 1/sqrt(n)
+        #         weight=None,
+        #         # if 'None', all weights are assumed to be 1,
+        #         # elif 'weight' use weight as computed previously
+        #         pos=positions,  # initial positions is the 2D embeddings
+        #         iterations=50,  # default to 50
+        #         # fixed=None,  # keep those nodes at their starting position
+        #         # center=None,  # center on a specific node
+        #         dim=2,  # dimension of layout
+        #         seed=4242,
+        #         threshold=1e-3,  # stop goes below, default 1e-4
+        #         )
+        # whi(f"Finished computing spring layout in {int(time.time()-start)}s")
+        # self._create_plotfig(G=G,
+        #                      computed_layout=layout_spring,
+        #                      node_colours=node_colours,
+        #                      title=f"{self.deckname} - spring"
+        #                      )
+        # whi(f"Saved spring layout in {int(time.time()-start)}s!")
+        # # nx.drawing.nx_pydot.write_dot(
+        # #         G, f'{self.plot_dir}/{self.deckname} - spring.dot')
+
+        # # not implemented for nx.Multigraph
+        # # computing average clustering coefficient
+        # # whi("Computing average clustering...")
+        # # t = time.time()
+        # # avg_clst = nx.average_clustering(G,
+        # #                                  weight="weight",
+        # #                                  count_zeros=True,
+        # #                                  )
+        # # yel(f"Average clustering of plot: {avg_clst}"
+        # #     f"\n(In {int(time.time()-t)}s)")
+
+        # whi("Finished 2D plots")
+        # signal.alarm(0)  # turn off timeout
 
     def _create_plotfig(self,
                         G,
