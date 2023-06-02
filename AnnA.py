@@ -2043,7 +2043,7 @@ class AnnA:
             up_triangular = np.triu_indices(self.df_dist.shape[0], 1)
             pd.set_option('display.max_colwidth', 180)
 
-            red("\nPrinting the most semantically different cards:")
+            red("\nPrinting the most semantically distant cards:")
             highest_value = np.max(self.df_dist.values[up_triangular].ravel())
             coord_max = np.where(self.df_dist == highest_value)
             one = self.df.loc[self.df.index[coord_max[0][0]]].text[:max_length]
@@ -2051,7 +2051,7 @@ class AnnA:
             yel(f"* {one}...")
             yel(f"* {two}...")
 
-            red("\nPrinting the most semantically but distinct similar "
+            red("\nPrinting the most semantically close but distinct similar "
                 "cards:")
             # the diagonal is the minimum of distance so we are looking for
             # the distance that is just higher
