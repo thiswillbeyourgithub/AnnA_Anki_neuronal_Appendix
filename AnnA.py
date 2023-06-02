@@ -3137,7 +3137,7 @@ class AnnA:
         # 2D embeddings layout
         start = time.time()
         whi("Drawing embedding network...")
-        self._construct_plot(G=G,
+        self._create_plotfig(G=G,
                              computed_layout=positions,
                              node_colours=node_colours,
                              title=f"{self.deckname} - embeddings"
@@ -3166,7 +3166,7 @@ class AnnA:
                 threshold=1e-3,  # stop goes below, default 1e-4
                 )
         whi(f"Finished computing spring layout in {int(time.time()-start)}s")
-        self._construct_plot(G=G,
+        self._create_plotfig(G=G,
                              computed_layout=layout_spring,
                              node_colours=node_colours,
                              title=f"{self.deckname} - spring"
@@ -3189,7 +3189,7 @@ class AnnA:
         whi("Finished 2D plots")
         signal.alarm(0)  # turn off timeout
 
-    def _construct_plot(self,
+    def _create_plotfig(self,
                         G,
                         computed_layout,
                         node_colours,
