@@ -216,7 +216,7 @@ class AnnA:
 
                  # vectorization:
                  vectorizer="embeddings",
-                 embed_model="distiluse-base-multilingual-cased-v2",
+                 embed_model="paraphrase-multilingual-mpnet-base-v2",
                  # left for legacy reason
                  ndim_reduc="auto",
                  TFIDF_tokenize=True,
@@ -3811,12 +3811,12 @@ if __name__ == "__main__":
                         nargs=1,
                         metavar="EMBED_MODEL",
                         dest="embed_model",
-                        default="distiluse-base-multilingual-cased-v2",
+                        default="paraphrase-multilingual-mpnet-base-v2",
                         required=False,
                         type=str,
                         help=(
                             "For multilingual use "
-                            "'distiluse-base-multilingual-cased-v2' but for "
+                            "'paraphrase-multilingual-mpnet-base-v2' but for "
                             "anything else use 'all-mpnet-base-v2'"
                             ))
     parser.add_argument("--ndim_reduc",
