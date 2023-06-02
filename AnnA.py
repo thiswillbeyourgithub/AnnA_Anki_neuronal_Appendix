@@ -3087,7 +3087,6 @@ class AnnA:
 
 
         red(f"Done with BERTopic")
-        return
 
         # older code that does not use bertopic
         # n_n_plot = 10  # number of closest neighbors to take into account
@@ -3259,8 +3258,9 @@ class AnnA:
         # # yel(f"Average clustering of plot: {avg_clst}"
         # #     f"\n(In {int(time.time()-t)}s)")
 
-        # whi("Finished 2D plots")
-        # signal.alarm(0)  # turn off timeout
+        whi("Finished 2D plots")
+        signal.alarm(0)  # turn off timeout
+        return
 
     def _create_plotfig(self,
                         G,
