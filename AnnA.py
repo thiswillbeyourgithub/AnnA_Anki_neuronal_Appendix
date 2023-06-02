@@ -1867,7 +1867,7 @@ class AnnA:
                 yel("Computing 2D embeddings for the plot using UMAP...")
                 if self.vectors.shape[1] == 2:
                     whi("Reusing UMAP dimension reduction for embeddings.")
-                    self.embeddings2D = self.vectors
+                    self.vectors2D = self.vectors
                 else:  # compute embeddings
                     umap_kwargs = {"n_jobs": -1,
                                    "verbose": 1,
@@ -1881,7 +1881,7 @@ class AnnA:
                                    "densmap": False,
                                    }
                     U = umap.umap_.UMAP(**umap_kwargs)
-                    self.embeddings2D = U.fit_transform(t_vec)
+                    self.vectors2D = U.fit_transform(t_vec)
             except Exception as err:
                 beep(f"Error when computing 2D embeddings: '{err}'")
                 red(traceback.format_exc())
@@ -3038,7 +3038,7 @@ class AnnA:
             nid = self.df.loc[cid, "note"]
             G.add_node(nid)  # duplicate nodes are ignored by networkx
             if nid not in positions:
-                positions[nid] = list(self.embeddings2D[np.argwhere(self.df.index == cid).squeeze(), :])
+                positions[nid] = list(self.vectors2D[np.argwhere(self.df.index == cid).squeeze(), :])
 
                 node_colours.append(self.df.loc[cid, "colors"])
 
