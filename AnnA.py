@@ -1379,7 +1379,7 @@ class AnnA:
                                 comb_text += next_field + " <NEWFIELD> "
                             else:
                                 #comb_text += f"\n{f.title()}: {next_field}"
-                                comb_text += f"\n\n{next_field.title()}"
+                                comb_text += f"\n\n{next_field}"
                     except KeyError as e:
                         with lock:
                             to_notify.append(
@@ -3023,11 +3023,11 @@ class AnnA:
         # bertopic plots
         topic_model = BERTopic(
                 language="french",
-                top_n_words=10,
+                top_n_words=20,
                 nr_topics=25,
                 vectorizer_model=CountVectorizer(
-                    stop_words=self.stops,
-                    ngram_range=(1, 3),
+                    stop_words=self.stops + [f"c{n}" for n in range(10)],
+                    ngram_range=(1, 1),
                     ),
                 hdbscan_model=hdbscan.HDBSCAN(
                     min_cluster_size=5,
