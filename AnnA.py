@@ -200,7 +200,7 @@ class AnnA:
                  log_level=0,  # 0, 1, 2
                  replace_greek=True,
                  keep_OCR=True,
-                 append_tags=True,
+                 append_tags=False,
                  tags_to_ignore=["AnnA", "leech"],
                  add_KNN_to_field=False,
                  filtered_deck_name_template=None,
@@ -3700,13 +3700,13 @@ if __name__ == "__main__":
                             "included in the card. Default is `True`."))
     parser.add_argument("--append_tags",
                         dest="append_tags",
-                        default=True,
+                        default=False,
                         required=False,
                         action="store_true",
                         help=(
                             "Whether to append the tags to the "
                             "cards content or to add no tags. Default "
-                            "to `True`."))
+                            "to `False`."))
     parser.add_argument("--tags_to_ignore",
                         nargs="*",
                         metavar="TAGS_TO_IGNORE",
