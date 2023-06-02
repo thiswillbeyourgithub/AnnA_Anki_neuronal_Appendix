@@ -1735,7 +1735,10 @@ class AnnA:
                 for f in filenames:
                     f = f.replace(".pickle", "")
                     nid, fingerprint = f.split("_")
-                    cache_nid_fing[nid] = fingerprint
+                    if nid not in cache_nid_fing:
+                        cache_nid_fing[nid] = [fingerprint]
+                    else:
+                        cache_nid_fing[nid].append(fingerprint)
 
                 # compute fingerprint of all note content
                 tqdm.pandas(
@@ -1751,16 +1754,18 @@ class AnnA:
                     fingerprint = df.loc[ind, "sha256"]
                     nid = df.loc[ind, "note"]
                     if nid in cache_nid_fing:
-                        filename = f"{nid}_{fingerprint}.pickle"
-                        if cache_nid_fing[nid] == fingerprint:
+                        if fingerprint in cache_nid_fing[nid]:
+                            filename = f"{nid}_{fingerprint}.pickle"
                             t_vec[i, :] = memretr(str(vec_cache / filename))
                         else:
-                            (vec_cache / filename).unlink(missing_ok=False)
-                            n_deleted += 1
+                            for fp in cache_nid_fing[nid]:
+                                filename = f"{nid}_{fp}.pickle"
+                                (vec_cache / filename).unlink(missing_ok=False)
+                                n_deleted += 1
 
                 # get embeddings for missing rows
-                done_rows = np.where(np.sum(t_vec, axis=1) != 0.0)[0]
-                missing_rows = np.where(np.sum(t_vec, axis=1) == 0.0)[0]
+                done_rows = np.where(np.isclose(np.sum(t_vec, axis=1), 0.0))[0]
+                missing_rows = np.where(~np.isclose(np.sum(t_vec, axis=1), 0.0))[0]
                 missing_cid = [df.index[i] for i in missing_rows]
 
                 yel(f"Outdated entry in cache that were deleted: '{n_deleted}'")
