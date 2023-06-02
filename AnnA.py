@@ -1729,8 +1729,13 @@ class AnnA:
                 vec_cache = vec_cache / self.embed_model
                 vec_cache.mkdir(exist_ok=True)
 
-                # get what is in cache
-                cache_key = set(f.name for f in vec_cache.iterdir())
+                # get what is in cache in the form "NID_FINGERPRINT.pickle"
+                filenames = set(f.name for f in vec_cache.iterdir())
+                cache_nid_fing = {}
+                for f in filenames:
+                    f = f.replace(".pickle", "")
+                    nid, fingerprint = f.split("_")
+                    cache_nid_fing[nid] = fingerprint
 
                 # compute fingerprint of all note content
                 tqdm.pandas(
@@ -1741,18 +1746,24 @@ class AnnA:
                 df["sha256"] = df["text"].progress_apply(memhasher)
 
                 # load row of t_vec if cache present
+                n_deleted = 0
                 for i, ind in enumerate(tqdm(df.index, desc="Loading from cache", file=self.t_strm)):
                     fingerprint = df.loc[ind, "sha256"]
                     nid = df.loc[ind, "note"]
-                    filename = f"{nid}_{fingerprint}.pickle"
-                    if filename in cache_key:
-                        t_vec[i, :] = memretr(str(vec_cache / filename))
+                    if nid in cache_nid_fing:
+                        filename = f"{nid}_{fingerprint}.pickle"
+                        if cache_nid_fing[nid] == fingerprint:
+                            t_vec[i, :] = memretr(str(vec_cache / filename))
+                        else:
+                            (vec_cache / filename).unlink(missing_ok=False)
+                            n_deleted += 1
 
                 # get embeddings for missing rows
                 done_rows = np.where(np.sum(t_vec, axis=1) != 0.0)[0]
                 missing_rows = np.where(np.sum(t_vec, axis=1) == 0.0)[0]
                 missing_cid = [df.index[i] for i in missing_rows]
 
+                yel(f"Outdated entry in cache that were deleted: '{n_deleted}'")
                 yel(f"Rows not found in cache: '{len(missing_cid)}'")
                 yel(f"Rows found in cache: '{len(done_rows)}'")
 
