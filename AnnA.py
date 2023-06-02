@@ -1849,8 +1849,8 @@ class AnnA:
                                "metric": "cosine",
                                "init": 'spectral',  # TODO: try, 'pca' when new release comes out
                                "transform_seed": 42,
-                               "n_neighbors":  min(max(len(self.df.index) // 100 * 5, 10), 300),  # higher means more focused on the global structure, capped at 300
-                               "min_dist": 0.2,  # could also be 0 because siblings have the same location anyway
+                               "n_neighbors":  min(max(len(self.df.index) // 10, 10), 500),  # higher means more focused on the global structure, capped at 300
+                               "min_dist": 0.0001,  # could also be 0 because siblings have the same location anyway
                                "low_memory":  False,
                                "densmap": False,  # try to preserve local density
                                # "random_state": 42, # turned of because makes it non deterministic
@@ -1878,8 +1878,8 @@ class AnnA:
                                    "metric": "cosine",
                                    "init": 'spectral',
                                    "transform_seed": 42,
-                                   "n_neighbors":  min(max(len(self.df.index) // 100 * 5, 10), 300),  # capped at 300
-                                   "min_dist": 0.2,
+                                   "n_neighbors":  min(max(len(self.df.index) // 10, 10), 500),  # capped at 300
+                                   "min_dist": 0.0001,
                                    "low_memory":  False,
                                    "densmap": False,
                                    }
