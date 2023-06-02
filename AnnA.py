@@ -3026,7 +3026,7 @@ class AnnA:
                 nr_topics=25,
                 vectorizer_model=CountVectorizer(
                     stop_words=self.stops,
-                    n_gram_range=(1, 3),
+                    ngram_range=(1, 3),
                     ),
                 hdbscan_model=hdbscan.HDBSCAN(
                     min_cluster_size=5,
