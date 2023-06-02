@@ -1378,7 +1378,8 @@ class AnnA:
                             if TFIDFmode:
                                 comb_text += next_field + " <NEWFIELD> "
                             else:
-                                comb_text += f"\n{f.title()}: {next_field}"
+                                #comb_text += f"\n{f.title()}: {next_field}"
+                                comb_text += f"\n\n{next_field.title()}"
                     except KeyError as e:
                         with lock:
                             to_notify.append(
