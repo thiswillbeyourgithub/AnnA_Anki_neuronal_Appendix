@@ -24,6 +24,7 @@ field_dic = {
                                  "Extra 1",
                                  "Extra 2",
                                  "Sources"],
+    "logseq_filesmodel": ["Text", "Extra"],
     "basic": ["Front", "Back", "Hint"],
     "Basic (and reversed card)": ["Front", "Back"],
     "spanish cards": ["Spanish", "English"],
