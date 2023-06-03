@@ -183,7 +183,7 @@ class AnnA:
                  task="filter_review_cards",
                  # any of "filter_review_cards",
                  # "bury_excess_review_cards", "bury_excess_learning_cards"
-                 # "just_add_KNN"
+                 # "just_add_KNN", "just_plot"
                  target_deck_size="deck_config",
                  # format: 80%, "all", "deck_config"
                  max_deck_size=None,
@@ -386,7 +386,8 @@ class AnnA:
         assert task in ["filter_review_cards",
                         "bury_excess_learning_cards",
                         "bury_excess_review_cards",
-                        "just_add_KNN"], "Invalid value for `task`"
+                        "just_add_KNN",
+                        "just_plot"], "Invalid value for `task`"
         if task in ["bury_excess_learning_cards",
                     "bury_excess_review_cards"]:
             if task == "bury_excess_learning_cards":
@@ -398,6 +399,9 @@ class AnnA:
         elif task == "just_add_KNN":
             red("Task : find the nearest neighbor of each note and "
                 "add it to a field.")
+        elif task == "just_plot":
+            red("Task : vectorize the cards and create a 2D plot.")
+            assert plot_2D_embeddings, "argument plot_2D_embeddings should be True"
         else:
             raise ValueError()
         self.task = task
@@ -709,6 +713,10 @@ class AnnA:
                 self._add_neighbors_to_notes()
             else:
                 return
+
+        elif task == "just_plot":
+            self.rated_last_X_days = None
+            assert self._common_init(), "Error during _common_init"
 
         else:
             raise ValueError(f"Invalid task value: {task}")
@@ -3551,17 +3559,19 @@ if __name__ == "__main__":
                         default="filter_review_cards",
                         required=True,
                         help=(
-                            "can be \"filter_review_cards\", "
-                            "\"bury_excess_learning_cards\", "
-                            "\"bury_excess_review_cards\", \"add_KNN_to_field\""
+                            "can be 'filter_review_cards', "
+                            "'bury_excess_learning_cards', "
+                            "'bury_excess_review_cards', 'add_KNN_to_field'"
+                            "'just_plot'. "
                             ". Respectively to create "
                             "a filtered deck with the cards, or bury only the "
                             "similar learning cards (among other learning cards), "
                             "or bury only the similar cards in review (among "
                             "other review cards) or just find the nearest "
                             "neighbors of each note and save it to the field "
-                            "'Nearest_neighbors' of each note. Default is "
-                            "\"`filter_review_cards`\"."))
+                            "'Nearest_neighbors' of each note, or create "
+                            "a 2D plot after vectorizing the cards. "
+                            "Default is `filter_review_cards`."))
     parser.add_argument("--target_deck_size",
                         nargs=1,
                         metavar="TARGET_SIZE",
