@@ -1807,7 +1807,7 @@ class AnnA:
             # dimensions so ended up in the curse of dimensionnality
 
             # reduce dimensions before UMAP if too many dimensions
-            dim_limit = 100
+            dim_limit = 50
             if t_vec.shape[1] > dim_limit:
                 try:
                     yel(f"Vectorized text of shape {t_vec.shape}, dimensions above "
@@ -1849,10 +1849,10 @@ class AnnA:
                                "metric": "cosine",
                                "init": 'spectral',  # TODO: try, 'pca' when new release comes out
                                "transform_seed": 42,
-                               "n_neighbors":  min(max(len(self.df.index) // 10, 10), 500),  # higher means more focused on the global structure, capped at 300
-                               "min_dist": 0.0001,  # could also be 0 because siblings have the same location anyway
+                               "n_neighbors":  min(max(len(self.df.index) // 10, 15), 100),  # higher means more focused on the global structure, capped at 300
+                               "min_dist": 0,
                                "low_memory":  False,
-                               "densmap": False,  # try to preserve local density
+                               "densmap": True,  # try to preserve local density
                                # "random_state": 42, # turned of because makes it non deterministic
                                }
                 U = umap.umap_.UMAP(**umap_kwargs)
@@ -1878,10 +1878,10 @@ class AnnA:
                                    "metric": "cosine",
                                    "init": 'spectral',
                                    "transform_seed": 42,
-                                   "n_neighbors":  min(max(len(self.df.index) // 10, 10), 500),  # capped at 300
-                                   "min_dist": 0.0001,
+                                   "n_neighbors":  min(max(len(self.df.index) // 10, 15), 100),  # capped at 300
+                                   "min_dist": 0,
                                    "low_memory":  False,
-                                   "densmap": False,
+                                   "densmap": True,
                                    }
                     U = umap.umap_.UMAP(**umap_kwargs)
                     self.vectors2D = U.fit_transform(t_vec)
@@ -3022,9 +3022,9 @@ class AnnA:
 
         # bertopic plots
         topic_model = BERTopic(
-                language="french",
-                top_n_words=20,
+                top_n_words=10,
                 nr_topics=25,
+                min_topic_size=10,
                 vectorizer_model=CountVectorizer(
                     stop_words=self.stops + [f"c{n}" for n in range(10)],
                     ngram_range=(1, 1),
@@ -3032,14 +3032,16 @@ class AnnA:
                 hdbscan_model=hdbscan.HDBSCAN(
                     min_cluster_size=5,
                     ),
+                verbose=True,
                 ).fit(
-                        self.df["text"].tolist(),
+                        documents=self.df["text"].tolist(),
                         embeddings=self.vectors,
                         )
         fig = topic_model.visualize_documents(
-                self.df["text"].tolist(),
-                #embeddings=self.vectors,
+                docs=self.df["text"].tolist(),
+                embeddings=self.vectors,
                 reduced_embeddings=self.vectors2D,
+                title=f"{self.deckname} - embeddings",
                 )
         saved_plot = f"{self.plot_dir}/{self.deckname} - embeddings.html"
         whi(f"Saving plot to {saved_plot}")
