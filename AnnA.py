@@ -1850,20 +1850,21 @@ class AnnA:
                          f"UMAP nonetheless.\rData shape: {t_vec.shape}")
                     red(traceback.format_exc())
 
-            target_dim = 5
+            target_dim = 2
             whi(f"Using UMAP to reduce to {target_dim} dimensions")
             try:
                 umap_kwargs = {"n_jobs": -1,
                                "verbose": 1,
                                "n_components": target_dim,
                                "metric": "cosine",
-                               "init": 'spectral',  # TODO: try, 'pca' when new release comes out
+                               "init": 'random',  # TODO: try, 'pca' when new release comes out
                                "transform_seed": 42,
-                               "n_neighbors":  min(max(len(self.df.index) // 10, 15), 100),  # higher means more focused on the global structure, capped at 300
-                               "min_dist": 0,
+                               "n_neighbors":  min(max(len(self.df.index) // 100 * 5, 15), 300),  # higher means more focused on the global structure, capped at 300
+                               "min_dist": 0.2,
                                "low_memory":  False,
-                               "densmap": True,  # try to preserve local density
+                               "densmap": False,  # try to preserve local density
                                # "random_state": 42, # turned of because makes it non deterministic
+                               "n_epochs": 500,  # None will automatically adjust
                                }
                 U = umap.umap_.UMAP(**umap_kwargs)
                 t_red = U.fit_transform(t_vec)
@@ -1886,12 +1887,13 @@ class AnnA:
                                    "verbose": 1,
                                    "n_components": 2,
                                    "metric": "cosine",
-                                   "init": 'spectral',
+                                   "init": 'random',
                                    "transform_seed": 42,
-                                   "n_neighbors":  min(max(len(self.df.index) // 10, 15), 100),  # capped at 300
-                                   "min_dist": 0,
+                                   "n_neighbors":  min(max(len(self.df.index) // 100 * 5, 15), 300),  # capped at 300
+                                   "min_dist": 0.2,
                                    "low_memory":  False,
-                                   "densmap": True,
+                                   "densmap": False,
+                                   "n_epochs": 500,
                                    }
                     U = umap.umap_.UMAP(**umap_kwargs)
                     self.vectors2D = U.fit_transform(t_vec)
@@ -3031,10 +3033,11 @@ class AnnA:
         self.timeout_start_time = time.time()
 
         # bertopic plots
+        docs = self.df["text"].tolist()
         topic_model = BERTopic(
                 top_n_words=10,
-                nr_topics=25,
-                min_topic_size=10,
+                #nr_topics=25,
+                min_topic_size=5,
                 vectorizer_model=CountVectorizer(
                     stop_words=self.stops + [f"c{n}" for n in range(10)],
                     ngram_range=(1, 1),
@@ -3044,12 +3047,15 @@ class AnnA:
                     ),
                 verbose=True,
                 ).fit(
-                        documents=self.df["text"].tolist(),
-                        embeddings=self.vectors,
+                        documents=docs,
+                        embeddings=self.vectors2D,
                         )
-        fig = topic_model.visualize_documents(
-                docs=self.df["text"].tolist(),
-                embeddings=self.vectors,
+        hierarchical_topics = topic_model.hierarchical_topics(
+            docs=docs,
+            )
+        fig = topic_model.visualize_hierarchical_documents(
+                docs=docs,
+                hierarchical_topics=hierarchical_topics,
                 reduced_embeddings=self.vectors2D,
                 title=f"{self.deckname} - embeddings",
                 )
