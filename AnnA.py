@@ -1810,6 +1810,8 @@ class AnnA:
             else:
                  raise ValueError("Invalid vectorizer value")
 
+        self.vectors_beforeUMAP = t_vec
+
         if self.ndim_reduc is None:
             self.vectors = t_vec
         else:
@@ -1851,6 +1853,7 @@ class AnnA:
                          f"UMAP nonetheless.\rData shape: {t_vec.shape}")
                     red(traceback.format_exc())
 
+            self.vectors_beforeUMAP = t_vec
             target_dim = 2
             whi(f"Using UMAP to reduce to {target_dim} dimensions")
             try:
@@ -1860,7 +1863,7 @@ class AnnA:
                                "metric": "cosine",
                                "init": 'spectral',  # TODO: try, 'pca' when new release comes out
                                "transform_seed": 42,
-                               "n_neighbors":  min(max(len(self.df.index) // 100 * 5, 15), 300),  # higher means more focused on the global structure, capped at 300
+                               "n_neighbors":  15,
                                "min_dist": 0.1,
                                "low_memory":  False,
                                "densmap": False,  # try to preserve local density
@@ -1884,13 +1887,15 @@ class AnnA:
                     whi("Reusing UMAP dimension reduction for embeddings.")
                     self.vectors2D = self.vectors
                 else:  # compute embeddings
+                    whi("Computing 2D UMAP for embeddings.")
+                    self.vectors2D = self.vectors
                     umap_kwargs = {"n_jobs": -1,
                                    "verbose": 1,
                                    "n_components": 2,
                                    "metric": "cosine",
                                    "init": 'spectral',
                                    "transform_seed": 42,
-                                   "n_neighbors":  min(max(len(self.df.index) // 100 * 5, 15), 300),  # capped at 300
+                                   "n_neighbors":  15,
                                    "min_dist": 0.1,
                                    "low_memory":  False,
                                    "densmap": False,
@@ -3036,20 +3041,20 @@ class AnnA:
         # bertopic plots
         docs = self.df["text"].tolist()
         topic_model = BERTopic(
-                top_n_words=10,
-                #nr_topics=25,
-                min_topic_size=5,
+                top_n_words=5,
+                nr_topics=100,
+                min_topic_size=10,
                 vectorizer_model=CountVectorizer(
                     stop_words=self.stops + [f"c{n}" for n in range(10)],
                     ngram_range=(1, 1),
                     ),
                 hdbscan_model=hdbscan.HDBSCAN(
-                    min_cluster_size=5,
+                    min_cluster_size=10,
                     ),
                 verbose=True,
                 ).fit(
                         documents=docs,
-                        embeddings=self.vectors2D,
+                        embeddings=self.vectors_beforeUMAP,
                         )
         hierarchical_topics = topic_model.hierarchical_topics(
             docs=docs,
@@ -3059,9 +3064,9 @@ class AnnA:
                 hierarchical_topics=hierarchical_topics,
                 reduced_embeddings=self.vectors2D,
                 nr_levels=20,
-                level_scale="log",
+                # level_scale="log",
                 title=f"{self.deckname} - embeddings",
-                hide_annotations=True,
+                # hide_annotations=True,
                 )
         saved_plot = f"{self.plot_dir}/{self.deckname} - embeddings.html"
         whi(f"Saving plot to {saved_plot}")
