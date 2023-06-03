@@ -1817,7 +1817,7 @@ class AnnA:
             # dimensions so ended up in the curse of dimensionnality
 
             # reduce dimensions before UMAP if too many dimensions
-            dim_limit = 50
+            dim_limit = 100
             if t_vec.shape[1] > dim_limit:
                 try:
                     yel(f"Vectorized text of shape {t_vec.shape}, dimensions above "
@@ -1857,13 +1857,13 @@ class AnnA:
                                "verbose": 1,
                                "n_components": target_dim,
                                "metric": "cosine",
-                               "init": 'random',  # TODO: try, 'pca' when new release comes out
+                               "init": 'spectral',  # TODO: try, 'pca' when new release comes out
                                "transform_seed": 42,
                                "n_neighbors":  min(max(len(self.df.index) // 100 * 5, 15), 300),  # higher means more focused on the global structure, capped at 300
-                               "min_dist": 0.2,
+                               "min_dist": 0.1,
                                "low_memory":  False,
                                "densmap": False,  # try to preserve local density
-                               # "random_state": 42, # turned of because makes it non deterministic
+                               # "random_state": 42, # turned of because makes it non multithreaded
                                "n_epochs": 500,  # None will automatically adjust
                                }
                 U = umap.umap_.UMAP(**umap_kwargs)
@@ -1887,10 +1887,10 @@ class AnnA:
                                    "verbose": 1,
                                    "n_components": 2,
                                    "metric": "cosine",
-                                   "init": 'random',
+                                   "init": 'spectral',
                                    "transform_seed": 42,
                                    "n_neighbors":  min(max(len(self.df.index) // 100 * 5, 15), 300),  # capped at 300
-                                   "min_dist": 0.2,
+                                   "min_dist": 0.1,
                                    "low_memory":  False,
                                    "densmap": False,
                                    "n_epochs": 500,
@@ -3057,7 +3057,10 @@ class AnnA:
                 docs=docs,
                 hierarchical_topics=hierarchical_topics,
                 reduced_embeddings=self.vectors2D,
+                nr_levels=20,
+                level_scale="log",
                 title=f"{self.deckname} - embeddings",
+                hide_annotations=True,
                 )
         saved_plot = f"{self.plot_dir}/{self.deckname} - embeddings.html"
         whi(f"Saving plot to {saved_plot}")
