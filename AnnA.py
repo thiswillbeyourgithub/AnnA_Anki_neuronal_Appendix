@@ -1805,7 +1805,7 @@ class AnnA:
                         add_to_cache(t_vec[missing_rows[i], :], str(vec_cache / filename))
 
                 whi("Normalizing embeddings")
-                normalize(t_vec, norm="l2", axis=1, copy=False)
+                t_vec = normalize(t_vec, norm="l2", axis=1, copy=True)
 
             else:
                  raise ValueError("Invalid vectorizer value")
@@ -3041,7 +3041,7 @@ class AnnA:
         # bertopic plots
         docs = self.df["text"].tolist()
         topic_model = BERTopic(
-                top_n_words=5,
+                top_n_words=3,
                 nr_topics=100,
                 min_topic_size=10,
                 vectorizer_model=CountVectorizer(
@@ -3063,7 +3063,7 @@ class AnnA:
                 docs=docs,
                 hierarchical_topics=hierarchical_topics,
                 reduced_embeddings=self.vectors2D,
-                nr_levels=20,
+                nr_levels=min(20, len(hierarchical_topics) - 1),
                 # level_scale="log",
                 title=f"{self.deckname} - embeddings",
                 # hide_annotations=True,
