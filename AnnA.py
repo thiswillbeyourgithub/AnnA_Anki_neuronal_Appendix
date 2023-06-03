@@ -3022,7 +3022,7 @@ class AnnA:
         assert self.plot_2D_embeddings, "invalid arguments!"
         assert hasattr(self, "vectors2D"), "2D embeddings could not be found!"
 
-        self.timeout_in_minutes = 5
+        self.timeout_in_minutes = 15
         # add a timeout to make sure it doesn't get stuck
         signal.signal(signal.SIGALRM, self.time_watcher)
         signal.alarm(int(self.timeout_in_minutes * 60))
