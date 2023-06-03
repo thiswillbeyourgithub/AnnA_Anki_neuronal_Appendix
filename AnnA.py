@@ -940,12 +940,14 @@ class AnnA:
             due_cards = self._call_anki(action="findCards", query=query)
             whi(f"Found {len(due_cards)} learning cards...\n")
 
-        elif self.task == "just_add_KNN":
+        elif self.task in ["just_add_KNN", "just_plot"]:
             yel("Getting all card list except suspended...")
             query = (f"\"deck:{self.deckname}\" -is:suspended")
             whi(" >  '" + query + "'")
             due_cards = self._call_anki(action="findCards", query=query)
             whi(f"Found {len(due_cards)} cards...\n")
+        else:
+            raise ValueError(f"Invalid task: '{self.task}'")
 
         # fetch recently rated cards
         def iterated_fetcher(query):
