@@ -2103,10 +2103,10 @@ class AnnA:
                 "cards:")
             # the diagonal is the minimum of distance so we are looking for
             # the distance that is just higher
-            # q_diagonal = (self.df_dist.shape[0] + 1) / (
-            #         self.df_dist.shape[0] ** 2 / 2)
+            q_diagonal = (self.df_dist.shape[0] + 2) / (
+                     self.df_dist.shape[0] ** 2 / 2)
             quantile_limit = np.quantile(
-                    self.df_dist.values[up_triangular].ravel(), 0.01)
+                    self.df_dist.values[up_triangular].ravel(), q_diagonal)
             lowest_non_zero_value = np.amin(
                     self.df_dist.values[up_triangular],
                     where=self.df_dist.values[up_triangular] > quantile_limit,
