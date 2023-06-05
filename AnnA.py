@@ -1807,6 +1807,7 @@ class AnnA:
                         add_to_cache(t_vec[missing_rows[i], :], str(vec_cache / filename))
 
                 assert not np.isclose(t_vec.sum(), 0), "t_vec is still 0"
+                assert t_vec.shape[0] == len(np.where(~np.isclose(np.sum(t_vec, axis=1), 0.0))[0]), "t_vec invalid"
 
                 whi("Normalizing embeddings")
                 t_vec = normalize(t_vec, norm="l2", axis=1, copy=True)
