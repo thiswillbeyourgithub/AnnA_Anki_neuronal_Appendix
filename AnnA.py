@@ -1812,6 +1812,25 @@ class AnnA:
 
         self.vectors_beforeUMAP = t_vec
 
+        # number of neighbors to consider for umap:
+        # for 100 cards or less: use 15 n_neighbors
+        # for more than 1000 use 100
+        n_n = int(len(self.df.index) * (100-15) / (1000 - 100))
+        n_n = min(max(n_n, 15), 100)  # keep it between 15 and 100
+        umap_kwargs = {"n_jobs": -1,
+                       "verbose": 1,
+                       "metric": "cosine",
+                       "init": 'spectral',  # TODO: try, 'pca' when new release comes out
+                       "transform_seed": 42,
+                       "random_state": 42, # turns off some multithreading section of the code
+                       "n_neighbors":  n_n,
+                       "min_dist": 0.01,
+                       "low_memory":  False,
+                       "densmap": False,  # try to preserve local density
+                       # "n_epochs": 1000,  # None will automatically adjust
+                       # "target_metric": "l2",  # not sure what it does
+                       }
+
         if self.ndim_reduc is None:
             self.vectors = t_vec
         else:
@@ -1820,7 +1839,7 @@ class AnnA:
             # dimensions so ended up in the curse of dimensionnality
 
             # reduce dimensions before UMAP if too many dimensions
-            dim_limit = 100
+            dim_limit = 1000
             if t_vec.shape[1] > dim_limit:
                 try:
                     yel(f"Vectorized text of shape {t_vec.shape}, dimensions above "
@@ -1857,19 +1876,7 @@ class AnnA:
             target_dim = 2
             whi(f"Using UMAP to reduce to {target_dim} dimensions")
             try:
-                umap_kwargs = {"n_jobs": -1,
-                               "verbose": 1,
-                               "n_components": target_dim,
-                               "metric": "cosine",
-                               "init": 'spectral',  # TODO: try, 'pca' when new release comes out
-                               "transform_seed": 42,
-                               "n_neighbors":  15,
-                               "min_dist": 0.1,
-                               "low_memory":  False,
-                               "densmap": False,  # try to preserve local density
-                               # "random_state": 42, # turned of because makes it non multithreaded
-                               "n_epochs": 500,  # None will automatically adjust
-                               }
+                umap_kwargs["n_components"] = target_dim
                 U = umap.umap_.UMAP(**umap_kwargs)
                 t_red = U.fit_transform(t_vec)
                 self.vectors = t_red
@@ -1889,18 +1896,7 @@ class AnnA:
                 else:  # compute embeddings
                     whi("Computing 2D UMAP for embeddings.")
                     self.vectors2D = self.vectors
-                    umap_kwargs = {"n_jobs": -1,
-                                   "verbose": 1,
-                                   "n_components": 2,
-                                   "metric": "cosine",
-                                   "init": 'spectral',
-                                   "transform_seed": 42,
-                                   "n_neighbors":  15,
-                                   "min_dist": 0.1,
-                                   "low_memory":  False,
-                                   "densmap": False,
-                                   "n_epochs": 500,
-                                   }
+                    umap_kwargs["n_components"] = 2
                     U = umap.umap_.UMAP(**umap_kwargs)
                     self.vectors2D = U.fit_transform(t_vec)
             except Exception as err:
