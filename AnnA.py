@@ -1882,7 +1882,7 @@ class AnnA:
 
             self.vectors_beforeUMAP = t_vec
             target_dim = 2
-            if target_dim > t_vec.shape[1]:
+            if target_dim < t_vec.shape[1]:
                 whi(f"Using UMAP to reduce to {target_dim} dimensions")
                 try:
                     umap_kwargs["n_components"] = target_dim
