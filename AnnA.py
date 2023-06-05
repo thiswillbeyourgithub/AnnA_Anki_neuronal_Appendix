@@ -1777,8 +1777,8 @@ class AnnA:
                         else:
                             for fp in cache_nid_fing[nid]:
                                 filename = f"{nid}_{fp}.pickle"
-                                red(f"Deleting {vec_cache / filename}")
-                                (vec_cache / filename).unlink(missing_ok=False)
+                                red(f"Invalid hash so this entry should probably be deleted: {vec_cache / filename}")
+                                # (vec_cache / filename).unlink(missing_ok=False)
                                 n_deleted += 1
 
                 # get embeddings for missing rows
@@ -1786,7 +1786,7 @@ class AnnA:
                 missing_rows = np.where(np.isclose(np.sum(t_vec, axis=1), 0.0))[0]
                 missing_cid = [df.index[i] for i in missing_rows]
 
-                yel(f"Outdated entry in cache that were deleted: '{n_deleted}'")
+                yel(f"Seemingly outdated entry in cache that should perhaps be deleted: '{n_deleted}'")
                 yel(f"Rows not found in cache: '{len(missing_cid)}'")
                 yel(f"Rows found in cache: '{len(done_rows)}'")
 
