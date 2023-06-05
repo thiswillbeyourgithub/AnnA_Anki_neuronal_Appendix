@@ -2083,8 +2083,8 @@ class AnnA:
             red("\nPrinting the most semantically distant cards:")
             highest_value = np.max(self.df_dist.values[up_triangular].ravel())
             coord_max = np.where(self.df_dist == highest_value)
-            one = self.df.loc[self.df.index[coord_max[0][0]]].text[:max_length]
-            two = self.df.loc[self.df.index[coord_max[1][0]]].text[:max_length]
+            one = self.df.iloc[coord_max[0][0]].text[:max_length]
+            two = self.df.iloc[coord_max[1][0]].text[:max_length]
             yel(f"* {one}...")
             yel(f"* {two}...")
 
@@ -2092,17 +2092,17 @@ class AnnA:
                 "cards:")
             # the diagonal is the minimum of distance so we are looking for
             # the distance that is just higher
-            q_diagonal = (self.df_dist.shape[0] + 1) / (
-                    self.df_dist.shape[0] ** 2 / 2)
+            # q_diagonal = (self.df_dist.shape[0] + 1) / (
+            #         self.df_dist.shape[0] ** 2 / 2)
             quantile_limit = np.quantile(
-                    self.df_dist.values[up_triangular].ravel(), q_diagonal)
+                    self.df_dist.values[up_triangular].ravel(), 0.01)
             lowest_non_zero_value = np.amin(
                     self.df_dist.values[up_triangular],
                     where=self.df_dist.values[up_triangular] > quantile_limit,
                     initial=highest_value)
             coord_min = np.where(self.df_dist == lowest_non_zero_value)
-            one = self.df.loc[self.df.index[coord_min[0][0]]].text[:max_length]
-            two = self.df.loc[self.df.index[coord_min[1][0]]].text[:max_length]
+            one = self.df.iloc[coord_min[0][0]].text[:max_length]
+            two = self.df.iloc[coord_min[1][0]].text[:max_length]
             yel(f"* {one}...")
             yel(f"* {two}...")
             whi(f"    (distance: {lowest_non_zero_value})")
@@ -2118,8 +2118,8 @@ class AnnA:
                 coord_med = np.where(np.isclose(
                     self.df_dist, median_value, atol=1e-08*i))
                 i *= 1e1
-            one = self.df.loc[self.df.index[coord_med[0][0]]].text[:max_length]
-            two = self.df.loc[self.df.index[coord_med[1][0]]].text[:max_length]
+            one = self.df.iloc[coord_med[0][0]].text[:max_length]
+            two = self.df.iloc[coord_med[1][0]].text[:max_length]
             yel(f"* {one}...")
             yel(f"* {two}...")
         except TimeoutError:
