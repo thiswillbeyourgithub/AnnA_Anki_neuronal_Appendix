@@ -1776,6 +1776,7 @@ class AnnA:
                         else:
                             for fp in cache_nid_fing[nid]:
                                 filename = f"{nid}_{fp}.pickle"
+                                red(f"Deleting {vec_cache / filename}")
                                 (vec_cache / filename).unlink(missing_ok=False)
                                 n_deleted += 1
 
@@ -1844,8 +1845,8 @@ class AnnA:
             # dimensions so ended up in the curse of dimensionnality
 
             # reduce dimensions before UMAP if too many dimensions
-            # if set to 2, will skip using UMAP
-            dim_limit = 1000
+            # if set to 2, will skip UMAP
+            dim_limit = 100
             if t_vec.shape[1] > dim_limit:
                 try:
                     yel(f"Vectorized text of shape {t_vec.shape}, dimensions above "
@@ -1903,7 +1904,7 @@ class AnnA:
             try:
                 yel("Computing 2D embeddings for the plot using UMAP...")
                 if self.vectors.shape[1] == 2:
-                    whi("Reusing UMAP dimension reduction for embeddings.")
+                    whi("Reusing previous dimension reduction for embeddings.")
                     self.vectors2D = self.vectors
                 else:  # compute embeddings
                     whi("Computing 2D UMAP for embeddings.")
