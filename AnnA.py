@@ -1806,6 +1806,8 @@ class AnnA:
                         filename = f"{nid}_{fingerprint}.pickle"
                         add_to_cache(t_vec[missing_rows[i], :], str(vec_cache / filename))
 
+                assert not np.isclose(t_vec.sum(), 0), "t_vec is still 0"
+
                 whi("Normalizing embeddings")
                 t_vec = normalize(t_vec, norm="l2", axis=1, copy=True)
 
