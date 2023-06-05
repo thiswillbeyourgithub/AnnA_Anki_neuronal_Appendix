@@ -3080,7 +3080,7 @@ class AnnA:
                 nr_levels=min(20, len(hierarchical_topics) - 1),
                 # level_scale="log",
                 title=f"{self.deckname} - embeddings",
-                hide_annotations=False,
+                hide_annotations=True,
                 hide_document_hover=False,
                 )
         saved_plot = f"{self.plot_dir}/{self.deckname} - embeddings.html"
