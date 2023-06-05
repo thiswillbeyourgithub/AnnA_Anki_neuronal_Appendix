@@ -39,10 +39,11 @@ from tokenizers import Tokenizer
 from sentence_transformers import SentenceTransformer
 import ftfy
 
-from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer, TfidfTransformer
 from sklearn.metrics import pairwise_distances, pairwise_kernels
 from sklearn.decomposition import TruncatedSVD, PCA
 from sklearn.preprocessing import normalize
+from sklearn import cluster
 import umap.umap_
 from bertopic import BERTopic
 import hdbscan
@@ -3053,17 +3054,18 @@ class AnnA:
         # bertopic plots
         docs = self.df["text"].tolist()
         topic_model = BERTopic(
-                top_n_words=3,
+                verbose=True,
+                top_n_words=10,
                 nr_topics=100,
-                min_topic_size=10,
                 vectorizer_model=CountVectorizer(
                     stop_words=self.stops + [f"c{n}" for n in range(10)],
                     ngram_range=(1, 1),
                     ),
                 hdbscan_model=hdbscan.HDBSCAN(
                     min_cluster_size=10,
+                    min_samples=1,
                     ),
-                verbose=True,
+                # hdbscan_model=cluster.KMeans(n_clusters=min(len(self.df.index)//10, 100)),
                 ).fit(
                         documents=docs,
                         embeddings=self.vectors_beforeUMAP,
