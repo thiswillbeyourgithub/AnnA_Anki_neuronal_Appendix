@@ -110,7 +110,6 @@ AnnA includes built-in methods you can run after instantiating the class. Note t
 * instead of having difference reference order, use a vector of weights to adjust each reference possible and combine them at will
 * add new task "resort filtered deck"
 * figure out a clever way to know which cards can be used to link 2 distinct tags/notes
-* compute the distance matrix on the notes only instead of the cards
 * instead of storing the nearest neighbors in a field, store it in a file accessible to the addon and add interface menus via the addon to query neighbors
 * add picture and documentation to the knn feature
     * reach out to the dev of the mindmapping addon and show them the 2D plots you made
