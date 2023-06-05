@@ -1745,10 +1745,12 @@ class AnnA:
 
                 # get what is in cache in the form "NID_FINGERPRINT.pickle"
                 filenames = set(f.name for f in vec_cache.iterdir())
+                whi(f"Number of entries in cache: {len(filenames)}")
                 cache_nid_fing = {}
                 for f in filenames:
                     f = f.replace(".pickle", "")
                     nid, fingerprint = f.split("_")
+                    nid = int(nid)
                     if nid not in cache_nid_fing:
                         cache_nid_fing[nid] = [fingerprint]
                     else:
@@ -1766,7 +1768,7 @@ class AnnA:
                 n_deleted = 0
                 for i, ind in enumerate(tqdm(df.index, desc="Loading from cache", file=self.t_strm)):
                     fingerprint = df.loc[ind, "sha256"]
-                    nid = df.loc[ind, "note"]
+                    nid = int(df.loc[ind, "note"])
                     if nid in cache_nid_fing:
                         if fingerprint in cache_nid_fing[nid]:
                             filename = f"{nid}_{fingerprint}.pickle"
@@ -1778,8 +1780,8 @@ class AnnA:
                                 n_deleted += 1
 
                 # get embeddings for missing rows
-                done_rows = np.where(np.isclose(np.sum(t_vec, axis=1), 0.0))[0]
-                missing_rows = np.where(~np.isclose(np.sum(t_vec, axis=1), 0.0))[0]
+                done_rows = np.where(~np.isclose(np.sum(t_vec, axis=1), 0.0))[0]
+                missing_rows = np.where(np.isclose(np.sum(t_vec, axis=1), 0.0))[0]
                 missing_cid = [df.index[i] for i in missing_rows]
 
                 yel(f"Outdated entry in cache that were deleted: '{n_deleted}'")
