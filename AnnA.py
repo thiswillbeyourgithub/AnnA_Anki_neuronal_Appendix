@@ -2116,6 +2116,8 @@ class AnnA:
             yel(f"* {one}...")
             yel(f"* {two}...")
             whi(f"    (distance: {lowest_non_zero_value})")
+            whi(f"    (quantile limit: {quantile_limit})")
+            whi(f"    (q diagonal: {q_diagonal})")
 
             red("\nPrinting the median distance cards:")
             median_value = np.median(self.df_dist.values[up_triangular].ravel(
