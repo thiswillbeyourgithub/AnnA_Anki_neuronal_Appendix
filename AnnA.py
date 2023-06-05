@@ -1839,6 +1839,7 @@ class AnnA:
             # dimensions so ended up in the curse of dimensionnality
 
             # reduce dimensions before UMAP if too many dimensions
+            # if set to 2, will skip using UMAP
             dim_limit = 1000
             if t_vec.shape[1] > dim_limit:
                 try:
@@ -1874,17 +1875,23 @@ class AnnA:
 
             self.vectors_beforeUMAP = t_vec
             target_dim = 2
-            whi(f"Using UMAP to reduce to {target_dim} dimensions")
-            try:
-                umap_kwargs["n_components"] = target_dim
-                U = umap.umap_.UMAP(**umap_kwargs)
-                t_red = U.fit_transform(t_vec)
-                self.vectors = t_red
-            except Exception as err:
-                beep(f"Error when using UMAP to reduce to {target_dim} "
-                     f"dims: '{err}'.\rTrying to continue "
-                     f"nonetheless.\rData shape: {t_vec.shape}")
-                red(traceback.format_exc())
+            if target_dim > t_vec.shape[1]:
+                whi(f"Using UMAP to reduce to {target_dim} dimensions")
+                try:
+                    umap_kwargs["n_components"] = target_dim
+                    U = umap.umap_.UMAP(**umap_kwargs)
+                    t_red = U.fit_transform(t_vec)
+                    self.vectors = t_red
+                except Exception as err:
+                    beep(f"Error when using UMAP to reduce to {target_dim} "
+                         f"dims: '{err}'.\rTrying to continue "
+                         f"nonetheless.\rData shape: {t_vec.shape}")
+                    red(traceback.format_exc())
+                    self.vectors = t_vec
+            else:
+                whi("Not using UMAP to reduce dimensions as the number of "
+                    f"dim is {t_vec.shape[1]} which is not higher "
+                    f"than {target_dim}")
                 self.vectors = t_vec
 
         if self.plot_2D_embeddings:
