@@ -1766,7 +1766,6 @@ class AnnA:
                 df["sha256"] = df["text"].progress_apply(memhasher)
 
                 # load row of t_vec if cache present
-                n_deleted = 0
                 for i, ind in enumerate(tqdm(df.index, desc="Loading from cache", file=self.t_strm)):
                     fingerprint = df.loc[ind, "sha256"]
                     nid = int(df.loc[ind, "note"])
@@ -1774,19 +1773,12 @@ class AnnA:
                         if fingerprint in cache_nid_fing[nid]:
                             filename = f"{nid}_{fingerprint}.pickle"
                             t_vec[i, :] = memretr(str(vec_cache / filename))
-                        else:
-                            for fp in cache_nid_fing[nid]:
-                                filename = f"{nid}_{fp}.pickle"
-                                red(f"Invalid hash so this entry should probably be deleted: {vec_cache / filename}")
-                                # (vec_cache / filename).unlink(missing_ok=False)
-                                n_deleted += 1
 
                 # get embeddings for missing rows
                 done_rows = np.where(~np.isclose(np.sum(t_vec, axis=1), 0.0))[0]
                 missing_rows = np.where(np.isclose(np.sum(t_vec, axis=1), 0.0))[0]
                 missing_cid = [df.index[i] for i in missing_rows]
 
-                yel(f"Seemingly outdated entry in cache that should perhaps be deleted: '{n_deleted}'")
                 yel(f"Rows not found in cache: '{len(missing_cid)}'")
                 yel(f"Rows found in cache: '{len(done_rows)}'")
 
