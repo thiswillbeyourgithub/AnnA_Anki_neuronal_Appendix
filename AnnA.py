@@ -2924,15 +2924,15 @@ class AnnA:
 
             # instead of having the last batch being of size different
             # than batchsize, I prefer it being the first batch.
-            reminder = len(toempty) % batchsize
-            batches = [toempty[:reminder]]
-            toempty = toempty[:reminder]
-            # (if reminder is 0, batches is empty and toempty is full)
+            remainder = len(toempty) % batchsize
+            batches = [toempty[:remainder]]
+            toempty = toempty[:remainder]
+            # (if remainder is 0, batches is empty and toempty is full)
             assert (
-                    reminder == 0 and len(toempty) != len(self.opti_rev_order)
+                    remainder == 0 and len(toempty) != len(self.opti_rev_order)
                     ) or (
-                            reminder != 0 and len(toempty) == len(self.opti_rev_order)
-                            ), "invalid reminder handling"
+                            remainder != 0 and len(toempty) == len(self.opti_rev_order)
+                            ), "invalid remainder handling"
 
             while toempty:
                 batches.append([])
@@ -2943,7 +2943,7 @@ class AnnA:
             assert len(toempty) == 0
             assert list(set([len(x) for x in batches[1:]]))[0] == batchsize, (
                 "invalid batches construction #1")
-            assert len(batches[0]) in [batchsize, reminder], (
+            assert len(batches[0]) in [batchsize, remainder], (
                 "invalid batches construction #2")
 
             for cnt, batch_cards in enumerate(batches):
