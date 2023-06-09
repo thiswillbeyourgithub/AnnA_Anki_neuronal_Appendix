@@ -2926,12 +2926,12 @@ class AnnA:
             # than batchsize, I prefer it being the first batch.
             remainder = len(toempty) % batchsize
             batches = [toempty[:remainder]]
-            toempty = toempty[:remainder]
+            toempty = toempty[remainder:]
             # (if remainder is 0, batches is empty and toempty is full)
             assert (
-                    remainder == 0 and len(toempty) != len(self.opti_rev_order)
+                    remainder == 0 and len(toempty) == len(self.opti_rev_order)
                     ) or (
-                            remainder != 0 and len(toempty) == len(self.opti_rev_order)
+                            remainder != 0 and len(toempty) != len(self.opti_rev_order)
                             ), "invalid remainder handling"
 
             while toempty:
