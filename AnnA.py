@@ -4,7 +4,7 @@ import webbrowser
 import textwrap
 import traceback
 import copy
-# import beepy
+import beepy
 import argparse
 import logging
 import gc
@@ -166,7 +166,6 @@ def _beep(message=None, **args):
         except Exception:
             red("Failed to beep twice.")
     time.sleep(0.5)  # avoid too close beeps in a row
-
 
 class AnnA:
     """
@@ -754,10 +753,11 @@ class AnnA:
                                  ).encode('utf-8')
 
         # otherwise beep cannot be used in a classmethod and exception fail:
+        global beep
         if "beep" not in globals().keys():
             def beep(x):
-                #return beepy.beep(f"(fallback beepy){x}")
-                pass
+                return beepy.beep(f"(fallback beepy){x}")
+                #pass
 
         try:
             response = json.load(urllib.request.urlopen(
