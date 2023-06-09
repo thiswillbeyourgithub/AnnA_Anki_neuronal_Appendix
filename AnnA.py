@@ -2925,8 +2925,10 @@ class AnnA:
             # instead of having the last batch being of size different
             # than batchsize, I prefer it being the first batch.
             remainder = len(toempty) % batchsize
-            batches = [toempty[:remainder]]
-            toempty = toempty[remainder:]
+            batches = []
+            if remainder != 0:
+                batches = [toempty[:remainder]]
+                toempty = toempty[remainder:]
             # (if remainder is 0, batches is empty and toempty is full)
             assert (
                     remainder == 0 and len(toempty) == len(self.opti_rev_order)
