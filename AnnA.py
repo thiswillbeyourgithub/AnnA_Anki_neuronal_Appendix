@@ -1819,7 +1819,10 @@ class AnnA:
         umap_kwargs = {"n_jobs": -1,
                        "verbose": 1,
                        "metric": "cosine",
-                       "init": 'spectral',  # TODO: try, 'pca' when new release comes out
+                       # the initial position is the 2D PCA
+                       "init": PCA(
+                           n_components=2,
+                           random_state=42).fit_transform(t_vec),
                        "transform_seed": 42,
                        "random_state": 42, # turns off some multithreading section of the code
                        "n_neighbors":  n_n,
