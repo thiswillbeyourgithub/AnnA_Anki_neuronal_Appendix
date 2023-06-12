@@ -1829,7 +1829,7 @@ class AnnA:
                        "min_dist": 0.01,
                        "low_memory":  False,
                        "densmap": True,  # try to preserve local density
-                       # "n_epochs": 1000,  # None will automatically adjust
+                       "n_epochs": 1000,  # None will automatically adjust
                        "target_metric": "l2",  # not sure what it does
                        "unique": True,
                        }
