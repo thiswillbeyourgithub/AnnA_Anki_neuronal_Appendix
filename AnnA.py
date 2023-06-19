@@ -1718,6 +1718,7 @@ class AnnA:
                     return hashlib.sha256(text.encode()).hexdigest()[:10]
 
                 def retrieve_cache(path):
+                    Path(path).touch()  # this way we can see what files are very old and should be removed
                     with open(path, "rb") as f:
                         return pickle.load(f)
 
