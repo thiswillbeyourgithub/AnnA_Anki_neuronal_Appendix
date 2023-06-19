@@ -1619,6 +1619,19 @@ class AnnA:
                     raise Exception("Ankipandas database is of length 0")
 
                 # get only the right fields
+                # way cleaner code not yet implemented:
+                # cards["mid"] = col.cards.mid.loc[cards.index]
+                # mid2fields = akp.raw.get_mid2fields(col.db)
+                # mod2mid = akp.raw.get_model2mid(col.db)
+                # cards["fields_name"] = cards["mid"].apply(lambda x: mid2fields[x])
+                # cards["fields"] = cards[["nflds", "fields_name"]].apply(
+                #         lambda x: {
+                #             k: v
+                #             for k, v in zip(x["fields_name"], x["nflds"])
+                #             if k in anki_fields_to_keep
+                #             },
+                #         axis=1)
+
                 cards["mid"] = col.cards.mid.loc[cards.index]
                 mid2fields = akp.raw.get_mid2fields(col.db)
                 mod2mid = akp.raw.get_model2mid(col.db)
