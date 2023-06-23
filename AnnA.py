@@ -2209,8 +2209,8 @@ class AnnA:
         display_stats = True if not self.low_power_mode else False
 
         # setting interval to correct value for learning and relearnings:
-        steps_L = [x / 1440 for x in self.deck_config["new"]["delays"]]
-        steps_RL = [x / 1440 for x in self.deck_config["lapse"]["delays"]]
+        steps_L = sorted([x / 1440 for x in self.deck_config["new"]["delays"]])
+        steps_RL = sorted([x / 1440 for x in self.deck_config["lapse"]["delays"]])
         for i in df.index:
             if df.loc[i, "type"] == 1:  # learning
                 step_L_index = int(str(df.loc[i, "left"])[-3:])-1
@@ -2224,8 +2224,12 @@ class AnnA:
                              "interval"] >= 0, (
                                      f"negative interval for card {i}")
             elif df.loc[i, "type"] == 3:  # relearning
-                df.at[i, "interval"] = steps_RL[int(
-                    str(df.loc[i, "left"])[-3:])-1]
+                step_RL_index = int(str(df.loc[i, "left"])[-3:])-1
+                try:
+                    df.at[i, "interval"] = steps_RL[step_RL_index]
+                except Exception as e:
+                    whi(f"Invalid relearning step, card was recently moved from another deck? cid: {i}; '{e}'")
+                    df.at[i, "interval"] = steps_RL[0]
                 assert df.at[i,
                              "interval"] >= 0, (
                                      f"negative interval for card {i}")
