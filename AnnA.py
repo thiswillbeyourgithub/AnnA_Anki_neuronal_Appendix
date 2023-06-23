@@ -661,9 +661,10 @@ class AnnA:
             beep(f"Error when extracting stop words: {e}\n\n"
                  "Setting stop words list to None.")
             self.stops = None
-        self.stopw_compiled = re.compile("\b" + "\b|\b".join(
-            self.stops) + "\b", flags=(
-                re.MULTILINE | re.IGNORECASE | re.DOTALL))
+        self.stopw_compiled = [
+                re.compile(r"\b" + s + r"\b",
+                           flags=re.IGNORECASE|re.MULTILINE|re.DOTALL
+                           ) for s in self.stops]
         assert "None" == self.repick_task or isinstance(self.repick_task, type(
             None)) or "addtag" in self.repick_task or (
                 "boost" in self.repick_task), (
@@ -1382,10 +1383,9 @@ class AnnA:
                         next_field = self.df.loc[index,
                                         "fields"][f.lower()]["value"].strip()
                         if TFIDFmode:
-                            next_field = re.sub(
-                                self.stopw_compiled,
-                                " ",
-                                next_field).strip()
+                            for sw in stopw_compiled:
+                                next_field = re.sub(sw, " ", next_field)
+                            next_field = next_field.strip()
                         if next_field != "":
                             if TFIDFmode:
                                 comb_text += next_field + " <NEWFIELD> "
@@ -1683,8 +1683,9 @@ class AnnA:
                     new = ""
                     for i in indices_to_keep:
                         new += fields_list[i] + " "
-                    processed = self._text_formatter(re.sub(
-                        self.stopw_compiled, " ", new))
+                    for sw in self.stopw_compiled:
+                        new = re.sub(sw, " ", new)
+                    processed = self._text_formatter(new.strip())
                     if len(processed) < 10 or self.append_tags:
                         tags = cards.loc[ind, "ntags"]
                         for t in tags:
