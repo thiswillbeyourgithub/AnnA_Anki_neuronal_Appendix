@@ -677,7 +677,7 @@ class AnnA:
             yel("Syncing before execution...")
             sync_output = self._call_anki(action="sync")
             assert sync_output is None or sync_output == "None", (
-                "Error during sync?: '{sync_output}'")
+                f"Error during sync?: '{sync_output}'")
             time.sleep(1)  # wait for sync to finish, just in case
             whi("Done!")
         else:
