@@ -184,6 +184,7 @@ class AnnA:
                  # any of "filter_review_cards",
                  # "bury_excess_review_cards", "bury_excess_learning_cards"
                  # "just_add_KNN", "just_plot"
+                 bypass_task_just_return=False,
                  target_deck_size="deck_config",
                  # format: 80%, "all", "deck_config"
                  max_deck_size=None,
@@ -405,6 +406,8 @@ class AnnA:
         else:
             raise ValueError()
         self.task = task
+        self.bypass_task_just_return = bypass_task_just_return
+        self.return_values = None  # can contain values than will be returned as the end of instanciation
 
         assert isinstance(filtered_deck_name_template, (str, type(
             None))), "Invalid type for `filtered_deck_name_template`"
@@ -2896,6 +2899,14 @@ class AnnA:
             and AnnA will just bury some cards that are too similar to cards
             that you will review.
         """
+        if self.bypass_task_just_return:
+            # This is a quick hack to, instead of creating a deck, return
+            # the cards to review
+            red("Bypass mode: will just tag the cards to review with tag "
+                f"{self.bypass_task_just_return}")
+            self.return_values = self.opti_rev_order
+            return
+
         if self.task in ["bury_excess_learning_cards",
                          "bury_excess_review_cards"]:
             to_keep = self.opti_rev_order
