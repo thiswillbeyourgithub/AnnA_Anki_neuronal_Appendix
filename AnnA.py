@@ -696,24 +696,21 @@ class AnnA:
                 self._add_neighbors_to_notes()
                 self._compute_optimized_queue()
                 self._bury_or_create_filtered()
-            else:
-                return
+            return
 
         elif task == "filter_review_cards":
             if self._common_init():
                 self._add_neighbors_to_notes()
                 self._compute_optimized_queue()
                 self._bury_or_create_filtered()
-            else:
-                return
+            return
 
         elif task == "just_add_KNN":
             whi("(Setting 'rated_last_X_days' to None)")
             self.rated_last_X_days = None
             if self._common_init():
                 self._add_neighbors_to_notes()
-            else:
-                return
+            return
 
         elif task == "just_plot":
             self.rated_last_X_days = None
