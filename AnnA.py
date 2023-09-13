@@ -2899,14 +2899,6 @@ class AnnA:
             and AnnA will just bury some cards that are too similar to cards
             that you will review.
         """
-        if self.bypass_task_just_return:
-            # This is a quick hack to, instead of creating a deck, return
-            # the cards to review
-            red("Bypass mode: will just tag the cards to review with tag "
-                f"{self.bypass_task_just_return}")
-            self.return_values = self.opti_rev_order
-            return
-
         if self.task in ["bury_excess_learning_cards",
                          "bury_excess_review_cards"]:
             to_keep = self.opti_rev_order
@@ -2916,7 +2908,16 @@ class AnnA:
             red(f"Burying {len(to_bury)} cards out of {len(self.due_cards)}.")
             red("This will not affect the due order.")
             self._call_anki(action="bury", cards=to_bury)
-            return True
+            if not self.bypass_task_just_return:
+                return True
+
+        if self.bypass_task_just_return:
+            # This is a quick hack to, instead of creating a deck, return
+            # the cards to review
+            red("Bypass mode: will just tag the cards to review with tag "
+                f"{self.bypass_task_just_return}")
+            self.return_values = self.opti_rev_order
+            return
 
         if self.filtered_deck_name_template is not None:
             filtered_deck_name = str(
