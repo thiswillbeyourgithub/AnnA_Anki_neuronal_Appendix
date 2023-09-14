@@ -1720,13 +1720,61 @@ class AnnA:
             elif self.vectorizer == "embeddings":
 
                 def sencoder(sentences):
-                    return model.encode(
-                            sentences=sentences,
+                    """
+                    the default embedding models have very short max seq length
+                    so I implemented a quick and dirty way to roll over the
+                    whole text then do an averaging.
+                    """
+                    n = model.max_seq_length
+                    n23 = (n * 2) // 3
+                    add_sent = []  # additional sentences
+                    add_sent_idx = []  # indices to keep track of sub sentences
+
+                    for i, s in enumerate(sentences):
+                        # skip if the sentence is short
+                        if len(s) <= n:
+                            continue
+
+                        # otherwise, split the sentence at regular interval
+                        # then do the embedding of each
+                        # and finally add those sub embeddings together
+                        # the renormalization happens later in the code
+                        sub_sentences = []
+                        j = 1
+                        while len(s) >= n23 * j:
+                            sub_sentences.append(s[n23 * j: n23 * j + n])
+                            j += 1
+
+                        # remove empty text just in case
+                        if "" in sub_sentences:
+                            while "" in sub_sentences:
+                                sub_sentences.remove("")
+                        add_sent.extend(sub_sentences)
+                        add_sent_idx.extend([i] * len(sub_sentences))
+
+                    vectors = model.encode(
+                            sentences=sentences + add_sent,
                             show_progress_bar=True if len(sentences) > 1 else False,
                             output_value="sentence_embedding",
                             convert_to_numpy=True,
                             normalize_embeddings=False,
                             )
+
+                    if add_sent:
+                        # at the position of the original sentence (not split)
+                        # add the vectors of the corresponding sub_sentence
+                        # then return only the 'summed' section
+                        assert len(add_sent) == len(add_sent_idx), (
+                            "Invalid add_sent length")
+                        offset = len(sentences)
+                        for sid in list(set(add_sent_idx)):
+                            id_range = [i for i, j in enumerate(add_sent_idx) if j == sid]
+                            add_sent_vec = vectors[
+                                    offset + min(id_range): offset + max(id_range),:]
+                            vectors[sid] += add_sent_vec.sum(axis=0)
+                        return vectors[:offset]
+                    else:
+                        return vectors
 
                 def hasher(text):
                     return hashlib.sha256(text.encode()).hexdigest()[:10]
