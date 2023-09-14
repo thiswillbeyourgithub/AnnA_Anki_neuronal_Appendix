@@ -102,7 +102,7 @@ AnnA includes built-in methods you can run after instantiating the class. Note t
 
 ## TODO
 * add option to group cards by "same 'source' field". That would allow to create filtered cards that would, instead of adding cards one at a time, would add a bunch of cards on a common notion at once. That would force the user to review a whole notion instead of just an atomic part of the lesson.
-* make a task=review_cluter that does a kmeans on the due cards, finds the cluster with the highest median relative overdueness then create a filtered deck from it
+* make a task=review_cluster that does a kmeans on the due cards, finds the cluster with the highest median relative overdueness then create a filtered deck from it
 * precompile all the regex matches used in text formatting to speed up the process
 * compute a metric for how good the embedding is in terms of clusterability and display it
 * add the date in the embedding's plot title
