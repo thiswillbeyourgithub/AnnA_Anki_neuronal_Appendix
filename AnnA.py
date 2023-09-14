@@ -1063,6 +1063,11 @@ class AnnA:
                  f"less than threshold ({self.minimum_due}).\nStopping.")
             red("Not enough cards to review! Exiting.")
             self.not_enough_cards = True
+            if self.bypass_task_just_return:
+                # this run will halt, but still do return the
+                # cards that are due, so that they can be aggregated
+                # in a common filtered deck using the bypass
+                self.return_values = self.due_cards
             return False
         else:
             self.not_enough_cards = False
