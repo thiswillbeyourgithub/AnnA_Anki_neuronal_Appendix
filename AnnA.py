@@ -232,6 +232,7 @@ class AnnA:
                  whole_deck_computation=False,
                  profile_name=None,
                  sync_behavior="before&after",
+                 disable_threading=False,
                  ):
 
         if show_banner:
@@ -255,6 +256,7 @@ class AnnA:
         # logger for tqdm progress bars
         self.t_strm = TqdmLogger("logs.txt")
         self.t_strm.reset()
+        self.disable_threading = disable_threading
 
         # loading arguments and proceed to check correct values ##############
 
@@ -822,7 +824,7 @@ class AnnA:
             threads = []
             cnt = 0
             r_list = []
-            target_thread_n = 3
+            target_thread_n = 3 if not self.disable_threading else 1
             batchsize = max((len(card_id) // target_thread_n) + 1, 5)
             whi("(Large number of cards to retrieve: creating "
                 f"{target_thread_n} threads of size {batchsize})")
@@ -1426,7 +1428,10 @@ class AnnA:
             return None
 
         n = len(self.df.index)
-        batchsize = n // 4 + 1
+        if self.disable_threading:
+            batchsize = n
+        else:
+            batchsize = n // 4 + 1
         lock = threading.Lock()
 
         threads = []
@@ -4198,6 +4203,17 @@ if __name__ == "__main__":
                             "None, ankipandas will use the most probable "
                             "collection. Only used if "
                             "'whole_deck_computation' is set to `True`"))
+    parser.add_argument("--disable_threading",
+                        nargs=1,
+                        metavar="DISABLE_THREADING",
+                        dest="disable_threading",
+                        default=None,
+                        required=False,
+                        help=(
+                            "defaults to `False`. If True will disable "
+                            "most hackish multithreading of the code. Needed "
+                            "if you have a terrible GPU that is slowing you "
+                            "down. This does not apply to the plotting"))
     parser.add_argument("--keep_console_open",
                         dest="console_mode",
                         default=False,
