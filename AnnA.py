@@ -824,7 +824,7 @@ class AnnA:
             threads = []
             cnt = 0
             r_list = []
-            target_thread_n = 3 if not self.disable_threading else 1
+            target_thread_n = 5 if not self.disable_threading else 1
             batchsize = max((len(card_id) // target_thread_n) + 1, 5)
             whi("(Large number of cards to retrieve: creating "
                 f"{target_thread_n} threads of size {batchsize})")
@@ -1431,7 +1431,7 @@ class AnnA:
         if self.disable_threading:
             batchsize = n
         else:
-            batchsize = n // 4 + 1
+            batchsize = n // 6 + 1
         lock = threading.Lock()
 
         threads = []
