@@ -1101,16 +1101,17 @@ class AnnA:
             whi("(Large number of cards to retrieve: creating "
                 f"{target_thread_n} threads of size {batchsize})")
 
-            results = joblib.Parallel(
+            results = ProgressParallel(
+                    tqdm_params={
+                        "total": len(card_id) // batchsize,
+                        "dynamic_ncols": True,
+                        "desc": "Done threads",
+                        "file": self.t_strm,
+                        },
                     n_jobs=target_thread_n
                     )(joblib.delayed(retrieve_cards)(
                         card_id[nb: nb + batchsize]
-                        ) for nb in tqdm(
-                            range(0, len(card_id), batchsize),
-                            dynamic_ncols=True,
-                            desc="Done threads",
-                            file=self.t_strm,
-                            ))
+                        ) for nb in range(0, len(card_id), batchsize))
             r_list = [item for sublist in results for item in sublist]
             assert len(r_list) == len(card_id), "could not retrieve all cards"
             r_list = sorted(r_list,
@@ -1677,15 +1678,16 @@ class AnnA:
         self.df["comb_text"] = np.nan
         self.df["comb_text"] = self.df["comb_text"].astype(str)
 
-        results = joblib.Parallel(
-                n_jobs=4 if not self.disable_threading else 1
-                )(joblib.delayed(_joblib_field_filter)(index) for index in tqdm(
-                    self.df.index,
-                    desc="Combining relevant fields",
-                    smoothing=0,
-                    file=self.t_strm,
-                    unit=" card",
-                    ))
+        results = ProgressParallel(
+                n_jobs=4 if not self.disable_threading else 1,
+                tqdm_params={
+                    "total": len(self.df.index),
+                    "desc": "Combining relevant fields",
+                    "smoothing": 0,
+                    "file": self.t_strm,
+                    "unit": " card",
+                    }
+                )(joblib.delayed(_joblib_field_filter)(index) for index in self.df.index)
 
         to_notify = []
         for index, comb_text, notif in results:
