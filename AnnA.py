@@ -1092,23 +1092,15 @@ class AnnA:
             return r_list
 
         else:
-            lock = threading.Lock()
-            threads = []
-            cnt = 0
-            r_list = []
-            target_thread_n = 5 if not self.disable_threading else 1
+            def retrieve_cards(card_list):
+                "for multithreaded card retrieval"
+                out_list = self._call_anki(action="cardsInfo", cards=card_list)
+                return out_list
+
+            target_thread_n = 3 if not self.disable_threading else 1
             batchsize = min(max((len(card_id) // target_thread_n) + 1, 5), 500)
             whi("(Large number of cards to retrieve: creating "
                 f"{target_thread_n} threads of size {batchsize})")
-
-            def retrieve_cards(card_list, lock, cnt, r_list):
-                "for multithreaded card retrieval"
-                out_list = self._call_anki(action="cardsInfo",
-                                           cards=card_list)
-                with lock:
-                    r_list.extend(out_list)
-                    pbar.update(1)
-                return True
 
             with tqdm(total=target_thread_n,
                       unit="thread",
@@ -1117,20 +1109,13 @@ class AnnA:
                       delay=2,
                       file=self.t_strm,
                       smoothing=0) as pbar:
-                for nb in range(0, len(card_id), batchsize):
-                    cnt += 1
-                    temp_card_id = card_id[nb: nb + batchsize]
-                    thread = threading.Thread(target=retrieve_cards,
-                                              args=(temp_card_id,
-                                                    lock,
-                                                    cnt,
-                                                    r_list),
-                                              daemon=False)
-                    thread.start()
-                    threads.append(thread)
-                    time.sleep(0.1)
-                print("")
-                [t.join() for t in threads]
+                results = joblib.Parallel(
+                        n_jobs=target_thread_n
+                        )(joblib.delayed(retrieve_cards)(
+                            card_id[nb: nb + batchsize]
+                            ) for nb in range(0, len(card_id), batchsize))
+                r_list = [item for sublist in results for item in sublist]
+                pbar.update(1)
             assert len(r_list) == len(card_id), "could not retrieve all cards"
             r_list = sorted(r_list,
                             key=lambda x: x["cardId"],
