@@ -1570,181 +1570,131 @@ class AnnA:
             For example you can give more importance to field "Body" of a
             cloze than to the field "More"
         """
-        def _threaded_field_filter(index_list, lock, pbar,
-                                   stopw_compiled, spacers_compiled,
-                                   vectorizer):
+        def _joblib_field_filter(index):
             """
-            threaded call to speed up execution
+            joblib call to speed up execution
             """
+            notifications = []
             # skips using stopwords etc depending on the vectorizer
-            if vectorizer == "embeddings":
-                TFIDFmode=False
-            elif vectorizer == "TFIDF":
-                TFIDFmode=True
+            if self.vectorizer == "embeddings":
+                TFIDFmode = False
+            elif self.vectorizer == "TFIDF":
+                TFIDFmode = True
             else:
                 raise ValueError("Invalid vectorizer")
 
-            for index in index_list:
-                card_model = self.df.loc[index, "modelName"]
-                target_model = []
-                fields_to_keep = []
+            card_model = self.df.loc[index, "modelName"]
+            target_model = []
+            fields_to_keep = []
 
-                # determines which is the corresponding model described
-                # in field_dic
-                field_dic = self.field_dic
-                if card_model in field_dic:
-                    target_model = [card_model]
+            # determines which is the corresponding model described
+            # in field_dic
+            field_dic = self.field_dic
+            if card_model in field_dic:
+                target_model = [card_model]
+                fields_to_keep = field_dic[target_model[0]]
+            else:
+                for user_model in field_dic:
+                    if user_model.lower() in card_model.lower():
+                        target_model.append(user_model)
+
+                if len(target_model) == 0:
+                    fields_to_keep = "take_first_fields"
+                elif len(target_model) == 1:
                     fields_to_keep = field_dic[target_model[0]]
-                else:
-                    for user_model in field_dic:
-                        if user_model.lower() in card_model.lower():
-                            target_model.append(user_model)
+                elif len(target_model) > 1:
+                    target_model = sorted(
+                        target_model, key=lambda x: lev.ratio(
+                            x.lower(), user_model.lower()))
+                    fields_to_keep = field_dic[target_model[0]]
+                    notifications.append(
+                        f"Several notetypes match  '{card_model}'"
+                        f". Selecting '{target_model[0]}'")
 
-                    if len(target_model) == 0:
-                        fields_to_keep = "take_first_fields"
-                    elif len(target_model) == 1:
-                        fields_to_keep = field_dic[target_model[0]]
-                    elif len(target_model) > 1:
-                        target_model = sorted(
-                            target_model, key=lambda x: lev.ratio(
-                                x.lower(), user_model.lower()))
-                        fields_to_keep = field_dic[target_model[0]]
-                        with lock:
-                            to_notify.append(
-                                f"Several notetypes match  '{card_model}'"
-                                f". Selecting '{target_model[0]}'")
+            # concatenates the corresponding fields into one string:
+            field_list = list(self.df.loc[index, "fields"])
+            if fields_to_keep == "take_first_fields":
+                fields_to_keep = ["", ""]
+                for f in field_list:
+                    order = self.df.loc[index,
+                                        "fields"][f.lower()]["order"]
+                    if order == 0:
+                        fields_to_keep[0] = f
+                    elif order == 1:
+                        fields_to_keep[1] = f
+                notifications.append(
+                    f"No matching notetype found for {card_model}. "
+                    "Keeping the first 2 fields: "
+                    f"{', '.join(fields_to_keep)}")
+            elif fields_to_keep == "take_all_fields":
+                fields_to_keep = sorted(
+                    field_list, key=lambda x: int(
+                        self.df.loc[index, "fields"][x.lower()]["order"]))
+                if "Nearest_neighbors" in field_list:
+                    field_list.remove("Nearest_neighbors")
 
-                # concatenates the corresponding fields into one string:
-                field_list = list(self.df.loc[index, "fields"])
-                if fields_to_keep == "take_first_fields":
-                    fields_to_keep = ["", ""]
-                    for f in field_list:
-                        order = self.df.loc[index,
-                                            "fields"][f.lower()]["order"]
-                        if order == 0:
-                            fields_to_keep[0] = f
-                        elif order == 1:
-                            fields_to_keep[1] = f
-                    with lock:
-                        to_notify.append(
-                            f"No matching notetype found for {card_model}. "
-                            "Keeping the first 2 fields: "
-                            f"{', '.join(fields_to_keep)}")
-                elif fields_to_keep == "take_all_fields":
-                    fields_to_keep = sorted(
-                        field_list, key=lambda x: int(
-                            self.df.loc[index, "fields"][x.lower()]["order"]))
-                    if "Nearest_neighbors" in field_list:
-                        field_list.remove("Nearest_neighbors")
-
-                comb_text = ""
-                for f in fields_to_keep:
-                    try:
-                        next_field = self.df.loc[index,
-                                        "fields"][f.lower()]["value"].strip()
+            comb_text = ""
+            for f in fields_to_keep:
+                try:
+                    next_field = self.df.loc[
+                            index, "fields"][f.lower()]["value"].strip()
+                    if TFIDFmode:
+                        for sw in self.stopw_compiled:
+                            next_field = re.sub(sw, " ", next_field)
+                        next_field = next_field.strip()
+                    if next_field != "":
                         if TFIDFmode:
-                            for sw in stopw_compiled:
-                                next_field = re.sub(sw, " ", next_field)
-                            next_field = next_field.strip()
-                        if next_field != "":
-                            if TFIDFmode:
-                                comb_text += next_field + " <NEWFIELD> "
-                            else:
-                                #comb_text += f"\n{f.title()}: {next_field}"
-                                comb_text += f"\n\n{next_field}"
-                    except KeyError as e:
-                        with lock:
-                            to_notify.append(
-                                f"Error when looking for field {e} in card "
-                                f"{self.df.loc[index, 'modelName']} "
-                                "identified as "
-                                f"notetype {target_model}")
-                comb_text = comb_text.strip()
-                if TFIDFmode and comb_text.endswith("<NEWFIELD>"):
-                    comb_text = comb_text[:-10].strip()
+                            comb_text += next_field + " <NEWFIELD> "
+                        else:
+                            comb_text += f"\n\n{next_field}"
+                except KeyError as e:
+                    notifications.append(
+                        f"Error when looking for field {e} in card "
+                        f"{self.df.loc[index, 'modelName']} "
+                        "identified as "
+                        f"notetype {target_model}")
+            comb_text = comb_text.strip()
+            if TFIDFmode and comb_text.endswith("<NEWFIELD>"):
+                comb_text = comb_text[:-10].strip()
 
-                # add tags to comb_text
-                if self.append_tags:
-                    tags = self.df.loc[index, "tags"].split(" ")
-                    if tags and not TFIDFmode:
-                        comb_text += "\nTags: "
-                    for t in tags:
-                        t = re.sub(
-                            spacers_compiled,
-                            " ",
-                            t)
-                        comb_text += " " + t
+            # add tags to comb_text
+            if self.append_tags:
+                tags = self.df.loc[index, "tags"].split(" ")
+                if tags and not TFIDFmode:
+                    comb_text += "\nTags: "
+                for t in tags:
+                    t = re.sub(
+                        self.spacers_compiled,
+                        " ",
+                        t)
+                    comb_text += " " + t
 
-                with lock:
-                    self.df.at[index, "comb_text"] = comb_text
-                    pbar.update(1)
-            return None
+            return index, comb_text, notifications
 
-        n = len(self.df.index)
-        if self.disable_threading:
-            batchsize = n
-        else:
-            batchsize = min(n // 6 + 1, 500)
-        lock = threading.Lock()
-
-        threads = []
-        to_notify = []
-        spacers_compiled = re.compile("_|-|/|::")
+        self.spacers_compiled = re.compile("_|-|/|::")
 
         # initialize the column to avoid race conditions
         self.df["comb_text"] = np.nan
         self.df["comb_text"] = self.df["comb_text"].astype(str)
 
-        with tqdm(total=n,
-                  desc="Combining relevant fields",
-                  smoothing=0,
-                  file=self.t_strm,
-                  unit=" card") as pbar:
-            for nb in range(0, n, batchsize):
-                sub_card_list = self.df.index[nb: nb + batchsize]
-                thread = threading.Thread(target=_threaded_field_filter,
-                                          args=(sub_card_list,
-                                                lock,
-                                                pbar,
-                                                self.stopw_compiled,
-                                                spacers_compiled,
-                                                self.vectorizer,
-                                                ),
-                                          daemon=False)
-                thread.start()
-                threads.append(thread)
+        results = joblib.Parallel(
+                n_jobs=4 if not self.disable_threading else 1
+                )(joblib.delayed(_joblib_field_filter)(index) for index in tqdm(
+                    self.df.index,
+                    desc="Combining relevant fields",
+                    smoothing=0,
+                    file=self.t_strm,
+                    unit=" card",
+                    ))
 
-            [t.join() for t in threads]
+        to_notify = []
+        for index, comb_text, notif in results:
+            to_notify.extend(notif)
+            self.df.at[index, "comb_text"] = comb_text
 
-            # retries in case of error:
-            cnt = 0
-            while sum(self.df.isna()["comb_text"]) != 0:
-                cnt += 1
-                na_list = [x
-                           for x in self.df.index[
-                               self.df.isna()["comb_text"]].tolist()]
-                pbar.update(-len(na_list))
-                red(
-                    f"Found {sum(self.df.isna()['comb_text'])} null values "
-                    "in comb_text: retrying")
-                thread = threading.Thread(target=_threaded_field_filter,
-                                          args=(na_list,
-                                                lock,
-                                                pbar,
-                                                self.stopw_compiled,
-                                                spacers_compiled,
-                                                self.vectorizer,
-                                                ),
-                                          daemon=False)
-                thread.start()
-                thread.join()
-                if cnt > 10:
-                    beep(f"Error: restart anki then"
-                         "rerun AnnA.")
-                    raise SystemExit()
-            if cnt > 0:
-                yel(f"Succesfully corrected null combined texts on #{cnt} "
-                    "trial.")
+        # retries in case of error:
+        if self.df.isna()["comb_text"].sum() != 0:
+            raise Exception("Invalid comb_text value")
 
         to_notify = list(set(to_notify))
         for notif in to_notify:
