@@ -23,7 +23,6 @@ from tqdm_logger import TqdmLogger
 import re
 import importlib
 from pathlib import Path
-import threading
 from prompt_toolkit import prompt
 from prompt_toolkit.completion import WordCompleter
 from plyer import notification
@@ -1102,20 +1101,17 @@ class AnnA:
             whi("(Large number of cards to retrieve: creating "
                 f"{target_thread_n} threads of size {batchsize})")
 
-            with tqdm(total=target_thread_n,
-                      unit="thread",
-                      dynamic_ncols=True,
-                      desc="Done threads",
-                      delay=2,
-                      file=self.t_strm,
-                      smoothing=0) as pbar:
-                results = joblib.Parallel(
-                        n_jobs=target_thread_n
-                        )(joblib.delayed(retrieve_cards)(
-                            card_id[nb: nb + batchsize]
-                            ) for nb in range(0, len(card_id), batchsize))
-                r_list = [item for sublist in results for item in sublist]
-                pbar.update(1)
+            results = joblib.Parallel(
+                    n_jobs=target_thread_n
+                    )(joblib.delayed(retrieve_cards)(
+                        card_id[nb: nb + batchsize]
+                        ) for nb in tqdm(
+                            range(0, len(card_id), batchsize),
+                            dynamic_ncols=True,
+                            desc="Done threads",
+                            file=self.t_strm,
+                            ))
+            r_list = [item for sublist in results for item in sublist]
             assert len(r_list) == len(card_id), "could not retrieve all cards"
             r_list = sorted(r_list,
                             key=lambda x: x["cardId"],
