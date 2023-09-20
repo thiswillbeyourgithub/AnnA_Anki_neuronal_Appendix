@@ -1742,7 +1742,8 @@ class AnnA:
 
                     for i, s in enumerate(sentences):
                         # skip if the sentence is short
-                        if len(s) <= n:
+                        length = len(model.tokenizer.encode(s))
+                        if length <= n:
                             continue
 
                         # otherwise, split the sentence at regular interval
@@ -1751,7 +1752,7 @@ class AnnA:
                         # the renormalization happens later in the code
                         sub_sentences = []
                         j = 1
-                        while len(s) >= n23 * j:
+                        while length >= n23 * j:
                             sub_sentences.append(s[n23 * j: n23 * j + n])
                             j += 1
 
