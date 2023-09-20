@@ -5,6 +5,7 @@ python_Levenshtein == 0.12.2  # to correct for field mapping and note type spell
 beepy>=1.0.7  # make a beeping sound
 ankipandas>=0.3.10  # to load the anki collection
 ftfy>=6.1.1
+fire>=0.5.0
 
 # datascience and computation
 pandas == 1.2.3
