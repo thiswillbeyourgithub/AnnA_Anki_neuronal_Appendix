@@ -1,60 +1,57 @@
-import pickle
-import hashlib
-import webbrowser
-import textwrap
-import traceback
-import copy
-import beepy
 import argparse
-import logging
+import copy
 import gc
-from datetime import datetime
-import time
-import random
-import signal
-import os
-import subprocess
-import shlex
-import json
-import urllib.request
-import pyfiglet
-from pprint import pprint
-from tqdm import tqdm
-from tqdm_logger import TqdmLogger
-import re
+import hashlib
 import importlib
-from pathlib import Path
+import json
+import logging
+import os
+import pickle
+import random
+import re
+import shlex
+import shutil
+import signal
+import subprocess
+import textwrap
 import threading
-from prompt_toolkit import prompt
-from prompt_toolkit.completion import WordCompleter
-from plyer import notification
+import time
+import traceback
+import urllib.request
+import webbrowser
+from datetime import datetime
+from logging import handlers
+from pathlib import Path
+from pprint import pprint
 
-import joblib
-import pandas as pd
-import numpy as np
 import Levenshtein as lev
-from nltk.corpus import stopwords
-from nltk.stem import PorterStemmer
-from tokenizers import Tokenizer
-from sentence_transformers import SentenceTransformer
+import ankipandas as akp
+import beepy
 import ftfy
-
-from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer, TfidfTransformer
-from sklearn.metrics import pairwise_distances, pairwise_kernels
-from sklearn.decomposition import TruncatedSVD, PCA
-from sklearn.preprocessing import normalize
-from sklearn import cluster
+import hdbscan
+import joblib
+import numpy as np
+import pandas as pd
+import pyfiglet
 import umap.umap_
 from bertopic import BERTopic
-import hdbscan
-
-import networkx as nx
+from func_timeout import func_timeout, FunctionTimedOut
+from nltk.corpus import stopwords
+from nltk.stem import PorterStemmer
 from plotly.colors import qualitative
-from plotly.offline import plot as offpy
 from plotly.graph_objs import (Scatter, scatter, Figure, Layout, layout)
-
-import ankipandas as akp
-import shutil
+from plotly.offline import plot as offpy
+from plyer import notification
+from prompt_toolkit import prompt
+from prompt_toolkit.completion import WordCompleter
+from sentence_transformers import SentenceTransformer
+from sklearn.decomposition import TruncatedSVD, PCA
+from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
+from sklearn.metrics import pairwise_distances, pairwise_kernels
+from sklearn.preprocessing import normalize
+from tokenizers import Tokenizer
+from tqdm import tqdm
+from tqdm_logger import TqdmLogger
 
 from utils.greek import greek_alphabet_mapping
 
@@ -1033,7 +1030,7 @@ class AnnA:
             rated_cards = self._call_anki(action="findCards", query=query)
             red(f"Found {len(rated_cards)} cards...\n")
         elif self.rated_last_X_days not in [0, None]:
-            yel("Getting cards that where rated in the last "
+            yel("Getting cards that were rated in the last "
                 f"{self.rated_last_X_days} days...")
             query = (f"\"deck:{self.deckname}\" rated:{self.rated_last_X_days}"
                      " -is:suspended -is:buried")
@@ -1136,10 +1133,8 @@ class AnnA:
         assert self.due_cards, "Empty self.due_cards!"
 
         # assemble cards into a dataframe
-        self.df = pd.DataFrame().append(list_cardInfo,
-                                        ignore_index=True,
-                                        sort=True)
-        self.df["cardId"] = self.df["cardId"].astype(int)
+        self.df = pd.DataFrame(list_cardInfo)
+        self.df["cardId"] = self.df["cardId"].astype("int64")
         self.df = self.df.set_index("cardId").sort_index()
         self.df["interval"] = self.df["interval"].astype(float)
         return True
@@ -2151,68 +2146,66 @@ class AnnA:
         Given that this takes time, a timeout has been implemented.
         """
         self.timeout_in_minutes = 1
-        signal.signal(signal.SIGALRM, self.time_watcher)
-        signal.alarm(int(self.timeout_in_minutes * 60))
+        def innerprint():
+            try:
+                max_length = 200
+                up_triangular = np.triu_indices(self.df_dist.shape[0], 1)
+                pd.set_option('display.max_colwidth', 180)
 
+                red("\nPrinting the most semantically distant cards:")
+                highest_value = np.max(self.df_dist.values[up_triangular].ravel())
+                coord_max = np.where(self.df_dist == highest_value)
+                one = self.df.iloc[coord_max[0][0]].text[:max_length]
+                two = self.df.iloc[coord_max[1][0]].text[:max_length]
+                yel(f"* {one}...")
+                yel(f"* {two}...")
+
+                red("\nPrinting the most semantically close but distinct similar "
+                    "cards:")
+                # the diagonal is the minimum of distance so we are looking for
+                # the distance that is just higher
+                q_diagonal = (self.df_dist.shape[0] + 2) / (
+                         self.df_dist.shape[0] ** 2 / 2)
+                quantile_limit = np.quantile(
+                        self.df_dist.values[up_triangular].ravel(), q_diagonal)
+                lowest_non_zero_value = np.amin(
+                        self.df_dist.values[up_triangular],
+                        where=self.df_dist.values[up_triangular] > quantile_limit,
+                        initial=highest_value)
+                coord_min = np.where(self.df_dist == lowest_non_zero_value)
+                one = self.df.iloc[coord_min[0][0]].text[:max_length]
+                two = self.df.iloc[coord_min[1][0]].text[:max_length]
+                yel(f"* {one}...")
+                yel(f"* {two}...")
+                whi(f"    (distance: {lowest_non_zero_value})")
+                whi(f"    (quantile limit: {quantile_limit})")
+                whi(f"    (q diagonal: {q_diagonal})")
+
+                red("\nPrinting the median distance cards:")
+                median_value = np.median(self.df_dist.values[up_triangular].ravel(
+                    ))
+                coord_med = [[]]
+                i = 1
+                while len(coord_med[0]) == 0:
+                    if i >= 1e08:
+                        break
+                    coord_med = np.where(np.isclose(
+                        self.df_dist, median_value, atol=1e-08*i))
+                    i *= 1e1
+                one = self.df.iloc[coord_med[0][0]].text[:max_length]
+                two = self.df.iloc[coord_med[1][0]].text[:max_length]
+                yel(f"* {one}...")
+                yel(f"* {two}...")
+            except Exception as err:
+                beep(f"Exception when locating similar "
+                     f"cards: '{err}'")
+            finally:
+                pd.reset_option('display.max_colwidth')
+                whi("")
         try:
-            max_length = 200
-            up_triangular = np.triu_indices(self.df_dist.shape[0], 1)
-            pd.set_option('display.max_colwidth', 180)
-
-            red("\nPrinting the most semantically distant cards:")
-            highest_value = np.max(self.df_dist.values[up_triangular].ravel())
-            coord_max = np.where(self.df_dist == highest_value)
-            one = self.df.iloc[coord_max[0][0]].text[:max_length]
-            two = self.df.iloc[coord_max[1][0]].text[:max_length]
-            yel(f"* {one}...")
-            yel(f"* {two}...")
-
-            red("\nPrinting the most semantically close but distinct similar "
-                "cards:")
-            # the diagonal is the minimum of distance so we are looking for
-            # the distance that is just higher
-            q_diagonal = (self.df_dist.shape[0] + 2) / (
-                     self.df_dist.shape[0] ** 2 / 2)
-            quantile_limit = np.quantile(
-                    self.df_dist.values[up_triangular].ravel(), q_diagonal)
-            lowest_non_zero_value = np.amin(
-                    self.df_dist.values[up_triangular],
-                    where=self.df_dist.values[up_triangular] > quantile_limit,
-                    initial=highest_value)
-            coord_min = np.where(self.df_dist == lowest_non_zero_value)
-            one = self.df.iloc[coord_min[0][0]].text[:max_length]
-            two = self.df.iloc[coord_min[1][0]].text[:max_length]
-            yel(f"* {one}...")
-            yel(f"* {two}...")
-            whi(f"    (distance: {lowest_non_zero_value})")
-            whi(f"    (quantile limit: {quantile_limit})")
-            whi(f"    (q diagonal: {q_diagonal})")
-
-            red("\nPrinting the median distance cards:")
-            median_value = np.median(self.df_dist.values[up_triangular].ravel(
-                ))
-            coord_med = [[]]
-            i = 1
-            while len(coord_med[0]) == 0:
-                if i >= 1e08:
-                    break
-                coord_med = np.where(np.isclose(
-                    self.df_dist, median_value, atol=1e-08*i))
-                i *= 1e1
-            one = self.df.iloc[coord_med[0][0]].text[:max_length]
-            two = self.df.iloc[coord_med[1][0]].text[:max_length]
-            yel(f"* {one}...")
-            yel(f"* {two}...")
-        except TimeoutError:
-            beep(f"Taking too long to locating similar "
-                 "nonequal cards, skipping")
-        except Exception as err:
-            beep(f"Exception when locating similar "
-                 f"cards: '{err}'")
-        finally:
-            signal.alarm(0)
-            pd.reset_option('display.max_colwidth')
-            whi("")
+            func_timeout(self.timeout_in_minutes * 60, innerprint)
+        except FunctionTimedOut:
+            red("Taking too long to find similar nonequal cards, skipping")
 
     def _compute_optimized_queue(self):
         """
@@ -2430,7 +2423,7 @@ class AnnA:
                 beep(f"{len(urgent_dues)}/{len(due)} cards "
                      "with too low "
                      "relative overdueness (i.e. on the brink of being "
-                     "forgotten) where found.")
+                     "forgotten) were found.")
                 if boost:
                     red("Those cards were boosted to make sure you review them"
                         " soon.")
@@ -2773,7 +2766,7 @@ class AnnA:
             if self.task == "filter_review_cards" and self.resort_by_dist:
                 red("Reordering before creating the filtered deck "
                     "to maximize/minimize distance...")
-                whi("But starts by the cards needing to be boosted)")
+                whi("But starts by the cards needing to be boosted")
                 new_queue = [queue[0]]
                 to_process = [q for q in queue[1:]]
 

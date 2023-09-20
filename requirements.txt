@@ -7,7 +7,7 @@ ankipandas>=0.3.10  # to load the anki collection
 ftfy>=6.1.1
 
 # datascience and computation
-pandas == 1.2.3
+pandas >= 1.2.3
 joblib >= 1.1.0
 umap-learn >= 0.5.3
 
@@ -26,3 +26,7 @@ tables >= 0.0.4
 matplotlib>=3.6.1
 networkx>=2.8.7
 pydot>=1.4.2
+
+bertopic
+hdbscan
+plotly
