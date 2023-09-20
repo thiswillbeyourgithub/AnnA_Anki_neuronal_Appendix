@@ -146,7 +146,7 @@ def _beep(message=None, **args):
             red("NOTIF: " + message)
             notification.notify(title="AnnA",
                                 message=message,
-                                timeout=-1,
+                                timeout=0,
                                 )
         except Exception as err:
             red(f"Error when creating notification: '{err}'")
@@ -728,7 +728,6 @@ class AnnA:
             except Exception as err:
                 beep(f"Exception when plotting 2D embeddings: '{err}'")
                 red(traceback.format_exc())
-            signal.alarm(0)  # turn off timeout
         red(f"Done with task '{self.task}' on deck '{self.deckname}'")
         gc.collect()
 
@@ -1081,7 +1080,7 @@ class AnnA:
         list_cardInfo.extend(
             self._fetch_cards(
                 card_id=combined_card_list))
-        whi(f"Got all infos in {int(time.time()-start)} seconds.\n")
+        whi(f"Got all info in {int(time.time()-start)} seconds.\n")
 
         error_ids = []
         for i, card in enumerate(list_cardInfo):
@@ -3120,88 +3119,74 @@ class AnnA:
         assert hasattr(self, "vectors2D"), "2D embeddings could not be found!"
 
         self.timeout_in_minutes = 15
-        # add a timeout to make sure it doesn't get stuck
-        signal.signal(signal.SIGALRM, self.time_watcher)
-        signal.alarm(int(self.timeout_in_minutes * 60))
-        # this timeout is replaced by a shorter timeout when opening
-        # the browser then resumed
-        self.timeout_start_time = time.time()
 
-        # bertopic plots
-        docs = self.df["text"].tolist()
-        topic_model = BERTopic(
-                verbose=True,
-                top_n_words=10,
-                nr_topics=100,
-                vectorizer_model=CountVectorizer(
-                    stop_words=self.stops + [f"c{n}" for n in range(10)],
-                    ngram_range=(1, 1),
-                    ),
-                hdbscan_model=hdbscan.HDBSCAN(
-                    min_cluster_size=10,
-                    min_samples=1,
-                    ),
-                # hdbscan_model=cluster.KMeans(n_clusters=min(len(self.df.index)//10, 100)),
-                ).fit(
-                        documents=docs,
-                        embeddings=self.vectors_beforeUMAP,
-                        )
-        hierarchical_topics = topic_model.hierarchical_topics(
-            docs=docs,
-            )
-        fig = topic_model.visualize_hierarchical_documents(
+        def inner_plot():
+            # bertopic plots
+            docs = self.df["text"].tolist()
+            topic_model = BERTopic(
+                    verbose=True,
+                    top_n_words=10,
+                    nr_topics=100,
+                    vectorizer_model=CountVectorizer(
+                        stop_words=self.stops + [f"c{n}" for n in range(10)],
+                        ngram_range=(1, 1),
+                        ),
+                    hdbscan_model=hdbscan.HDBSCAN(
+                        min_cluster_size=10,
+                        min_samples=1,
+                        ),
+                    # hdbscan_model=cluster.KMeans(n_clusters=min(len(self.df.index)//10, 100)),
+                    ).fit(
+                            documents=docs,
+                            embeddings=self.vectors_beforeUMAP,
+                            )
+            hierarchical_topics = topic_model.hierarchical_topics(
                 docs=docs,
-                hierarchical_topics=hierarchical_topics,
-                reduced_embeddings=self.vectors2D,
-                nr_levels=min(20, len(hierarchical_topics) - 1),
-                # level_scale="log",
-                title=f"{self.deckname} - embeddings",
-                hide_annotations=True,
-                hide_document_hover=False,
                 )
-        saved_plot = f"{self.plot_dir}/{self.deckname} - embeddings.html"
-        whi(f"Saving plot to {saved_plot}")
-        offpy(fig,
-              filename=saved_plot,
-              auto_open=False,
-              show_link=False,
-              validate=True,
-              output_type="file",
-              )
+            fig = topic_model.visualize_hierarchical_documents(
+                    docs=docs,
+                    hierarchical_topics=hierarchical_topics,
+                    reduced_embeddings=self.vectors2D,
+                    nr_levels=min(20, len(hierarchical_topics) - 1),
+                    # level_scale="log",
+                    title=f"{self.deckname} - embeddings",
+                    hide_annotations=True,
+                    hide_document_hover=False,
+                    )
+            saved_plot = f"{self.plot_dir}/{self.deckname.replace('::','-')} - embeddings.html"
+            whi(f"Saving plot to {saved_plot}")
+            offpy(fig,
+                  filename=saved_plot,
+                  auto_open=False,
+                  show_link=False,
+                  validate=True,
+                  output_type="file",
+                  )
+
+            def inner_browser():
+                whi(f"Trying to open {saved_plot} in the browser...")
+                saved_plot_fp = str(Path(saved_plot).absolute()).replace("\\", "")
+                if "genericbrowser" in str(webbrowser.get()).lower():
+                    # if AnnA is launched using SSH, the webbrowser will
+                    # possibly be in the console and can stop the script
+                    # while the browser is not closed.
+                    whi("No GUI browser detected, maybe you're in an SSH console? "
+                        "\nFalling back to using linux shell to open firefox")
+                    subprocess.check_output(
+                            shlex.split(f"env DISPLAY=:0 firefox '{saved_plot_fp}'"),
+                            shell=False,
+                            )
+                else:
+                    whi("Opening browser.")
+                    webbrowser.open(saved_plot_fp)
+            try:
+                func_timeout(5, inner_browser)
+            except Exception as e:
+                beep(f"Exception when openning file: '{e}'")
         try:
-            # replacing timeout by a 5s one then resuming the previous one
-            def f_browser_timeout(signum, frame):
-                raise TimeoutError
-            signal.alarm(0)
-            signal.signal(signal.SIGALRM, f_browser_timeout)
-            signal.alarm(5)
-            whi(f"Trying to open {saved_plot} in the browser...")
-            saved_plot_fp = str(Path(saved_plot).absolute()).replace("\\", "")
-            if "genericbrowser" in str(webbrowser.get()).lower():
-                # if AnnA is launched using SSH, the webbrowser will
-                # possibly be in the console and can stop the script
-                # while the browser is not closed.
-                whi("No GUI browser detected, maybe you're in an SSH console? "
-                    "\nFalling back to using linux shell to open firefox")
-                subprocess.check_output(
-                        shlex.split(f"env DISPLAY=:0 firefox '{saved_plot_fp}'"),
-                        shell=False,
-                        )
-            else:
-                whi("Opening browser.")
-                webbrowser.open(saved_plot_fp)
-        except TimeoutError as e:
-            elapsed = self.timeout_in_minutes * 60 - (time.time() - self.timeout_start_time)
-            if elapsed <= 1:  # rare case when the timeout is for the overall
-                # plotting code and not just to open the browser
-                raise
-            else:
-                pass  # the function got stuck when openning the browser, ignore
-        except Exception as e:
-            beep(f"Exception when openning file: '{e}'")
-        signal.alarm(0)
-        signal.signal(signal.SIGALRM, self.time_watcher)
-        signal.alarm(int(self.timeout_in_minutes * 60 - (time.time() - self.timeout_start_time)))
+            func_timeout(self.timeout_in_minutes * 60, inner_plot)
+        except FunctionTimedOut:
+            red("Taking too long to find similar nonequal cards, skipping")
 
 
 
@@ -3378,7 +3363,6 @@ class AnnA:
         # #     f"\n(In {int(time.time()-t)}s)")
 
         whi("Finished 2D plots")
-        signal.alarm(0)  # turn off timeout
         return
 
     def _create_plotfig(self,
@@ -3902,11 +3886,10 @@ if __name__ == "__main__":
                             "cards content or to add no tags. Default "
                             "to `False`."))
     parser.add_argument("--tags_to_ignore",
-                        nargs="*",
+                        nargs="+",
                         metavar="TAGS_TO_IGNORE",
                         dest="tags_to_ignore",
                         default=["AnnA", "leech"],
-                        type=list,
                         required=False,
                         help=(
                             "a list of regexp of tags to "
