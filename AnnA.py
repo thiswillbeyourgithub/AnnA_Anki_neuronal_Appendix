@@ -1921,7 +1921,7 @@ class AnnA:
                                                   file=self.t_strm))
                 yel("Done vectorizing over whole deck!")
             except Exception as e:
-                beep(f"Exception : {e}\nUsing "
+                beep(f"Exception when using the whole deck : {e}\nUsing "
                      "fallback method...")
                 use_fallback = True
 
