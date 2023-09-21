@@ -1742,7 +1742,7 @@ class AnnA:
                         if skip_tag:
                             continue
                         t = re.sub(
-                            spacers_compiled,
+                            self.spacers_compiled,
                             " ",
                             t)
                         self.df.loc[ind, "text"] += " " + t
