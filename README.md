@@ -28,6 +28,7 @@ Here are different ways of looking at what AnnA can do for you in a few words:
 4. In the past I implemented several vectorization methods. I now only kep [subword TF_IDF](https://en.wikipedia.org/wiki/Tf%E2%80%93idf) and [sentence-embeddings](https://www.sbert.net/). TF_IDF is known to be reliable, fast, very general (it does not assume anything about your cards and will work for just about any language, format, phrasing etc). TF_IDF works very well if you have large number of cards. Sentence embeddings is more AI than ML in a way : aligned vectors are supposed to have similar meaning / topic but it way longer to compute than TFIDF so I implemented a caching mechanism that checks if the note has changed since last time and avoids unecessary recomputation.
 5. If you want to know how I'm using this, take a look at [authors_routine.md](./docs/authors_routine.md)
 6. If you like this, another  project of mine can be used to do semantic search on your anki collection using AI : [I call it Anki SemSearch](https://github.com/thiswillbeyourgithub/Anki-Semantic-Search)
+7. An other project you might be interested in is [anki_PrioriTag](https://github.com/thiswillbeyourgithub/anki_Prioritag). It allows to create a filtered deck automatically to review the most forgotten **tags**.
 
 ## Other features
 * Code is PEP8 compliant, dynamically typed, all the functions have a detailed docstrings. Contributions are welcome, opening issues is encouraged and appreciated.
