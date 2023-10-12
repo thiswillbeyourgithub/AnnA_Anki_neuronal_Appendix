@@ -1996,6 +1996,18 @@ class AnnA:
                         add_sent.extend(sub_sentences)
                         add_sent_idx.extend([i] * len(sub_sentences))
 
+                    if add_sent:
+                        sent_lengths = [
+                                len(encode(s)) > n
+                                for s in sentences
+                                ]
+                        addsent_lengths = [
+                                len(encode(s)) > n
+                                for s in add_sent
+                                ]
+                        assert sum(sent_lengths) != 0 and sum(addsent_lengths) == 0, (
+                                f"The rolling average failed apparently:\n{sent_lengths}\n{addsent_lengths}")
+
                     vectors = encode(
                             sentences=sentences + add_sent,
                             show_progress_bar=True if len(sentences) > 1 else False,
