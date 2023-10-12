@@ -1968,13 +1968,26 @@ class AnnA:
 
                         # otherwise, split the sentence at regular interval
                         # then do the embedding of each
-                        # and finally add those sub embeddings together
+                        # and finally maxpool those sub embeddings together
                         # the renormalization happens later in the code
                         sub_sentences = []
-                        j = 1
-                        while length >= n23 * j:
-                            sub_sentences.append(s[n23 * j: n23 * j + n])
-                            j += 1
+                        words = s.split(" ")
+                        j = 0
+                        while words:
+                            # if reached max length, use that minus one word
+                            if len(encode(" ".join(words[:j]))) > max_len:
+                                sub_sentences.append(" ".join(words[:j-1]))
+
+                                # remove first word until 1/3 of the max_token was removed
+                                # this way we have a rolling window
+                                jj = 0
+                                while len(encode(" ".join(words[jj:j]))) > n23:
+                                    jj += 1
+                                words = words[jj:]
+
+                                j = 0
+                            else:
+                                j += 1
 
                         # remove empty text just in case
                         if "" in sub_sentences:
