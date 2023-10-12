@@ -1945,9 +1945,24 @@ class AnnA:
                     add_sent = []  # additional sentences
                     add_sent_idx = []  # indices to keep track of sub sentences
 
+                    if not isinstance(n, int):
+                        # the clip model has a different way to use the encoder
+                        # sources : https://github.com/UKPLab/sentence-transformers/issues/1269
+                        assert "clip" in str(model).lower(), f"sbert model with no 'max_seq_length' attribute and not clip: '{model}'"
+                        n = 77
+                        encode = model._first_module().processor.tokenizer.encode
+                    else:
+                        if hasattr(model.tokenizer, "encode"):
+                            # most models
+                            encode = model.tokenizer.encode
+                        else:
+                            # word embeddings models like glove
+                            encode = model.tokenizer.tokenize
+
+
                     for i, s in enumerate(sentences):
                         # skip if the sentence is short
-                        length = len(model.tokenizer.encode(s))
+                        length = len(encode(s))
                         if length <= n:
                             continue
 
@@ -1968,7 +1983,7 @@ class AnnA:
                         add_sent.extend(sub_sentences)
                         add_sent_idx.extend([i] * len(sub_sentences))
 
-                    vectors = model.encode(
+                    vectors = encode(
                             sentences=sentences + add_sent,
                             show_progress_bar=True if len(sentences) > 1 else False,
                             output_value="sentence_embedding",
