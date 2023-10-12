@@ -1940,16 +1940,16 @@ class AnnA:
                     so I implemented a quick and dirty way to roll over the
                     whole text then do an averaging.
                     """
-                    n = model.max_seq_length
-                    n23 = (n * 2) // 3
+                    max_len = model.max_seq_length
+                    n23 = (max_len * 2) // 3
                     add_sent = []  # additional sentences
                     add_sent_idx = []  # indices to keep track of sub sentences
 
-                    if not isinstance(n, int):
+                    if not isinstance(max_len, int):
                         # the clip model has a different way to use the encoder
                         # sources : https://github.com/UKPLab/sentence-transformers/issues/1269
                         assert "clip" in str(model).lower(), f"sbert model with no 'max_seq_length' attribute and not clip: '{model}'"
-                        n = 77
+                        max_len = 77
                         encode = model._first_module().processor.tokenizer.encode
                     else:
                         if hasattr(model.tokenizer, "encode"):
@@ -1963,7 +1963,7 @@ class AnnA:
                     for i, s in enumerate(sentences):
                         # skip if the sentence is short
                         length = len(encode(s))
-                        if length <= n:
+                        if length <= max_len:
                             continue
 
                         # otherwise, split the sentence at regular interval
@@ -1972,22 +1972,34 @@ class AnnA:
                         # the renormalization happens later in the code
                         sub_sentences = []
                         words = s.split(" ")
-                        j = 0
-                        while words:
+                        avg_tkn = length / len(words)
+                        j = int(max_len / avg_tkn * 0.8)  # start at 90% of the supposed max_len
+                        while len(encode(" ".join(words))) > max_len:
+
                             # if reached max length, use that minus one word
-                            if len(encode(" ".join(words[:j]))) > max_len:
+                            until_j = len(encode(" ".join(words[:j])))
+                            if until_j > max_len:
                                 sub_sentences.append(" ".join(words[:j-1]))
 
                                 # remove first word until 1/3 of the max_token was removed
                                 # this way we have a rolling window
-                                jj = 0
-                                while len(encode(" ".join(words[jj:j]))) > n23:
+                                jj = int((max_len // 3) / avg_tkn * 0.8)
+                                while len(encode(" ".join(words[jj:j-1]))) > n23:
                                     jj += 1
                                 words = words[jj:]
 
-                                j = 0
+                                j = int(max_len / avg_tkn * 0.8)
                             else:
-                                j += 1
+                                diff = abs(max_len - until_j)
+                                if diff > 10:
+                                    j += int(10 / avg_tkn)
+                                else:
+                                    j += 1
+
+                        sub_sentences.append(" ".join(words))
+
+                        sentences[i] = " "  # discard this sentence as we will keep only
+                        # the sub sentences maxpooled
 
                         # remove empty text just in case
                         if "" in sub_sentences:
@@ -1997,16 +2009,17 @@ class AnnA:
                         add_sent_idx.extend([i] * len(sub_sentences))
 
                     if add_sent:
-                        sent_lengths = [
-                                len(encode(s)) > n
+                        sent_check = [
+                                len(encode(s)) > max_len
                                 for s in sentences
                                 ]
-                        addsent_lengths = [
-                                len(encode(s)) > n
+                        addsent_check = [
+                                len(encode(s)) > max_len
                                 for s in add_sent
                                 ]
-                        assert sum(sent_lengths) != 0 and sum(addsent_lengths) == 0, (
-                                f"The rolling average failed apparently:\n{sent_lengths}\n{addsent_lengths}")
+                        assert sum(sent_check + addsent_check) == 0, (
+                            f"The rolling average failed apparently:\n{sent_check}\n{addsent_check}")
+
 
                     vectors = encode(
                             sentences=sentences + add_sent,
@@ -2026,8 +2039,8 @@ class AnnA:
                         for sid in list(set(add_sent_idx)):
                             id_range = [i for i, j in enumerate(add_sent_idx) if j == sid]
                             add_sent_vec = vectors[
-                                    offset + min(id_range): offset + max(id_range),:]
-                            vectors[sid] = np.max(vectors[sid], np.amax(add_sent_vec, axis=0))
+                                    offset + min(id_range): offset + max(id_range), :]
+                            vectors[sid] = np.amax(add_sent_vec, axis=0)
                         return vectors[:offset]
                     else:
                         return vectors
