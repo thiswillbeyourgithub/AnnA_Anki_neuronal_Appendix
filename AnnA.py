@@ -2019,7 +2019,7 @@ class AnnA:
                     if add_sent:
                         # at the position of the original sentence (not split)
                         # add the vectors of the corresponding sub_sentence
-                        # then return only the 'summed' section
+                        # then return only the 'maxpooled' section
                         assert len(add_sent) == len(add_sent_idx), (
                             "Invalid add_sent length")
                         offset = len(sentences)
@@ -2027,7 +2027,7 @@ class AnnA:
                             id_range = [i for i, j in enumerate(add_sent_idx) if j == sid]
                             add_sent_vec = vectors[
                                     offset + min(id_range): offset + max(id_range),:]
-                            vectors[sid] += add_sent_vec.sum(axis=0)
+                            vectors[sid] = np.max(vectors[sid], np.amax(add_sent_vec, axis=0))
                         return vectors[:offset]
                     else:
                         return vectors
