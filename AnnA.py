@@ -1974,17 +1974,20 @@ class AnnA:
                         words = s.split(" ")
                         avg_tkn = length / len(words)
                         j = int(max_len / avg_tkn * 0.8)  # start at 90% of the supposed max_len
-                        while len(encode(" ".join(words))) > max_len:
+                        while len(encode(" ".join(words))) >= max_len:
 
                             # if reached max length, use that minus one word
                             until_j = len(encode(" ".join(words[:j])))
-                            if until_j > max_len:
-                                sub_sentences.append(" ".join(words[:j-1]))
+                            if until_j >= max_len:
+                                jjj = 1
+                                while len(encode(" ".join(words[:j-jjj]))) >= max_len:
+                                    jjj += 1
+                                sub_sentences.append(" ".join(words[:j-jjj]))
 
                                 # remove first word until 1/3 of the max_token was removed
                                 # this way we have a rolling window
                                 jj = int((max_len // 3) / avg_tkn * 0.8)
-                                while len(encode(" ".join(words[jj:j-1]))) > n23:
+                                while len(encode(" ".join(words[jj:j-jjj]))) > n23:
                                     jj += 1
                                 words = words[jj:]
 
@@ -2005,6 +2008,7 @@ class AnnA:
                         if "" in sub_sentences:
                             while "" in sub_sentences:
                                 sub_sentences.remove("")
+                        assert sum([len(encode(ss)) > max_len for ss in sub_sentences]) == 0, f"error when splitting long sentences: {sub_sentences}"
                         add_sent.extend(sub_sentences)
                         add_sent_idx.extend([i] * len(sub_sentences))
 
@@ -2021,7 +2025,7 @@ class AnnA:
                             f"The rolling average failed apparently:\n{sent_check}\n{addsent_check}")
 
 
-                    vectors = encode(
+                    vectors = model.encode(
                             sentences=sentences + add_sent,
                             show_progress_bar=True if len(sentences) > 1 else False,
                             output_value="sentence_embedding",
