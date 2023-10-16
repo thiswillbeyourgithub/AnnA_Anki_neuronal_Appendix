@@ -16,9 +16,14 @@
 import inspect
 import json
 
-from PyQt5 import QtCore
-from PyQt5.QtCore import QTimer
-from PyQt5.QtWidgets import QMessageBox
+try:
+    from PyQt6 import QtCore
+    from PyQt6.QtCore import QTimer
+    from PyQt6.QtWidgets import QMessageBox
+except ImportError:
+    from PyQt5 import QtCore
+    from PyQt5.QtCore import QTimer
+    from PyQt5.QtWidgets import QMessageBox
 
 import anki
 import anki.exporting
