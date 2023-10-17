@@ -356,8 +356,8 @@ class AnnA:
                           recomputing the embedding for previously seen notes,
                           ignore stopwords and any TFIDF arguments used.
     --embed_model EMBED_MODEL
-                          For multilingual use 'distiluse-base-multilingual-
-                          cased-v1', but for anything else use 'all-mpnet-
+                          For multilingual use 'paraphrase-multilingual-mpnet-base-v2'
+                           but for anything else use 'all-mpnet-
                           base-v2'
     --ndim_reduc NDIM_REDUC
                           the number of dimension to keep using TruncatedSVD (if
@@ -490,7 +490,7 @@ class AnnA:
 
                  # vectorization:
                  vectorizer="embeddings",
-                 embed_model="distiluse-base-multilingual-cased-v1",
+                 embed_model="paraphrase-multilingual-mpnet-base-v2",
                  # left for legacy reason
                  ndim_reduc="auto",
                  TFIDF_tokenize=True,
