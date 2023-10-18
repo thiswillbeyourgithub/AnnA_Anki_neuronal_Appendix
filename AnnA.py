@@ -19,7 +19,6 @@ import urllib.request
 import pyfiglet
 from pprint import pprint
 from tqdm import tqdm
-from tqdm_logger import TqdmLogger
 import re
 import importlib
 from pathlib import Path
@@ -524,9 +523,6 @@ class AnnA:
         else:
             log.setLevel(logging.INFO)
 
-        # logger for tqdm progress bars
-        self.t_strm = TqdmLogger("logs.txt")
-        self.t_strm.reset()
         self.disable_threading = disable_threading
 
         # loading arguments and proceed to check correct values ##############
@@ -1085,7 +1081,7 @@ class AnnA:
             card_id = [card_id]
         if len(card_id) < 20:
             r_list = []
-            for card in tqdm(card_id, file=self.t_strm):
+            for card in tqdm(card_id):
                 r_list.extend(self._call_anki(action="cardsInfo",
                                               cards=[card]))
             return r_list
@@ -1106,7 +1102,6 @@ class AnnA:
                         "total": len(card_id) // batchsize,
                         "dynamic_ncols": True,
                         "desc": "Done threads",
-                        "file": self.t_strm,
                         },
                     n_jobs=target_thread_n
                     )(joblib.delayed(retrieve_cards)(
@@ -1684,7 +1679,6 @@ class AnnA:
                     "total": len(self.df.index),
                     "desc": "Combining relevant fields",
                     "smoothing": 0,
-                    "file": self.t_strm,
                     "unit": " card",
                     }
                 )(joblib.delayed(_joblib_field_filter)(index) for index in self.df.index)
@@ -1704,8 +1698,7 @@ class AnnA:
 
         # using multithreading is not faster, using multiprocess is probably
         # slower if not done by large batch
-        tqdm.pandas(desc="Formating text", smoothing=0, unit=" card",
-                    file=self.t_strm)
+        tqdm.pandas(desc="Formating text", smoothing=0, unit=" card")
         if self.vectorizer == "TFIDF":
             self.df["text"] = self.df["comb_text"].progress_apply(
                 lambda x: " <NEWFIELD> ".join(
@@ -1892,7 +1885,7 @@ class AnnA:
                 for ind in tqdm(cards.index,
                                 desc=("Gathering and formating "
                                       f"{self.deckname}"),
-                                file=self.t_strm):
+                                ):
                     indices_to_keep = m_gIoF(cards.loc[ind, "nmodel"])
                     fields_list = cards.loc[ind, "nflds"]
                     new = ""
@@ -1914,11 +1907,11 @@ class AnnA:
                 vectorizer = init_TFIDF_vectorizer()
                 vectorizer.fit(tqdm(corpus + df["text"].tolist(),
                                     desc="Vectorizing whole deck",
-                                    file=self.t_strm))
+                                    ))
                 t_vec = vectorizer.transform(tqdm(df["text"],
                                                   desc=(
                     "Vectorizing dues cards using TFIDF"),
-                                                  file=self.t_strm))
+                                                  ))
                 yel("Done vectorizing over whole deck!")
             except Exception as e:
                 beep(f"Exception when using the whole deck : {e}\nUsing "
@@ -1931,7 +1924,7 @@ class AnnA:
                 t_vec = vectorizer.fit_transform(tqdm(df["text"],
                                                       desc=(
                   "Vectorizing using TFIDF"),
-                                                      file=self.t_strm))
+                                                      ))
             elif self.vectorizer == "embeddings":
 
                 def sencoder(sentences):
@@ -2097,12 +2090,11 @@ class AnnA:
                 tqdm.pandas(
                         desc="Computing note content fingerprint",
                         smoothing=0,
-                        unit=" card",
-                        file=self.t_strm)
+                        unit=" card")
                 df["sha256"] = df["text"].progress_apply(memhasher)
 
                 # load row of t_vec if cache present
-                for i, ind in enumerate(tqdm(df.index, desc="Loading from cache", file=self.t_strm)):
+                for i, ind in enumerate(tqdm(df.index, desc="Loading from cache")):
                     fingerprint = df.loc[ind, "sha256"]
                     nid = int(df.loc[ind, "note"])
                     if nid in cache_nid_fing:
@@ -2128,7 +2120,6 @@ class AnnA:
                                 missing_cid,
                                 desc="adding to cache",
                                 unit="note",
-                                file=self.t_strm
                                 )
                             ):
                         nid = df.loc[ind, "note"]
@@ -2274,8 +2265,7 @@ class AnnA:
                                             ))
             # turn the similarity into a distance
             # apply log to hopefully reduce the spread
-            tqdm.pandas(desc="Applying log", smoothing=0, unit=" card",
-                        file=self.t_strm)
+            tqdm.pandas(desc="Applying log", smoothing=0, unit=" card")
             self.df_dist = self.df_dist.progress_apply(lambda x: np.log(1+x))
             max_val = np.max(self.df_dist.values.ravel())
             self.df_dist /= -max_val  # normalize values then make negative
@@ -2363,7 +2353,6 @@ class AnnA:
             for cardId in tqdm(
                     self.df.index,
                     desc="Collecting neighbors of notes",
-                    file=self.t_strm,
                     mininterval=5,
                     unit="card"):
                 if "Nearest_neighbors".lower() not in self.df.loc[
@@ -3013,7 +3002,6 @@ class AnnA:
                   unit=" card",
                   initial=len(rated),
                   smoothing=0,
-                  file=self.t_strm,
                   total=queue_size_goal + len(rated)) as pbar:
             while len(queue) < queue_size_goal:
                 queue.append(
@@ -3069,7 +3057,6 @@ class AnnA:
                         "queue construction failed! #2")
 
                 pbar = tqdm(total=len(to_process),
-                            file=self.t_strm,
                             desc="reordering filtered deck")
                 while to_process:
                     pbar.update(1)
@@ -3495,7 +3482,7 @@ class AnnA:
 
         # # add nodes
         # for cid in tqdm(self.df.index, desc="Adding nodes", unit="node",
-        #                 file=self.t_strm):
+        #                 ):
         #     nid = self.df.loc[cid, "note"]
         #     G.add_node(nid)  # duplicate nodes are ignored by networkx
         #     if nid not in positions:
@@ -3514,7 +3501,6 @@ class AnnA:
         # for cardId in tqdm(
         #         self.df.index,
         #         desc="Computing edges",
-        #         file=self.t_strm,
         #         mininterval=5,
         #         unit="card"):
         #     noteId = self.df.loc[cardId, "note"]
@@ -3575,7 +3561,7 @@ class AnnA:
         # fixed_offset = 0.1
         # for k, v in tqdm(all_edges.items(),
         #                  desc="Minmax weights",
-        #                  file=self.t_strm):
+        #                  ):
         #     for sub_k, sub_v in all_edges[k].items():
         #         if isinstance(sub_v, list):
         #             sub_v = float(np.mean(sub_v))
@@ -3591,7 +3577,7 @@ class AnnA:
         # # add each edge to the graph
         # for k, v in tqdm(all_edges.items(),
         #                  desc="Adding edges",
-        #                  file=self.t_strm):
+        #                  ):
         #     for sub_k, sub_v in all_edges[k].items():
         #         G.add_edge(k, sub_k, weight=sub_v)
 
@@ -3677,7 +3663,6 @@ class AnnA:
         tqdm_params = {
                 "total": len(G.edges.data()),
                 "desc": "Plotting edges",
-                "file": self.t_strm,
                 "leave": True,
                 }
         def _plot_edges(edge, computed_layout, lock):
@@ -3717,7 +3702,6 @@ class AnnA:
         tqdm_params = {
                 "total": len(G.nodes()),
                 "desc": "Plotting nodes",
-                "file": self.t_strm,
                 "leave": True,
                 }
         note_df = self.df.reset_index().drop_duplicates(subset="note").set_index("note")
