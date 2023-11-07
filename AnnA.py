@@ -3216,6 +3216,7 @@ class AnnA:
             red(f"Burying {len(to_bury)} cards out of {len(self.due_cards)}.")
             red("This will not affect the due order.")
             self._call_anki(action="bury", cards=to_bury)
+
             if not self.bypass_task_just_return:
                 return True
 
