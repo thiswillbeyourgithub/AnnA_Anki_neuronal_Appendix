@@ -354,6 +354,8 @@ class AnnA:
                           it's content before tokenizing, use a cache to avoid
                           recomputing the embedding for previously seen notes,
                           ignore stopwords and any TFIDF arguments used.
+    --sentencetransformers_device
+                          either "cpu" or "gpu". None to guess. Default to None.
     --embed_model EMBED_MODEL
                           For multilingual use 'paraphrase-multilingual-mpnet-base-v2'
                            but for anything else use 'all-mpnet-
@@ -489,6 +491,7 @@ class AnnA:
 
                  # vectorization:
                  vectorizer="embeddings",
+                 sentencetransformers_device=None,
                  embed_model="paraphrase-multilingual-mpnet-base-v2",
                  # left for legacy reason
                  ndim_reduc="auto",
@@ -621,6 +624,9 @@ class AnnA:
         self.vectorizer = vectorizer
         if vectorizer == "embeddings" and whole_deck_computation:
             raise Exception("You can't use whole_deck_computation for embeddings")
+
+        assert sentencetransformers_device in [None, "cpu", "gpu"], "Invalid value for sentencetransformers_device"
+        self.sentencetransformers_device = sentencetransformers_device
 
         self.embed_model = embed_model
 
@@ -2058,7 +2064,9 @@ class AnnA:
                 memretr = self.memoize(retrieve_cache)
 
                 whi("Loading sentence transformer model")
-                model = SentenceTransformer(self.embed_model)
+                model = SentenceTransformer(
+                        self.embed_model,
+                        device=self.sentencetransformers_device)
 
                 # create empty numpy array
                 t_vec = np.zeros(
