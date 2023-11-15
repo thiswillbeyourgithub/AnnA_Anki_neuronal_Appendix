@@ -1996,7 +1996,7 @@ class AnnA:
                             else:
                                 diff = abs(max_len - until_j)
                                 if diff > 10:
-                                    j += int(10 / avg_tkn)
+                                    j += max(1, int(10 / avg_tkn))
                                 else:
                                     j += 1
 
