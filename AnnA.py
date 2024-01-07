@@ -355,6 +355,7 @@ class AnnA:
                           it's content before tokenizing, use a cache to avoid
                           recomputing the embedding for previously seen notes,
                           ignore stopwords and any TFIDF arguments used.
+                          Default to 'embeddings'.
     --sentencetransformers_device
                           either "cpu" or "gpu". None to guess. Default to None.
     --embed_model EMBED_MODEL
