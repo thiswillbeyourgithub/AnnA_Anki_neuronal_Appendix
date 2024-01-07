@@ -1194,8 +1194,10 @@ class AnnA:
 
         elif self.task == "bury_excess_learning_cards":
             yel("Getting is:learn card list...")
+            # query = (f"\"deck:{self.deckname}\" is:due is:learn -is:suspended "
+            #          "-rated:1 -rated:2:1 -rated:2:2")
             query = (f"\"deck:{self.deckname}\" is:due is:learn -is:suspended "
-                     "-rated:1 -rated:2:1 -rated:2:2")
+                     "-rated:1")
             whi(" >  '" + query + "'")
             due_cards = self._call_anki(action="findCards", query=query)
             whi(f"Found {len(due_cards)} learning cards...\n")
