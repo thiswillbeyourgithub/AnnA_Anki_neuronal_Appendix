@@ -1986,6 +1986,7 @@ class AnnA:
                                 while len(encode(" ".join(words[:j-jjj]))) >= max_len:
                                     jjj += 1
                                     assert j-jjj >= 0, f"Infinite loop for {words}. j={j}, jj={jj}, jjj={jjj}"
+                                tqdm.write(f"Added: {words[:j-jjj]}")
                                 sub_sentences.append(" ".join(words[:j-jjj]))
 
                                 # remove first word until 1/3 of the max_token was removed
@@ -1993,7 +1994,9 @@ class AnnA:
                                 jj = max(1, int((max_len // 3) / avg_tkn * 0.8))
                                 while len(encode(" ".join(words[jj:j-jjj]))) > n23:
                                     jj += 1
+                                    tqdm.write(f"{words[jj:j-jjj]}")
                                     assert jj <= len(words), f"Infinite loop for {words}"
+                                tqdm.write(f"Cut: {words[jj:]}")
                                 words = words[jj:]
 
                                 j = int(max_len / avg_tkn * 0.8)
