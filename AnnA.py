@@ -1963,7 +1963,7 @@ class AnnA:
                             encode = model.tokenizer.tokenize
 
 
-                    for i, s in enumerate(sentences):
+                    for i, s in enumerate(tqdm(sentences, "Splitting sentences")):
                         # skip if the sentence is short
                         length = len(encode(s))
                         if length <= max_len:
@@ -1979,7 +1979,7 @@ class AnnA:
                         j = int(max_len / avg_tkn * 0.8)  # start at 90% of the supposed max_len
                         while len(encode(" ".join(words))) >= max_len:
 
-                            # if reached max length, use that minus one word
+                            # if reached max length, use that until j words
                             until_j = len(encode(" ".join(words[:j])))
                             if until_j >= max_len:
                                 jjj = 1
