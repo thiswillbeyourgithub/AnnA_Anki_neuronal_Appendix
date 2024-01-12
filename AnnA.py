@@ -272,7 +272,7 @@ class AnnA:
     --highjack_due_query HIGHJACK_DUE_QUERY
                           bypasses the browser query used to find the list of
                           due cards. You can set it for example to
-                          `deck:"my_deck" is:due -rated:14 flag:1`. Default is
+                          `deck:"my_deck" (is:due OR prop:due=0) -rated:14 flag:1`. Default is
                           `None`. **Keep in mind that, when highjacking queries,
                           you have to specify the deck otherwise AnnA will
                           compare your whole collection.**
@@ -1187,7 +1187,7 @@ class AnnA:
 
         elif self.task in ["filter_review_cards", "bury_excess_review_cards"]:
             yel("Getting due card list...")
-            query = (f"\"deck:{self.deckname}\" is:due is:review -is:learn "
+            query = (f"\"deck:{self.deckname}\" (is:due OR prop:due=0) is:review -is:learn "
                      "-is:suspended -is:buried -is:new -rated:1")
             whi(" >  '" + query + "'")
             due_cards = self._call_anki(action="findCards", query=query)
@@ -1195,9 +1195,9 @@ class AnnA:
 
         elif self.task == "bury_excess_learning_cards":
             yel("Getting is:learn card list...")
-            # query = (f"\"deck:{self.deckname}\" is:due is:learn -is:suspended "
+            # query = (f"\"deck:{self.deckname}\" (is:due OR prop:due=0) is:learn -is:suspended "
             #          "-rated:1 -rated:2:1 -rated:2:2")
-            query = (f"\"deck:{self.deckname}\" is:due is:learn -is:suspended "
+            query = (f"\"deck:{self.deckname}\" (is:due OR prop:due=0) is:learn -is:suspended "
                      "-rated:1")
             whi(" >  '" + query + "'")
             due_cards = self._call_anki(action="findCards", query=query)
@@ -1266,7 +1266,7 @@ class AnnA:
             if self.filtered_deck_name_template is not None:
                 deckname_trial.append(f"deck:\"*{self.filtered_deck_name_template}*\"")
             for deckname in deckname_trial:
-                optideck_query = f"{deckname} is:due -rated:1"
+                optideck_query = f"{deckname} (is:due OR prop:due=0) -rated:1"
                 temp = self._call_anki(
                         action="findCards",
                         query=optideck_query)
@@ -3306,7 +3306,7 @@ class AnnA:
                 "invalid batches construction #2")
 
             for cnt, batch_cards in enumerate(batches):
-                query = "is:due -rated:1 cid:" + ','.join(
+                query = "(is:due OR prop:due=0) -rated:1 cid:" + ','.join(
                         [str(x) for x in batch_cards])
                 self._call_anki(action="createFilteredDeck",
                                 newDeckName=(
@@ -3317,7 +3317,7 @@ class AnnA:
                                 sortOrder=5,
                                 createEmpty=False)
         else:
-            query = "is:due -rated:1 cid:" + ','.join(
+            query = "(is:due OR prop:due=0) -rated:1 cid:" + ','.join(
                     [str(x) for x in self.opti_rev_order])
             self._call_anki(action="createFilteredDeck",
                             newDeckName=filtered_deck_name,
