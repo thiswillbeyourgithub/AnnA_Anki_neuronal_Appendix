@@ -1,9 +1,6 @@
-sbert_cache.pickle
-obsolete
 .ipynb_checkpoints
 __pycache__/
-AMIMA_jupyter.py
-*.pickle
-logs.txt
-*perso*
-cache
+logs.txt*
+.cache
+Plots
+author_dir/

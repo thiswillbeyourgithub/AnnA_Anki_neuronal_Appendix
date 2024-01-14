@@ -16,9 +16,14 @@
 import inspect
 import json
 
-from PyQt5 import QtCore
-from PyQt5.QtCore import QTimer
-from PyQt5.QtWidgets import QMessageBox
+try:
+    from PyQt6 import QtCore
+    from PyQt6.QtCore import QTimer
+    from PyQt6.QtWidgets import QMessageBox
+except ImportError:
+    from PyQt5 import QtCore
+    from PyQt5.QtCore import QTimer
+    from PyQt5.QtWidgets import QMessageBox
 
 import anki
 import anki.exporting
@@ -116,7 +121,7 @@ class AnkiConnect:
                         break
 
             if method is None:
-                raise Exception('unsupported action')
+                raise Exception('unsupported action. You addon version is probably outdated.')
             else:
                 reply['result'] = methodInst(**params)
 
@@ -436,6 +441,9 @@ class AnkiConnect:
             order += 1
             try:
                 ankiCard = self.getCard(card)
+                if ankiCard.due >= -10_000:
+                    result.append([False, f"Due value was {ankiCard.due}"])
+                    continue
                 ankiCard.due = order
                 ankiCard.flush()
                 result.append([True])
@@ -482,6 +490,14 @@ class AnkiConnect:
         return buried
 
     @util.api()
+    def deckNameFromId(self, deckId):
+        deck = self.collection().decks.get(deckId)
+        if deck is None:
+            raise Exception('deck was not found: {}'.format(deckId))
+
+        return deck['name']
+
+    @util.api()
     def cardsInfo(self, cards):
         result = []
         for cid in cards:
@@ -498,7 +514,9 @@ class AnkiConnect:
                 result.append({
                     'cardId': card.id,
                     'fields': fields,
+                    'deckName': self.deckNameFromId(card.did),
                     'modelName': model['name'],
+                    'factor': card.factor,
                     'tags': note.tags,
                     'interval': card.ivl,
                     'note': card.nid,
@@ -533,9 +551,41 @@ class AnkiConnect:
     def cardsToNotes(self, cards):
         return self.collection().db.list('select distinct nid from cards where id in ' + anki.utils.ids2str(cards))
 
-#
-# Entry
-#
+    @util.api()
+    def update_KNN_field(self, nid_content):
+        try:
+            self.startEditing()
+            for note, content in nid_content.items():
+                ankiNote = self.getNote(int(note))
+                if ankiNote["Nearest_neighbors"] != content:
+                    ankiNote["Nearest_neighbors"] = content
+                    ankiNote.flush()
+            self.collection().autosave()
+            self.stopEditing()
+        except Exception:
+            self.collection().autosave()
+            self.stopEditing()
+            raise
+
+
+
+    @util.api()
+    def guiBrowse(self, query=None):
+        browser = aqt.dialogs.open('Browser', self.window())
+        browser.activateWindow()
+
+        if query is not None:
+            browser.form.searchEdit.lineEdit().setText(query)
+            if hasattr(browser, 'onSearch'):
+                browser.onSearch()
+            else:
+                browser.onSearchActivated()
+
+        return self.findCards(query)
+
+    @util.api()
+    def sync(self):
+        self.window().onSync()
+
 
 ac = AnkiConnect()
-
