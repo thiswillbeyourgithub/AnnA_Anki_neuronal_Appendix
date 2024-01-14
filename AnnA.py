@@ -2535,7 +2535,7 @@ class AnnA:
         # hardcoded settings
         display_stats = True if not self.low_power_mode else False
 
-        # setting interval to correct value for learning and relearnings:
+        # setting interval to correct value in days for learning and relearnings:
         steps_L = sorted([x / 1440 for x in self.deck_config["new"]["delays"]])
         steps_RL = sorted([x / 1440 for x in self.deck_config["lapse"]["delays"]])
         for i in df.index:
@@ -2614,13 +2614,14 @@ class AnnA:
                     df.at[i, "ref_due"] /= 86400
                 assert df.at[i,
                              "ref_due"] > 0, f"negative interval for card {i}"
+
             df.loc[due, "overdue"] = df.loc[due, "ref_due"] - time_offset
             overdue = df.loc[due, "overdue"]
 
             # then, correct overdue values to make sure they are negative
             correction = max(overdue.max(), 0) + 0.01
             if correction > 1:
-                raise Exception("Correction factor above 1")
+                raise Exception(f"Correction factor above 1: {correction}")
 
             # my implementation of relative overdueness:
             # (intervals are positive, overdue are negative for due cards
