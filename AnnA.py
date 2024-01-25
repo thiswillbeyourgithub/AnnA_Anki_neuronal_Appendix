@@ -1750,19 +1750,23 @@ class AnnA:
                             t)
                         self.df.loc[ind, "text"] += " " + t
 
-        yel("\n\nPrinting 2 random samples of your formated text, to help "
-            " adjust formating issues:")
-        pd.set_option('display.max_colwidth', 8000)
-        max_length = 10000
-        sub_index = random.sample(self.df.index.tolist(), k=2)
-        for i in sub_index:
-            if len(self.df.loc[i, "text"]) > max_length:
-                ending = "...\n"
-            else:
-                ending = "\n"
-            whi(f" * {i} : {str(self.df.loc[i, 'text'])[0:max_length]}",
-                end=ending)
-        pd.reset_option('display.max_colwidth')
+        if len(self.df.index) > 2:
+            yel("\n\nPrinting 2 random samples of your formated text, to help "
+                " adjust formating issues:")
+            pd.set_option('display.max_colwidth', 8000)
+            max_length = 10000
+            sub_index = random.sample(self.df.index.tolist(), k=2)
+            for i in sub_index:
+                if len(self.df.loc[i, "text"]) > max_length:
+                    ending = "...\n"
+                else:
+                    ending = "\n"
+                whi(f" * {i} : {str(self.df.loc[i, 'text'])[0:max_length]}",
+                    end=ending)
+            pd.reset_option('display.max_colwidth')
+        else:
+            yel("Not printing random samples because only {len(self.df.index)}"
+            "cards are in the df")
         print("\n")
         self.df = self.df.sort_index()
         return True
