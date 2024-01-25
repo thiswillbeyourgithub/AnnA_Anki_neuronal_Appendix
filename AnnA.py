@@ -3347,6 +3347,7 @@ class AnnA:
                      f"{len(diff)}")
 
         yel("\nAsking anki to alter the due order...", end="")
+        time.sleep(1)
         res = self._call_anki(action="setDueOrderOfFiltered",
                               cards=self.opti_rev_order)
         err = [x[1] for x in res if x[0] is False]
