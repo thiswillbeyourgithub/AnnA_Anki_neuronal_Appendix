@@ -441,6 +441,9 @@ class AnkiConnect:
             order += 1
             try:
                 ankiCard = self.getCard(card)
+                if ankiCard.odue != 0:
+                    result.append([False, f"odue value was {ankiCard.odue}"])
+                    continue
                 if ankiCard.due >= -10_000:
                     result.append([False, f"Due value was {ankiCard.due}"])
                     continue
