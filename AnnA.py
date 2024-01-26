@@ -268,7 +268,9 @@ class AnnA:
                           `AI_machine_learning,medical_terms`. Default to None.
     --minimum_due MINIMUM_DUE_CARDS
                           stops AnnA if the number of due cards is inferior to
-                          this value. Default is `5`.
+                          this value. Default is `5`. If it's an int less or
+                          equal to 2 it will be set to 3 as it makes no sense
+                          otherwise.
     --highjack_due_query HIGHJACK_DUE_QUERY
                           bypasses the browser query used to find the list of
                           due cards. You can set it for example to
@@ -573,7 +575,9 @@ class AnnA:
         self.rated_last_X_days = rated_last_X_days
 
         assert minimum_due >= 0, "Invalid value for `minimum_due`"
-        self.minimum_due = minimum_due
+        if minimum_due <= 2:
+            red(f"Minimum due should not be under 3, setting it to 3")
+        self.minimum_due = max(minimum_due, 3)
 
         assert isinstance(highjack_due_query, (str, type(None))
                           ), "Invalid type of `highjack_due_query`"
