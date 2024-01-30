@@ -268,7 +268,9 @@ class AnnA:
                           `AI_machine_learning,medical_terms`. Default to None.
     --minimum_due MINIMUM_DUE_CARDS
                           stops AnnA if the number of due cards is inferior to
-                          this value. Default is `5`.
+                          this value. Default is `5`. If it's an int less or
+                          equal to 2 it will be set to 3 as it makes no sense
+                          otherwise.
     --highjack_due_query HIGHJACK_DUE_QUERY
                           bypasses the browser query used to find the list of
                           due cards. You can set it for example to
@@ -573,7 +575,9 @@ class AnnA:
         self.rated_last_X_days = rated_last_X_days
 
         assert minimum_due >= 0, "Invalid value for `minimum_due`"
-        self.minimum_due = minimum_due
+        if minimum_due <= 2:
+            red(f"Minimum due should not be under 3, setting it to 3")
+        self.minimum_due = max(minimum_due, 3)
 
         assert isinstance(highjack_due_query, (str, type(None))
                           ), "Invalid type of `highjack_due_query`"
@@ -1750,19 +1754,23 @@ class AnnA:
                             t)
                         self.df.loc[ind, "text"] += " " + t
 
-        yel("\n\nPrinting 2 random samples of your formated text, to help "
-            " adjust formating issues:")
-        pd.set_option('display.max_colwidth', 8000)
-        max_length = 10000
-        sub_index = random.sample(self.df.index.tolist(), k=2)
-        for i in sub_index:
-            if len(self.df.loc[i, "text"]) > max_length:
-                ending = "...\n"
-            else:
-                ending = "\n"
-            whi(f" * {i} : {str(self.df.loc[i, 'text'])[0:max_length]}",
-                end=ending)
-        pd.reset_option('display.max_colwidth')
+        if len(self.df.index) > 2:
+            yel("\n\nPrinting 2 random samples of your formated text, to help "
+                " adjust formating issues:")
+            pd.set_option('display.max_colwidth', 8000)
+            max_length = 10000
+            sub_index = random.sample(self.df.index.tolist(), k=2)
+            for i in sub_index:
+                if len(self.df.loc[i, "text"]) > max_length:
+                    ending = "...\n"
+                else:
+                    ending = "\n"
+                whi(f" * {i} : {str(self.df.loc[i, 'text'])[0:max_length]}",
+                    end=ending)
+            pd.reset_option('display.max_colwidth')
+        else:
+            yel("Not printing random samples because only {len(self.df.index)}"
+            "cards are in the df")
         print("\n")
         self.df = self.df.sort_index()
         return True
@@ -3343,6 +3351,7 @@ class AnnA:
                      f"{len(diff)}")
 
         yel("\nAsking anki to alter the due order...", end="")
+        time.sleep(1)
         res = self._call_anki(action="setDueOrderOfFiltered",
                               cards=self.opti_rev_order)
         err = [x[1] for x in res if x[0] is False]

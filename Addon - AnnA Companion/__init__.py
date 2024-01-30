@@ -441,8 +441,11 @@ class AnkiConnect:
             order += 1
             try:
                 ankiCard = self.getCard(card)
+                if ankiCard.odue == 0:
+                    result.append([False, f"odue value was 0 for {ankiCard}"])
+                    continue
                 if ankiCard.due >= -10_000:
-                    result.append([False, f"Due value was {ankiCard.due}"])
+                    result.append([False, f"Due value was {ankiCard.due} for {ankiCard}"])
                     continue
                 ankiCard.due = order
                 ankiCard.flush()
