@@ -7,6 +7,7 @@ import traceback
 import copy
 import beepy
 import logging
+from logging import handlers
 import gc
 from datetime import datetime
 import time
@@ -65,7 +66,7 @@ signal.signal(signal.SIGINT, (lambda signal, frame: breakpoint()))
 
 # adds logger file, restrict it to X lines
 log_formatter = logging.Formatter('%(asctime)s %(levelname)s %(funcName)s(%(lineno)d) %(message)s')
-file_handler = logging.handlers.RotatingFileHandler(
+file_handler = handlers.RotatingFileHandler(
         "logs.txt",
         mode='a',
         maxBytes=1000000,
