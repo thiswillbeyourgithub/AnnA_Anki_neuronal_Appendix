@@ -296,6 +296,8 @@ class AnnA:
                           making it usable for less powerful computers. This can
                           greatly reduce accuracy. Also removes non necessary
                           steps that take long like displaying some stats.
+                          Specifically it uses binary mode for TFIDF and has
+                          no effect if another vectorizer is used.
                           Default to `False`.
     --log_level LOG_LEVEL
                           can be any number between 0 and 2. Default is `0` to
@@ -1781,10 +1783,10 @@ class AnnA:
         """
         df = self.df
 
-        # if self.low_power_mode:
-        #     binary_mode = True
-        # else:
-        binary_mode = False
+        if self.low_power_mode:
+            binary_mode = True
+        else:
+            binary_mode = False
 
         def init_TFIDF_vectorizer():
             """used to make sure the same statement is used to create
