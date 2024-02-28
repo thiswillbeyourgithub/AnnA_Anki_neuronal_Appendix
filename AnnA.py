@@ -3913,11 +3913,12 @@ if __name__ == "__main__":
     whi("Launched AnnA with arguments :\r")
     pprint(kwargs)
 
-    if kwargs["console_mode"]:
-        console_mode = True
-    else:
-        console_mode = False
-    kwargs.pop("console_mode")
+    if "console_mode" in kwargs:
+        if kwargs["console_mode"]:
+            console_mode = True
+        else:
+            console_mode = False
+        kwargs.pop("console_mode")
 
     anna = AnnA(**kwargs)
     if console_mode:
