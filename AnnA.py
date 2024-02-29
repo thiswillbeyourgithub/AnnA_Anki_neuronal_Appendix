@@ -319,6 +319,8 @@ class AnnA:
                           to cards. This is not a list of tags whose card should
                           be ignored! Default is ['AnnA', 'leech']. Set to None
                           to disable it.
+                          If a string is supplied, it will be parsed as a list
+                          as a comma separated value.
     --add_KNN_to_field    Whether to add a query to find the K nearestneighbor
                           of a given card to a new field called
                           'Nearest_neighbors' (only if already present in the
@@ -614,6 +616,10 @@ class AnnA:
 
         if tags_to_ignore is None:
             tags_to_ignore = []
+        if isinstance(tags_to_ignore, str):
+            assert "," in tags_to_ignore, f"If tags_to_ignore is a string it must contain a comma to be separated as list"
+            tags_to_ignore = tags_to_ignore.split(",")
+            whi(f"tags_to_ignore was parsed as a comma separated list: {tags_to_ignore}")
         assert isinstance(tags_to_ignore, list), "tags_to_ignore is not a list"
         self.tags_to_ignore = [re.compile(f".*{t.strip()}.*")
                                if ".*" not in t
