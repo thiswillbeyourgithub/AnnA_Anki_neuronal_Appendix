@@ -659,6 +659,8 @@ class AnnA:
             "Invalid type of `plot_2D_embeddings`")
         self.plot_2D_embeddings = plot_2D_embeddings
         self.plot_dir = Path(str(plot_dir))
+        self.plot_dir.mkdir(exist_ok=True)
+        assert self.plot_dir.exists(), f"Couldn't find or create dir {self.plot_dir}"
 
         assert isinstance(TFIDF_stem, bool), "Invalid type of `TFIDF_stem`"
         assert isinstance(
@@ -3455,10 +3457,10 @@ class AnnA:
                 hide_annotations=True,
                 hide_document_hover=False,
                 )
-        saved_plot = f"{self.plot_dir}/{self.deckname} - embeddings.html"
+        saved_plot = self.plot_dir / f"{self.deckname} - embeddings.html"
         whi(f"Saving plot to {saved_plot}")
         offpy(fig,
-              filename=saved_plot,
+              filename=str(saved_plot.absolute()),
               auto_open=False,
               show_link=False,
               validate=True,
@@ -3472,7 +3474,7 @@ class AnnA:
             signal.signal(signal.SIGALRM, f_browser_timeout)
             signal.alarm(5)
             whi(f"Trying to open {saved_plot} in the browser...")
-            saved_plot_fp = str(Path(saved_plot).absolute()).replace("\\", "")
+            saved_plot_fp = str(saved_plot.absolute()).replace("\\", "")
             if "genericbrowser" in str(webbrowser.get()).lower():
                 # if AnnA is launched using SSH, the webbrowser will
                 # possibly be in the console and can stop the script
