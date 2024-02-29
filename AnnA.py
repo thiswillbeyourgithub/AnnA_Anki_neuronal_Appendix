@@ -364,7 +364,7 @@ class AnnA:
                           ignore stopwords and any TFIDF arguments used.
                           Default to 'embeddings'.
     --sentencetransformers_device
-                          either "cpu" or "gpu". None to guess. Default to None.
+                          either "cpu" or "gpu"/"cuda". None to guess. Default to None.
     --embed_model EMBED_MODEL
                           For multilingual use 'paraphrase-multilingual-mpnet-base-v2'
                            but for anything else use 'all-mpnet-
@@ -640,7 +640,7 @@ class AnnA:
         if vectorizer == "embeddings" and whole_deck_computation:
             raise Exception("You can't use whole_deck_computation for embeddings")
 
-        assert sentencetransformers_device in [None, "cpu", "gpu"], "Invalid value for sentencetransformers_device"
+        assert sentencetransformers_device in [None, "cpu", "gpu", "cuda"], "Unexpected value for sentencetransformers_device"
         self.sentencetransformers_device = sentencetransformers_device
 
         self.embed_model = embed_model
