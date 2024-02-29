@@ -3433,7 +3433,7 @@ class AnnA:
         topic_model = BERTopic(
                 verbose=True,
                 top_n_words=10,
-                nr_topics=100,
+                nr_topics=max(2, len(docs) // 10),
                 vectorizer_model=CountVectorizer(
                     stop_words=self.stops + [f"c{n}" for n in range(10)] + ["<br>"],
                     ngram_range=(1, 1),
@@ -3454,11 +3454,13 @@ class AnnA:
                 docs=docs,
                 hierarchical_topics=hierarchical_topics,
                 reduced_embeddings=self.vectors2D,
-                nr_levels=min(20, len(hierarchical_topics) - 1),
-                # level_scale="log",
+                nr_levels=min(30, len(hierarchical_topics) - 1),
+                level_scale="linear",
                 title=f"{self.deckname} - embeddings",
                 hide_annotations=True,
                 hide_document_hover=False,
+                # width=1200,
+                # height=1200,
                 )
         saved_plot = self.plot_dir / f"{self.deckname} - embeddings.html"
         whi(f"Saving plot to {saved_plot}")
