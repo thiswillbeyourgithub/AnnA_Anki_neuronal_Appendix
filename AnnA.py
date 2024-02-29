@@ -3425,14 +3425,17 @@ class AnnA:
         # the browser then resumed
         self.timeout_start_time = time.time()
 
-        # bertopic plots
         docs = self.df["text"].tolist()
+        # make sure to add newline to the documents
+        docs = ["<br>".join(textwrap.wrap(d, width=60) for d in docs]
+
+        # bertopic plots
         topic_model = BERTopic(
                 verbose=True,
                 top_n_words=10,
                 nr_topics=100,
                 vectorizer_model=CountVectorizer(
-                    stop_words=self.stops + [f"c{n}" for n in range(10)],
+                    stop_words=self.stops + [f"c{n}" for n in range(10)] + ["<br>"],
                     ngram_range=(1, 1),
                     ),
                 hdbscan_model=hdbscan.HDBSCAN(
