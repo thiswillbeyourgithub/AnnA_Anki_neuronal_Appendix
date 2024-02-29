@@ -3427,7 +3427,7 @@ class AnnA:
 
         docs = self.df["text"].tolist()
         # make sure to add newline to the documents
-        docs = ["<br>".join(textwrap.wrap(d, width=60) for d in docs]
+        docs = ["<br>".join(textwrap.wrap(d, width=60)) for d in docs]
 
         # bertopic plots
         topic_model = BERTopic(
