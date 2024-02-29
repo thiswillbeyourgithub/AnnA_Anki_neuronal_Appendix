@@ -1119,12 +1119,13 @@ class AnnA:
                 f"{target_thread_n} threads of size {batchsize})")
 
             results = ProgressParallel(
+                    n_jobs=target_thread_n,
+                    backend="threading",
                     tqdm_params={
                         "total": len(card_id) // batchsize,
                         "dynamic_ncols": True,
                         "desc": "Done threads",
                         },
-                    n_jobs=target_thread_n
                     )(joblib.delayed(retrieve_cards)(
                         card_id[nb: nb + batchsize]
                         ) for nb in range(0, len(card_id), batchsize))
@@ -1698,6 +1699,7 @@ class AnnA:
 
         results = ProgressParallel(
                 n_jobs=4 if not self.disable_threading else 1,
+                backend="threading",
                 tqdm_params={
                     "total": len(self.df.index),
                     "desc": "Combining relevant fields",
