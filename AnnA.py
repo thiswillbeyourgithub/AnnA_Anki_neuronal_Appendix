@@ -3927,6 +3927,8 @@ if __name__ == "__main__":
         else:
             console_mode = False
         kwargs.pop("console_mode")
+    else:
+        console_mode = False
 
     anna = AnnA(**kwargs)
     if console_mode:
