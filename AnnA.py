@@ -199,17 +199,19 @@ class AnnA:
                           them and increase their likelyhood of being part of
                           the Optideck.
     --task TASK           can be 'filter_review_cards',
-                          'bury_excess_learning_cards',
-                          'bury_excess_review_cards',
-                          'add_KNN_to_field''just_plot'. . Respectively to
-                          create a filtered deck with the cards, or bury only
-                          the similar learning cards (among other learning
-                          cards), or bury only the similar cards in review
-                          (among other review cards) or just find the nearest
-                          neighbors of each note and save it to the field
-                          'Nearest_neighbors' of each note, or create a 2D plot
-                          after vectorizing the cards. Default is
-                          `filter_review_cards`.
+                                 'bury_excess_learning_cards',
+                                 'bury_excess_review_cards',
+                                 'add_KNN_to_field',
+                                 'just_plot',
+                                 'plot_and_tag'.
+                          Respectively to
+                                create a filtered deck with the cards,
+                                or bury only the similar learning cards (among other learning cards),
+                                or bury only the similar cards in review (among other review cards),
+                                or just find the nearest neighbors of each note and save it to the field 'Nearest_neighbors' of each note,
+                                or create a 2D plot using BERTopic
+                                or create the 2D plot using BERTopic then add the topics as tags to the cards
+                          Default is `filter_review_cards`.
     --target_deck_size TARGET_SIZE
                           indicates the size of the filtered deck to create. Can
                           be the number of due cards like "100", a proportion of
@@ -680,7 +682,8 @@ class AnnA:
                         "bury_excess_learning_cards",
                         "bury_excess_review_cards",
                         "just_add_KNN",
-                        "just_plot"], "Invalid value for `task`"
+                        "just_plot",
+                        "plot_and_tag"], "Invalid value for `task`"
         if task in ["bury_excess_learning_cards",
                     "bury_excess_review_cards"]:
             if task == "bury_excess_learning_cards":
@@ -694,6 +697,9 @@ class AnnA:
                 "add it to a field.")
         elif task == "just_plot":
             red("Task : vectorize the cards and create a 2D plot.")
+            assert plot_2D_embeddings, "argument plot_2D_embeddings should be True"
+        elif task == "plot_and_tag":
+            red("Task : vectorize the cards and create a 2D plot then tag the cards with the appropriate topic.")
             assert plot_2D_embeddings, "argument plot_2D_embeddings should be True"
         else:
             raise ValueError()
@@ -1007,7 +1013,7 @@ class AnnA:
                 self._add_neighbors_to_notes()
             return
 
-        elif task == "just_plot":
+        elif task in ["just_plot", "plot_and_tag"]:
             self.rated_last_X_days = None
             assert self._common_init(), "Error during _common_init"
 
@@ -1219,7 +1225,7 @@ class AnnA:
             due_cards = self._call_anki(action="findCards", query=query)
             whi(f"Found {len(due_cards)} learning cards...\n")
 
-        elif self.task in ["just_add_KNN", "just_plot"]:
+        elif self.task in ["just_add_KNN", "just_plot", "plot_and_tag"]:
             yel("Getting all card list except suspended...")
             query = (f"\"deck:{self.deckname}\" -is:suspended")
             whi(" >  '" + query + "'")
@@ -1394,7 +1400,7 @@ class AnnA:
             beep("Error: duplicate cards in DataFrame!\nExiting.")
             breakpoint()
 
-        if self.task not in ["just_add_KNN", "just_plot"]:
+        if self.task not in ["just_add_KNN", "just_plot", "plot_and_tag"]:
             # exclude from 'due' cards that have an 'odue' column != 0
             # which means that they are already in a filtered deck
             to_remove = []
@@ -3450,6 +3456,7 @@ class AnnA:
         hierarchical_topics = topic_model.hierarchical_topics(
             docs=docs,
             )
+
         fig = topic_model.visualize_hierarchical_documents(
                 docs=docs,
                 hierarchical_topics=hierarchical_topics,
@@ -3462,6 +3469,50 @@ class AnnA:
                 # width=1200,
                 # height=1200,
                 )
+        #
+        # add the topics as tags to the cards
+        if  self.task == "plot_and_tag":
+            signal.alarm(0)
+            data = fig.to_ordered_dict()
+
+            top_parent = max([int(el[1]["Parent_ID"]) for el in hierarchical_topics.iterrows()])
+            nlab = len(hierarchical_topics)
+            max_level = min(30, len(hierarchical_topics)-1)
+            level_to_nid = [{} for i in range(1000)]
+            nid_done = []
+
+            assert len(topic_model.hdbscan_model.labels_) == len(self.df)
+            for i, labelid in enumerate(tqdm(topic_model.topics_, desc="Computing hierarchy")):
+                nid = int(self.df.iloc[i]["note"])
+                if nid in nid_done:
+                    continue
+                # for each level store the value
+                level = max_level
+                label = topic_model.topic_labels_[labelid]
+                if label in level_to_nid[level]:
+                    assert nid not in level_to_nid[level], f"nid already added :{level_to_nid[level]}"
+                    level_to_nid[level].append(nid)
+                else:
+                    level_to_nid[level][label] = [nid]
+                pid = int(hierarchical_topics.loc[labelid, "Parent_ID"])
+                while pid != top_parent:
+                    assert pid > len(hierarchical_topics), f"unexpectedly high pid: {pid}"
+                    pid = int(hierarchical_topics.loc[pid-nlab, "Parent_ID"])
+                    level -= 1
+                    label = topic_model.topic_labels_[pid - nlab]
+                    if label in level_to_nid[level]:
+                        assert nid not in level_to_nid[level][label], f"nid in level_to_nid: {level_to_nid[level]}"
+                        level_to_nid[level].append(nid)
+                    else:
+                        level_to_nid[level][label] = [nid]
+                        if level < 0:
+                            print(f"Level: {level} for {label}")
+                    # assert level >= 0, f"Level is {level}"
+                nid_done.append(nid)
+                        # remove previous tags
+
+                        breakpoint()
+
         saved_plot = self.plot_dir / f"{self.deckname} - embeddings.html"
         whi(f"Saving plot to {saved_plot}")
         offpy(fig,
@@ -3471,6 +3522,7 @@ class AnnA:
               validate=True,
               output_type="file",
               )
+
         try:
             # replacing timeout by a 5s one then resuming the previous one
             def f_browser_timeout(signum, frame):
