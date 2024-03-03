@@ -3509,9 +3509,9 @@ class AnnA:
                             print(f"Level: {level} for {label}")
                     # assert level >= 0, f"Level is {level}"
                 nid_done.append(nid)
-                        # remove previous tags
+                # remove previous tags
 
-                        breakpoint()
+                breakpoint()
 
         saved_plot = self.plot_dir / f"{self.deckname} - embeddings.html"
         whi(f"Saving plot to {saved_plot}")
