@@ -27,6 +27,7 @@ from pathlib import Path
 from prompt_toolkit import prompt
 from prompt_toolkit.completion import WordCompleter
 from plyer import notification
+from typing import Callable
 import fire
 
 import joblib
@@ -132,9 +133,9 @@ def get_coloured_logger(color_asked: str) -> Callable:
     return printer
 
 
-whi = coloured_log("white")
-yel = coloured_log("yellow")
-red = coloured_log("red")
+whi = get_coloured_logger("white")
+yel = get_coloured_logger("yellow")
+red = get_coloured_logger("red")
 
 set_global_logging_level(logging.ERROR,
                          ["transformers", "nlp", "torch",
