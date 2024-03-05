@@ -3442,7 +3442,12 @@ class AnnA:
         self.timeout_start_time = time.time()
 
         docs = self.df["text"].tolist()
-        # make sure to add newline to the documents
+
+        # stem the text:
+        ps = PorterStemmer()
+        docs = [ps.stem(x) for x in tqdm(docs, desc="Stemmer")]
+
+        # make sure to add newline to the documents to make it readable in the plot
         docs = ["<br>".join(textwrap.wrap(d, width=60)) for d in docs]
 
         # bertopic plots
