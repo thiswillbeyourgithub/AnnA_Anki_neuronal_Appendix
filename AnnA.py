@@ -40,7 +40,7 @@ from tokenizers import Tokenizer
 from sentence_transformers import SentenceTransformer
 import ftfy
 
-from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer, TfidfTransformer
+from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from sklearn.metrics import pairwise_distances, pairwise_kernels
 from sklearn.decomposition import TruncatedSVD, PCA
 from sklearn.preprocessing import normalize
