@@ -3456,7 +3456,7 @@ class AnnA:
                 top_n_words=10,
                 nr_topics=max(2, len(docs) // 10),
                 vectorizer_model=CountVectorizer(
-                    stop_words=self.stops + [ps.stem(x) f or x in self.stops] + [f"c{n}" for n in range(10)] + ["<br>"],
+                    stop_words=self.stops + [ps.stem(x) for x in self.stops] + [f"c{n}" for n in range(10)] + ["<br>"],
                     ngram_range=(1, 1),
                     ),
                 hdbscan_model=hdbscan.HDBSCAN(
